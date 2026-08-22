@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../../../common/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/surah_entity.dart';
+import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import 'surah_ayah_badge.dart';
 
 /// Displays the Surah Title, English Name, Kaaba Icon (Makki/Madani), Juz & Hizb, and Ayah Count Badge.
-class SurahInfoContent extends StatelessWidget {
+class SurahInfoContent extends ConsumerWidget {
   final SurahEntity surah;
   final bool isDark;
 
@@ -19,7 +21,12 @@ class SurahInfoContent extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fontScript = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
+    );
+    final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
+
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -33,7 +40,7 @@ class SurahInfoContent extends StatelessWidget {
               style: TextStyle(
                 fontSize: 19,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Amiri',
+                fontFamily: fontFamily,
                 color: isDark ? AppColors.softGoldText : AppColors.primary,
               ),
             ),

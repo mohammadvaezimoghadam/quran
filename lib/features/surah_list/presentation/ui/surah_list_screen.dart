@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
 import '../../../../core/routes/route_name.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/surah_list_controller.dart';
+import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.dart';
 import '../widgets/surah_error_view.dart';
 import '../widgets/surah_list_item.dart';
@@ -18,10 +20,16 @@ class SurahListScreen extends ConsumerWidget {
     final state = ref.watch(surahListControllerProvider);
     final controller = ref.read(surahListControllerProvider.notifier);
 
+    final fontScript = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
+    );
+    final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
+
     return Scaffold(
       extendBody: true,
       appBar: IslamicKatibahAppBar(
         surahName: AppConstants.surahListScreenTitle,
+        fontFamily: fontFamily,
         showSearchField: true,
         onSearchChanged: (query) {
           controller.searchSurahs(query);
