@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,23 +13,31 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+    with TickerProviderStateMixin {
+  late final AnimationController _entryController;
+  late final AnimationController _shimmerController;
+
   late final Animation<double> _fadeAnimation;
   late final Animation<double> _scaleAnimation;
   late final Animation<Offset> _slideAnimation;
+  late final Animation<double> _shimmerAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    _entryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1400),
+    );
+
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
     );
 
     final curvedAnimation = CurvedAnimation(
-      parent: _controller,
+      parent: _entryController,
       curve: Curves.easeOutCubic,
     );
 
@@ -39,7 +48,18 @@ class _SplashScreenState extends State<SplashScreen>
       end: Offset.zero,
     ).animate(curvedAnimation);
 
-    _controller.forward();
+    _shimmerAnimation = Tween<double>(begin: -1.5, end: 2.5).animate(
+      CurvedAnimation(
+        parent: _shimmerController,
+        curve: Curves.easeInOutSine,
+      ),
+    );
+
+    _entryController.forward().then((_) {
+      if (mounted) {
+        _shimmerController.repeat(reverse: true);
+      }
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _navigateToHome();
@@ -48,7 +68,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _entryController.dispose();
+    _shimmerController.dispose();
     super.dispose();
   }
 
@@ -59,9 +80,9 @@ class _SplashScreenState extends State<SplashScreen>
       } catch (_) {}
     }
 
-    await Future.delayed(const Duration(milliseconds: 2200));
+    await Future.delayed(const Duration(milliseconds: 2600));
     if (mounted) {
-      context.goNamed(mainHomeRoute);
+      context.goNamed(quranHomeRoute);
     }
   }
 
@@ -74,8 +95,9 @@ class _SplashScreenState extends State<SplashScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF1A1A1A), // Dark charcoal
-              Color(0xFF000000), // Pure black
+              Color(0xFF0F5A47), // Emerald Green
+              Color(0xFF072B22), // Deep Dark Emerald
+              Color(0xFF020E0B), // Deepest Emerald Black
             ],
           ),
         ),
@@ -89,22 +111,32 @@ class _SplashScreenState extends State<SplashScreen>
                     scale: _scaleAnimation,
                     child: SlideTransition(
                       position: _slideAnimation,
-                      child: Text(
-                        'تفکر',
-                        style: TextStyle(
-                          fontFamily: 'Vazirmatn', // Changed to Vazirmatn
-                          fontSize: 52,
-                          color: Colors.white, // Changed to white
-                          height: 1.4,
-                          shadows: [
-                            Shadow(
-                              color: Colors.white.withValues(alpha: 0.2), // Subtle white glow
-                              blurRadius: 18,
-                              offset: const Offset(0, 4),
+                      child: AnimatedBuilder(
+                        animation: _shimmerController,
+                        builder: (context, child) {
+                          return ShaderMask(
+                            blendMode: BlendMode.srcATop,
+                            shaderCallback: (bounds) {
+                              return LinearGradient(
+                                begin: Alignment(_shimmerAnimation.value - 1.0, 0),
+                                end: Alignment(_shimmerAnimation.value, 0),
+                                colors: const [
+                                  AppColors.goldAccent,
+                                  AppColors.softGoldText,
+                                  Color(0xFFFFF6D6), // Radiant High Gold Light
+                                  AppColors.softGoldText,
+                                  AppColors.goldAccent,
+                                ],
+                                stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
+                              ).createShader(bounds);
+                            },
+                            child: Text(
+                              AppConstants.appTitle,
+                              style: AppTypography.splashAppTitle,
+                              textAlign: TextAlign.center,
                             ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -120,12 +152,12 @@ class _SplashScreenState extends State<SplashScreen>
                   child: FadeTransition(
                     opacity: _fadeAnimation,
                     child: SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 22,
+                      height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.0,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white.withValues(alpha: 0.7),
+                          AppColors.goldAccent.withValues(alpha: 0.85),
                         ),
                       ),
                     ),

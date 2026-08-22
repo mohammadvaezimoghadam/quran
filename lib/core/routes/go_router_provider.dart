@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/main_home/presentation/ui/main_home_screen.dart';
 import '../../features/quran_home/presentation/ui/quran_home_screen.dart';
 import '../../features/quran_reader/presentation/ui/quran_reader_screen.dart';
 import '../../features/splash/presentation/ui/splash_screen.dart';
@@ -16,11 +15,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/splash',
         name: splashRoute,
         builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/main-home',
-        name: mainHomeRoute,
-        builder: (context, state) => const MainHomeScreen(),
       ),
       GoRoute(
         path: '/quran-home',

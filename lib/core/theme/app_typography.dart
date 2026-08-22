@@ -31,6 +31,30 @@ class AppTypography {
     }
   }
 
+  /// Main App Bar Title Style (Thuluth Calligraphy in Gold Accent)
+  static const TextStyle appBarTitle = TextStyle(
+    fontFamily: thuluthFont,
+    fontSize: 30,
+    fontWeight: FontWeight.bold,
+    color: AppColors.goldAccent,
+  );
+
+  /// Splash Screen Main Title Style (Thuluth Calligraphy in Gold Accent)
+  static const TextStyle splashAppTitle = TextStyle(
+    fontFamily: thuluthFont,
+    fontSize: 54,
+    fontWeight: FontWeight.bold,
+    color: AppColors.goldAccent,
+    height: 1.4,
+    shadows: [
+      Shadow(
+        color: Color(0x59C5A059), // AppColors.goldAccent ~35% opacity
+        blurRadius: 20,
+        offset: Offset(0, 4),
+      ),
+    ],
+  );
+
   /// Quranic Arabic Text Style (Full Display)
   static const TextStyle displayQuran = TextStyle(
     fontFamily: fontFamily,

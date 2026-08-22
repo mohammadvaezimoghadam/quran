@@ -24,12 +24,7 @@ class QuranHomeScreen extends StatelessWidget {
         centerTitle: true,
         title: const Text(
           AppConstants.appTitle,
-          style: TextStyle(
-            fontFamily: AppTypography.thuluthFont,
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFC5A059),
-          ),
+          style: AppTypography.appBarTitle,
         ),
         actions: const [
           Padding(
