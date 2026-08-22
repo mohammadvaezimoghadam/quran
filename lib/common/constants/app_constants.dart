@@ -1,0 +1,84 @@
+abstract class AppConstants {
+  // Base URLs
+  static const String alQuranCloudBaseUrl = 'https://api.alquran.cloud/v1';
+  static const String ummahApiBaseUrl = 'https://ummahapi.com/api';
+  static const String everyAyahAudioBaseUrl = 'https://everyayah.com/data';
+
+  // Assets Paths
+  static const String ayahCardBgAsset = 'assets/images/ayah_card_bg.png';
+  static const String surahStarAsset = 'assets/images/surah_star.png';
+
+  // Network Error Messages - Connection Types
+  static const String connectionTimeoutError = 'زمان اتصال به سرور به پایان رسید. لطفاً مجدداً تلاش کنید.';
+  static const String sendTimeoutError = 'زمان ارسال اطلاعات به سرور به پایان رسید. اتصال اینترنت خود را بررسی کنید.';
+  static const String receiveTimeoutError = 'زمان دریافت پاسخ از سرور به پایان رسید. لطفاً مجدداً تلاش کنید.';
+  static const String badCertificateError = 'گواهی امنیتی سرور معتبر نمی‌باشد.';
+  static const String requestCancelledError = 'درخواست لغو شد.';
+  static const String connectionError = 'اتصال با سرور برقرار نشد. لطفاً اینترنت خود را بررسی کنید.';
+  static const String unexpectedError = 'خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً تلاش کنید.';
+
+  // Network Error Messages - HTTP Status Codes
+  static const String badRequestError = 'درخواست نامعتبر است.';
+  static const String unauthorizedError = 'دسترسی غیرمجاز. لطفاً وارد حساب کاربری شوید.';
+  static const String forbiddenError = 'شما دسترسی به این بخش را ندارید.';
+  static const String notFoundError = 'اطلاعات مورد نظر یافت نشد.';
+  static const String tooManyRequestsError = 'تعداد درخواست‌ها بیش از حد مجاز است. لطفاً کمی صبر کنید.';
+  static const String internalServerError = 'خطای داخلی سرور. لطفاً بعداً تلاش کنید.';
+  static const String serviceUnavailableError = 'سرویس در حال حاضر در دسترس نیست.';
+
+  // Home & Surah Feature Error Messages
+  static const String incompleteAyahDataError = 'اطلاعات آیه روز کامل دریافت نشد.';
+  static const String ayahOfTheDayFetchError = 'خطای غیرمنتظره در دریافت آیه روز';
+  static const String surahFetchError = 'خطایی در دریافت لیست سوره‌ها رخ داد';
+  static const String surahFetchUnexpectedError = 'خطای غیرمنتظره‌ای در دریافت سوره‌ها رخ داد.';
+
+  // UI App Titles & Theme Tooltips
+  static const String appTitle = 'قُرْآنٌ كَرِيمٌ';
+  static const String surahListScreenTitle = 'فهرست سوره‌ها';
+  static const String lightThemeTooltip = 'تم روشن';
+  static const String darkThemeTooltip = 'تم تاریک';
+
+  // UI Common String Constants
+  static const String ayahOfTheDayTitle = 'آیه روز';
+  static const String loadingAyahOfTheDay = 'در حال دریافت آیه روز...';
+  static const String retryButtonLabel = 'تلاش مجدد';
+  static const String readMoreButtonLabel = 'مشاهده بیشتر';
+  static const String collapseButtonLabel = 'بستن';
+  static const String surahLabel = 'سوره';
+  static const String ayahLabel = 'آیه';
+  static const String meccamTypeLabel = 'مکی';
+  static const String medinanTypeLabel = 'مدنی';
+
+  // Home Quick Access Titles & Messages
+  static const String quickAccessTitle = 'دسترسی سریع';
+  static const String surahListTitle = 'سوره‌ها';
+  static const String translationTitle = 'ترجمه';
+  static const String tafsirTitle = 'تفسیر ';
+  static const String homeWelcomeTitle = 'به اپلیکیشن قرآن کریم خوش آمدید';
+  static const String translationComingSoon = 'بخش ترجمه به زودی اضافه می‌شود';
+  static const String tafsirComingSoon = 'بخش تفسیر به زودی اضافه می‌شود';
+
+  // Surah List & Quran Reader Feature Constants
+  static const String surahListErrorTitle = 'خطا در بارگذاری اطلاعات';
+  static const String noSurahFound = 'سوره‌ای با این مشخصات یافت نشد.';
+  static const String ayahLoadError = 'خطا در بارگذاری آیات';
+  static const String noAyahFound = 'آیه‌ای یافت نشد.';
+  static const String searchHintText = 'جستجوی نام یا شماره سوره...';
+
+  // Reciter & Audio Playback Constants
+  static const String selectReciterTitle = 'انتخاب قاری قرآن';
+  static const String searchReciterHint = 'جستجوی قاری...';
+  static const String noReciterFound = 'هیچ قاری با این مشخصات یافت نشد.';
+  static const String reciterLoadError = 'خطا در بارگذاری لیست قاریان';
+  static const String defaultReciterSubtitle = 'قاری پیش‌فرض (شهریار پرهیزگار)';
+  static const String recitersCountLabel = 'تعداد قاریان:';
+  static const String closeButtonLabel = 'بستن';
+  static const String nowPlayingLabel = 'در حال پخش...';
+  static const String bufferingAudioLabel = 'در حال دریافت صوت...';
+  static const String audioPlaybackError = 'خطا در پخش صوت';
+  static const String selectReciterButtonLabel = 'انتخاب قاری';
+  static const String copyAyahTooltip = 'کپی متن آیه';
+  static const String shareAyahTooltip = 'اشتراک‌گذاری آیه';
+  static const String playAyahTooltip = 'پخش آیه';
+  static const String copyAyahSuccessMessage = 'متن آیه با موفقیت کپی شد';
+}

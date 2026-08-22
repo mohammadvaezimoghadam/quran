@@ -1,0 +1,220 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:flutter/services.dart';
+
+import '../../../../common/extensions/ayah_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../core/services/audio/audio_player_state.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../application/controllers/quran_audio_controller.dart';
+import '../../application/controllers/quran_display_settings_controller.dart';
+import '../../application/controllers/quran_reader_controller.dart';
+import '../../application/controllers/selected_ayah_action_provider.dart';
+import '../../domain/entities/ayah_entity.dart';
+import 'ayah_action_buttons.dart';
+import 'ayah_arabic_text.dart';
+import 'ayah_bottom_action_chips.dart';
+import 'ayah_translation_text.dart';
+import 'word_by_word_bottom_sheet.dart';
+
+/// Clean component for displaying an individual Ayah card.
+class AyahListItem extends ConsumerWidget {
+  final AyahEntity ayah;
+  final String surahName;
+  final int totalAyahsInSurah;
+  final VoidCallback? onBookmarkTap;
+  final VoidCallback? onPlayTap;
+  final VoidCallback? onShareTap;
+
+  const AyahListItem({
+    super.key,
+    required this.ayah,
+    required this.surahName,
+    required this.totalAyahsInSurah,
+    this.onBookmarkTap,
+    this.onPlayTap,
+    this.onShareTap,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Gate: Only consider highlight if audio is playing THIS surah
+    final isAudioForThisSurah = ref.watch(
+      quranAudioControllerProvider.select((s) => s.currentSurahId == ayah.surahId),
+    );
+
+    // Active playing Ayah subscription (gated by surah match)
+    final isPlayingAyah = isAudioForThisSurah && ref.watch(
+      activeAyahProvider.select((active) => active == ayah.ayahNumber),
+    );
+    final isAudioPlayingNow = isPlayingAyah && ref.watch(
+      quranAudioControllerProvider.select((s) => s.status == AudioStatus.playing),
+    );
+    final autoHighlight = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.autoHighlight),
+    );
+
+    // Selected Ayah for context action (copy/share/bookmark)
+    final isSelectedForAction = ref.watch(
+      selectedAyahActionProvider.select((selected) => selected == ayah.ayahNumber),
+    );
+
+    final isAudioActive = isPlayingAyah && autoHighlight;
+    final borderRadius = BorderRadius.circular(AppDimens.radiusSm);
+
+    return InkWell(
+      onTap: () {
+        final anySelected = ref.read(selectedAyahActionProvider) != null;
+        if (anySelected) {
+          // Tap anywhere dismisses the action menu
+          ref.read(selectedAyahActionProvider.notifier).clearSelection();
+        } else {
+          // Single tap plays/pauses ayah audio directly
+          final controller = ref.read(quranAudioControllerProvider.notifier);
+          if (isAudioPlayingNow) {
+            controller.pause();
+          } else {
+            // User explicitly chose this ayah — resume auto-scroll from here
+            controller.resumeAutoScrollAndSync();
+            controller.playAyah(
+              surahId: ayah.surahId,
+              ayahNumber: ayah.ayahNumber,
+              totalAyahsInSurah: totalAyahsInSurah,
+            );
+          }
+        }
+      },
+      onLongPress: () {
+        // Long Press opens context action menu for copy/share/bookmark
+        ref.read(selectedAyahActionProvider.notifier).selectAyah(ayah.ayahNumber);
+      },
+      borderRadius: borderRadius,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        margin: const EdgeInsets.symmetric(vertical: AppDimens.stackXs),
+        padding: const EdgeInsets.all(AppDimens.stackSmMd),
+        decoration: BoxDecoration(
+          color: isAudioActive
+              ? colorScheme.primary.withValues(alpha: 0.1)
+              : (isSelectedForAction
+                  ? colorScheme.surfaceContainerHigh
+                  : Colors.transparent),
+          borderRadius: borderRadius,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Stage 2 Action Bar: Animated fan-out when Ayah is focused
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: AyahActionButtons(
+                      isVisible: isSelectedForAction,
+                      isPlaying: isAudioPlayingNow,
+                      onPlayTap: () {
+                        final controller =
+                            ref.read(quranAudioControllerProvider.notifier);
+                        final audioState = ref.read(quranAudioControllerProvider);
+
+                        // Clear selection menu & resume auto-scroll so Re-Sync button does not appear
+                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        controller.resumeAutoScrollAndSync();
+
+                        if (isAudioPlayingNow) {
+                          controller.pause();
+                        } else if (audioState.status == AudioStatus.paused &&
+                            audioState.currentAyahNumber == ayah.ayahNumber) {
+                          controller.resume();
+                        } else {
+                          controller.playAyah(
+                            surahId: ayah.surahId,
+                            ayahNumber: ayah.ayahNumber,
+                            totalAyahsInSurah: totalAyahsInSurah,
+                          );
+                        }
+                      },
+                      onCopyTap: () async {
+                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        
+                        final shareableText = ayah.toShareableText(surahName: surahName);
+                        await Clipboard.setData(ClipboardData(text: shareableText));
+                        
+                        if (context.mounted) {
+                          AppSnackBar.showSuccess(
+                            context,
+                            'آیه با موفقیت کپی شد',
+                          );
+                        }
+                      },
+                      onBookmarkTap: () {
+                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        AppSnackBar.showInfo(
+                          context,
+                          'قابلیت نشانک‌گذاری آیه به زودی اضافه خواهد شد',
+                        );
+                      },
+                      onShareTap: () {
+                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        AppSnackBar.showInfo(
+                          context,
+                          'قابلیت اشتراک‌گذاری آیه به زودی اضافه خواهد شد',
+                        );
+                      },
+                    ),
+                  ),
+                  if (isSelectedForAction) AppDimens.stackSmMd.vSpace,
+                ],
+              ),
+            ),
+
+            // Main Arabic Ayah Text with Embedded Ayah Marker
+            AyahArabicText(
+              text: ayah.arabicText,
+              ayahNumber: ayah.ayahNumber,
+              isActive: isAudioActive,
+            ),
+
+            // Ayah Persian Translation
+            AyahTranslationText(
+              surahId: ayah.surahId,
+              ayahNumber: ayah.ayahNumber,
+              fallbackText: ayah.translationText ?? '',
+              isActive: isAudioActive,
+            ),
+
+            // Soft, subtle Bottom Action Chips (Tafsir & Vocabulary)
+            AyahBottomActionChips(
+              isVisible: isSelectedForAction,
+              onTafsirTap: () {
+                ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                AppSnackBar.showInfo(
+                  context,
+                  'تفسیر آیه به زودی اضافه خواهد شد',
+                );
+              },
+              onDictionaryTap: () {
+                ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                WordByWordBottomSheet.show(
+                  context, 
+                  surahId: ayah.surahId,
+                  surahName: surahName,
+                  ayahNumber: ayah.ayahNumber,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
