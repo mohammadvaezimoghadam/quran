@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/utils/arabic_text_helper.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import 'ayah_number_marker.dart';
@@ -50,7 +49,8 @@ class AyahArabicText extends ConsumerWidget {
       color: colorScheme.onSurface,
     );
 
-    // Fast-path: no custom harakat color → render as a single TextSpan.
+    final sanitizedText = ArabicTextHelper.removeAnnotationMarks(text);
+
     final bool useCustomColor = harakatColor != null &&
         harakatColor != colorScheme.onSurface;
 
@@ -59,7 +59,7 @@ class AyahArabicText extends ConsumerWidget {
     if (useCustomColor) {
       textChildren = [
         ...ArabicTextHelper.buildColoredSpans(
-          text: text,
+          text: sanitizedText,
           baseStyle: baseStyle,
           baseColor: colorScheme.onSurface,
           harakatColor: harakatColor,
@@ -67,7 +67,7 @@ class AyahArabicText extends ConsumerWidget {
       ];
     } else {
       textChildren = [
-        TextSpan(text: text),
+        TextSpan(text: sanitizedText),
       ];
     }
 

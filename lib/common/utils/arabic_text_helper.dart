@@ -50,11 +50,26 @@ abstract final class ArabicTextHelper {
   /// pause mark, or small high/low auxiliary mark (e.g. Small Low Meem for Iqlab,
   /// Small High Stop marks, Small High Noon/Yaa, etc.).
   static bool isAnnotationOrPauseMark(int rune) {
-    return (rune >= 0x0610 && rune <= 0x061A) ||
-        (rune >= 0x06D6 && rune <= 0x06DC) ||
-        (rune >= 0x06DF && rune <= 0x06E4) ||
-        (rune >= 0x06E7 && rune <= 0x06E8) ||
-        (rune >= 0x06EA && rune <= 0x06ED);
+    return rune == 0xFFFD ||
+        (rune >= 0x0600 && rune <= 0x0605) ||
+        (rune >= 0x0610 && rune <= 0x061A) ||
+        (rune >= 0x06D6 && rune <= 0x06ED) ||
+        (rune >= 0x08D3 && rune <= 0x08FF);
+  }
+
+  /// Cleans corrupted/unprintable characters like U+FFFD (Unicode replacement character)
+  /// and invalid control characters from any text (Arabic or Persian translation).
+  static String sanitizeText(String text) {
+    if (text.isEmpty) return text;
+    final buf = StringBuffer();
+    for (final rune in text.runes) {
+      if (rune == 0xFFFD ||
+          (rune >= 0x0000 && rune <= 0x001F && rune != 0x000A && rune != 0x000D)) {
+        continue;
+      }
+      buf.writeCharCode(rune);
+    }
+    return buf.toString();
   }
 
   /// Strips Quranic annotation marks, pause signs, and small auxiliary marks

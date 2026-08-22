@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/utils/arabic_text_helper.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
@@ -36,8 +37,9 @@ class AyahTranslationText extends ConsumerWidget {
 
     // Isolated subscription to ONLY the translation map for this surah
     final translationsAsync = ref.watch(surahTranslationsProvider(surahId));
-    final translationText =
+    final rawTranslation =
         translationsAsync.value?[ayahNumber] ?? fallbackText;
+    final translationText = ArabicTextHelper.sanitizeText(rawTranslation);
 
     if (translationText.isEmpty) {
       return const SizedBox.shrink();

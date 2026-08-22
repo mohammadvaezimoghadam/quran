@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../ayah_service.dart';
 import '../states/quran_reader_state.dart';
@@ -9,16 +10,17 @@ final quranReaderControllerProvider =
 );
 
 class QuranReaderController extends Notifier<QuranReaderState> {
-  int? _currentSurahId;
-
   @override
   QuranReaderState build() {
     return const QuranReaderState();
   }
 
   Future<void> fetchAyahs(int surahId) async {
-    _currentSurahId = surahId;
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(
+      currentSurahId: surahId,
+      isLoading: true,
+      errorMessage: null,
+    );
 
     final service = ref.read(ayahServiceProvider);
     final result = await service.getAyahsBySurah(surahId);
@@ -37,9 +39,7 @@ class QuranReaderController extends Notifier<QuranReaderState> {
   }
 
   void retry() {
-    if (_currentSurahId != null) {
-      fetchAyahs(_currentSurahId!);
-    }
+    fetchAyahs(state.currentSurahId);
   }
 }
 
@@ -54,5 +54,20 @@ class ActiveAyahNotifier extends Notifier<int?> {
 
 final activeAyahProvider = NotifierProvider<ActiveAyahNotifier, int?>(
   ActiveAyahNotifier.new,
+);
+
+class ActiveItemPositionsListenerNotifier
+    extends Notifier<ItemPositionsListener?> {
+  @override
+  ItemPositionsListener? build() => null;
+
+  void setListener(ItemPositionsListener? listener) {
+    state = listener;
+  }
+}
+
+final activeItemPositionsListenerProvider = NotifierProvider<
+    ActiveItemPositionsListenerNotifier, ItemPositionsListener?>(
+  ActiveItemPositionsListenerNotifier.new,
 );
 

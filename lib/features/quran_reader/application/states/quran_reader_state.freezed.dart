@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$QuranReaderState {
 
- bool get isLoading; List<AyahEntity> get ayahs; String? get errorMessage;
+ bool get isLoading; int get currentSurahId; List<AyahEntity> get ayahs; String? get errorMessage;
 /// Create a copy of QuranReaderState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $QuranReaderStateCopyWith<QuranReaderState> get copyWith => _$QuranReaderStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuranReaderState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other.ayahs, ayahs)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuranReaderState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.currentSurahId, currentSurahId) || other.currentSurahId == currentSurahId)&&const DeepCollectionEquality().equals(other.ayahs, ayahs)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(ayahs),errorMessage);
+int get hashCode => Object.hash(runtimeType,isLoading,currentSurahId,const DeepCollectionEquality().hash(ayahs),errorMessage);
 
 @override
 String toString() {
-  return 'QuranReaderState(isLoading: $isLoading, ayahs: $ayahs, errorMessage: $errorMessage)';
+  return 'QuranReaderState(isLoading: $isLoading, currentSurahId: $currentSurahId, ayahs: $ayahs, errorMessage: $errorMessage)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $QuranReaderStateCopyWith<$Res>  {
   factory $QuranReaderStateCopyWith(QuranReaderState value, $Res Function(QuranReaderState) _then) = _$QuranReaderStateCopyWithImpl;
 @useResult
 $Res call({
- bool isLoading, List<AyahEntity> ayahs, String? errorMessage
+ bool isLoading, int currentSurahId, List<AyahEntity> ayahs, String? errorMessage
 });
 
 
@@ -62,10 +62,11 @@ class _$QuranReaderStateCopyWithImpl<$Res>
 
 /// Create a copy of QuranReaderState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? ayahs = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? currentSurahId = null,Object? ayahs = null,Object? errorMessage = freezed,}) {
   return _then(_self.copyWith(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
-as bool,ayahs: null == ayahs ? _self.ayahs : ayahs // ignore: cast_nullable_to_non_nullable
+as bool,currentSurahId: null == currentSurahId ? _self.currentSurahId : currentSurahId // ignore: cast_nullable_to_non_nullable
+as int,ayahs: null == ayahs ? _self.ayahs : ayahs // ignore: cast_nullable_to_non_nullable
 as List<AyahEntity>,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -152,10 +153,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  List<AyahEntity> ayahs,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  int currentSurahId,  List<AyahEntity> ayahs,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QuranReaderState() when $default != null:
-return $default(_that.isLoading,_that.ayahs,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.currentSurahId,_that.ayahs,_that.errorMessage);case _:
   return orElse();
 
 }
@@ -173,10 +174,10 @@ return $default(_that.isLoading,_that.ayahs,_that.errorMessage);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  List<AyahEntity> ayahs,  String? errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  int currentSurahId,  List<AyahEntity> ayahs,  String? errorMessage)  $default,) {final _that = this;
 switch (_that) {
 case _QuranReaderState():
-return $default(_that.isLoading,_that.ayahs,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.currentSurahId,_that.ayahs,_that.errorMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -193,10 +194,10 @@ return $default(_that.isLoading,_that.ayahs,_that.errorMessage);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  List<AyahEntity> ayahs,  String? errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  int currentSurahId,  List<AyahEntity> ayahs,  String? errorMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _QuranReaderState() when $default != null:
-return $default(_that.isLoading,_that.ayahs,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.currentSurahId,_that.ayahs,_that.errorMessage);case _:
   return null;
 
 }
@@ -208,10 +209,11 @@ return $default(_that.isLoading,_that.ayahs,_that.errorMessage);case _:
 
 
 class _QuranReaderState implements QuranReaderState {
-  const _QuranReaderState({this.isLoading = true, final  List<AyahEntity> ayahs = const [], this.errorMessage}): _ayahs = ayahs;
+  const _QuranReaderState({this.isLoading = true, this.currentSurahId = 1, final  List<AyahEntity> ayahs = const [], this.errorMessage}): _ayahs = ayahs;
   
 
 @override@JsonKey() final  bool isLoading;
+@override@JsonKey() final  int currentSurahId;
  final  List<AyahEntity> _ayahs;
 @override@JsonKey() List<AyahEntity> get ayahs {
   if (_ayahs is EqualUnmodifiableListView) return _ayahs;
@@ -231,16 +233,16 @@ _$QuranReaderStateCopyWith<_QuranReaderState> get copyWith => __$QuranReaderStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuranReaderState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other._ayahs, _ayahs)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuranReaderState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.currentSurahId, currentSurahId) || other.currentSurahId == currentSurahId)&&const DeepCollectionEquality().equals(other._ayahs, _ayahs)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(_ayahs),errorMessage);
+int get hashCode => Object.hash(runtimeType,isLoading,currentSurahId,const DeepCollectionEquality().hash(_ayahs),errorMessage);
 
 @override
 String toString() {
-  return 'QuranReaderState(isLoading: $isLoading, ayahs: $ayahs, errorMessage: $errorMessage)';
+  return 'QuranReaderState(isLoading: $isLoading, currentSurahId: $currentSurahId, ayahs: $ayahs, errorMessage: $errorMessage)';
 }
 
 
@@ -251,7 +253,7 @@ abstract mixin class _$QuranReaderStateCopyWith<$Res> implements $QuranReaderSta
   factory _$QuranReaderStateCopyWith(_QuranReaderState value, $Res Function(_QuranReaderState) _then) = __$QuranReaderStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isLoading, List<AyahEntity> ayahs, String? errorMessage
+ bool isLoading, int currentSurahId, List<AyahEntity> ayahs, String? errorMessage
 });
 
 
@@ -268,10 +270,11 @@ class __$QuranReaderStateCopyWithImpl<$Res>
 
 /// Create a copy of QuranReaderState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? ayahs = null,Object? errorMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? currentSurahId = null,Object? ayahs = null,Object? errorMessage = freezed,}) {
   return _then(_QuranReaderState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
-as bool,ayahs: null == ayahs ? _self._ayahs : ayahs // ignore: cast_nullable_to_non_nullable
+as bool,currentSurahId: null == currentSurahId ? _self.currentSurahId : currentSurahId // ignore: cast_nullable_to_non_nullable
+as int,ayahs: null == ayahs ? _self._ayahs : ayahs // ignore: cast_nullable_to_non_nullable
 as List<AyahEntity>,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
