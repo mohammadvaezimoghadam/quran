@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class AppSnackBar {
@@ -38,14 +39,14 @@ class AppSnackBar {
   }
 
   static void showSuccess(BuildContext context, String message) {
-    _show(context, message, Colors.green.shade600, Icons.check_circle_outline);
+    _show(context, message, Colors.green.shade600, CupertinoIcons.checkmark_circle);
   }
 
   static void showError(BuildContext context, String message) {
-    _show(context, message, Colors.red.shade600, Icons.error_outline);
+    _show(context, message, Colors.red.shade600, CupertinoIcons.exclamationmark_circle);
   }
 
   static void showInfo(BuildContext context, String message) {
-    _show(context, message, Colors.blue.shade600, Icons.info_outline);
+    _show(context, message, Colors.blue.shade600, CupertinoIcons.info_circle);
   }
 }

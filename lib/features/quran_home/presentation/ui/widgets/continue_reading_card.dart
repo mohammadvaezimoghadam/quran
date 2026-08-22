@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -162,8 +163,8 @@ class ContinueReadingCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              Icons.chevron_right_rounded,
-                              size: 20,
+                              CupertinoIcons.chevron_back,
+                              size: 18,
                               color: buttonTextColor,
                             ),
                           ],
@@ -210,7 +211,7 @@ class ContinueReadingCard extends StatelessWidget {
                           ),
                           4.vSpace,
                           Icon(
-                            Icons.check_rounded,
+                            CupertinoIcons.checkmark,
                             size: 22,
                             color: gaugeColor,
                           ),

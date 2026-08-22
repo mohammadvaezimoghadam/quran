@@ -52,7 +52,7 @@ class _TashkeelColorSelectorTileState extends State<TashkeelColorSelectorTile> {
               Row(
                 children: [
                   Icon(
-                    Icons.color_lens_outlined,
+                    CupertinoIcons.color_filter,
                     size: 18.0,
                     color: widget.accentColor,
                   ),

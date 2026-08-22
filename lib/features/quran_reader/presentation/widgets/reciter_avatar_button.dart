@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -130,7 +131,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                     AppCachedNetworkImage.circle(
                       imageUrl: imageUrl,
                       size: avatarSize,
-                      fallbackIcon: Icons.person_rounded,
+                      fallbackIcon: CupertinoIcons.person_fill,
                       backgroundColor: isPlaying
                           ? colorScheme.primary
                           : colorScheme.surfaceContainerHigh,

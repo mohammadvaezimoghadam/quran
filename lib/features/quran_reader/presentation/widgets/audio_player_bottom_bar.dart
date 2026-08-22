@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -96,10 +97,10 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                       children: [
                         // Controls Grouped on Visual Left
                         IconButton(
-                          iconSize: 20,
+                          iconSize: 18,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
-                          icon: const Icon(Icons.close_rounded),
+                          icon: const Icon(CupertinoIcons.xmark),
                           onPressed: () => audioController.stop(),
                         ),
 
@@ -126,13 +127,13 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                         ),
 
                         IconButton(
-                          iconSize: 20,
+                          iconSize: 18,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
                           icon: Icon(
                             audioState.isAutoPlayNext
-                                ? Icons.repeat_one_on_rounded
-                                : Icons.repeat_one_rounded,
+                                ? CupertinoIcons.repeat_1
+                                : CupertinoIcons.repeat,
                             color: audioState.isAutoPlayNext
                                 ? colorScheme.primary
                                 : colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
@@ -176,8 +177,8 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                         ),
                                         const SizedBox(width: 2),
                                         Icon(
-                                          Icons.keyboard_arrow_down_rounded,
-                                          size: 14,
+                                          CupertinoIcons.chevron_down,
+                                          size: 13,
                                           color: colorScheme.primary.withValues(alpha: 0.75),
                                         ),
                                       ],

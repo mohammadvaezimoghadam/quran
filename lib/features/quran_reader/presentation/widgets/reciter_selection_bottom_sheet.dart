@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -188,9 +189,9 @@ class _ReciterSelectionBottomSheetState
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.record_voice_over_rounded,
+                      CupertinoIcons.mic_fill,
                       color: colorScheme.primary,
-                      size: 22.0,
+                      size: 20.0,
                     ),
                   ),
                   12.hSpace,
@@ -223,9 +224,9 @@ class _ReciterSelectionBottomSheetState
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: Icon(
-                      Icons.close_rounded,
+                      CupertinoIcons.xmark,
                       color: colorScheme.onSurfaceVariant,
-                      size: 20.0,
+                      size: 18.0,
                     ),
                   ),
                 ],
@@ -358,7 +359,7 @@ class _ReciterSelectionBottomSheetState
                                   child: AppCachedNetworkImage.circle(
                                     imageUrl: group.imageUrl,
                                     size: 52.0,
-                                    fallbackIcon: Icons.person_rounded,
+                                    fallbackIcon: CupertinoIcons.person_fill,
                                     backgroundColor: isGroupSelected
                                         ? colorScheme.primary
                                         : colorScheme.surfaceContainerHigh,
@@ -432,8 +433,8 @@ class _ReciterSelectionBottomSheetState
                                             children: [
                                               Icon(
                                                 isVSelected
-                                                    ? Icons.check_circle_rounded
-                                                    : Icons.circle_outlined,
+                                                    ? CupertinoIcons.checkmark_circle_fill
+                                                    : CupertinoIcons.circle,
                                                 size: 16,
                                                 color: isVSelected
                                                     ? colorScheme.primary
@@ -500,8 +501,8 @@ class _ReciterSelectionBottomSheetState
                                             ),
                                             2.hSpace,
                                             Icon(
-                                              Icons.arrow_drop_down_rounded,
-                                              size: 14.0,
+                                              CupertinoIcons.chevron_down,
+                                              size: 12.0,
                                               color: isGroupSelected
                                                   ? colorScheme.primary
                                                   : colorScheme.primary

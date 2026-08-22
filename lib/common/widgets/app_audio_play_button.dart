@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -60,9 +61,9 @@ class AppAudioPlayButton extends StatelessWidget {
                     ),
                   )
                 : Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
                     color: innerSymbolColor,
-                    size: iconSize * 0.62,
+                    size: iconSize * 0.55,
                   ),
           ),
         ),

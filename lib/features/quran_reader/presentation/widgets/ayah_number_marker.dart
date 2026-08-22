@@ -44,8 +44,8 @@ class AyahNumberMarker extends ConsumerWidget {
     );
     final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -54,33 +54,39 @@ class AyahNumberMarker extends ConsumerWidget {
           // Right Bracket (Ra_bracket)
           SvgPicture.asset(
             'assets/icons/ic_bracket_right.svg',
-            height: 24, // Adjust this as needed for proper scale
+            height: 24,
             colorFilter: ColorFilter.mode(bracketColor, BlendMode.srcIn),
           ),
           
-          const SizedBox(width: 2), // Small gap
+          const SizedBox(width: 3), // Balanced gap
           
-          // Ayah Number
-          Padding(
-            padding: const EdgeInsets.only(top: 2.0), // Tiny optical adjustment
-            child: Text(
-              number.toPersianDigit(),
-              style: TextStyle(
-                color: numberColor,
-                fontSize: 20, 
-                fontFamily: fontFamily, // Dynamically matches the Arabic verse font!
-                fontWeight: FontWeight.bold,
-                height: 1.0,
+          // Ayah Number - Vertically centered exactly in the middle of brackets
+          SizedBox(
+            height: 24,
+            child: Center(
+              child: Transform.translate(
+                offset: const Offset(0, -5.5),
+                child: Text(
+                  number.toPersianDigit(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: numberColor,
+                    fontSize: 18,
+                    fontFamily: fontFamily,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
+                ),
               ),
             ),
           ),
           
-          const SizedBox(width: 2), // Small gap
+          const SizedBox(width: 3), // Balanced gap
           
           // Left Bracket (La_bracket)
           SvgPicture.asset(
             'assets/icons/ic_bracket_left.svg',
-            height: 24, // Adjust this as needed for proper scale
+            height: 24,
             colorFilter: ColorFilter.mode(bracketColor, BlendMode.srcIn),
           ),
         ],

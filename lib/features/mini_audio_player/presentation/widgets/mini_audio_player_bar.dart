@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -111,8 +112,8 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                   child: const Padding(
                     padding: EdgeInsets.all(4.0),
                     child: Icon(
-                      Icons.close_rounded,
-                      size: 15,
+                      CupertinoIcons.xmark,
+                      size: 14,
                       color: Colors.white60,
                     ),
                   ),
@@ -195,8 +196,8 @@ class _MiniPlayPauseButtonWithProgress extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                size: 14,
+                isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
+                size: 13,
                 color: Colors.white,
               ),
             ),

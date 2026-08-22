@@ -39,6 +39,7 @@ class SurahInfoContent extends ConsumerWidget {
               surah.name,
               style: AppTypography.surahTitle.copyWith(
                 fontFamily: fontFamily,
+                height: 1.4,
                 color: isDark ? AppColors.softGoldText : AppColors.primary,
               ),
             ),
@@ -56,7 +57,7 @@ class SurahInfoContent extends ConsumerWidget {
           ],
         ),
 
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
 
         // Subtitle: Kaaba Icon + Makki/Madani • Juz & Hizb • Ayah Count Badge
         Row(

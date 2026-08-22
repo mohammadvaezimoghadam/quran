@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../common/constants/app_constants.dart';
@@ -20,7 +21,7 @@ class SurahErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const Icon(CupertinoIcons.exclamationmark_circle, color: Colors.red, size: 48),
             const SizedBox(height: 16),
             Text(
               errorMessage,
@@ -30,7 +31,7 @@ class SurahErrorView extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(CupertinoIcons.refresh),
               label: const Text(AppConstants.retryButtonLabel),
             ),
           ],

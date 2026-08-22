@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -135,9 +136,9 @@ class QuickSettingsDrawer extends ConsumerWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        Icons.close_rounded,
+                        CupertinoIcons.xmark,
                         color: textSecondary,
-                        size: 18,
+                        size: 16,
                       ),
                     ),
                   ),
@@ -164,7 +165,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
                             context: context,
                             title: 'اندازه متن عربی',
                             valueLabel: '${settings.arabicFontSize.toInt()} pt',
-                            icon: Icons.format_size_rounded,
+                            icon: CupertinoIcons.textformat_size,
                             value: settings.arabicFontSize,
                             min: 18,
                             max: 42,
@@ -207,7 +208,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
                           _buildSwitchTile(
                             title: 'نمایش ترجمه',
                             subtitle: 'نمایش ترجمه فارسی زیر آیه‌ها',
-                            icon: Icons.subtitles_outlined,
+                            icon: CupertinoIcons.captions_bubble,
                             value: settings.showTranslation,
                             accentColor: accentColor,
                             textPrimary: textPrimary,
@@ -230,7 +231,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
                                         title: 'اندازه متن ترجمه',
                                         valueLabel:
                                             '${settings.translationFontSize.toInt()} pt',
-                                        icon: Icons.translate_rounded,
+                                        icon: CupertinoIcons.chat_bubble_text,
                                         value: settings.translationFontSize,
                                         min: 12,
                                         max: 26,
@@ -286,7 +287,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
                           _buildSwitchTile(
                             title: 'نمایش شماره آیه‌ها',
                             subtitle: 'نمایش نشانگر شماره در پایان هر آیه',
-                            icon: Icons.pin_outlined,
+                            icon: CupertinoIcons.number,
                             value: settings.showAyahNumbers,
                             accentColor: accentColor,
                             textPrimary: textPrimary,
@@ -300,7 +301,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
                           _buildSwitchTile(
                             title: 'هایلایت خودکار پخش',
                             subtitle: 'هایلایت رنگی آیه در حال تلاوت',
-                            icon: Icons.highlight_outlined,
+                            icon: CupertinoIcons.sparkles,
                             value: settings.autoHighlight,
                             accentColor: accentColor,
                             textPrimary: textPrimary,
@@ -319,7 +320,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
                             notifier.resetToDefaults();
                           },
                           icon: Icon(
-                            Icons.restart_alt_rounded,
+                            CupertinoIcons.refresh,
                             size: 16,
                             color: textSecondary,
                           ),
@@ -519,7 +520,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.font_download_outlined, size: 18.0, color: accentColor),
+              Icon(CupertinoIcons.textformat, size: 18.0, color: accentColor),
               8.0.hSpace,
               Text(
                 'نوع خط عربی',
@@ -598,7 +599,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
           Row(
             children: [
               Icon(
-                isDark ? Icons.nightlight_round_rounded : Icons.wb_sunny_rounded,
+                isDark ? CupertinoIcons.moon_fill : CupertinoIcons.sun_max_fill,
                 size: 18.0,
                 color: accentColor,
               ),
@@ -651,7 +652,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.menu_book_outlined, size: 18.0, color: accentColor),
+              Icon(CupertinoIcons.book, size: 18.0, color: accentColor),
               8.0.hSpace,
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -692,8 +693,8 @@ class QuickSettingsDrawer extends ConsumerWidget {
                     ? settings.translatorName
                     : _translators.first,
                 dropdownColor: colorScheme.surfaceContainerHigh,
-                icon: Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 18, color: accentColor),
+                icon: Icon(CupertinoIcons.chevron_down,
+                    size: 16, color: accentColor),
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 11,

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_dimens.dart';
@@ -79,7 +80,7 @@ class _AyahActionButtonsState extends State<AyahActionButtons>
     final List<_ActionItem> secondaryItems = [];
     if (widget.onCopyTap != null) {
       secondaryItems.add(_ActionItem(
-        icon: Icons.copy_rounded,
+        icon: CupertinoIcons.doc_on_doc,
         onTap: widget.onCopyTap,
         tooltip: 'کپی آیه',
       ));
@@ -87,15 +88,15 @@ class _AyahActionButtonsState extends State<AyahActionButtons>
     if (widget.onBookmarkTap != null) {
       secondaryItems.add(_ActionItem(
         icon: widget.isBookmarked
-            ? Icons.bookmark_rounded
-            : Icons.bookmark_add_outlined,
+            ? CupertinoIcons.bookmark_fill
+            : CupertinoIcons.bookmark,
         onTap: widget.onBookmarkTap,
         tooltip: 'نشانک',
       ));
     }
     if (widget.onShareTap != null) {
       secondaryItems.add(_ActionItem(
-        icon: Icons.share_outlined,
+        icon: CupertinoIcons.share,
         onTap: widget.onShareTap,
         tooltip: 'اشتراک‌گذاری',
       ));
@@ -147,8 +148,8 @@ class _AyahActionButtonsState extends State<AyahActionButtons>
                 child: _buildActionButton(
                   context: context,
                   icon: widget.isPlaying
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
+                      ? CupertinoIcons.pause_fill
+                      : CupertinoIcons.play_fill,
                   onTap: widget.onPlayTap,
                   colorScheme: colorScheme,
                   tooltip: 'پخش آیه',

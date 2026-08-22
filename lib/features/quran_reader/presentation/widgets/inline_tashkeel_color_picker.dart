@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
 
@@ -120,7 +121,7 @@ class _InlineTashkeelColorPickerState extends State<InlineTashkeelColorPicker> {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.brightness_6_outlined,
+                          CupertinoIcons.sun_max,
                           size: 14,
                           color: widget.textSecondary,
                         ),
@@ -173,8 +174,8 @@ class _InlineTashkeelColorPickerState extends State<InlineTashkeelColorPicker> {
                       onTap: widget.onClose,
                       behavior: HitTestBehavior.opaque,
                       child: Icon(
-                        Icons.close_rounded,
-                        size: 18,
+                        CupertinoIcons.xmark,
+                        size: 16,
                         color: widget.textSecondary,
                       ),
                     ),

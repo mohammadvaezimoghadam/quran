@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// A reusable, cached network image component wrapping [CachedNetworkImage]
@@ -138,7 +139,7 @@ class _AppCircleCachedNetworkImage extends AppCachedNetworkImage {
     super.placeholder,
     super.errorWidget,
     super.fallbackText,
-    super.fallbackIcon = Icons.person_rounded,
+    super.fallbackIcon = CupertinoIcons.person_fill,
     super.backgroundColor,
   }) : super(
           width: size,

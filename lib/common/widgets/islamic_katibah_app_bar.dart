@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/app_constants.dart';
@@ -104,8 +105,8 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
                       if (Navigator.of(context).canPop())
                         IconButton(
                           icon: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 18,
+                            CupertinoIcons.chevron_forward,
+                            size: 20,
                             color: softGoldText,
                           ),
                           tooltip: 'بازگشت',
@@ -196,7 +197,7 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
             prefixIcon: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Icon(
-                Icons.search_rounded,
+                CupertinoIcons.search,
                 color: textGold.withValues(alpha: 0.85),
                 size: 20,
               ),
@@ -213,7 +214,7 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
                       minHeight: 36,
                     ),
                     icon: const Icon(
-                      Icons.clear_rounded,
+                      CupertinoIcons.xmark_circle_fill,
                       size: 18,
                       color: Colors.white70,
                     ),

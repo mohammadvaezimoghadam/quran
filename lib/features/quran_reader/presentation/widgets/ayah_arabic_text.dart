@@ -75,13 +75,9 @@ class AyahArabicText extends ConsumerWidget {
     textChildren.add(
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,
-        child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: AppDimens.stackSmMd),
-          child: AyahNumberMarker(
-            number: ayahNumber,
-            isActive: isActive,
-          ),
+        child: AyahNumberMarker(
+          number: ayahNumber,
+          isActive: isActive,
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/size_extension.dart';
@@ -126,7 +127,7 @@ class AppHeaderCard extends StatelessWidget {
             top: -20,
             right: -20,
             child: Icon(
-              Icons.mosque_rounded,
+              CupertinoIcons.building_2_fill,
               color: turquoiseAccent.withValues(alpha: 0.08),
               size: 140,
             ),
@@ -135,7 +136,7 @@ class AppHeaderCard extends StatelessWidget {
             bottom: -30,
             left: -20,
             child: Icon(
-              Icons.auto_awesome_mosaic_rounded,
+              CupertinoIcons.sparkles,
               color: borderGold.withValues(alpha: 0.06),
               size: 130,
             ),
@@ -172,7 +173,7 @@ class AppHeaderCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.star_rounded,
+                            CupertinoIcons.star_fill,
                             size: 12,
                             color: softGold,
                           ),
@@ -235,7 +236,7 @@ class AppHeaderCard extends StatelessWidget {
                     children: [
                       if (revelationType != null) ...[
                         _buildBadge(
-                          icon: Icons.mosque_outlined,
+                          icon: CupertinoIcons.building_2_fill,
                           label: _translateType(revelationType!),
                           accentColor: turquoiseAccent,
                         ),
@@ -243,7 +244,7 @@ class AppHeaderCard extends StatelessWidget {
                       ],
                       if (ayahCount != null) ...[
                         _buildBadge(
-                          icon: Icons.format_list_numbered_rtl_rounded,
+                          icon: CupertinoIcons.list_number,
                           label: '$ayahCount آیه',
                           accentColor: softGold,
                         ),
@@ -251,7 +252,7 @@ class AppHeaderCard extends StatelessWidget {
                       ],
                       if (juzNumber != null) ...[
                         _buildBadge(
-                          icon: Icons.auto_stories_rounded,
+                          icon: CupertinoIcons.book,
                           label: 'جزء $juzNumber',
                           accentColor: brightTurquoise,
                         ),
@@ -274,7 +275,7 @@ class AppHeaderCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10.0),
                         child: Icon(
-                          Icons.all_inclusive_rounded,
+                          CupertinoIcons.infinite,
                           color: softGold.withValues(alpha: 0.8),
                           size: 16,
                         ),

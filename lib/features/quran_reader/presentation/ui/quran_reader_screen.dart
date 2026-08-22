@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -137,7 +138,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
         actions: [
           IconButton(
             icon: const Icon(
-              Icons.tune_rounded,
+              CupertinoIcons.slider_horizontal_3,
               size: 20,
               color: Color(0xFFF4E0A5),
             ),

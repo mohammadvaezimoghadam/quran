@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -60,7 +61,7 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
-              Icons.wifi_off_rounded,
+              CupertinoIcons.wifi_slash,
               color: AppColors.error,
               size: AppDimens.iconMd,
             ),
@@ -85,7 +86,7 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
                     borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                   ),
                 ),
-                icon: const Icon(Icons.refresh_rounded, size: AppDimens.iconXs),
+                icon: const Icon(CupertinoIcons.refresh, size: AppDimens.iconXs),
                 label: const Text(
                   AppConstants.retryButtonLabel,
                   style: AppTypography.buttonLabel,
@@ -151,7 +152,7 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.auto_awesome_rounded,
+                      CupertinoIcons.sparkles,
                       color: Colors.white.withValues(alpha: 0.80),
                       size: AppDimens.iconSm,
                     ),
@@ -264,7 +265,7 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
                       duration: animationDuration,
                       curve: animationCurve,
                       child: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
+                        CupertinoIcons.chevron_down,
                         color: AppColors.secondaryContainer,
                         size: AppDimens.iconXs,
                       ),
