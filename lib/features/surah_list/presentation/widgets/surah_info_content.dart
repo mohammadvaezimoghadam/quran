@@ -37,9 +37,7 @@ class SurahInfoContent extends ConsumerWidget {
           children: [
             Text(
               surah.name,
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
+              style: AppTypography.surahTitle.copyWith(
                 fontFamily: fontFamily,
                 color: isDark ? AppColors.softGoldText : AppColors.primary,
               ),
@@ -50,9 +48,7 @@ class SurahInfoContent extends ConsumerWidget {
                 '(${surah.englishName})',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontFamily: AppTypography.fontFamily,
+                style: AppTypography.surahSubtitle.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.55),
                 ),
               ),
@@ -78,10 +74,8 @@ class SurahInfoContent extends ConsumerWidget {
             const SizedBox(width: 4),
             Text(
               surah.revelationTypeFa,
-              style: TextStyle(
-                fontSize: 11,
+              style: AppTypography.surahMetadata.copyWith(
                 fontWeight: FontWeight.w600,
-                fontFamily: AppTypography.fontFamily,
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
               ),
             ),
@@ -89,8 +83,7 @@ class SurahInfoContent extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 5.0),
               child: Text(
                 '•',
-                style: TextStyle(
-                  fontSize: 11,
+                style: AppTypography.surahMetadata.copyWith(
                   color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 ),
               ),
@@ -99,13 +92,10 @@ class SurahInfoContent extends ConsumerWidget {
             // Juz Info
             Text(
               'جزء ${surah.startJuz}',
-              style: TextStyle(
-                fontSize: 11,
-                fontFamily: AppTypography.fontFamily,
+              style: AppTypography.surahMetadata.copyWith(
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ),
-
 
             const Spacer(),
 

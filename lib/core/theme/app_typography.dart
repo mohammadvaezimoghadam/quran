@@ -85,10 +85,26 @@ class AppTypography {
   /// Surah Titles and Main Page Headers
   static const TextStyle surahTitle = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: FontWeight.bold,
-    height: 1.4,
+    height: 1.3,
     color: AppColors.onSurface,
+  );
+
+  /// Surah Card English Title / Subtitle Style
+  static const TextStyle surahSubtitle = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    color: AppColors.outline,
+  );
+
+  /// Surah Card Metadata (Makki/Madani, Juz) Style
+  static const TextStyle surahMetadata = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    color: AppColors.onSurfaceVariant,
   );
 
   /// Katibah Header Title Style
