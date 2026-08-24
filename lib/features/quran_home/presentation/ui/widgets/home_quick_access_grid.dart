@@ -6,6 +6,7 @@ import '../../../../../common/constants/app_constants.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/routes/route_name.dart';
 import '../../../../../core/theme/app_dimens.dart';
+import 'translation_selection_bottom_sheet.dart';
 
 /// Quick Access Action Item Model
 class _QuickAccessItem {
@@ -35,14 +36,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
       _QuickAccessItem(
         title: AppConstants.translationTitle,
         svgAssetPath: 'assets/icons/ic_translation.svg',
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppConstants.translationComingSoon),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
+        onTap: () => TranslationSelectionBottomSheet.show(context),
       ),
       _QuickAccessItem(
         title: AppConstants.tafsirTitle,

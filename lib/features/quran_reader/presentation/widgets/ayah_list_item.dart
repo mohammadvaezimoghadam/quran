@@ -44,23 +44,36 @@ class AyahListItem extends ConsumerWidget {
 
     // Gate: Only consider highlight if audio is playing THIS surah
     final isAudioForThisSurah = ref.watch(
-      quranAudioControllerProvider.select((s) => s.currentSurahId == ayah.surahId),
+      quranAudioControllerProvider.select(
+        (s) => s.currentSurahId == ayah.surahId,
+      ),
     );
 
     // Active playing Ayah subscription (gated by surah match)
-    final isPlayingAyah = isAudioForThisSurah && ref.watch(
-      activeAyahProvider.select((active) => active == ayah.ayahNumber),
-    );
-    final isAudioPlayingNow = isPlayingAyah && ref.watch(
-      quranAudioControllerProvider.select((s) => s.status == AudioStatus.playing),
-    );
+    final isPlayingAyah =
+        isAudioForThisSurah &&
+        ref.watch(
+          activeAyahProvider.select((active) => active == ayah.ayahNumber),
+        );
+    final isAudioPlayingNow =
+        isPlayingAyah &&
+        ref.watch(
+          quranAudioControllerProvider.select(
+            (s) => s.status == AudioStatus.playing,
+          ),
+        );
     final autoHighlight = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.autoHighlight),
+    );
+    final showArabicText = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.showArabicText),
     );
 
     // Selected Ayah for context action (copy/share/bookmark)
     final isSelectedForAction = ref.watch(
-      selectedAyahActionProvider.select((selected) => selected == ayah.ayahNumber),
+      selectedAyahActionProvider.select(
+        (selected) => selected == ayah.ayahNumber,
+      ),
     );
 
     final isAudioActive = isPlayingAyah && autoHighlight;
@@ -90,7 +103,9 @@ class AyahListItem extends ConsumerWidget {
       },
       onLongPress: () {
         // Long Press opens context action menu for copy/share/bookmark
-        ref.read(selectedAyahActionProvider.notifier).selectAyah(ayah.ayahNumber);
+        ref
+            .read(selectedAyahActionProvider.notifier)
+            .selectAyah(ayah.ayahNumber);
       },
       borderRadius: borderRadius,
       child: AnimatedContainer(
@@ -102,8 +117,8 @@ class AyahListItem extends ConsumerWidget {
           color: isAudioActive
               ? colorScheme.primary.withValues(alpha: 0.1)
               : (isSelectedForAction
-                  ? colorScheme.surfaceContainerHigh
-                  : Colors.transparent),
+                    ? colorScheme.surfaceContainerHigh
+                    : Colors.transparent),
           borderRadius: borderRadius,
         ),
         child: Column(
@@ -122,12 +137,17 @@ class AyahListItem extends ConsumerWidget {
                       isVisible: isSelectedForAction,
                       isPlaying: isAudioPlayingNow,
                       onPlayTap: () {
-                        final controller =
-                            ref.read(quranAudioControllerProvider.notifier);
-                        final audioState = ref.read(quranAudioControllerProvider);
+                        final controller = ref.read(
+                          quranAudioControllerProvider.notifier,
+                        );
+                        final audioState = ref.read(
+                          quranAudioControllerProvider,
+                        );
 
                         // Clear selection menu & resume auto-scroll so Re-Sync button does not appear
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        ref
+                            .read(selectedAyahActionProvider.notifier)
+                            .clearSelection();
                         controller.resumeAutoScrollAndSync();
 
                         if (isAudioPlayingNow) {
@@ -144,11 +164,17 @@ class AyahListItem extends ConsumerWidget {
                         }
                       },
                       onCopyTap: () async {
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
-                        
-                        final shareableText = ayah.toShareableText(surahName: surahName);
-                        await Clipboard.setData(ClipboardData(text: shareableText));
-                        
+                        ref
+                            .read(selectedAyahActionProvider.notifier)
+                            .clearSelection();
+
+                        final shareableText = ayah.toShareableText(
+                          surahName: surahName,
+                        );
+                        await Clipboard.setData(
+                          ClipboardData(text: shareableText),
+                        );
+
                         if (context.mounted) {
                           AppSnackBar.showSuccess(
                             context,
@@ -157,14 +183,18 @@ class AyahListItem extends ConsumerWidget {
                         }
                       },
                       onBookmarkTap: () {
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        ref
+                            .read(selectedAyahActionProvider.notifier)
+                            .clearSelection();
                         AppSnackBar.showInfo(
                           context,
                           'قابلیت نشانک‌گذاری آیه به زودی اضافه خواهد شد',
                         );
                       },
                       onShareTap: () {
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        ref
+                            .read(selectedAyahActionProvider.notifier)
+                            .clearSelection();
                         AppSnackBar.showInfo(
                           context,
                           'قابلیت اشتراک‌گذاری آیه به زودی اضافه خواهد شد',
@@ -178,11 +208,12 @@ class AyahListItem extends ConsumerWidget {
             ),
 
             // Main Arabic Ayah Text with Embedded Ayah Marker
-            AyahArabicText(
-              text: ayah.arabicText,
-              ayahNumber: ayah.ayahNumber,
-              isActive: isAudioActive,
-            ),
+            if (showArabicText)
+              AyahArabicText(
+                text: ayah.arabicText,
+                ayahNumber: ayah.ayahNumber,
+                isActive: isAudioActive,
+              ),
 
             // Ayah Persian Translation
             AyahTranslationText(
@@ -205,7 +236,7 @@ class AyahListItem extends ConsumerWidget {
               onDictionaryTap: () {
                 ref.read(selectedAyahActionProvider.notifier).clearSelection();
                 WordByWordBottomSheet.show(
-                  context, 
+                  context,
                   surahId: ayah.surahId,
                   surahName: surahName,
                   ayahNumber: ayah.ayahNumber,

@@ -20,8 +20,7 @@ class QuranDisplaySettingsController
         prefs.getBool(PreferencesKeys.showTranslation) ?? true;
     final showAyahNumbers =
         prefs.getBool(PreferencesKeys.showAyahNumbers) ?? true;
-    final autoHighlight =
-        prefs.getBool(PreferencesKeys.autoHighlight) ?? true;
+    final autoHighlight = prefs.getBool(PreferencesKeys.autoHighlight) ?? true;
     final fontScript =
         prefs.getString(PreferencesKeys.fontScript) ?? 'عثمان طه';
     final translatorName =
@@ -58,7 +57,9 @@ class QuranDisplaySettingsController
     final prefs = ref.read(preferencesServiceProvider);
     prefs.setDouble(PreferencesKeys.arabicFontSize, state.arabicFontSize);
     prefs.setDouble(
-        PreferencesKeys.translationFontSize, state.translationFontSize);
+      PreferencesKeys.translationFontSize,
+      state.translationFontSize,
+    );
     prefs.setBool(PreferencesKeys.showTranslation, state.showTranslation);
     prefs.setBool(PreferencesKeys.showAyahNumbers, state.showAyahNumbers);
     prefs.setBool(PreferencesKeys.autoHighlight, state.autoHighlight);
@@ -80,6 +81,12 @@ class QuranDisplaySettingsController
   void toggleTranslation(bool show) {
     state = state.copyWith(showTranslation: show);
   }
+
+  void toggleArabicText(bool show) {
+    state = state.copyWith(showArabicText: show);
+  }
+
+
 
   void toggleAyahNumbers(bool show) {
     state = state.copyWith(showAyahNumbers: show);
@@ -120,7 +127,7 @@ class QuranDisplaySettingsController
   }
 }
 
-final quranDisplaySettingsControllerProvider = NotifierProvider<
-    QuranDisplaySettingsController, QuranDisplaySettingsState>(
-  QuranDisplaySettingsController.new,
-);
+final quranDisplaySettingsControllerProvider =
+    NotifierProvider<QuranDisplaySettingsController, QuranDisplaySettingsState>(
+      QuranDisplaySettingsController.new,
+    );

@@ -1,18 +1,22 @@
 import sqlite3
-import sys
-
-sys.stdout.reconfigure(encoding='utf-8')
+import json
 
 conn = sqlite3.connect('assets/database/quran.db')
 cursor = conn.cursor()
 
-print("=== TRANSLATION_EDITIONS TABLE ===")
-cursor.execute("PRAGMA table_info(translation_editions)")
-cols = [c[1] for c in cursor.fetchall()]
-print("Columns:", cols)
+cursor.execute("SELECT id, surah_id, ayah_number, word_position, arabic_text, translation_fa FROM words WHERE surah_id = 1 AND ayah_number = 1")
+rows = cursor.fetchall()
 
-cursor.execute("SELECT * FROM translation_editions")
-for row in cursor.fetchall():
-    print(row)
+result = []
+for row in rows:
+    result.append({
+        'id': row[0],
+        'surah_id': row[1],
+        'ayah_number': row[2],
+        'word_position': row[3],
+        'arabic_text': row[4],
+        'translation_fa': row[5]
+    })
 
-conn.close()
+with open('scripts/db_output.json', 'w', encoding='utf-8') as f:
+    json.dump(result, f, ensure_ascii=False, indent=2)

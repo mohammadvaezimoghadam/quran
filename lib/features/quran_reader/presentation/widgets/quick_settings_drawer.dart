@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_theme_toggle_button.dart';
+import '../../../../common/widgets/settings_switch_tile.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/presentation/theme_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
@@ -228,8 +229,22 @@ class QuickSettingsDrawer extends ConsumerWidget {
 
                           _buildInnerDivider(colorScheme),
 
-                          // 1.3 Show Translation Toggle
-                          _buildSwitchTile(
+                          // 1.4 Show Arabic Text Toggle
+                          SettingsSwitchTile(
+                            title: 'نمایش متن عربی',
+                            subtitle: 'نمایش آیات به زبان عربی',
+                            icon: CupertinoIcons.text_quote,
+                            value: settings.showArabicText,
+                            accentColor: accentColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            onChanged: (val) => notifier.toggleArabicText(val),
+                          ),
+
+                          _buildInnerDivider(colorScheme),
+
+                          // 1.5 Show Translation Toggle
+                          SettingsSwitchTile(
                             title: 'نمایش ترجمه',
                             subtitle: 'نمایش ترجمه فارسی زیر آیه‌ها',
                             icon: CupertinoIcons.captions_bubble,
@@ -308,7 +323,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
                           _buildInnerDivider(colorScheme),
 
                           // 2.2 Show Ayah Numbers
-                          _buildSwitchTile(
+                          SettingsSwitchTile(
                             title: 'نمایش شماره آیه‌ها',
                             subtitle: 'نمایش نشانگر شماره در پایان هر آیه',
                             icon: CupertinoIcons.number,
@@ -322,7 +337,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
                           _buildInnerDivider(colorScheme),
 
                           // 2.3 Auto Highlight
-                          _buildSwitchTile(
+                          SettingsSwitchTile(
                             title: 'هایلایت خودکار پخش',
                             subtitle: 'هایلایت رنگی آیه در حال تلاوت',
                             icon: CupertinoIcons.sparkles,
@@ -752,60 +767,5 @@ class QuickSettingsDrawer extends ConsumerWidget {
     );
   }
 
-  Widget _buildSwitchTile({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required bool value,
-    required Color accentColor,
-    required Color textPrimary,
-    required Color textSecondary,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 18.0, color: accentColor),
-              8.0.hSpace,
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 10,
-                      color: textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Transform.scale(
-            scale: 0.75,
-            child: Switch(
-              value: value,
-              activeTrackColor: accentColor,
-              activeThumbColor: Colors.white,
-              onChanged: onChanged,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

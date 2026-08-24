@@ -228,4 +228,26 @@ class AppTypography {
     fontWeight: FontWeight.normal,
     color: Color(0x99FFFFFF), // white 60% opacity
   );
+
+  /// Bottom Sheet Subtitle
+  static const TextStyle bottomSheetSubtitle = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    color: AppColors.onSurfaceVariant,
+  );
+
+  /// Bottom Sheet Action Label (e.g. Start Reading)
+  static const TextStyle bottomSheetActionLabel = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 15,
+    fontWeight: FontWeight.bold,
+  );
+
+  /// Bottom Sheet Item Label
+  static const TextStyle bottomSheetItemLabel = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 13,
+    fontWeight: FontWeight.normal,
+  );
 }

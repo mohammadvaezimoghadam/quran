@@ -1,7 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
+
+import '../../../../../common/extensions/int_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/routes/route_name.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -9,7 +13,7 @@ import '../../../../../core/theme/app_typography.dart';
 
 /// Sacred Minimalist "Continue Reading" Widget (ویجت ادامه خواندن)
 /// Pixel-perfect implementation matching the reference UI design.
-class ContinueReadingCard extends StatelessWidget {
+class ContinueReadingCard extends ConsumerWidget {
   const ContinueReadingCard({super.key});
 
   // Placeholder data for UI demonstration
@@ -18,24 +22,15 @@ class ContinueReadingCard extends StatelessWidget {
   static const int _ayahNumber = 142;
   static const int _totalAyahs = 286;
 
-  String _toPersianDigits(String input) {
-    const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-    for (int i = 0; i < 10; i++) {
-      input = input.replaceAll(englishDigits[i], persianDigits[i]);
-    }
-    return input;
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     final double progress = 0.50; // 50% matching reference image
-    final String progressPercentText = '${_toPersianDigits('50')}%';
+    final String progressPercentText = '${50.toPersianDigit()}%';
     final String ayahInfoText =
-        'آیه ${_toPersianDigits(_ayahNumber.toString())} از ${_toPersianDigits(_totalAyahs.toString())}';
+        'آیه ${_ayahNumber.toPersianDigit()} از ${_totalAyahs.toPersianDigit()}';
 
     // Theme-Aware Colors (High Contrast & Perfect Readability)
     final cardBgColor = isDark ? const Color(0xFF192220) : Colors.white;
@@ -75,11 +70,16 @@ class ContinueReadingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24.0),
         child: InkWell(
           onTap: () {
-            context.pushNamed(
-              quranReaderRoute,
-              pathParameters: {'id': _surahId.toString()},
-              queryParameters: {'name': _surahName},
-            );
+            ref.read(quranDisplaySettingsControllerProvider.notifier).toggleArabicText(true);
+            Future.microtask(() {
+              if (context.mounted) {
+                context.pushNamed(
+                  quranReaderRoute,
+                  pathParameters: {'id': _surahId.toString()},
+                  queryParameters: {'name': _surahName},
+                );
+              }
+            });
           },
           borderRadius: BorderRadius.circular(24.0),
           child: Padding(

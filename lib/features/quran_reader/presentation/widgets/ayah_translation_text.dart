@@ -8,6 +8,7 @@ import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/translation_controller.dart';
+import 'translation_skeleton.dart';
 
 /// Renders the Persian translation text of an Ayah with isolated state subscriptions.
 class AyahTranslationText extends ConsumerWidget {
@@ -37,6 +38,11 @@ class AyahTranslationText extends ConsumerWidget {
 
     // Isolated subscription to ONLY the translation map for this surah
     final translationsAsync = ref.watch(surahTranslationsProvider(surahId));
+    
+    if (translationsAsync.isLoading && !translationsAsync.hasValue) {
+      return const TranslationSkeleton();
+    }
+
     final rawTranslation =
         translationsAsync.value?[ayahNumber] ?? fallbackText;
     final translationText = ArabicTextHelper.sanitizeText(rawTranslation);

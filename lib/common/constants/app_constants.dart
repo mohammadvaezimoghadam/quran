@@ -9,28 +9,40 @@ abstract class AppConstants {
   static const String surahStarAsset = 'assets/images/surah_star.png';
 
   // Network Error Messages - Connection Types
-  static const String connectionTimeoutError = 'زمان اتصال به سرور به پایان رسید. لطفاً مجدداً تلاش کنید.';
-  static const String sendTimeoutError = 'زمان ارسال اطلاعات به سرور به پایان رسید. اتصال اینترنت خود را بررسی کنید.';
-  static const String receiveTimeoutError = 'زمان دریافت پاسخ از سرور به پایان رسید. لطفاً مجدداً تلاش کنید.';
+  static const String connectionTimeoutError =
+      'زمان اتصال به سرور به پایان رسید. لطفاً مجدداً تلاش کنید.';
+  static const String sendTimeoutError =
+      'زمان ارسال اطلاعات به سرور به پایان رسید. اتصال اینترنت خود را بررسی کنید.';
+  static const String receiveTimeoutError =
+      'زمان دریافت پاسخ از سرور به پایان رسید. لطفاً مجدداً تلاش کنید.';
   static const String badCertificateError = 'گواهی امنیتی سرور معتبر نمی‌باشد.';
   static const String requestCancelledError = 'درخواست لغو شد.';
-  static const String connectionError = 'اتصال با سرور برقرار نشد. لطفاً اینترنت خود را بررسی کنید.';
-  static const String unexpectedError = 'خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً تلاش کنید.';
+  static const String connectionError =
+      'اتصال با سرور برقرار نشد. لطفاً اینترنت خود را بررسی کنید.';
+  static const String unexpectedError =
+      'خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً تلاش کنید.';
 
   // Network Error Messages - HTTP Status Codes
   static const String badRequestError = 'درخواست نامعتبر است.';
-  static const String unauthorizedError = 'دسترسی غیرمجاز. لطفاً وارد حساب کاربری شوید.';
+  static const String unauthorizedError =
+      'دسترسی غیرمجاز. لطفاً وارد حساب کاربری شوید.';
   static const String forbiddenError = 'شما دسترسی به این بخش را ندارید.';
   static const String notFoundError = 'اطلاعات مورد نظر یافت نشد.';
-  static const String tooManyRequestsError = 'تعداد درخواست‌ها بیش از حد مجاز است. لطفاً کمی صبر کنید.';
-  static const String internalServerError = 'خطای داخلی سرور. لطفاً بعداً تلاش کنید.';
-  static const String serviceUnavailableError = 'سرویس در حال حاضر در دسترس نیست.';
+  static const String tooManyRequestsError =
+      'تعداد درخواست‌ها بیش از حد مجاز است. لطفاً کمی صبر کنید.';
+  static const String internalServerError =
+      'خطای داخلی سرور. لطفاً بعداً تلاش کنید.';
+  static const String serviceUnavailableError =
+      'سرویس در حال حاضر در دسترس نیست.';
 
   // Home & Surah Feature Error Messages
-  static const String incompleteAyahDataError = 'اطلاعات آیه روز کامل دریافت نشد.';
-  static const String ayahOfTheDayFetchError = 'خطای غیرمنتظره در دریافت آیه روز';
+  static const String incompleteAyahDataError =
+      'اطلاعات آیه روز کامل دریافت نشد.';
+  static const String ayahOfTheDayFetchError =
+      'خطای غیرمنتظره در دریافت آیه روز';
   static const String surahFetchError = 'خطایی در دریافت لیست سوره‌ها رخ داد';
-  static const String surahFetchUnexpectedError = 'خطای غیرمنتظره‌ای در دریافت سوره‌ها رخ داد.';
+  static const String surahFetchUnexpectedError =
+      'خطای غیرمنتظره‌ای در دریافت سوره‌ها رخ داد.';
 
   // UI App Titles & Theme Tooltips
   static const String appTitle = 'قُرْآنٌ كَرِيمٌ';
@@ -57,6 +69,12 @@ abstract class AppConstants {
   static const String homeWelcomeTitle = 'به اپلیکیشن قرآن کریم خوش آمدید';
   static const String translationComingSoon = 'بخش ترجمه به زودی اضافه می‌شود';
   static const String tafsirComingSoon = 'بخش تفسیر به زودی اضافه می‌شود';
+
+  // Translation Selection Bottom Sheet
+  static const String selectSurahAndTranslatorTitle = 'انتخاب سوره و مترجم';
+  static const String translatorLabel = 'مترجم';
+  static const String startReadingButtonLabel = 'شروع مطالعه';
+  static const String showArabicTextToggleLabel = 'نمایش متن عربی';
 
   // Surah List & Quran Reader Feature Constants
   static const String surahListErrorTitle = 'خطا در بارگذاری اطلاعات';

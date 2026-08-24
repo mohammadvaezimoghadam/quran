@@ -42,7 +42,7 @@ const Map<String, String> translatorNameToIdMap = {
   'اردو جالندھری': 'ur.jalandhry',
 };
 
-final selectedTranslationIdProvider = Provider<String>((ref) {
+final selectedTranslationIdProvider = Provider.autoDispose<String>((ref) {
   final translatorName = ref.watch(
     quranDisplaySettingsControllerProvider
         .select((QuranDisplaySettingsState s) => s.translatorName),
@@ -51,7 +51,7 @@ final selectedTranslationIdProvider = Provider<String>((ref) {
 });
 
 final surahTranslationsProvider =
-    FutureProvider.family<Map<int, String>, int>((ref, surahId) async {
+    FutureProvider.autoDispose.family<Map<int, String>, int>((ref, surahId) async {
   final translationId = ref.watch(selectedTranslationIdProvider);
   final service = ref.watch(translationServiceProvider);
 

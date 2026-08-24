@@ -79,11 +79,16 @@ class SurahListScreen extends ConsumerWidget {
         return SurahListItem(
           surah: surah,
           onTap: () {
-            context.pushNamed(
-              quranReaderRoute,
-              pathParameters: {'id': surah.number.toString()},
-              queryParameters: {'name': surah.name},
-            );
+            ref.read(quranDisplaySettingsControllerProvider.notifier).toggleArabicText(true);
+            Future.microtask(() {
+              if (context.mounted) {
+                context.pushNamed(
+                  quranReaderRoute,
+                  pathParameters: {'id': surah.number.toString()},
+                  queryParameters: {'name': surah.name},
+                );
+              }
+            });
           },
         );
       },
