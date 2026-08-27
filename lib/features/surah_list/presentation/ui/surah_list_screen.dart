@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
 import '../../../../core/routes/route_name.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/surah_list_controller.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.dart';
+import '../../../page_navigation/presentation/widgets/page_navigation_bottom_sheet.dart';
 import '../widgets/surah_error_view.dart';
 import '../widgets/surah_list_item.dart';
 
@@ -36,6 +38,24 @@ class SurahListScreen extends ConsumerWidget {
         },
       ),
       body: _buildBody(context, ref, state, controller),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          PageNavigationBottomSheet.show(context);
+        },
+        label: const Text(
+          'تلاوت نور',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.softGoldText,
+          ),
+        ),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkPrimaryContainer
+            : Theme.of(context).colorScheme.primary,
+        elevation: 4,
+      ),
       bottomNavigationBar: const MiniAudioPlayerBar(),
     );
   }

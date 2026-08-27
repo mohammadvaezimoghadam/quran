@@ -14,12 +14,14 @@ class SurahAyahPageView extends ConsumerStatefulWidget {
   final int surahId;
   final String surahName;
   final bool isCurrentPage;
+  final int? initialAyahNumber;
 
   const SurahAyahPageView({
     super.key,
     required this.surahId,
     required this.surahName,
     required this.isCurrentPage,
+    this.initialAyahNumber,
   });
 
   @override
@@ -29,6 +31,14 @@ class SurahAyahPageView extends ConsumerStatefulWidget {
 class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
+  bool _hasUsedInitialScroll = false;
+
+  int _getInitialScrollIndex(List<dynamic> ayahs) {
+    if (_hasUsedInitialScroll || widget.initialAyahNumber == null) return 0;
+    _hasUsedInitialScroll = true; // Mark as used
+    final index = ayahs.indexWhere((a) => a.ayahNumber == widget.initialAyahNumber);
+    return index != -1 ? index : 0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +156,7 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
       },
       child: ScrollablePositionedList.builder(
         key: ValueKey('surah_list_${widget.surahId}'),
+        initialScrollIndex: _getInitialScrollIndex(state.ayahs),
         itemScrollController: _itemScrollController,
         itemPositionsListener: _itemPositionsListener,
         padding: EdgeInsets.only(
@@ -157,10 +168,14 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
         itemCount: state.ayahs.length,
         itemBuilder: (context, index) {
           final ayah = state.ayahs[index];
+          final previousAyah = index > 0 ? state.ayahs[index - 1] : null;
+          final isPageStart = previousAyah == null || previousAyah.page != ayah.page;
+          
           return AyahListItem(
             ayah: ayah,
             surahName: widget.surahName,
             totalAyahsInSurah: state.ayahs.length,
+            isPageStart: isPageStart,
           );
         },
       ),

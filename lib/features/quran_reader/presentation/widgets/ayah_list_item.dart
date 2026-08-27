@@ -24,6 +24,7 @@ class AyahListItem extends ConsumerWidget {
   final AyahEntity ayah;
   final String surahName;
   final int totalAyahsInSurah;
+  final bool isPageStart;
   final VoidCallback? onBookmarkTap;
   final VoidCallback? onPlayTap;
   final VoidCallback? onShareTap;
@@ -33,6 +34,7 @@ class AyahListItem extends ConsumerWidget {
     required this.ayah,
     required this.surahName,
     required this.totalAyahsInSurah,
+    this.isPageStart = false,
     this.onBookmarkTap,
     this.onPlayTap,
     this.onShareTap,
@@ -213,6 +215,7 @@ class AyahListItem extends ConsumerWidget {
                 text: ayah.arabicText,
                 ayahNumber: ayah.ayahNumber,
                 isActive: isAudioActive,
+                pageIndicatorNumber: isPageStart ? ayah.page : null,
               ),
 
             // Ayah Persian Translation

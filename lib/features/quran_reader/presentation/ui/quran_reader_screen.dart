@@ -21,11 +21,13 @@ import '../widgets/surah_ayah_page_view.dart';
 class QuranReaderScreen extends ConsumerStatefulWidget {
   final int surahId;
   final String surahName;
+  final int? initialAyahNumber;
 
   const QuranReaderScreen({
     super.key,
     required this.surahId,
     required this.surahName,
+    this.initialAyahNumber,
   });
 
   @override
@@ -173,6 +175,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
                         surahId: pageSurahId,
                         surahName: _getSurahName(ref, pageSurahId),
                         isCurrentPage: pageSurahId == currentSurahId,
+                        initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
                       );
                     },
                   ),

@@ -99,4 +99,10 @@ abstract class AppConstants {
   static const String shareAyahTooltip = 'اشتراک‌گذاری آیه';
   static const String playAyahTooltip = 'پخش آیه';
   static const String copyAyahSuccessMessage = 'متن آیه با موفقیت کپی شد';
+
+  // Page Navigation Feature
+  static const String pageNotFoundError = 'اطلاعاتی برای این صفحه یافت نشد.';
+  static const String invalidScannedCodeError = 'کد اسکن شده معتبر نیست یا صفحه وجود ندارد.';
+  static const String telavatNoorPlan = 'طرح تلاوت نور';
+  static const String pageNavigationTitle = 'پرش به صفحه';
 }

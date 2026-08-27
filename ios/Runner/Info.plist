@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>برای اسکن کد صفحه قرآن، نیاز به دسترسی دوربین داریم.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>برای انتخاب عکس حاوی کد، باید به گالری شما دسترسی داشته باشیم.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>برای ذخیره نتایج نیاز است بتوانیم عکس ها را در گالری اضافه کنیم.</string>
 </dict>
 </plist>
