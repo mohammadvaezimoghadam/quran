@@ -22,12 +22,14 @@ class QuranReaderScreen extends ConsumerStatefulWidget {
   final int surahId;
   final String surahName;
   final int? initialAyahNumber;
+  final String? translationId;
 
   const QuranReaderScreen({
     super.key,
     required this.surahId,
     required this.surahName,
     this.initialAyahNumber,
+    this.translationId,
   });
 
   @override
@@ -137,9 +139,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
     final currentSurahName = _getSurahName(ref, currentSurahId);
 
     return Scaffold(
-      extendBody: true,
-      appBar: IslamicKatibahAppBar(
-        surahName: currentSurahName,
+        extendBody: true,
+        appBar: IslamicKatibahAppBar(
+          surahName: currentSurahName,
         surahNumber: currentSurahId,
         fontFamily: fontFamily,
         actions: [
@@ -176,6 +178,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
                         surahName: _getSurahName(ref, pageSurahId),
                         isCurrentPage: pageSurahId == currentSurahId,
                         initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
+                        translationId: widget.translationId,
                       );
                     },
                   ),

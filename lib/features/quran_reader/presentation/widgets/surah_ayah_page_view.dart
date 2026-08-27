@@ -15,6 +15,7 @@ class SurahAyahPageView extends ConsumerStatefulWidget {
   final String surahName;
   final bool isCurrentPage;
   final int? initialAyahNumber;
+  final String? translationId;
 
   const SurahAyahPageView({
     super.key,
@@ -22,6 +23,7 @@ class SurahAyahPageView extends ConsumerStatefulWidget {
     required this.surahName,
     required this.isCurrentPage,
     this.initialAyahNumber,
+    this.translationId,
   });
 
   @override
@@ -176,6 +178,7 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
             surahName: widget.surahName,
             totalAyahsInSurah: state.ayahs.length,
             isPageStart: isPageStart,
+            translationId: widget.translationId,
           );
         },
       ),

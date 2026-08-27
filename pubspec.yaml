@@ -35,6 +35,7 @@ dependencies:
 
   # State Management & Routing
   flutter_riverpod: ^3.3.2
+  riverpod_annotation: any
   go_router: ^17.4.0
 
   # Networking & REST Client
@@ -47,6 +48,8 @@ dependencies:
   audio_service: 0.18.18
 
   # Local Database & User Preferences Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
   sqflite: ^2.4.3
   path_provider: ^2.1.6
   path: ^1.9.1

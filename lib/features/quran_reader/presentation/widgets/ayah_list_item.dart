@@ -8,6 +8,8 @@ import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
@@ -16,7 +18,7 @@ import '../../domain/entities/ayah_entity.dart';
 import 'ayah_action_buttons.dart';
 import 'ayah_arabic_text.dart';
 import 'ayah_bottom_action_chips.dart';
-import 'ayah_translation_text.dart';
+import '../../../translation_manager/presentation/widgets/ayah_translation_text.dart';
 import 'word_by_word_bottom_sheet.dart';
 
 /// Clean component for displaying an individual Ayah card.
@@ -25,6 +27,7 @@ class AyahListItem extends ConsumerWidget {
   final String surahName;
   final int totalAyahsInSurah;
   final bool isPageStart;
+  final String? translationId;
   final VoidCallback? onBookmarkTap;
   final VoidCallback? onPlayTap;
   final VoidCallback? onShareTap;
@@ -35,6 +38,7 @@ class AyahListItem extends ConsumerWidget {
     required this.surahName,
     required this.totalAyahsInSurah,
     this.isPageStart = false,
+    this.translationId,
     this.onBookmarkTap,
     this.onPlayTap,
     this.onShareTap,
@@ -64,6 +68,11 @@ class AyahListItem extends ConsumerWidget {
             (s) => s.status == AudioStatus.playing,
           ),
         );
+        
+    final displaySettings = ref.watch(quranDisplaySettingsControllerProvider);
+    final showTranslation = displaySettings.showTranslation;
+    final translationFontSize = displaySettings.translationFontSize;
+    
     final autoHighlight = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.autoHighlight),
     );
@@ -209,13 +218,30 @@ class AyahListItem extends ConsumerWidget {
               ),
             ),
 
+            if (isPageStart)
+              Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, right: 12.0),
+                  child: Text(
+                    'صفحه ${ayah.page}',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.goldAccent,
+                    ),
+                    textDirection: TextDirection.rtl,
+                  ),
+                ),
+              ),
+
             // Main Arabic Ayah Text with Embedded Ayah Marker
             if (showArabicText)
               AyahArabicText(
                 text: ayah.arabicText,
                 ayahNumber: ayah.ayahNumber,
                 isActive: isAudioActive,
-                pageIndicatorNumber: isPageStart ? ayah.page : null,
               ),
 
             // Ayah Persian Translation
@@ -224,6 +250,9 @@ class AyahListItem extends ConsumerWidget {
               ayahNumber: ayah.ayahNumber,
               fallbackText: ayah.translationText ?? '',
               isActive: isAudioActive,
+              isVisible: showTranslation,
+              fontSize: translationFontSize,
+              translationId: translationId,
             ),
 
             // Soft, subtle Bottom Action Chips (Tafsir & Vocabulary)

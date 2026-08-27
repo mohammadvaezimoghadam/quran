@@ -12,7 +12,12 @@ final networkServiceProvider = Provider<Dio>((ref) {
 
   final dio = Dio(options);
   final interceptor = ref.watch(networkServiceInterceptorProvider);
-  dio.interceptors.addAll([HttpFormatter(), interceptor]);
+  
+  // Added HttpFormatter with includeResponseBody: false to prevent huge JSON logs (like Quran translations) from freezing the console
+  dio.interceptors.addAll([
+    HttpFormatter(includeResponseBody: false), 
+    interceptor
+  ]);
 
   return dio;
 });

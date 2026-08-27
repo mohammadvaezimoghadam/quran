@@ -6,45 +6,45 @@ import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../application/controllers/quran_display_settings_controller.dart';
-import '../../application/controllers/translation_controller.dart';
+import '../../application/controllers/ayah_translation_provider.dart';
 import 'translation_skeleton.dart';
 
-/// Renders the Persian translation text of an Ayah with isolated state subscriptions.
+/// Renders the translation text of an Ayah.
+/// This widget is fully decoupled from the Reader feature's display settings.
 class AyahTranslationText extends ConsumerWidget {
   final int surahId;
   final int ayahNumber;
   final String fallbackText;
   final bool isActive;
+  final bool isVisible;
+  final double fontSize;
+  final String? translationId;
 
   const AyahTranslationText({
     super.key,
     required this.surahId,
     required this.ayahNumber,
     required this.fallbackText,
+    required this.isVisible,
+    required this.fontSize,
+    this.translationId,
     this.isActive = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Isolated check: If showTranslation is false, self-collapse
-    final showTranslation = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.showTranslation),
-    );
-
-    if (!showTranslation) {
+    if (!isVisible) {
       return const SizedBox.shrink();
     }
 
-    // Isolated subscription to ONLY the translation map for this surah
-    final translationsAsync = ref.watch(surahTranslationsProvider(surahId));
+    // Fetch the translation using the translation_manager module
+    final translationAsync = ref.watch(ayahTranslationProvider(surahId, ayahNumber, translationId));
     
-    if (translationsAsync.isLoading && !translationsAsync.hasValue) {
+    if (translationAsync.isLoading && !translationAsync.hasValue) {
       return const TranslationSkeleton();
     }
 
-    final rawTranslation =
-        translationsAsync.value?[ayahNumber] ?? fallbackText;
+    final rawTranslation = translationAsync.value ?? fallbackText;
     final translationText = ArabicTextHelper.sanitizeText(rawTranslation);
 
     if (translationText.isEmpty) {
@@ -53,18 +53,12 @@ class AyahTranslationText extends ConsumerWidget {
 
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Isolated subscription to ONLY translationFontSize
-    final translationFontSize = ref.watch(
-      quranDisplaySettingsControllerProvider
-          .select((s) => s.translationFontSize),
-    );
-
     final textColor = isActive
         ? colorScheme.onSurface
         : colorScheme.onSurfaceVariant;
 
     final style = AppTypography.translationText.copyWith(
-      fontSize: translationFontSize,
+      fontSize: fontSize,
       color: textColor,
     );
 

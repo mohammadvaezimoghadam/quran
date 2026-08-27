@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/presentation/theme_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import 'tashkeel_color_selector_tile.dart';
+import '../../../translation_manager/presentation/widgets/translation_settings_section.dart';
 
 /// Ultra-modern iOS-style Grouped Settings Bottom Sheet.
 class QuickSettingsDrawer extends ConsumerWidget {
@@ -43,42 +44,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
     'شهرزاد',
     'نیریزی',
   ];
-  static const List<String> _translators = [
-    'شیخ حسین انصاریان',
-    'آیت‌الله مکارم شیرازی',
-    'استاد فولادوند',
-    'دکتر الهی قمشه‌ای',
-    'استاد بهاءالدین خرمشاهی',
-    'استاد عبدالمحمد آیتی',
-    'استاد محسن قرائتی',
-    'استاد مصطفی خرم‌دل',
-    'سید جلال‌الدین مجتبوی',
-    'محمدکاظم معزی',
-    'استاد ابوالفضل بهرام‌پور',
-    'دکتر محمد صادقی تهرانی',
-    'ترجمه بر اساس المیزان (صفوی)',
-    'دکتر حسین تاجی کالداری',
-    'گروه مترجمان اسلام‌هاوس',
-    'فارسی فولادوند (خوانش هدایت‌فر)',
-    'عربی التفسیر المیسر',
-    'آذربایجانی ممدعلی‌اف',
-    'آلمانی بوبنهایم (Bubenheim & Elyas)',
-    'انگلیسی ایروینگ',
-    'انگلیسی شاکر',
-    'انگلیسی صحیح اینترنشنال',
-    'انگلیسی پیکتال',
-    'انگلیسی یوسف علی',
-    'اسپانیایی کورتز',
-    'فرانسه حمید‌الله',
-    'ایتالیایی پیکاردو',
-    'کردی آسان (برهان امین)',
-    'هلندی سیرگار',
-    'پشتو عبدالوالی خان',
-    'روسی کولینف',
-    'آلبانیایی احمدی',
-    'ترکی سازمان دیانت',
-    'اردو جالندھری',
-  ];
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -105,15 +71,20 @@ class QuickSettingsDrawer extends ConsumerWidget {
     final textSecondary = colorScheme.onSurfaceVariant;
     final accentColor = colorScheme.primary;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: SafeArea(
-        top: false,
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: screenHeight * 0.55,
-          ),
-          decoration: BoxDecoration(
+    return ScaffoldMessenger(
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: screenHeight * 0.55,
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Builder(
+            builder: (context) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: SafeArea(
+              top: false,
+              child: Container(
+                decoration: BoxDecoration(
             color: sheetBgColor,
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(24.0),
@@ -243,60 +214,15 @@ class QuickSettingsDrawer extends ConsumerWidget {
 
                           _buildInnerDivider(colorScheme),
 
-                          // 1.5 Show Translation Toggle
-                          SettingsSwitchTile(
-                            title: 'نمایش ترجمه',
-                            subtitle: 'نمایش ترجمه فارسی زیر آیه‌ها',
-                            icon: CupertinoIcons.captions_bubble,
-                            value: settings.showTranslation,
+                          // 1.5 Translation Settings (Extracted to translation_manager feature)
+                          TranslationSettingsSection(
+                            showTranslation: settings.showTranslation,
+                            translationFontSize: settings.translationFontSize,
+                            onToggleTranslation: (val) => notifier.toggleTranslation(val),
+                            onFontSizeChanged: (val) => notifier.updateTranslationFontSize(val),
                             accentColor: accentColor,
                             textPrimary: textPrimary,
                             textSecondary: textSecondary,
-                            onChanged: (val) => notifier.toggleTranslation(val),
-                          ),
-
-                          // 1.4 Animated Sub-settings for Translation
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeInOut,
-                            child: settings.showTranslation
-                                ? Column(
-                                    children: [
-                                      _buildInnerDivider(colorScheme),
-
-                                      // Translation Font Size
-                                      _buildSliderTile(
-                                        context: context,
-                                        title: 'اندازه متن ترجمه',
-                                        valueLabel:
-                                            '${settings.translationFontSize.toInt()} pt',
-                                        icon: CupertinoIcons.chat_bubble_text,
-                                        value: settings.translationFontSize,
-                                        min: 12,
-                                        max: 26,
-                                        divisions: 14,
-                                        accentColor: accentColor,
-                                        textPrimary: textPrimary,
-                                        textSecondary: textSecondary,
-                                        onChanged: (val) =>
-                                            notifier.updateTranslationFontSize(val),
-                                      ),
-
-                                      _buildInnerDivider(colorScheme),
-
-                                      // Translator Dropdown
-                                      _buildTranslatorTile(
-                                        context: context,
-                                        settings: settings,
-                                        notifier: notifier,
-                                        accentColor: accentColor,
-                                        textPrimary: textPrimary,
-                                        textSecondary: textSecondary,
-                                        colorScheme: colorScheme,
-                                      ),
-                                    ],
-                                  )
-                                : const SizedBox.shrink(),
                           ),
                         ],
                       ),
@@ -387,6 +313,10 @@ class QuickSettingsDrawer extends ConsumerWidget {
             ],
           ),
         ),
+        ),
+        ),
+        ),
+      ),
       ),
     );
   }
@@ -675,97 +605,7 @@ class QuickSettingsDrawer extends ConsumerWidget {
     );
   }
 
-  Widget _buildTranslatorTile({
-    required BuildContext context,
-    required dynamic settings,
-    required dynamic notifier,
-    required Color accentColor,
-    required Color textPrimary,
-    required Color textSecondary,
-    required ColorScheme colorScheme,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(CupertinoIcons.book, size: 18.0, color: accentColor),
-              8.0.hSpace,
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'مترجم قرآن',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
-                  ),
-                  Text(
-                    'انتخاب مترجم رسمی',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 10,
-                      color: textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: colorScheme.outline.withValues(alpha: 0.15),
-              ),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _translators.contains(settings.translatorName)
-                    ? settings.translatorName
-                    : _translators.first,
-                dropdownColor: colorScheme.surfaceContainerHigh,
-                icon: Icon(CupertinoIcons.chevron_down,
-                    size: 16, color: accentColor),
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 11,
-                  color: textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-                items: _translators.map((String translator) {
-                  return DropdownMenuItem<String>(
-                    value: translator,
-                    child: Text(
-                      translator,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        color: textPrimary,
-                      ),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  if (newValue != null) {
-                    notifier.updateTranslator(newValue);
-                  }
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
 
 }

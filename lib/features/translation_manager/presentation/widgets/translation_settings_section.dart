@@ -1,0 +1,206 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/widgets/settings_switch_tile.dart';
+import '../../../../core/theme/app_typography.dart';
+import 'translation_dropdown_selector.dart';/// An encapsulated UI section for Translation Settings (Toggle, Font Size, and Manager).
+/// This can be injected into any settings drawer/menu across the app.
+class TranslationSettingsSection extends StatelessWidget {
+  final bool showTranslation;
+  final double translationFontSize;
+  final ValueChanged<bool> onToggleTranslation;
+  final ValueChanged<double> onFontSizeChanged;
+  
+  /// Colors injected from the parent (e.g., drawer) to match its theme
+  final Color accentColor;
+  final Color textPrimary;
+  final Color textSecondary;
+
+  const TranslationSettingsSection({
+    super.key,
+    required this.showTranslation,
+    required this.translationFontSize,
+    required this.onToggleTranslation,
+    required this.onFontSizeChanged,
+    required this.accentColor,
+    required this.textPrimary,
+    required this.textSecondary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        // 1. Show Translation Toggle
+        SettingsSwitchTile(
+          title: 'نمایش ترجمه',
+          subtitle: 'نمایش ترجمه فارسی زیر آیه‌ها',
+          icon: CupertinoIcons.captions_bubble,
+          value: showTranslation,
+          accentColor: accentColor,
+          textPrimary: textPrimary,
+          textSecondary: textSecondary,
+          onChanged: onToggleTranslation,
+        ),
+
+        // 2. Animated Sub-settings for Translation
+        AnimatedSize(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          child: showTranslation
+              ? Column(
+                  children: [
+                    _buildInnerDivider(colorScheme),
+
+                    // Translation Font Size
+                    _buildSliderTile(
+                      context: context,
+                      title: 'اندازه متن ترجمه',
+                      valueLabel: '${translationFontSize.toInt()} pt',
+                      icon: CupertinoIcons.chat_bubble_text,
+                      value: translationFontSize,
+                      min: 12,
+                      max: 26,
+                      divisions: 14,
+                      accentColor: accentColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      onChanged: onFontSizeChanged,
+                    ),
+
+                    _buildInnerDivider(colorScheme),
+
+                    // Translation Manager Button
+                    _buildManagerButton(context, colorScheme),
+                  ],
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildManagerButton(BuildContext context, ColorScheme colorScheme) {
+    return TranslationDropdownSelector(
+      accentColor: accentColor,
+      textPrimary: textPrimary,
+      textSecondary: textSecondary,
+    );
+  }
+
+  Widget _buildInnerDivider(ColorScheme colorScheme) {
+    return Divider(
+      height: 1,
+      thickness: 0.8,
+      indent: 14,
+      endIndent: 14,
+      color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+    );
+  }
+
+  Widget _buildSliderTile({
+    required BuildContext context,
+    required String title,
+    required String valueLabel,
+    required IconData icon,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required Color accentColor,
+    required Color textPrimary,
+    required Color textSecondary,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 18.0, color: accentColor),
+                  8.0.hSpace,
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  valueLabel,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11,
+                    color: accentColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          4.0.vSpace,
+          Row(
+            children: [
+              Text(
+                'کوچک',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 10.5,
+                  color: textSecondary,
+                ),
+              ),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderThemeData(
+                    activeTrackColor: accentColor,
+                    inactiveTrackColor: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.2),
+                    thumbColor: Colors.white,
+                    overlayColor: accentColor.withValues(alpha: 0.15),
+                    trackHeight: 4,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                  ),
+                  child: Slider(
+                    value: value,
+                    min: min,
+                    max: max,
+                    divisions: divisions,
+                    onChanged: onChanged,
+                  ),
+                ),
+              ),
+              Text(
+                'بزرگ',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
