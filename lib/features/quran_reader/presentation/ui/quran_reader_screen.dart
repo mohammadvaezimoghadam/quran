@@ -103,17 +103,20 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
 
     // Listen to audio errors – distinguish download-related messages
     ref.listen(quranAudioControllerProvider, (previous, next) {
-      if (next.errorMessage != null && previous?.errorMessage != next.errorMessage) {
-        final isDownloadRelated = next.errorMessage!.contains('دانلود');
+      if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
+        final errorMessage = next.errorMessage!;
+        final isDownloadRelated = errorMessage.contains('دانلود');
+
         if (isDownloadRelated) {
           AppSnackBar.showInfo(
             context,
-            next.errorMessage!,
-            duration: const Duration(seconds: 5),
+            errorMessage,
+            duration: const Duration(seconds: 3),
             action: SnackBarAction(
               label: 'دانلود صوت',
               textColor: Theme.of(context).colorScheme.primary,
               onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 final targetSurahId = next.currentSurahId ?? widget.surahId;
                 context.pushNamed(
                   audioDownloadManagerRoute,
@@ -123,8 +126,11 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
             ),
           );
         } else {
-          AppSnackBar.showError(context, next.errorMessage!);
+          AppSnackBar.showError(context, errorMessage);
         }
+
+        // Immediately reset error in state so subsequent taps will trigger ref.listen again
+        ref.read(quranAudioControllerProvider.notifier).clearError();
       }
     });
 

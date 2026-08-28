@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/app_constants.dart';
-import '../../../../common/widgets/app_audio_play_button.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../application/controllers/selected_ayah_action_provider.dart';
 import 'audio_mini_progress_slider.dart';
+import 'quick_settings_drawer.dart';
 import '../../../../common/widgets/reciter/reciter_avatar_button.dart';
 import '../../../../common/widgets/reciter/reciter_selection_bottom_sheet.dart';
 
@@ -41,9 +41,24 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     final audioController = ref.read(quranAudioControllerProvider.notifier);
 
     final isPlaying = audioState.status == AudioStatus.playing;
-    final isLoading = audioState.status == AudioStatus.loading;
     final isAutoScrollSuspended = audioState.isAutoScrollSuspended;
     final reciterName = _formatReciterName(audioState.selectedReciter?.name);
+
+    void onTogglePlay() {
+      if (isPlaying) {
+        audioController.pause();
+      } else if (audioState.status == AudioStatus.paused) {
+        audioController.resume();
+      } else {
+        final ayahs = ref.read(quranReaderControllerProvider).ayahs;
+        final startAyah = ayahs.isNotEmpty ? ayahs.first.ayahNumber : 1;
+        audioController.playAyah(
+          surahId: surahId,
+          ayahNumber: startAyah,
+          totalAyahsInSurah: ayahs.isNotEmpty ? ayahs.length : 7,
+        );
+      }
+    }
 
     const double discRadius = 35.0;
     const double discDiameter = discRadius * 2; // 70.0px
@@ -95,54 +110,38 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                     child: Row(
                       textDirection: TextDirection.ltr,
                       children: [
-                        // Controls Grouped on Visual Left
+                        // 1. Settings Button (Visual Left)
                         IconButton(
                           iconSize: 18,
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
-                          icon: const Icon(CupertinoIcons.xmark),
-                          onPressed: () => audioController.stop(),
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          icon: const Icon(CupertinoIcons.gear_alt),
+                          tooltip: 'تنظیمات نمایش',
+                          onPressed: () => QuickSettingsDrawer.show(context),
                         ),
 
-                        AppAudioPlayButton(
-                          isPlaying: isPlaying,
-                          isLoading: isLoading,
-                          color: colorScheme.primary,
-                          iconSize: 26,
-                          onTap: () {
-                            if (isPlaying) {
-                              audioController.pause();
-                            } else if (audioState.status == AudioStatus.paused) {
-                              audioController.resume();
-                            } else {
-                              final ayahs = ref.read(quranReaderControllerProvider).ayahs;
-                              final startAyah = ayahs.isNotEmpty ? ayahs.first.ayahNumber : 1;
-                              audioController.playAyah(
-                                surahId: surahId,
-                                ayahNumber: startAyah,
-                                totalAyahsInSurah: ayahs.isNotEmpty ? ayahs.length : 7,
-                              );
-                            }
-                          },
-                        ),
-
+                        // 2. Next Ayah Button (Left of Middle Section)
                         IconButton(
-                          iconSize: 18,
+                          iconSize: 16,
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                          constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
                           icon: Icon(
-                            audioState.isAutoPlayNext
-                                ? CupertinoIcons.repeat_1
-                                : CupertinoIcons.repeat,
-                            color: audioState.isAutoPlayNext
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                            CupertinoIcons.backward_fill,
+                            color: (audioState.currentAyahNumber != null &&
+                                    audioState.totalAyahsInSurah != null &&
+                                    audioState.currentAyahNumber! < audioState.totalAyahsInSurah!)
+                                ? colorScheme.onSurface
+                                : colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
                           ),
-                          tooltip: 'پخش خودکار آیه بعدی',
-                          onPressed: () => audioController.toggleAutoPlayNext(),
+                          tooltip: 'آیه بعدی',
+                          onPressed: (audioState.currentAyahNumber != null &&
+                                  audioState.totalAyahsInSurah != null &&
+                                  audioState.currentAyahNumber! < audioState.totalAyahsInSurah!)
+                              ? () => audioController.playNextAyah()
+                              : null,
                         ),
 
-                        // Middle Section: Reciter Name, Ayah Number & Constant-Height Mini Slider
+                        // 3. Middle Section: Reciter Name, Ayah Number & Constant-Height Mini Slider
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -192,16 +191,37 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                             ),
                           ),
                         ),
+
+                        // 4. Previous Ayah Button (Right of Middle Section)
+                        IconButton(
+                          iconSize: 16,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                          icon: Icon(
+                            CupertinoIcons.forward_fill,
+                            color: (audioState.currentAyahNumber != null && audioState.currentAyahNumber! > 1)
+                                ? colorScheme.onSurface
+                                : colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
+                          ),
+                          tooltip: 'آیه قبلی',
+                          onPressed: (audioState.currentAyahNumber != null && audioState.currentAyahNumber! > 1)
+                              ? () => audioController.playPreviousAyah()
+                              : null,
+                        ),
                       ],
                     ),
                   ),
                 ),
 
-                // 2. Overlapping Larger Floating Reciter Disc
+                // 2. Overlapping Larger Floating Reciter Disc (Acts as Primary Play Button)
                 Positioned(
                   right: 0,
                   top: 26,
-                  child: ReciterAvatarButton(radius: discRadius),
+                  child: ReciterAvatarButton(
+                    radius: discRadius,
+                    isPlayButton: true,
+                    onTap: onTogglePlay,
+                  ),
                 ),
 
                 // 3. Ultra-sleek mini Re-Sync Pill placed centered right above the reciter avatar

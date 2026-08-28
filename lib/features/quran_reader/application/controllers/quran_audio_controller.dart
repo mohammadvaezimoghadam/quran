@@ -22,6 +22,12 @@ class QuranAudioController extends Notifier<QuranAudioState> {
   StreamSubscription<AudioPlayerState>? _audioStateSubscription;
   bool _isTransitioningTrack = false;
 
+  /// Timestamp when the current loading phase started.
+  /// Used to enforce a minimum visual loading duration so the spinner
+  /// is always visible (even for fast local files).
+  DateTime? _loadingStartedAt;
+  static const _minLoadingDuration = Duration(milliseconds: 300);
+
   @override
   QuranAudioState build() {
     _initDefaultReciterAndListeners();
@@ -34,8 +40,8 @@ class QuranAudioController extends Notifier<QuranAudioState> {
   Future<void> _initDefaultReciterAndListeners() async {
     // Register AudioHandler callbacks for notification & headset controls
     final handler = ref.read(quranAudioHandlerProvider);
-    handler.onSkipNext = () async => _playNextAyah();
-    handler.onSkipPrevious = () async => _playPreviousAyah();
+    handler.onSkipNext = () async => playNextAyah();
+    handler.onSkipPrevious = () async => playPreviousAyah();
     // 1. Fetch default reciter (Parhizgar by default or saved pref)
     final repo = ref.read(reciterRepositoryProvider);
     final prefs = ref.read(preferencesServiceProvider);
@@ -72,12 +78,54 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       // Do NOT trigger continuous auto-play if stream is in error state!
       if (playerState.status == AudioStatus.error) {
         _isTransitioningTrack = false;
+        _loadingStartedAt = null;
         state = state.copyWith(
           status: AudioStatus.error,
           errorMessage: playerState.errorMessage ?? 'خطا در پخش صوت',
         );
         return;
       }
+
+      // ── While transitioning between tracks, suppress ALL intermediate
+      //    states (stopped, paused, completed, loading) so the UI stays
+      //    on the loading spinner. Only 'playing' (success) and 'error'
+      //    (handled above) break through the guard.
+      if (_isTransitioningTrack) {
+        if (playerState.status == AudioStatus.playing) {
+          // Track loaded & started — enforce minimum visual loading duration
+          if (_loadingStartedAt != null) {
+            final elapsed = DateTime.now().difference(_loadingStartedAt!);
+            final remaining = _minLoadingDuration - elapsed;
+            if (remaining > Duration.zero) {
+              Future.delayed(remaining, () {
+                _isTransitioningTrack = false;
+                _loadingStartedAt = null;
+                if (state.status == AudioStatus.loading) {
+                  state = state.copyWith(status: AudioStatus.playing);
+                }
+              });
+              return; // keep loading visible
+            }
+          }
+          _isTransitioningTrack = false;
+          _loadingStartedAt = null;
+          state = state.copyWith(
+            status: AudioStatus.playing,
+            position: playerState.position,
+            duration: playerState.duration,
+          );
+          if (state.currentAyahNumber != null) {
+            ref
+                .read(activeAyahProvider.notifier)
+                .setActiveAyah(state.currentAyahNumber);
+          }
+        }
+        // All other statuses (stopped, paused, loading, completed) are
+        // silently swallowed — UI keeps showing loading spinner.
+        return;
+      }
+
+      // ── Normal (non-transitioning) state handling ──
 
       // Check if transitioning to next ayah in continuous mode
       final isFinishingCurrentAyah =
@@ -90,12 +138,18 @@ class QuranAudioController extends Notifier<QuranAudioState> {
           !state.isSingleAyahMode &&
           hasNextAyah;
 
-      final effectiveStatus = (_isTransitioningTrack || isWillAutoPlayNext)
-          ? AudioStatus.loading
-          : playerState.status;
+      if (isWillAutoPlayNext) {
+        // About to auto-play next — show loading, start transition
+        state = state.copyWith(status: AudioStatus.loading);
+        _isTransitioningTrack = true;
+        _loadingStartedAt = DateTime.now();
+        playNextAyah();
+        return;
+      }
 
+      // Regular state passthrough
       state = state.copyWith(
-        status: effectiveStatus,
+        status: playerState.status,
         position: playerState.position,
         duration: playerState.duration,
         errorMessage: playerState.errorMessage,
@@ -108,25 +162,9 @@ class QuranAudioController extends Notifier<QuranAudioState> {
             .setActiveAyah(state.currentAyahNumber);
       }
 
-      // Handle continuous playback when current ayah finishes cleanly!
+      // End of track — if we shouldn't auto-play, stop cleanly
       if (playerState.status == AudioStatus.completed) {
-        if (state.isAutoPlayNext &&
-            !state.isSingleAyahMode &&
-            state.currentAyahNumber != null &&
-            !_isTransitioningTrack) {
-          _isTransitioningTrack = true;
-          _playNextAyah();
-        } else if (!_isTransitioningTrack) {
-          // If we shouldn't play the next track (e.g. single mode, autoplay off, or end of surah)
-          // then completely stop the player to dismiss the mini player and notification.
-          stop();
-        }
-      } else if (playerState.status == AudioStatus.playing) {
-        // Only reset when the NEW track is confirmed playing — prevents
-        // late-arriving codec events from triggering duplicate _playNextAyah().
-        _isTransitioningTrack = false;
-      } else if (playerState.status == AudioStatus.stopped) {
-        _isTransitioningTrack = false;
+        stop();
       }
     });
   }
@@ -162,6 +200,12 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     bool isSingleAyahMode = false,
   }) async {
     _isTransitioningTrack = true;
+    _loadingStartedAt = DateTime.now();
+
+    // Reset previous error message so new error events trigger UI listeners cleanly
+    if (state.errorMessage != null) {
+      state = state.copyWith(errorMessage: null);
+    }
 
     var reciter = state.selectedReciter;
 
@@ -202,6 +246,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       currentAyahNumber: ayahNumber,
       totalAyahsInSurah: totalAyahsInSurah,
       isSingleAyahMode: isSingleAyahMode,
+      status: AudioStatus.loading,
     );
 
     // Update system notification & Lock Screen metadata via AudioHandler
@@ -253,8 +298,8 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     }
   }
 
-  /// Play previous ayah automatically
-  Future<void> _playPreviousAyah() async {
+  /// Play previous ayah automatically or manually
+  Future<void> playPreviousAyah() async {
     final currentAyah = state.currentAyahNumber;
     final totalAyahs = state.totalAyahsInSurah;
     final surahId = state.currentSurahId;
@@ -268,8 +313,8 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     }
   }
 
-  /// Play next ayah automatically — first checks if the file exists
-  Future<void> _playNextAyah() async {
+  /// Play next ayah automatically or manually — first checks if the file exists
+  Future<void> playNextAyah() async {
     final currentAyah = state.currentAyahNumber;
     final totalAyahs = state.totalAyahsInSurah;
     final surahId = state.currentSurahId;
@@ -305,6 +350,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       } else {
         // End of Surah reached!
         _isTransitioningTrack = false;
+        _loadingStartedAt = null;
         stop();
       }
     }
@@ -312,6 +358,8 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
   /// Pause audio
   Future<void> pause() async {
+    _isTransitioningTrack = false;
+    _loadingStartedAt = null;
     final audioService = ref.read(audioPlayerServiceProvider);
     await audioService.pause();
   }
@@ -324,6 +372,8 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
   /// Stop audio
   Future<void> stop() async {
+    _isTransitioningTrack = false;
+    _loadingStartedAt = null;
     final audioService = ref.read(audioPlayerServiceProvider);
     await audioService.stop();
     
@@ -341,6 +391,13 @@ class QuranAudioController extends Notifier<QuranAudioState> {
   /// Toggle AutoPlayNext
   void toggleAutoPlayNext() {
     state = state.copyWith(isAutoPlayNext: !state.isAutoPlayNext);
+  }
+
+  /// Clear any error message state
+  void clearError() {
+    if (state.errorMessage != null) {
+      state = state.copyWith(errorMessage: null);
+    }
   }
 
   /// Suspend auto-scroll (e.g. when user interacts with an Ayah for copy/share/bookmark)

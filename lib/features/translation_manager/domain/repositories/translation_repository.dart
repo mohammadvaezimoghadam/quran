@@ -11,6 +11,9 @@ abstract class ITranslationRepository {
   /// Downloads a translation and saves it to local storage.
   Future<Result<void, Failure>> downloadTranslation(TranslationEntity translation, {void Function(int, int)? onReceiveProgress});
 
+  /// Preloads a translation from a local JSON asset file into Hive.
+  Future<Result<void, Failure>> preloadTranslationFromJson(String translationId, String assetPath);
+
   /// Deletes a downloaded translation from Hive.
   Future<Result<void, Failure>> deleteTranslation(String translationId);
 

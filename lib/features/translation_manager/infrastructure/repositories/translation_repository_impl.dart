@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multiple_result/multiple_result.dart';
@@ -53,6 +55,25 @@ class TranslationRepositoryImpl with DioExceptionMapper implements ITranslationR
       return Error(mapDioExceptionToFailure(e, stackTrace));
     } catch (e, stackTrace) {
       return Error(Failure(message: 'خطا در دانلود ترجمه: $e', stackTrace: stackTrace));
+    }
+  }
+
+  @override
+  Future<Result<void, Failure>> preloadTranslationFromJson(String translationId, String assetPath) async {
+    try {
+      final downloadedIds = _localDataSource.getDownloadedTranslationIds();
+      if (downloadedIds.contains(translationId)) {
+         return const Success(null);
+      }
+      
+      final jsonString = await rootBundle.loadString(assetPath);
+      final Map<String, dynamic> jsonMap = json.decode(jsonString);
+      final Map<String, String> translationData = jsonMap.map((key, value) => MapEntry(key, value.toString()));
+      
+      await _localDataSource.saveTranslation(translationId, translationData);
+      return const Success(null);
+    } catch (e, stackTrace) {
+      return Error(Failure(message: 'خطا در بارگزاری ترجمه پیش‌فرض', stackTrace: stackTrace));
     }
   }
 

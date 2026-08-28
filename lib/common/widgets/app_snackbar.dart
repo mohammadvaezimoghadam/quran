@@ -10,8 +10,9 @@ class AppSnackBar {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 3),
   }) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: [
@@ -39,6 +40,11 @@ class AppSnackBar {
         duration: duration,
       ),
     );
+
+    // Guaranteed forced dismissal after duration
+    Future.delayed(duration + const Duration(milliseconds: 200), () {
+      messenger.hideCurrentSnackBar();
+    });
   }
 
   static void showSuccess(BuildContext context, String message) {

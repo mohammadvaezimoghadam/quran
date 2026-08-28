@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
-import '../../../../common/extensions/size_extension.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -85,67 +84,68 @@ class MiniAudioPlayerBar extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // 1. Corner Action: Play / Pause Button attached to far right corner
+                      // 1. Play / Pause Button pinned to start edge
                       const Padding(
-                        padding: EdgeInsets.only(left: 6.0, right: 4.0),
+                        padding: EdgeInsets.symmetric(horizontal: 6.0),
                         child: _MiniPlayPauseButton(),
                       ),
 
-                      // 2. Middle Interactive Zone: Surah Name (User Font) + Ayah Badge
-                      InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => QuranReaderScreen(
-                                surahId: currentSurahId,
-                                surahName: 'سوره $surahName',
-                              ),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6.0,
-                            vertical: 4.0,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                'سوره $surahName',
-                                style: TextStyle(
-                                  fontFamily: userFontFamily,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFF4E0A5), // Elegant Gold
+                      // 2. Middle Interactive Zone: Surah Name + Ayah Badge (Expanded pushes close button to far end)
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => QuranReaderScreen(
+                                  surahId: currentSurahId,
+                                  surahName: 'سوره $surahName',
                                 ),
                               ),
-                              6.hSpace,
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryContainer
-                                      .withValues(alpha: 0.35),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  'آیه $currentAyahNumber از $totalAyahsInSurah',
-                                  style: const TextStyle(
-                                    fontFamily: AppTypography.vazirmatnFont,
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white70,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    'سوره $surahName',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontFamily: userFontFamily,
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFFF4E0A5), // Elegant Gold
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryContainer
+                                        .withValues(alpha: 0.35),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    'آیه $currentAyahNumber از $totalAyahsInSurah',
+                                    style: const TextStyle(
+                                      fontFamily: AppTypography.vazirmatnFont,
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -157,7 +157,7 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                         color: Colors.white.withValues(alpha: 0.12),
                       ),
 
-                      // 3. Corner Action: Separate Close Button attached to far left corner
+                      // 3. Close Button pinned to far end edge
                       InkWell(
                         onTap: () {
                           ref
@@ -168,15 +168,13 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                               .stop();
                         },
                         child: const Padding(
-                          padding: EdgeInsets.only(
-                            left: 10.0,
-                            right: 12.0,
-                            top: 10.0,
-                            bottom: 10.0,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 10.0,
                           ),
                           child: Icon(
                             CupertinoIcons.xmark,
-                            size: 14,
+                            size: 15,
                             color: Colors.white60,
                           ),
                         ),

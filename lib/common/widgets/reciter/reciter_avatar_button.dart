@@ -11,11 +11,15 @@ import 'reciter_selection_bottom_sheet.dart';
 class ReciterAvatarButton extends ConsumerStatefulWidget {
   final double radius;
   final bool showLabel;
+  final bool isPlayButton;
+  final VoidCallback? onTap;
 
   const ReciterAvatarButton({
     super.key,
     this.radius = 24,
     this.showLabel = true,
+    this.isPlayButton = false,
+    this.onTap,
   });
 
   @override
@@ -46,6 +50,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
     final colorScheme = Theme.of(context).colorScheme;
     final audioState = ref.watch(quranAudioControllerProvider);
     final isPlaying = audioState.status == AudioStatus.playing;
+    final isLoading = audioState.status == AudioStatus.loading;
     final selectedReciter = audioState.selectedReciter;
     final reciterName = selectedReciter?.name ?? '';
     final imageUrl = selectedReciter?.imageUrl;
@@ -61,9 +66,11 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
     final avatarSize = widget.radius * 2;
 
     return Tooltip(
-      message: 'انتخاب قاری (${reciterName.isEmpty ? 'پیش‌فرض' : reciterName})',
+      message: widget.isPlayButton
+          ? (isPlaying ? 'توقف پخش' : 'پخش تلاوت')
+          : 'انتخاب قاری (${reciterName.isEmpty ? 'پیش‌فرض' : reciterName})',
       child: GestureDetector(
-        onTap: () {
+        onTap: widget.onTap ?? () {
           ReciterSelectionBottomSheet.show(context);
         },
         child: SizedBox(
@@ -138,12 +145,39 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                           ? colorScheme.primary
                           : colorScheme.surfaceContainerHigh,
                     ),
+
+                    // 3. Play/Pause/Loading Overlay Icon (When isPlayButton is true)
+                    if (widget.isPlayButton) ...[
+                      Container(
+                        width: avatarSize,
+                        height: avatarSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black.withValues(alpha: 0.38),
+                        ),
+                      ),
+                      if (isLoading)
+                        SizedBox(
+                          width: avatarSize * 0.38,
+                          height: avatarSize * 0.38,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      else
+                        Icon(
+                          isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
+                          color: Colors.white,
+                          size: avatarSize * 0.45,
+                        ),
+                    ],
                   ],
                 ),
               ),
 
-              // 3. Small "قاریان" label badge on the top-left corner
-              if (widget.showLabel)
+              // 4. Small "قاریان" label badge on the top-left corner (Only when not play button)
+              if (widget.showLabel && !widget.isPlayButton)
                 Positioned(
                   top: -2,
                   left: -4,
@@ -178,3 +212,4 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
     );
   }
 }
+

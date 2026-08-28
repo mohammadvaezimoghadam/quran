@@ -18,6 +18,7 @@ import '../../domain/entities/ayah_entity.dart';
 import 'ayah_action_buttons.dart';
 import 'ayah_arabic_text.dart';
 import 'ayah_bottom_action_chips.dart';
+import '../../../translation_manager/application/controllers/ayah_translation_provider.dart';
 import '../../../translation_manager/presentation/widgets/ayah_translation_text.dart';
 import 'word_by_word_bottom_sheet.dart';
 
@@ -179,7 +180,19 @@ class AyahListItem extends ConsumerWidget {
                             .read(selectedAyahActionProvider.notifier)
                             .clearSelection();
 
-                        final shareableText = ayah.toShareableText(
+                        final translationAsync = ref.read(
+                          ayahTranslationProvider(
+                            ayah.surahId,
+                            ayah.ayahNumber,
+                            translationId,
+                          ),
+                        );
+                        final currentTranslation = translationAsync.value ?? ayah.translationText;
+                        final ayahWithTranslation = ayah.copyWith(
+                          translationText: currentTranslation,
+                        );
+
+                        final shareableText = ayahWithTranslation.toShareableText(
                           surahName: surahName,
                         );
                         await Clipboard.setData(

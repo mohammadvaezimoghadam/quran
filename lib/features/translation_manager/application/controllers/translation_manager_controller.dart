@@ -17,13 +17,19 @@ class TranslationManagerController extends _$TranslationManagerController {
   Future<TranslationManagerState> _loadInitialState() async {
     final repository = ref.read(translationRepositoryProvider);
     
+    // Ensure default Makarem translation is preloaded
+    await repository.preloadTranslationFromJson('fa.makarem', 'assets/database/fa_makarem.json');
+    
     final translationsResult = await repository.getAllTranslations();
     final translations = translationsResult.tryGetSuccess() ?? [];
     
     final activeIdResult = await repository.getActiveTranslation();
     final activeId = activeIdResult.tryGetSuccess();
 
-    final initialActiveId = activeId ?? (translations.isNotEmpty ? translations.first.id : null);
+    String? initialActiveId = activeId ?? 'fa.makarem';
+    if (activeId == null) {
+      await repository.setActiveTranslation('fa.makarem');
+    }
 
     return TranslationManagerState(
       translations: translations,
