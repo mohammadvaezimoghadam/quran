@@ -33,7 +33,7 @@ class AyahLocalDataSource implements IAyahLocalDataSource {
         a.hizb_quarter,
         t.text AS translation
       FROM ayahs a
-      LEFT JOIN translations t ON a.id = t.ayah_id AND t.translation_id = 'fa.ansarian'
+      LEFT JOIN translations t ON a.id = t.ayah_id AND t.translation_id = 'fa.makarem'
       WHERE a.surah_number = ?
       ORDER BY a.number_in_surah ASC
     ''';

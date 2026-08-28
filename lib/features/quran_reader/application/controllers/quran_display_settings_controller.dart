@@ -27,6 +27,8 @@ class QuranDisplaySettingsController
         prefs.getString(PreferencesKeys.translatorName) ?? 'شیخ حسین انصاریان';
     final harakatColor =
         prefs.getString(PreferencesKeys.harakatColor) ?? '#FF4444';
+    final removeTranslationBrackets =
+        prefs.getBool(PreferencesKeys.removeTranslationBrackets) ?? true;
 
     return QuranDisplaySettingsState(
       arabicFontSize: arabicFontSize,
@@ -37,6 +39,7 @@ class QuranDisplaySettingsController
       fontScript: fontScript,
       translatorName: translatorName,
       harakatColor: harakatColor,
+      removeTranslationBrackets: removeTranslationBrackets,
     );
   }
 
@@ -66,6 +69,10 @@ class QuranDisplaySettingsController
     prefs.setString(PreferencesKeys.fontScript, state.fontScript);
     prefs.setString(PreferencesKeys.translatorName, state.translatorName);
     prefs.setString(PreferencesKeys.harakatColor, state.harakatColor);
+    prefs.setBool(
+      PreferencesKeys.removeTranslationBrackets,
+      state.removeTranslationBrackets,
+    );
 
     _initialStateOnOpen = state;
   }
@@ -86,7 +93,9 @@ class QuranDisplaySettingsController
     state = state.copyWith(showArabicText: show);
   }
 
-
+  void toggleRemoveTranslationBrackets(bool remove) {
+    state = state.copyWith(removeTranslationBrackets: remove);
+  }
 
   void toggleAyahNumbers(bool show) {
     state = state.copyWith(showAyahNumbers: show);
@@ -123,6 +132,7 @@ class QuranDisplaySettingsController
     prefs.remove(PreferencesKeys.fontScript);
     prefs.remove(PreferencesKeys.translatorName);
     prefs.remove(PreferencesKeys.harakatColor);
+    prefs.remove(PreferencesKeys.removeTranslationBrackets);
     _initialStateOnOpen = state;
   }
 }

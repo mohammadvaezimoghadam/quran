@@ -393,6 +393,11 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     state = state.copyWith(isAutoPlayNext: !state.isAutoPlayNext);
   }
 
+  /// Toggle SingleAyahMode
+  void toggleSingleAyahMode() {
+    state = state.copyWith(isSingleAyahMode: !state.isSingleAyahMode);
+  }
+
   /// Clear any error message state
   void clearError() {
     if (state.errorMessage != null) {

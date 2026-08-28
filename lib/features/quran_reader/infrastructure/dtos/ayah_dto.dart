@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../../common/extensions/string_extension.dart';
 import '../../domain/entities/ayah_entity.dart';
 
 part 'ayah_dto.freezed.dart';
@@ -44,7 +43,7 @@ abstract class AyahDto with _$AyahDto {
       surahId: surahId,
       ayahNumber: ayahNumber,
       arabicText: arabicText,
-      translationText: translationText?.removeTranslatorExplanations(),
+      translationText: translationText,
       page: page,
       juz: juz,
       hizbQuarter: hizbQuarter,

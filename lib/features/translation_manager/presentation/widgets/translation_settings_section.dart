@@ -9,8 +9,10 @@ import 'translation_dropdown_selector.dart';/// An encapsulated UI section for T
 class TranslationSettingsSection extends StatelessWidget {
   final bool showTranslation;
   final double translationFontSize;
+  final bool removeTranslationBrackets;
   final ValueChanged<bool> onToggleTranslation;
   final ValueChanged<double> onFontSizeChanged;
+  final ValueChanged<bool>? onToggleRemoveBrackets;
   
   /// Colors injected from the parent (e.g., drawer) to match its theme
   final Color accentColor;
@@ -21,8 +23,10 @@ class TranslationSettingsSection extends StatelessWidget {
     super.key,
     required this.showTranslation,
     required this.translationFontSize,
+    this.removeTranslationBrackets = true,
     required this.onToggleTranslation,
     required this.onFontSizeChanged,
+    this.onToggleRemoveBrackets,
     required this.accentColor,
     required this.textPrimary,
     required this.textSecondary,
@@ -72,6 +76,21 @@ class TranslationSettingsSection extends StatelessWidget {
                     ),
 
                     _buildInnerDivider(colorScheme),
+
+                    // Remove Bracket Explanations Toggle
+                    if (onToggleRemoveBrackets case final callback?) ...[
+                      SettingsSwitchTile(
+                        title: 'حذف توضیحات داخل پرانتز و قلاب',
+                        subtitle: 'مخفی کردن عبارات اضافه و تفسیری مترجم از متن ترجمه',
+                        icon: CupertinoIcons.textbox,
+                        value: removeTranslationBrackets,
+                        accentColor: accentColor,
+                        textPrimary: textPrimary,
+                        textSecondary: textSecondary,
+                        onChanged: callback,
+                      ),
+                      _buildInnerDivider(colorScheme),
+                    ],
 
                     // Translation Manager Button
                     _buildManagerButton(context, colorScheme),

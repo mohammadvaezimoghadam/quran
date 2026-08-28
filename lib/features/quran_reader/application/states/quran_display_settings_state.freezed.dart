@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$QuranDisplaySettingsState {
 
- double get arabicFontSize; double get translationFontSize; bool get showTranslation; bool get showArabicText; bool get showAyahNumbers; bool get autoHighlight; String get fontScript; String get translatorName; String get themeMode; String get harakatColor;
+ double get arabicFontSize; double get translationFontSize; bool get showTranslation; bool get showArabicText; bool get showAyahNumbers; bool get autoHighlight; String get fontScript; String get translatorName; String get themeMode; String get harakatColor; bool get removeTranslationBrackets;
 /// Create a copy of QuranDisplaySettingsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $QuranDisplaySettingsStateCopyWith<QuranDisplaySettingsState> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuranDisplaySettingsState&&(identical(other.arabicFontSize, arabicFontSize) || other.arabicFontSize == arabicFontSize)&&(identical(other.translationFontSize, translationFontSize) || other.translationFontSize == translationFontSize)&&(identical(other.showTranslation, showTranslation) || other.showTranslation == showTranslation)&&(identical(other.showArabicText, showArabicText) || other.showArabicText == showArabicText)&&(identical(other.showAyahNumbers, showAyahNumbers) || other.showAyahNumbers == showAyahNumbers)&&(identical(other.autoHighlight, autoHighlight) || other.autoHighlight == autoHighlight)&&(identical(other.fontScript, fontScript) || other.fontScript == fontScript)&&(identical(other.translatorName, translatorName) || other.translatorName == translatorName)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.harakatColor, harakatColor) || other.harakatColor == harakatColor));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuranDisplaySettingsState&&(identical(other.arabicFontSize, arabicFontSize) || other.arabicFontSize == arabicFontSize)&&(identical(other.translationFontSize, translationFontSize) || other.translationFontSize == translationFontSize)&&(identical(other.showTranslation, showTranslation) || other.showTranslation == showTranslation)&&(identical(other.showArabicText, showArabicText) || other.showArabicText == showArabicText)&&(identical(other.showAyahNumbers, showAyahNumbers) || other.showAyahNumbers == showAyahNumbers)&&(identical(other.autoHighlight, autoHighlight) || other.autoHighlight == autoHighlight)&&(identical(other.fontScript, fontScript) || other.fontScript == fontScript)&&(identical(other.translatorName, translatorName) || other.translatorName == translatorName)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.harakatColor, harakatColor) || other.harakatColor == harakatColor)&&(identical(other.removeTranslationBrackets, removeTranslationBrackets) || other.removeTranslationBrackets == removeTranslationBrackets));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,arabicFontSize,translationFontSize,showTranslation,showArabicText,showAyahNumbers,autoHighlight,fontScript,translatorName,themeMode,harakatColor);
+int get hashCode => Object.hash(runtimeType,arabicFontSize,translationFontSize,showTranslation,showArabicText,showAyahNumbers,autoHighlight,fontScript,translatorName,themeMode,harakatColor,removeTranslationBrackets);
 
 @override
 String toString() {
-  return 'QuranDisplaySettingsState(arabicFontSize: $arabicFontSize, translationFontSize: $translationFontSize, showTranslation: $showTranslation, showArabicText: $showArabicText, showAyahNumbers: $showAyahNumbers, autoHighlight: $autoHighlight, fontScript: $fontScript, translatorName: $translatorName, themeMode: $themeMode, harakatColor: $harakatColor)';
+  return 'QuranDisplaySettingsState(arabicFontSize: $arabicFontSize, translationFontSize: $translationFontSize, showTranslation: $showTranslation, showArabicText: $showArabicText, showAyahNumbers: $showAyahNumbers, autoHighlight: $autoHighlight, fontScript: $fontScript, translatorName: $translatorName, themeMode: $themeMode, harakatColor: $harakatColor, removeTranslationBrackets: $removeTranslationBrackets)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $QuranDisplaySettingsStateCopyWith<$Res>  {
   factory $QuranDisplaySettingsStateCopyWith(QuranDisplaySettingsState value, $Res Function(QuranDisplaySettingsState) _then) = _$QuranDisplaySettingsStateCopyWithImpl;
 @useResult
 $Res call({
- double arabicFontSize, double translationFontSize, bool showTranslation, bool showArabicText, bool showAyahNumbers, bool autoHighlight, String fontScript, String translatorName, String themeMode, String harakatColor
+ double arabicFontSize, double translationFontSize, bool showTranslation, bool showArabicText, bool showAyahNumbers, bool autoHighlight, String fontScript, String translatorName, String themeMode, String harakatColor, bool removeTranslationBrackets
 });
 
 
@@ -62,7 +62,7 @@ class _$QuranDisplaySettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of QuranDisplaySettingsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? arabicFontSize = null,Object? translationFontSize = null,Object? showTranslation = null,Object? showArabicText = null,Object? showAyahNumbers = null,Object? autoHighlight = null,Object? fontScript = null,Object? translatorName = null,Object? themeMode = null,Object? harakatColor = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? arabicFontSize = null,Object? translationFontSize = null,Object? showTranslation = null,Object? showArabicText = null,Object? showAyahNumbers = null,Object? autoHighlight = null,Object? fontScript = null,Object? translatorName = null,Object? themeMode = null,Object? harakatColor = null,Object? removeTranslationBrackets = null,}) {
   return _then(_self.copyWith(
 arabicFontSize: null == arabicFontSize ? _self.arabicFontSize : arabicFontSize // ignore: cast_nullable_to_non_nullable
 as double,translationFontSize: null == translationFontSize ? _self.translationFontSize : translationFontSize // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,8 @@ as bool,fontScript: null == fontScript ? _self.fontScript : fontScript // ignore
 as String,translatorName: null == translatorName ? _self.translatorName : translatorName // ignore: cast_nullable_to_non_nullable
 as String,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as String,harakatColor: null == harakatColor ? _self.harakatColor : harakatColor // ignore: cast_nullable_to_non_nullable
-as String,
+as String,removeTranslationBrackets: null == removeTranslationBrackets ? _self.removeTranslationBrackets : removeTranslationBrackets // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -215,7 +216,7 @@ return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTransla
 
 
 class _QuranDisplaySettingsState implements QuranDisplaySettingsState {
-  const _QuranDisplaySettingsState({this.arabicFontSize = 28.0, this.translationFontSize = 16.0, this.showTranslation = true, this.showArabicText = true, this.showAyahNumbers = true, this.autoHighlight = true, this.fontScript = 'عثمان طه', this.translatorName = 'شیخ حسین انصاریان', this.themeMode = 'light', this.harakatColor = '#FF4444'});
+  const _QuranDisplaySettingsState({this.arabicFontSize = 28.0, this.translationFontSize = 16.0, this.showTranslation = true, this.showArabicText = true, this.showAyahNumbers = true, this.autoHighlight = true, this.fontScript = 'عثمان طه', this.translatorName = 'شیخ حسین انصاریان', this.themeMode = 'light', this.harakatColor = '#FF4444', this.removeTranslationBrackets = true});
   
 
 @override@JsonKey() final  double arabicFontSize;
@@ -228,6 +229,7 @@ class _QuranDisplaySettingsState implements QuranDisplaySettingsState {
 @override@JsonKey() final  String translatorName;
 @override@JsonKey() final  String themeMode;
 @override@JsonKey() final  String harakatColor;
+@override@JsonKey() final  bool removeTranslationBrackets;
 
 /// Create a copy of QuranDisplaySettingsState
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +241,16 @@ _$QuranDisplaySettingsStateCopyWith<_QuranDisplaySettingsState> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuranDisplaySettingsState&&(identical(other.arabicFontSize, arabicFontSize) || other.arabicFontSize == arabicFontSize)&&(identical(other.translationFontSize, translationFontSize) || other.translationFontSize == translationFontSize)&&(identical(other.showTranslation, showTranslation) || other.showTranslation == showTranslation)&&(identical(other.showArabicText, showArabicText) || other.showArabicText == showArabicText)&&(identical(other.showAyahNumbers, showAyahNumbers) || other.showAyahNumbers == showAyahNumbers)&&(identical(other.autoHighlight, autoHighlight) || other.autoHighlight == autoHighlight)&&(identical(other.fontScript, fontScript) || other.fontScript == fontScript)&&(identical(other.translatorName, translatorName) || other.translatorName == translatorName)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.harakatColor, harakatColor) || other.harakatColor == harakatColor));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuranDisplaySettingsState&&(identical(other.arabicFontSize, arabicFontSize) || other.arabicFontSize == arabicFontSize)&&(identical(other.translationFontSize, translationFontSize) || other.translationFontSize == translationFontSize)&&(identical(other.showTranslation, showTranslation) || other.showTranslation == showTranslation)&&(identical(other.showArabicText, showArabicText) || other.showArabicText == showArabicText)&&(identical(other.showAyahNumbers, showAyahNumbers) || other.showAyahNumbers == showAyahNumbers)&&(identical(other.autoHighlight, autoHighlight) || other.autoHighlight == autoHighlight)&&(identical(other.fontScript, fontScript) || other.fontScript == fontScript)&&(identical(other.translatorName, translatorName) || other.translatorName == translatorName)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.harakatColor, harakatColor) || other.harakatColor == harakatColor)&&(identical(other.removeTranslationBrackets, removeTranslationBrackets) || other.removeTranslationBrackets == removeTranslationBrackets));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,arabicFontSize,translationFontSize,showTranslation,showArabicText,showAyahNumbers,autoHighlight,fontScript,translatorName,themeMode,harakatColor);
+int get hashCode => Object.hash(runtimeType,arabicFontSize,translationFontSize,showTranslation,showArabicText,showAyahNumbers,autoHighlight,fontScript,translatorName,themeMode,harakatColor,removeTranslationBrackets);
 
 @override
 String toString() {
-  return 'QuranDisplaySettingsState(arabicFontSize: $arabicFontSize, translationFontSize: $translationFontSize, showTranslation: $showTranslation, showArabicText: $showArabicText, showAyahNumbers: $showAyahNumbers, autoHighlight: $autoHighlight, fontScript: $fontScript, translatorName: $translatorName, themeMode: $themeMode, harakatColor: $harakatColor)';
+  return 'QuranDisplaySettingsState(arabicFontSize: $arabicFontSize, translationFontSize: $translationFontSize, showTranslation: $showTranslation, showArabicText: $showArabicText, showAyahNumbers: $showAyahNumbers, autoHighlight: $autoHighlight, fontScript: $fontScript, translatorName: $translatorName, themeMode: $themeMode, harakatColor: $harakatColor, removeTranslationBrackets: $removeTranslationBrackets)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$QuranDisplaySettingsStateCopyWith<$Res> implements $Quran
   factory _$QuranDisplaySettingsStateCopyWith(_QuranDisplaySettingsState value, $Res Function(_QuranDisplaySettingsState) _then) = __$QuranDisplaySettingsStateCopyWithImpl;
 @override @useResult
 $Res call({
- double arabicFontSize, double translationFontSize, bool showTranslation, bool showArabicText, bool showAyahNumbers, bool autoHighlight, String fontScript, String translatorName, String themeMode, String harakatColor
+ double arabicFontSize, double translationFontSize, bool showTranslation, bool showArabicText, bool showAyahNumbers, bool autoHighlight, String fontScript, String translatorName, String themeMode, String harakatColor, bool removeTranslationBrackets
 });
 
 
@@ -276,7 +278,7 @@ class __$QuranDisplaySettingsStateCopyWithImpl<$Res>
 
 /// Create a copy of QuranDisplaySettingsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? arabicFontSize = null,Object? translationFontSize = null,Object? showTranslation = null,Object? showArabicText = null,Object? showAyahNumbers = null,Object? autoHighlight = null,Object? fontScript = null,Object? translatorName = null,Object? themeMode = null,Object? harakatColor = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? arabicFontSize = null,Object? translationFontSize = null,Object? showTranslation = null,Object? showArabicText = null,Object? showAyahNumbers = null,Object? autoHighlight = null,Object? fontScript = null,Object? translatorName = null,Object? themeMode = null,Object? harakatColor = null,Object? removeTranslationBrackets = null,}) {
   return _then(_QuranDisplaySettingsState(
 arabicFontSize: null == arabicFontSize ? _self.arabicFontSize : arabicFontSize // ignore: cast_nullable_to_non_nullable
 as double,translationFontSize: null == translationFontSize ? _self.translationFontSize : translationFontSize // ignore: cast_nullable_to_non_nullable
@@ -288,7 +290,8 @@ as bool,fontScript: null == fontScript ? _self.fontScript : fontScript // ignore
 as String,translatorName: null == translatorName ? _self.translatorName : translatorName // ignore: cast_nullable_to_non_nullable
 as String,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as String,harakatColor: null == harakatColor ? _self.harakatColor : harakatColor // ignore: cast_nullable_to_non_nullable
-as String,
+as String,removeTranslationBrackets: null == removeTranslationBrackets ? _self.removeTranslationBrackets : removeTranslationBrackets // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

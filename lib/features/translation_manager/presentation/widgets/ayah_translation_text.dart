@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/ayah_translation_provider.dart';
 import 'translation_skeleton.dart';
 
@@ -44,8 +46,13 @@ class AyahTranslationText extends ConsumerWidget {
       return const TranslationSkeleton();
     }
 
+    final removeBrackets = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.removeTranslationBrackets),
+    );
+
     final rawTranslation = translationAsync.value ?? fallbackText;
-    final translationText = ArabicTextHelper.sanitizeText(rawTranslation);
+    final textToClean = removeBrackets ? rawTranslation.removeTranslatorExplanations() : rawTranslation;
+    final translationText = ArabicTextHelper.sanitizeText(textToClean);
 
     if (translationText.isEmpty) {
       return const SizedBox.shrink();

@@ -16,5 +16,6 @@ abstract class QuranDisplaySettingsState with _$QuranDisplaySettingsState {
     @Default('شیخ حسین انصاریان') String translatorName,
     @Default('light') String themeMode, // 'light', 'sepia', 'dark'
     @Default('#FF4444') String harakatColor,
+    @Default(true) bool removeTranslationBrackets,
   }) = _QuranDisplaySettingsState;
 }

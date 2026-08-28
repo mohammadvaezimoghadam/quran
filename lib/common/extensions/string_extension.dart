@@ -1,8 +1,11 @@
 extension StringSearchNormalizeExtension on String {
-  /// Removes text inside brackets [...] and cleans up resulting multiple spaces.
+  /// Removes text inside brackets [...], (...), {...} and cleans up resulting multiple spaces.
   /// Used primarily for cleaning up translator explanations from Quran translations.
   String removeTranslatorExplanations() {
-    String cleanText = replaceAll(RegExp(r'\[.*?\]'), '');
+    final regex = RegExp(r'[\(\[\{\（\［\｛].*?[\)\]\}\）\］\｝]');
+    String cleanText = replaceAll(regex, '');
+    // Clean up orphan spaces before punctuation (e.g. " ." -> ".")
+    cleanText = cleanText.replaceAll(RegExp(r'\s+([.,;:؛،!؟])'), r'$1');
     return cleanText.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 

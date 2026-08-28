@@ -70,10 +70,14 @@ class AyahListItem extends ConsumerWidget {
           ),
         );
         
-    final displaySettings = ref.watch(quranDisplaySettingsControllerProvider);
-    final showTranslation = displaySettings.showTranslation;
-    final translationFontSize = displaySettings.translationFontSize;
-    
+    final showTranslation = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.showTranslation),
+    );
+    final translationFontSize = ref.watch(
+      quranDisplaySettingsControllerProvider.select(
+        (s) => s.translationFontSize,
+      ),
+    );
     final autoHighlight = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.autoHighlight),
     );
