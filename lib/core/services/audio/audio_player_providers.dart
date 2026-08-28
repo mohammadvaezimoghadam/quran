@@ -3,6 +3,7 @@ import 'package:just_audio/just_audio.dart';
 
 import 'i_audio_player_service.dart';
 import 'just_audio_player_service.dart';
+import 'quran_audio_handler.dart';
 
 final rawAudioPlayerProvider = Provider<AudioPlayer>((ref) {
   final player = AudioPlayer();
@@ -10,6 +11,12 @@ final rawAudioPlayerProvider = Provider<AudioPlayer>((ref) {
     player.dispose();
   });
   return player;
+});
+
+final quranAudioHandlerProvider = Provider<QuranAudioHandler>((ref) {
+  throw UnimplementedError(
+    'quranAudioHandlerProvider must be overridden in ProviderScope',
+  );
 });
 
 final audioPlayerServiceProvider = Provider<IAudioPlayerService>((ref) {

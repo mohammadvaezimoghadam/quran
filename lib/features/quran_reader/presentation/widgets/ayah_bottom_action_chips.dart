@@ -33,16 +33,6 @@ class AyahBottomActionChips extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Tafsir Action Chip
-                    _buildSubtleChip(
-                      context: context,
-                      label: 'تفسیر آیه',
-                      onTap: onTafsirTap,
-                      colorScheme: colorScheme,
-                    ),
-
-                    const SizedBox(width: AppDimens.stackSmMd),
-
                     // Vocabulary / Dictionary Action Chip
                     _buildSubtleChip(
                       context: context,

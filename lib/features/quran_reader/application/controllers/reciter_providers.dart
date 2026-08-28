@@ -28,15 +28,30 @@ final selectedReciterStyleIdProvider =
   SelectedReciterStyleIdNotifier.new,
 );
 
-/// Cached FutureProvider for reciter list based on selected style filter
+
+/// Provider for the entire catalog of reciters (all available reciters)
+final allRecitersListProvider = FutureProvider<Result<List<ReciterEntity>, Failure>>((ref) async {
+  final repository = ref.watch(reciterRepositoryProvider);
+  return repository.getAllReciters();
+});
+
+/// Filtered reciter list for the main UI (only active ones)
 final recitersListProvider =
     FutureProvider<Result<List<ReciterEntity>, Failure>>((ref) async {
-  final repository = ref.watch(reciterRepositoryProvider);
-  final styleId = ref.watch(selectedReciterStyleIdProvider);
-
-  if (styleId == null) {
-    return repository.getAllReciters();
-  } else {
-    return repository.getRecitersByStyle(styleId);
-  }
+  final allRecitersResult = await ref.watch(allRecitersListProvider.future);
+  
+  return allRecitersResult.when(
+    (allReciters) {
+      final styleId = ref.watch(selectedReciterStyleIdProvider);
+      
+      var filtered = allReciters;
+      
+      if (styleId != null) {
+        filtered = filtered.where((r) => r.styleId == styleId).toList();
+      }
+      
+      return Success(filtered);
+    },
+    (error) => Error(error),
+  );
 });

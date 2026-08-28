@@ -5,6 +5,7 @@ import '../../features/quran_home/presentation/ui/quran_home_screen.dart';
 import '../../features/quran_reader/presentation/ui/quran_reader_screen.dart';
 import '../../features/splash/presentation/ui/splash_screen.dart';
 import '../../features/surah_list/presentation/ui/surah_list_screen.dart';
+import '../../features/audio_manager/presentation/ui/audio_download_manager_screen.dart';
 import 'route_name.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -41,6 +42,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             initialAyahNumber: initialAyah,
             translationId: translationId,
           );
+        },
+      ),
+      GoRoute(
+        path: '/audio-download-manager',
+        name: audioDownloadManagerRoute,
+        builder: (context, state) {
+          final surahIdStr = state.uri.queryParameters['surahId'];
+          final surahId = surahIdStr != null ? int.tryParse(surahIdStr) : null;
+          return AudioDownloadManagerScreen(initialSurahId: surahId);
         },
       ),
     ],

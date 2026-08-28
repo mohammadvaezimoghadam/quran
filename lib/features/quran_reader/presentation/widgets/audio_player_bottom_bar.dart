@@ -10,8 +10,8 @@ import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../application/controllers/selected_ayah_action_provider.dart';
 import 'audio_mini_progress_slider.dart';
-import 'reciter_avatar_button.dart';
-import 'reciter_selection_bottom_sheet.dart';
+import '../../../../common/widgets/reciter/reciter_avatar_button.dart';
+import '../../../../common/widgets/reciter/reciter_selection_bottom_sheet.dart';
 
 class AudioPlayerBottomBar extends ConsumerWidget {
   final int surahId;

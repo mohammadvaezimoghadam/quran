@@ -15,6 +15,9 @@ class IslamicKatibahAppBar extends StatefulWidget implements PreferredSizeWidget
   final List<Widget>? actions;
   final ValueChanged<String>? onSearchChanged;
   final bool showSearchField;
+  final Widget? searchPrefixWidget;
+  final FocusNode? searchFocusNode;
+  final TextEditingController? searchController;
 
   const IslamicKatibahAppBar({
     super.key,
@@ -25,6 +28,9 @@ class IslamicKatibahAppBar extends StatefulWidget implements PreferredSizeWidget
     this.actions,
     this.onSearchChanged,
     this.showSearchField = false,
+    this.searchPrefixWidget,
+    this.searchFocusNode,
+    this.searchController,
   });
 
   @override
@@ -35,11 +41,34 @@ class IslamicKatibahAppBar extends StatefulWidget implements PreferredSizeWidget
 }
 
 class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
-  final TextEditingController _searchController = TextEditingController();
+  TextEditingController? _internalSearchController;
+
+  TextEditingController get _searchController =>
+      widget.searchController ?? (_internalSearchController ??= TextEditingController());
+
+  @override
+  void initState() {
+    super.initState();
+    widget.searchFocusNode?.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didUpdateWidget(covariant IslamicKatibahAppBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.searchFocusNode != oldWidget.searchFocusNode) {
+      oldWidget.searchFocusNode?.removeListener(_onFocusChange);
+      widget.searchFocusNode?.addListener(_onFocusChange);
+    }
+  }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    widget.searchFocusNode?.removeListener(_onFocusChange);
+    _internalSearchController?.dispose();
     super.dispose();
   }
 
@@ -149,7 +178,15 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppDimens.marginPage,
                     ),
-                    child: _buildSearchTextField(softGoldText),
+                    child: Row(
+                      children: [
+                        Expanded(child: _buildSearchTextField(softGoldText)),
+                        if (widget.searchPrefixWidget != null) ...[
+                          const SizedBox(width: 12),
+                          widget.searchPrefixWidget!,
+                        ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -183,6 +220,7 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
       child: Center(
         child: TextField(
           controller: _searchController,
+          focusNode: widget.searchFocusNode,
           onChanged: (text) {
             widget.onSearchChanged?.call(text);
             setState(() {});
@@ -221,6 +259,7 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
                     onPressed: () {
                       _searchController.clear();
                       widget.onSearchChanged?.call('');
+                      widget.searchFocusNode?.unfocus();
                       setState(() {});
                     },
                   )

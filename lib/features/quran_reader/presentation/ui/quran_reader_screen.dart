@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
+import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
@@ -99,10 +101,30 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
       }
     });
 
-    // Listen to audio errors
+    // Listen to audio errors – distinguish download-related messages
     ref.listen(quranAudioControllerProvider, (previous, next) {
       if (next.errorMessage != null && previous?.errorMessage != next.errorMessage) {
-        AppSnackBar.showError(context, next.errorMessage!);
+        final isDownloadRelated = next.errorMessage!.contains('دانلود');
+        if (isDownloadRelated) {
+          AppSnackBar.showInfo(
+            context,
+            next.errorMessage!,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'دانلود صوت',
+              textColor: Theme.of(context).colorScheme.primary,
+              onPressed: () {
+                final targetSurahId = next.currentSurahId ?? widget.surahId;
+                context.pushNamed(
+                  audioDownloadManagerRoute,
+                  queryParameters: {'surahId': targetSurahId.toString()},
+                );
+              },
+            ),
+          );
+        } else {
+          AppSnackBar.showError(context, next.errorMessage!);
+        }
       }
     });
 

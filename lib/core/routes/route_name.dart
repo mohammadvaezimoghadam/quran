@@ -5,3 +5,4 @@ const String surahDetailRoute = "surah_detail";
 const String searchRoute = "search";
 const String settingsRoute = "settings";
 const String quranReaderRoute = "quran_reader";
+const String audioDownloadManagerRoute = "audio_download_manager";

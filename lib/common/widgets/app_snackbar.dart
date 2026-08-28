@@ -6,8 +6,10 @@ class AppSnackBar {
     BuildContext context,
     String message,
     Color backgroundColor,
-    IconData icon,
-  ) {
+    IconData icon, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 3),
+  }) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -27,13 +29,14 @@ class AppSnackBar {
             ),
           ],
         ),
+        action: action,
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),
         margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
+        duration: duration,
       ),
     );
   }
@@ -46,7 +49,19 @@ class AppSnackBar {
     _show(context, message, Colors.red.shade600, CupertinoIcons.exclamationmark_circle);
   }
 
-  static void showInfo(BuildContext context, String message) {
-    _show(context, message, Colors.blue.shade600, CupertinoIcons.info_circle);
+  static void showInfo(
+    BuildContext context,
+    String message, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    _show(
+      context,
+      message,
+      Colors.blue.shade600,
+      CupertinoIcons.info_circle,
+      action: action,
+      duration: duration,
+    );
   }
 }

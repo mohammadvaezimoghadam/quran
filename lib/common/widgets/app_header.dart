@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 /// AppHeader - Shared fixed header component for Hayat UI
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final String avatarImagePath;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onAvatarTap;
   final bool showNotificationIcon;
@@ -13,7 +12,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({
     super.key,
     this.title = 'خانه',
-    this.avatarImagePath = 'assets/images/user_profile_avatar.png',
+
     this.onNotificationTap,
     this.onAvatarTap,
     this.showNotificationIcon = true,
@@ -58,11 +57,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 color: containerHigh,
               ),
-              child: ClipOval(
-                child: Image.asset(
-                  avatarImagePath,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
+              child: const ClipOval(
+                child: Center(
+                  child: Icon(
                     CupertinoIcons.person_fill,
                     color: textSecondary,
                     size: 24,

@@ -2,18 +2,20 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../common/widgets/app_cached_network_image.dart';
-import '../../../../core/services/audio/audio_player_state.dart';
-import '../../application/controllers/quran_audio_controller.dart';
+import '../app_cached_network_image.dart';
+import '../../../core/services/audio/audio_player_state.dart';
+import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
 import 'reciter_selection_bottom_sheet.dart';
 
 /// Reusable circular button displaying reciter avatar with a slow rotating ambient glow ring.
 class ReciterAvatarButton extends ConsumerStatefulWidget {
   final double radius;
+  final bool showLabel;
 
   const ReciterAvatarButton({
     super.key,
     this.radius = 24,
+    this.showLabel = true,
   });
 
   @override
@@ -141,33 +143,34 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
               ),
 
               // 3. Small "قاریان" label badge on the top-left corner
-              Positioned(
-                top: -2,
-                left: -4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    borderRadius: BorderRadius.circular(6),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.35),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
+              if (widget.showLabel)
+                Positioned(
+                  top: -2,
+                  left: -4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.35),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'قاریان',
+                      style: TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.2,
                       ),
-                    ],
-                  ),
-                  child: const Text(
-                    'قاریان',
-                    style: TextStyle(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      height: 1.2,
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

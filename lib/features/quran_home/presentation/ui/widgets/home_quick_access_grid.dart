@@ -5,18 +5,22 @@ import 'package:go_router/go_router.dart';
 import '../../../../../common/constants/app_constants.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/routes/route_name.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_dimens.dart';
+import '../../../../../common/widgets/app_snackbar.dart';
 import '../../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
 /// Quick Access Action Item Model
 class _QuickAccessItem {
   final String title;
-  final String svgAssetPath;
+  final String? svgAssetPath;
+  final IconData? iconData;
   final VoidCallback onTap;
 
   const _QuickAccessItem({
     required this.title,
-    required this.svgAssetPath,
+    this.svgAssetPath,
+    this.iconData,
     required this.onTap,
   });
 }
@@ -39,15 +43,10 @@ class HomeQuickAccessGrid extends StatelessWidget {
         onTap: () => TranslationManagerBottomSheet.show(context),
       ),
       _QuickAccessItem(
-        title: AppConstants.tafsirTitle,
-        svgAssetPath: 'assets/icons/ic_tafsir.svg',
+        title: AppConstants.settingsTitle,
+        iconData: Icons.settings_outlined,
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(AppConstants.tafsirComingSoon),
-              duration: Duration(seconds: 2),
-            ),
-          );
+          AppSnackBar.showInfo(context, AppConstants.settingsComingSoon);
         },
       ),
     ];
@@ -115,11 +114,18 @@ class _QuickAccessCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SvgPicture.asset(
-                  item.svgAssetPath,
-                  width: 48,
-                  height: 48,
-                ),
+                if (item.svgAssetPath != null)
+                  SvgPicture.asset(
+                    item.svgAssetPath!,
+                    width: 48,
+                    height: 48,
+                  )
+                else if (item.iconData != null)
+                  Icon(
+                    item.iconData,
+                    size: 48,
+                    color: AppColors.goldAccent,
+                  ),
                 10.vSpace,
                 Text(
                   item.title,

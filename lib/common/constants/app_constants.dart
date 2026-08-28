@@ -65,10 +65,10 @@ abstract class AppConstants {
   static const String quickAccessTitle = 'دسترسی سریع';
   static const String surahListTitle = 'سوره‌ها';
   static const String translationTitle = 'ترجمه';
-  static const String tafsirTitle = 'تفسیر ';
+  static const String settingsTitle = 'تنظیمات';
   static const String homeWelcomeTitle = 'به اپلیکیشن قرآن کریم خوش آمدید';
   static const String translationComingSoon = 'بخش ترجمه به زودی اضافه می‌شود';
-  static const String tafsirComingSoon = 'بخش تفسیر به زودی اضافه می‌شود';
+  static const String settingsComingSoon = 'بخش تنظیمات به زودی اضافه می‌شود';
 
   // Translation Selection Bottom Sheet
   static const String selectSurahAndTranslatorTitle = 'انتخاب سوره و مترجم';

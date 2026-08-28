@@ -107,71 +107,75 @@ class JustAudioPlayerService implements IAudioPlayerService {
       ),
     );
 
-    // Cleanly stop any existing stream to prevent Android MediaCodec dead thread crashes
     _isInternalTransition = true;
-    await _audioPlayer.stop();
-    _isInternalTransition = false;
+    try {
+      // Pause (NOT stop) current playback to keep ExoPlayer instance alive.
+      // stop() causes ExoPlayer to Release → Android kills foreground notification.
+      // pause() keeps the native player alive so setUrl() just swaps the source.
+      if (_audioPlayer.playing) {
+        await _audioPlayer.pause();
+      }
 
-    // Brief delay for native MediaCodec handler thread to fully release resources
-    // before allocating a new decoder — prevents dead thread warnings and buffer conflicts.
-    await Future.delayed(const Duration(milliseconds: 50));
+      // Brief delay for native MediaCodec to settle before loading new source
+      await Future.delayed(const Duration(milliseconds: 20));
 
-    // Bail out if a newer play() was called during stop/delay
-    if (_playGeneration != generation) return;
-
-    // Retry loop for transient network failures
-    for (int attempt = 0; attempt <= _maxRetries; attempt++) {
-      // Check before each attempt — a newer play() supersedes this one
+      // Bail out if a newer play() was called during stop/delay
       if (_playGeneration != generation) return;
 
-      try {
-        await _audioPlayer.setUrl(url).timeout(
-          _loadTimeout,
-          onTimeout: () {
-            throw TimeoutException(
-              'سرور صوت پاسخ نمی‌دهد. لطفاً اتصال اینترنت خود را بررسی کنید.',
-              _loadTimeout,
-            );
-          },
-        );
-
-        // Bail out if superseded while waiting for setUrl
+      // Retry loop for transient network failures
+      for (int attempt = 0; attempt <= _maxRetries; attempt++) {
+        // Check before each attempt — a newer play() supersedes this one
         if (_playGeneration != generation) return;
 
-        // Successful load — start playback
-        await _audioPlayer.play();
-        return; // Exit retry loop on success
-      } catch (e) {
-        // If superseded by a newer play(), exit silently
-        if (_playGeneration != generation) return;
+        try {
+          await _audioPlayer.setUrl(url).timeout(
+            _loadTimeout,
+            onTimeout: () {
+              throw TimeoutException(
+                'سرور صوت پاسخ نمی‌دهد. لطفاً اتصال اینترنت خود را بررسی کنید.',
+                _loadTimeout,
+              );
+            },
+          );
 
-        final errorStr = e.toString().toLowerCase();
+          // Bail out if superseded while waiting for setUrl
+          if (_playGeneration != generation) return;
 
-        // If interrupted by a new play() call, simply exit silently.
-        // We DO NOT want to emit an error state and overwrite the new stream.
-        if (errorStr.contains('interrupted') || errorStr.contains('abort')) {
-          return;
-        }
+          // Reset position to start of new track (pause keeps old position)
+          await _audioPlayer.seek(Duration.zero);
 
-        final isLastAttempt = attempt == _maxRetries;
-        final isRetryable = _isRetryableError(e);
+          // Successful load — start playback
+          await _audioPlayer.play();
+          return; // Exit retry loop on success
+        } catch (e) {
+          if (_playGeneration != generation) return;
 
-        if (isLastAttempt || !isRetryable) {
-          // Final failure — report to UI (only if still the active generation)
-          if (_playGeneration == generation) {
-            _updateState(
-              _state.copyWith(
-                status: AudioStatus.error,
-                errorMessage: AudioErrorParser.parseError(e),
-              ),
-            );
+          final errorStr = e.toString().toLowerCase();
+          if (errorStr.contains('interrupted') || errorStr.contains('abort')) {
+            return;
           }
-          return;
-        }
 
-        // Wait before next retry (exponential backoff: 800ms, 1600ms)
-        final delay = _retryBaseDelay * (attempt + 1);
-        await Future.delayed(delay);
+          final isLastAttempt = attempt == _maxRetries;
+          final isRetryable = _isRetryableError(e);
+
+          if (isLastAttempt || !isRetryable) {
+            if (_playGeneration == generation) {
+              _updateState(
+                _state.copyWith(
+                  status: AudioStatus.error,
+                  errorMessage: AudioErrorParser.parseError(e),
+                ),
+              );
+            }
+            return;
+          }
+
+          await Future.delayed(Duration(seconds: 1 << attempt));
+        }
+      }
+    } finally {
+      if (_playGeneration == generation) {
+        _isInternalTransition = false;
       }
     }
   }

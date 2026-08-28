@@ -98,7 +98,7 @@ class SurahInfoContent extends ConsumerWidget {
               ),
             ),
 
-            const Spacer(),
+            const SizedBox(width: 12),
 
             // Ayah Count Badge
             SurahAyahBadge(

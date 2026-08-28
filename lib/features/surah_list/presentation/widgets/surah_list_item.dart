@@ -5,6 +5,7 @@ import '../../../../core/theme/app_dimens.dart';
 import '../../domain/entities/surah_entity.dart';
 import 'surah_info_content.dart';
 import 'surah_number_medallion.dart';
+import 'surah_audio_download_button.dart';
 
 /// Clean Surah Card composed of modular sub-widgets.
 class SurahListItem extends StatelessWidget {
@@ -52,6 +53,14 @@ class SurahListItem extends StatelessWidget {
                     surah: surah,
                     isDark: isDark,
                   ),
+                ),
+
+                // 3. Download Audio Button
+                SurahAudioDownloadButton(
+                  surah: surah,
+                  onDownloadTap: () {
+                    // TODO: Open Download Bottom Sheet
+                  },
                 ),
               ],
             ),

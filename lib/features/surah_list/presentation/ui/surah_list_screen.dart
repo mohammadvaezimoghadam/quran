@@ -11,17 +11,42 @@ import '../../application/controllers/surah_list_controller.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.dart';
 import '../../../page_navigation/presentation/widgets/page_navigation_bottom_sheet.dart';
+import '../../../../common/widgets/reciter/reciter_avatar_button.dart';
+import '../../../../core/services/audio_storage/audio_storage_providers.dart';
+import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../widgets/surah_error_view.dart';
 import '../widgets/surah_list_item.dart';
+import '../../domain/entities/surah_entity.dart';
 
-class SurahListScreen extends ConsumerWidget {
+/// Root screen – uses StatefulWidget so that the FocusNode survives rebuilds
+/// and we can explicitly control keyboard dismiss on navigation.
+class SurahListScreen extends ConsumerStatefulWidget {
   const SurahListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(surahListControllerProvider);
-    final controller = ref.read(surahListControllerProvider.notifier);
+  ConsumerState<SurahListScreen> createState() => _SurahListScreenState();
+}
 
+class _SurahListScreenState extends ConsumerState<SurahListScreen> {
+  final FocusNode _searchFocusNode = FocusNode();
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Only select what we need to avoid full-page rebuilds
+    final isLoading = ref.watch(
+      surahListControllerProvider.select((s) => s.isLoading),
+    );
+    final errorMessage = ref.watch(
+      surahListControllerProvider.select((s) => s.errorMessage),
+    );
     final fontScript = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
     );
@@ -33,11 +58,14 @@ class SurahListScreen extends ConsumerWidget {
         surahName: AppConstants.surahListScreenTitle,
         fontFamily: fontFamily,
         showSearchField: true,
+        searchFocusNode: _searchFocusNode,
+        searchController: _searchController,
+        searchPrefixWidget: const ReciterAvatarButton(radius: 18, showLabel: false),
         onSearchChanged: (query) {
-          controller.searchSurahs(query);
+          ref.read(surahListControllerProvider.notifier).searchSurahs(query);
         },
       ),
-      body: _buildBody(context, ref, state, controller),
+      body: _buildBody(context, isLoading, errorMessage),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           PageNavigationBottomSheet.show(context);
@@ -60,21 +88,24 @@ class SurahListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, WidgetRef ref, state, controller) {
-    if (state.isLoading) {
+  Widget _buildBody(BuildContext context, bool isLoading, String? errorMessage) {
+    if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state.errorMessage != null) {
+    if (errorMessage != null) {
       return SurahErrorView(
-        errorMessage: state.errorMessage!,
+        errorMessage: errorMessage,
         onRetry: () {
-          controller.build();
+          ref.read(surahListControllerProvider.notifier).build();
         },
       );
     }
 
-    final filteredSurahs = state.filteredSurahs;
+    // Watch filteredSurahs only inside the body so AppBar doesn't rebuild on search changes
+    final filteredSurahs = ref.watch(
+      surahListControllerProvider.select((s) => s.filteredSurahs),
+    );
 
     if (filteredSurahs.isEmpty) {
       return const Center(
@@ -86,6 +117,7 @@ class SurahListScreen extends ConsumerWidget {
     }
 
     return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.only(
         left: 12,
         right: 12,
@@ -98,20 +130,114 @@ class SurahListScreen extends ConsumerWidget {
         final surah = filteredSurahs[index];
         return SurahListItem(
           surah: surah,
-          onTap: () {
-            ref.read(quranDisplaySettingsControllerProvider.notifier).toggleArabicText(true);
-            Future.microtask(() {
-              if (context.mounted) {
-                context.pushNamed(
-                  quranReaderRoute,
-                  pathParameters: {'id': surah.number.toString()},
-                  queryParameters: {'name': surah.name},
-                );
-              }
-            });
-          },
+          onTap: () => _handleSurahTap(surah),
         );
       },
     );
+  }
+
+  void _handleSurahTap(SurahEntity surah) {
+    final reciter = ref.read(quranAudioControllerProvider).selectedReciter;
+    final isDownloaded = reciter != null &&
+        ref.read(audioStorageServiceProvider).isSurahDownloaded(reciter.id, surah.number);
+
+    if (!isDownloaded) {
+      final fontScript = ref.read(
+        quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
+      );
+      final surahFontFamily = AppTypography.getFontFamilyByScript(fontScript);
+
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text.rich(
+            TextSpan(
+              style: const TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              children: [
+                const TextSpan(text: 'صوت سوره '),
+                TextSpan(
+                  text: surah.name,
+                  style: TextStyle(
+                    fontFamily: surahFontFamily,
+                    fontSize: 20,
+                    color: AppColors.goldAccent,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          content: const Text(
+            'صوت این سوره به‌طور کامل موجود نیست. می‌توانید سوره را بخوانید و تا آیه دانلودشده گوش دهید.',
+            style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 14),
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _openReader(surah);
+                  },
+                  child: const Text('خواندن سوره', style: TextStyle(fontFamily: AppTypography.fontFamily)),
+                ),
+                const SizedBox(width: 4),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _dismissSearchAndNavigate(() {
+                      context.pushNamed(
+                        audioDownloadManagerRoute,
+                        queryParameters: {'surahId': surah.number.toString()},
+                      );
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('دانلود صوت', style: TextStyle(fontFamily: AppTypography.fontFamily, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else {
+      _openReader(surah);
+    }
+  }
+
+  void _openReader(SurahEntity surah) {
+    _dismissSearchAndNavigate(() {
+      ref.read(quranDisplaySettingsControllerProvider.notifier).toggleArabicText(true);
+      context.pushNamed(
+        quranReaderRoute,
+        pathParameters: {'id': surah.number.toString()},
+        queryParameters: {'name': surah.name},
+      );
+    });
+  }
+
+  /// Unfocus the search field, clear query, then navigate.
+  /// Using addPostFrameCallback ensures the keyboard is dismissed
+  /// BEFORE the navigation happens, so it won't re-appear on pop.
+  void _dismissSearchAndNavigate(VoidCallback navigate) {
+    _searchFocusNode.unfocus();
+    _searchController.clear();
+    ref.read(surahListControllerProvider.notifier).searchSurahs('');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) navigate();
+    });
   }
 }

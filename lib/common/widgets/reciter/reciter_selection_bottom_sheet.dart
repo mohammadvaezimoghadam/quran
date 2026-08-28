@@ -1,15 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quran/core/theme/app_colors.dart';
 
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_cached_network_image.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../application/controllers/quran_audio_controller.dart';
-import '../../application/controllers/reciter_providers.dart';
-import '../../domain/entities/reciter_entity.dart';
+import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
+import '../../../features/quran_reader/application/controllers/reciter_providers.dart';
+import '../../../features/quran_reader/domain/entities/reciter_entity.dart';
 
 /// Model representing a unique Reciter person with all their recitation variants.
 class ReciterGroup {
@@ -26,15 +27,29 @@ class ReciterGroup {
 
 /// Modal Bottom Sheet for selecting reciters with high contrast inline variant popup menu.
 class ReciterSelectionBottomSheet extends ConsumerStatefulWidget {
-  const ReciterSelectionBottomSheet({super.key});
+  final bool isDownloadMode;
+  final Function(ReciterEntity)? onReciterSelected;
 
-  static Future<void> show(BuildContext context) {
+  const ReciterSelectionBottomSheet({
+    super.key,
+    this.isDownloadMode = false,
+    this.onReciterSelected,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    bool isDownloadMode = false,
+    Function(ReciterEntity)? onReciterSelected,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (context) => const ReciterSelectionBottomSheet(),
+      builder: (context) => ReciterSelectionBottomSheet(
+        isDownloadMode: isDownloadMode,
+        onReciterSelected: onReciterSelected,
+      ),
     );
   }
 
@@ -245,6 +260,13 @@ class _ReciterSelectionBottomSheetState
                       FilterChip(
                         label: const Text('همه سبک‌ها'),
                         selected: selectedStyleId == null,
+                        selectedColor: AppColors.primary,
+                        checkmarkColor: Colors.white,
+                        labelStyle: TextStyle(
+                          color: selectedStyleId == null
+                              ? Colors.white
+                              : colorScheme.onSurface,
+                        ),
                         onSelected: (_) {
                           ref
                               .read(selectedReciterStyleIdProvider.notifier)
@@ -258,6 +280,13 @@ class _ReciterSelectionBottomSheetState
                           child: FilterChip(
                             label: Text(style.name),
                             selected: isSelected,
+                            selectedColor: AppColors.primary,
+                            checkmarkColor: Colors.white,
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : colorScheme.onSurface,
+                            ),
                             onSelected: (_) {
                               ref
                                   .read(selectedReciterStyleIdProvider.notifier)
@@ -323,9 +352,13 @@ class _ReciterSelectionBottomSheetState
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              ref
-                                  .read(quranAudioControllerProvider.notifier)
-                                  .selectReciter(activeVariant);
+                              if (widget.isDownloadMode) {
+                                widget.onReciterSelected?.call(activeVariant);
+                              } else {
+                                ref
+                                    .read(quranAudioControllerProvider.notifier)
+                                    .selectReciter(activeVariant);
+                              }
                               Navigator.of(context).pop();
                             },
                             borderRadius: BorderRadius.circular(16.0),
@@ -412,10 +445,16 @@ class _ReciterSelectionBottomSheetState
                                           _selectedVariantsMap[group.baseName] =
                                               variant;
                                         });
-                                        ref
-                                            .read(quranAudioControllerProvider
-                                                .notifier)
-                                            .selectReciter(variant);
+                                        
+                                        if (widget.isDownloadMode) {
+                                          widget.onReciterSelected?.call(variant);
+                                          Navigator.of(context).pop();
+                                        } else {
+                                          ref
+                                              .read(quranAudioControllerProvider
+                                                  .notifier)
+                                              .selectReciter(variant);
+                                        }
                                       },
                                       itemBuilder: (popupContext) =>
                                           group.variants.map((v) {
