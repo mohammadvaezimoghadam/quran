@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,8 +15,11 @@ import '../../../page_navigation/presentation/widgets/page_navigation_bottom_she
 import '../../../../common/widgets/reciter/reciter_avatar_button.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
+import '../../application/controllers/favorite_surahs_controller.dart';
+import '../widgets/surah_action_dialog.dart';
 import '../widgets/surah_error_view.dart';
 import '../widgets/surah_list_item.dart';
+import '../widgets/surah_sort_bottom_sheet.dart';
 import '../../domain/entities/surah_entity.dart';
 
 /// Root screen – uses StatefulWidget so that the FocusNode survives rebuilds
@@ -50,22 +54,80 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
     final fontScript = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
     );
+    final isOnlyFavorites = ref.watch(
+      surahListControllerProvider.select((s) => s.isOnlyFavorites),
+    );
     final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
     return Scaffold(
       extendBody: true,
       appBar: IslamicKatibahAppBar(
-        surahName: AppConstants.surahListScreenTitle,
+        surahName: isOnlyFavorites ? 'فهرست شخصی' : AppConstants.surahListScreenTitle,
         fontFamily: fontFamily,
         showSearchField: true,
         searchFocusNode: _searchFocusNode,
         searchController: _searchController,
-        searchPrefixWidget: const ReciterAvatarButton(radius: 18, showLabel: false),
+        searchPrefixWidget: const ReciterAvatarButton(radius: 25, showLabel: false),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(
+              CupertinoIcons.ellipsis_vertical,
+              color: AppColors.softGoldText,
+              size: 22,
+            ),
+            tooltip: 'گزینه‌ها',
+            onSelected: (value) {
+              if (value == 'sort') {
+                SurahSortBottomSheet.show(context);
+              } else if (value == 'custom_list') {
+                ref.read(surahListControllerProvider.notifier).toggleOnlyFavorites();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<String>(
+                value: 'sort',
+                child: Row(
+                  children: [
+                    Icon(CupertinoIcons.sort_down, size: 20, color: AppColors.goldAccent),
+                    SizedBox(width: 8),
+                    Text(
+                      'مرتب‌سازی',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'custom_list',
+                child: Row(
+                  children: [
+                    Icon(
+                      isOnlyFavorites ? CupertinoIcons.list_bullet : CupertinoIcons.star_fill,
+                      size: 20,
+                      color: AppColors.goldAccent,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isOnlyFavorites ? 'نمایش همه سوره‌ها' : 'فهرست شخصی',
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
         onSearchChanged: (query) {
           ref.read(surahListControllerProvider.notifier).searchSurahs(query);
         },
       ),
-      body: _buildBody(context, isLoading, errorMessage),
+      body: _buildBody(context, isLoading, errorMessage, isOnlyFavorites),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           PageNavigationBottomSheet.show(context);
@@ -88,7 +150,12 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, bool isLoading, String? errorMessage) {
+  Widget _buildBody(
+    BuildContext context,
+    bool isLoading,
+    String? errorMessage,
+    bool isOnlyFavorites,
+  ) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -102,16 +169,34 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
       );
     }
 
-    // Watch filteredSurahs only inside the body so AppBar doesn't rebuild on search changes
-    final filteredSurahs = ref.watch(
+    // Watch filteredSurahs & favorite IDs
+    final initialFiltered = ref.watch(
       surahListControllerProvider.select((s) => s.filteredSurahs),
     );
+    final favoriteSurahIds = ref.watch(favoriteSurahsProvider);
+
+    final filteredSurahs = isOnlyFavorites
+        ? initialFiltered
+            .where((surah) => favoriteSurahIds.contains(surah.number))
+            .toList()
+        : initialFiltered;
 
     if (filteredSurahs.isEmpty) {
-      return const Center(
-        child: Text(
-          AppConstants.noSurahFound,
-          style: TextStyle(fontSize: 14, color: Colors.grey),
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Text(
+            isOnlyFavorites
+                ? 'فهرست شخصی شما خالی است.\nبا زدن آیکون ستاره در کنار هر سوره می‌توانید آن را به این فهرست اضافه کنید.'
+                : AppConstants.noSurahFound,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 14,
+              color: Colors.grey,
+              height: 1.6,
+            ),
+          ),
         ),
       );
     }
@@ -136,82 +221,42 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
     );
   }
 
-  void _handleSurahTap(SurahEntity surah) {
+  void _handleSurahTap(SurahEntity surah) async {
     final reciter = ref.read(quranAudioControllerProvider).selectedReciter;
-    final isDownloaded = reciter != null &&
-        ref.read(audioStorageServiceProvider).isSurahDownloaded(reciter.id, surah.number);
+    final storageService = ref.read(audioStorageServiceProvider);
+
+    bool isDownloaded = false;
+    if (reciter != null) {
+      final isMarked = storageService.isSurahDownloaded(reciter.id, surah.number);
+      final firstAyahPath = await storageService.getLocalAyahAudioPath(
+        reciterId: reciter.id,
+        surahId: surah.number,
+        ayahNumber: 1,
+      );
+      isDownloaded = isMarked || firstAyahPath != null;
+    }
 
     if (!isDownloaded) {
+      if (!mounted) return;
       final fontScript = ref.read(
         quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
       );
       final surahFontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
-      showDialog(
+      SurahActionDialog.show(
         context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text.rich(
-            TextSpan(
-              style: const TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-              children: [
-                const TextSpan(text: 'صوت سوره '),
-                TextSpan(
-                  text: surah.name,
-                  style: TextStyle(
-                    fontFamily: surahFontFamily,
-                    fontSize: 20,
-                    color: AppColors.goldAccent,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          content: const Text(
-            'صوت این سوره به‌طور کامل موجود نیست. می‌توانید سوره را بخوانید و تا آیه دانلودشده گوش دهید.',
-            style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 14),
-          ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _openReader(surah);
-                  },
-                  child: const Text('خواندن سوره', style: TextStyle(fontFamily: AppTypography.fontFamily)),
-                ),
-                const SizedBox(width: 4),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _dismissSearchAndNavigate(() {
-                      context.pushNamed(
-                        audioDownloadManagerRoute,
-                        queryParameters: {'surahId': surah.number.toString()},
-                      );
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('دانلود صوت', style: TextStyle(fontFamily: AppTypography.fontFamily, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-          ],
-        ),
+        surah: surah,
+        surahFontFamily: surahFontFamily,
+        onReadSurah: () => _openReader(surah),
+        onDownloadAudio: () {
+          final router = GoRouter.of(context);
+          _dismissSearchAndNavigate(() {
+            router.pushNamed(
+              audioDownloadManagerRoute,
+              queryParameters: {'surahId': surah.number.toString()},
+            );
+          });
+        },
       );
     } else {
       _openReader(surah);

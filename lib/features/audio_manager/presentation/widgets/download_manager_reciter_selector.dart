@@ -9,12 +9,19 @@ import '../../../quran_reader/application/controllers/quran_audio_controller.dar
 import '../../application/states/download_manager_state.dart';
 
 class DownloadManagerReciterSelector extends ConsumerWidget {
-  const DownloadManagerReciterSelector({super.key});
+  final bool isTranslationMode;
+
+  const DownloadManagerReciterSelector({
+    super.key,
+    this.isTranslationMode = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedReciter = ref.watch(downloadManagerSelectedReciterProvider);
-    final recitersResult = ref.watch(recitersListProvider);
+    final recitersResult = ref.watch(
+      isTranslationMode ? translationRecitersListProvider : recitersListProvider,
+    );
     
     List<ReciterEntity> reciters = [];
     if (recitersResult.value != null && recitersResult.value!.isSuccess()) {
@@ -24,7 +31,9 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
     if (selectedReciter == null && reciters.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final audioState = ref.read(quranAudioControllerProvider);
-        final defaultReciter = audioState.selectedReciter ?? reciters.first;
+        final defaultReciter = isTranslationMode
+            ? (audioState.selectedTranslationReciter ?? reciters.first)
+            : (audioState.selectedReciter ?? reciters.first);
         ref.read(downloadManagerSelectedReciterProvider.notifier).setReciter(defaultReciter);
       });
     }
@@ -38,7 +47,7 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'قاری:',
+            isTranslationMode ? 'گوینده ترجمه:' : 'قاری:',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -50,6 +59,7 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
                 ReciterSelectionBottomSheet.show(
                   context,
                   isDownloadMode: true,
+                  isTranslationMode: isTranslationMode,
                   onReciterSelected: (ReciterEntity reciter) {
                     ref.read(downloadManagerSelectedReciterProvider.notifier).setReciter(reciter);
                   },
@@ -68,7 +78,7 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        selectedReciter?.name ?? 'انتخاب قاری',
+                        selectedReciter?.name ?? (isTranslationMode ? 'انتخاب گوینده' : 'انتخاب قاری'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(

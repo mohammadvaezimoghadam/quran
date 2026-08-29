@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../domain/entities/surah_entity.dart';
+import '../../application/controllers/favorite_surahs_controller.dart';
 import 'surah_info_content.dart';
 import 'surah_number_medallion.dart';
 import 'surah_audio_download_button.dart';
@@ -55,12 +57,33 @@ class SurahListItem extends StatelessWidget {
                   ),
                 ),
 
-                // 3. Download Audio Button
+                // 3. Favorite Star Button
+                Consumer(
+                  builder: (context, ref, child) {
+                    final isFavorite = ref.watch(
+                      favoriteSurahsProvider.select(
+                        (set) => set.contains(surah.number),
+                      ),
+                    );
+                    return IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
+                        color: isFavorite ? AppColors.goldAccent : Colors.grey.withValues(alpha: 0.5),
+                        size: 22,
+                      ),
+                      tooltip: isFavorite ? 'حذف از فهرست شخصی' : 'افزودن به فهرست شخصی',
+                      onPressed: () {
+                        ref.read(favoriteSurahsProvider.notifier).toggleFavorite(surah.number);
+                      },
+                    );
+                  },
+                ),
+
+                // 4. Download Audio Button
                 SurahAudioDownloadButton(
                   surah: surah,
-                  onDownloadTap: () {
-                    // TODO: Open Download Bottom Sheet
-                  },
+                  onDownloadTap: onTap,
                 ),
               ],
             ),

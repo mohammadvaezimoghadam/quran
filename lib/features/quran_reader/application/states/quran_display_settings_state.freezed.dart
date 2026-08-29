@@ -160,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double arabicFontSize,  double translationFontSize,  bool showTranslation,  bool showArabicText,  bool showAyahNumbers,  bool autoHighlight,  String fontScript,  String translatorName,  String themeMode,  String harakatColor)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double arabicFontSize,  double translationFontSize,  bool showTranslation,  bool showArabicText,  bool showAyahNumbers,  bool autoHighlight,  String fontScript,  String translatorName,  String themeMode,  String harakatColor,  bool removeTranslationBrackets)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QuranDisplaySettingsState() when $default != null:
-return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTranslation,_that.showArabicText,_that.showAyahNumbers,_that.autoHighlight,_that.fontScript,_that.translatorName,_that.themeMode,_that.harakatColor);case _:
+return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTranslation,_that.showArabicText,_that.showAyahNumbers,_that.autoHighlight,_that.fontScript,_that.translatorName,_that.themeMode,_that.harakatColor,_that.removeTranslationBrackets);case _:
   return orElse();
 
 }
@@ -181,10 +181,10 @@ return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTransla
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double arabicFontSize,  double translationFontSize,  bool showTranslation,  bool showArabicText,  bool showAyahNumbers,  bool autoHighlight,  String fontScript,  String translatorName,  String themeMode,  String harakatColor)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double arabicFontSize,  double translationFontSize,  bool showTranslation,  bool showArabicText,  bool showAyahNumbers,  bool autoHighlight,  String fontScript,  String translatorName,  String themeMode,  String harakatColor,  bool removeTranslationBrackets)  $default,) {final _that = this;
 switch (_that) {
 case _QuranDisplaySettingsState():
-return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTranslation,_that.showArabicText,_that.showAyahNumbers,_that.autoHighlight,_that.fontScript,_that.translatorName,_that.themeMode,_that.harakatColor);case _:
+return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTranslation,_that.showArabicText,_that.showAyahNumbers,_that.autoHighlight,_that.fontScript,_that.translatorName,_that.themeMode,_that.harakatColor,_that.removeTranslationBrackets);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +201,10 @@ return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTransla
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double arabicFontSize,  double translationFontSize,  bool showTranslation,  bool showArabicText,  bool showAyahNumbers,  bool autoHighlight,  String fontScript,  String translatorName,  String themeMode,  String harakatColor)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double arabicFontSize,  double translationFontSize,  bool showTranslation,  bool showArabicText,  bool showAyahNumbers,  bool autoHighlight,  String fontScript,  String translatorName,  String themeMode,  String harakatColor,  bool removeTranslationBrackets)?  $default,) {final _that = this;
 switch (_that) {
 case _QuranDisplaySettingsState() when $default != null:
-return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTranslation,_that.showArabicText,_that.showAyahNumbers,_that.autoHighlight,_that.fontScript,_that.translatorName,_that.themeMode,_that.harakatColor);case _:
+return $default(_that.arabicFontSize,_that.translationFontSize,_that.showTranslation,_that.showArabicText,_that.showAyahNumbers,_that.autoHighlight,_that.fontScript,_that.translatorName,_that.themeMode,_that.harakatColor,_that.removeTranslationBrackets);case _:
   return null;
 
 }

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SurahListState {
 
- bool get isLoading; List<SurahEntity> get surahs; String get searchQuery; String? get errorMessage;
+ bool get isLoading; List<SurahEntity> get surahs; String get searchQuery; bool get isOnlyFavorites; SurahSortBy get sortBy; SortOrder get sortOrder; String? get errorMessage;
 /// Create a copy of SurahListState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $SurahListStateCopyWith<SurahListState> get copyWith => _$SurahListStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SurahListState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other.surahs, surahs)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SurahListState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other.surahs, surahs)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.isOnlyFavorites, isOnlyFavorites) || other.isOnlyFavorites == isOnlyFavorites)&&(identical(other.sortBy, sortBy) || other.sortBy == sortBy)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(surahs),searchQuery,errorMessage);
+int get hashCode => Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(surahs),searchQuery,isOnlyFavorites,sortBy,sortOrder,errorMessage);
 
 @override
 String toString() {
-  return 'SurahListState(isLoading: $isLoading, surahs: $surahs, searchQuery: $searchQuery, errorMessage: $errorMessage)';
+  return 'SurahListState(isLoading: $isLoading, surahs: $surahs, searchQuery: $searchQuery, isOnlyFavorites: $isOnlyFavorites, sortBy: $sortBy, sortOrder: $sortOrder, errorMessage: $errorMessage)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $SurahListStateCopyWith<$Res>  {
   factory $SurahListStateCopyWith(SurahListState value, $Res Function(SurahListState) _then) = _$SurahListStateCopyWithImpl;
 @useResult
 $Res call({
- bool isLoading, List<SurahEntity> surahs, String searchQuery, String? errorMessage
+ bool isLoading, List<SurahEntity> surahs, String searchQuery, bool isOnlyFavorites, SurahSortBy sortBy, SortOrder sortOrder, String? errorMessage
 });
 
 
@@ -62,12 +62,15 @@ class _$SurahListStateCopyWithImpl<$Res>
 
 /// Create a copy of SurahListState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? surahs = null,Object? searchQuery = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? surahs = null,Object? searchQuery = null,Object? isOnlyFavorites = null,Object? sortBy = null,Object? sortOrder = null,Object? errorMessage = freezed,}) {
   return _then(_self.copyWith(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,surahs: null == surahs ? _self.surahs : surahs // ignore: cast_nullable_to_non_nullable
 as List<SurahEntity>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
-as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String,isOnlyFavorites: null == isOnlyFavorites ? _self.isOnlyFavorites : isOnlyFavorites // ignore: cast_nullable_to_non_nullable
+as bool,sortBy: null == sortBy ? _self.sortBy : sortBy // ignore: cast_nullable_to_non_nullable
+as SurahSortBy,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
+as SortOrder,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -153,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  List<SurahEntity> surahs,  String searchQuery,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  List<SurahEntity> surahs,  String searchQuery,  bool isOnlyFavorites,  SurahSortBy sortBy,  SortOrder sortOrder,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SurahListState() when $default != null:
-return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.isOnlyFavorites,_that.sortBy,_that.sortOrder,_that.errorMessage);case _:
   return orElse();
 
 }
@@ -174,10 +177,10 @@ return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.errorMessag
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  List<SurahEntity> surahs,  String searchQuery,  String? errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  List<SurahEntity> surahs,  String searchQuery,  bool isOnlyFavorites,  SurahSortBy sortBy,  SortOrder sortOrder,  String? errorMessage)  $default,) {final _that = this;
 switch (_that) {
 case _SurahListState():
-return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.isOnlyFavorites,_that.sortBy,_that.sortOrder,_that.errorMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +197,10 @@ return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.errorMessag
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  List<SurahEntity> surahs,  String searchQuery,  String? errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  List<SurahEntity> surahs,  String searchQuery,  bool isOnlyFavorites,  SurahSortBy sortBy,  SortOrder sortOrder,  String? errorMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _SurahListState() when $default != null:
-return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.errorMessage);case _:
+return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.isOnlyFavorites,_that.sortBy,_that.sortOrder,_that.errorMessage);case _:
   return null;
 
 }
@@ -209,7 +212,7 @@ return $default(_that.isLoading,_that.surahs,_that.searchQuery,_that.errorMessag
 
 
 class _SurahListState extends SurahListState {
-  const _SurahListState({this.isLoading = true, final  List<SurahEntity> surahs = const [], this.searchQuery = '', this.errorMessage}): _surahs = surahs,super._();
+  const _SurahListState({this.isLoading = true, final  List<SurahEntity> surahs = const [], this.searchQuery = '', this.isOnlyFavorites = false, this.sortBy = SurahSortBy.number, this.sortOrder = SortOrder.ascending, this.errorMessage}): _surahs = surahs,super._();
   
 
 @override@JsonKey() final  bool isLoading;
@@ -221,6 +224,9 @@ class _SurahListState extends SurahListState {
 }
 
 @override@JsonKey() final  String searchQuery;
+@override@JsonKey() final  bool isOnlyFavorites;
+@override@JsonKey() final  SurahSortBy sortBy;
+@override@JsonKey() final  SortOrder sortOrder;
 @override final  String? errorMessage;
 
 /// Create a copy of SurahListState
@@ -233,16 +239,16 @@ _$SurahListStateCopyWith<_SurahListState> get copyWith => __$SurahListStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SurahListState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other._surahs, _surahs)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SurahListState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&const DeepCollectionEquality().equals(other._surahs, _surahs)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.isOnlyFavorites, isOnlyFavorites) || other.isOnlyFavorites == isOnlyFavorites)&&(identical(other.sortBy, sortBy) || other.sortBy == sortBy)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(_surahs),searchQuery,errorMessage);
+int get hashCode => Object.hash(runtimeType,isLoading,const DeepCollectionEquality().hash(_surahs),searchQuery,isOnlyFavorites,sortBy,sortOrder,errorMessage);
 
 @override
 String toString() {
-  return 'SurahListState(isLoading: $isLoading, surahs: $surahs, searchQuery: $searchQuery, errorMessage: $errorMessage)';
+  return 'SurahListState(isLoading: $isLoading, surahs: $surahs, searchQuery: $searchQuery, isOnlyFavorites: $isOnlyFavorites, sortBy: $sortBy, sortOrder: $sortOrder, errorMessage: $errorMessage)';
 }
 
 
@@ -253,7 +259,7 @@ abstract mixin class _$SurahListStateCopyWith<$Res> implements $SurahListStateCo
   factory _$SurahListStateCopyWith(_SurahListState value, $Res Function(_SurahListState) _then) = __$SurahListStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isLoading, List<SurahEntity> surahs, String searchQuery, String? errorMessage
+ bool isLoading, List<SurahEntity> surahs, String searchQuery, bool isOnlyFavorites, SurahSortBy sortBy, SortOrder sortOrder, String? errorMessage
 });
 
 
@@ -270,12 +276,15 @@ class __$SurahListStateCopyWithImpl<$Res>
 
 /// Create a copy of SurahListState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? surahs = null,Object? searchQuery = null,Object? errorMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? surahs = null,Object? searchQuery = null,Object? isOnlyFavorites = null,Object? sortBy = null,Object? sortOrder = null,Object? errorMessage = freezed,}) {
   return _then(_SurahListState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,surahs: null == surahs ? _self._surahs : surahs // ignore: cast_nullable_to_non_nullable
 as List<SurahEntity>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
-as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String,isOnlyFavorites: null == isOnlyFavorites ? _self.isOnlyFavorites : isOnlyFavorites // ignore: cast_nullable_to_non_nullable
+as bool,sortBy: null == sortBy ? _self.sortBy : sortBy // ignore: cast_nullable_to_non_nullable
+as SurahSortBy,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
+as SortOrder,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

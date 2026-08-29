@@ -4,13 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../common/constants/app_constants.dart';
 import '../../../../../common/extensions/size_extension.dart';
-import '../../../../../common/widgets/app_audio_play_button.dart';
 import '../../../../../common/widgets/app_loading_indicator.dart';
-import '../../../../../core/services/audio/audio_player_state.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_dimens.dart';
 import '../../../../../core/theme/app_typography.dart';
-import '../../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../application/controllers/home_controller.dart';
 
 /// Premium Ayah of the Day Widget.
@@ -102,30 +99,6 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
     final ayah = state.ayah;
     if (ayah == null) return const SizedBox.shrink();
 
-    final audioController = ref.read(quranAudioControllerProvider.notifier);
-
-    final isCurrentAyah = ref.watch(
-      quranAudioControllerProvider.select(
-        (s) =>
-            s.currentSurahId == ayah.surahNumber &&
-            s.currentAyahNumber == ayah.ayahNumber,
-      ),
-    );
-
-    final isPlaying = isCurrentAyah &&
-        ref.watch(
-          quranAudioControllerProvider.select(
-            (s) => s.status == AudioStatus.playing,
-          ),
-        );
-
-    final isLoading = isCurrentAyah &&
-        ref.watch(
-          quranAudioControllerProvider.select(
-            (s) => s.status == AudioStatus.loading,
-          ),
-        );
-
     return _CardWrapper(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -163,35 +136,6 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
                     ),
                   ],
                 ),
-              ),
-              AppAudioPlayButton(
-                isPlaying: isPlaying,
-                isLoading: isLoading,
-                color: AppColors.secondaryContainer,
-                onTap: () {
-                  final audioState = ref.read(quranAudioControllerProvider);
-                  if (isCurrentAyah) {
-                    if (isPlaying) {
-                      audioController.pause();
-                    } else if (audioState.status == AudioStatus.paused) {
-                      audioController.resume();
-                    } else {
-                      audioController.playAyah(
-                        surahId: ayah.surahNumber,
-                        ayahNumber: ayah.ayahNumber,
-                        totalAyahsInSurah: 286,
-                        isSingleAyahMode: true,
-                      );
-                    }
-                  } else {
-                    audioController.playAyah(
-                      surahId: ayah.surahNumber,
-                      ayahNumber: ayah.ayahNumber,
-                      totalAyahsInSurah: 286,
-                      isSingleAyahMode: true,
-                    );
-                  }
-                },
               ),
             ],
           ),

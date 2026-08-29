@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/enums/surah_sort_options.dart';
 import '../states/surah_list_state.dart';
 import '../surah_service.dart';
 
@@ -33,5 +34,24 @@ class SurahListController extends Notifier<SurahListState> {
   /// Search action to filter surahs list in application state
   void searchSurahs(String query) {
     state = state.copyWith(searchQuery: query);
+  }
+
+  /// Toggles filtering only favorite/starred surahs
+  void toggleOnlyFavorites() {
+    state = state.copyWith(isOnlyFavorites: !state.isOnlyFavorites);
+  }
+
+  void setOnlyFavorites(bool value) {
+    state = state.copyWith(isOnlyFavorites: value);
+  }
+
+  /// Sets the sort criterion
+  void setSortBy(SurahSortBy sortBy) {
+    state = state.copyWith(sortBy: sortBy);
+  }
+
+  /// Sets the sort order (ascending / descending)
+  void setSortOrder(SortOrder sortOrder) {
+    state = state.copyWith(sortOrder: sortOrder);
   }
 }

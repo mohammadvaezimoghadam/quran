@@ -24,6 +24,7 @@ class PageNavigationBottomSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const PageNavigationBottomSheet(),
     );
@@ -151,26 +152,33 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
       }
     });
 
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final navBarPadding = MediaQuery.viewPaddingOf(context).bottom;
+    final bottomSpacing = keyboardInset > 0
+        ? keyboardInset + 16.0
+        : (navBarPadding > 0 ? navBarPadding + 16.0 : 24.0);
 
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: bottomInset > 0 ? bottomInset + 16 : 24,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 5),
-        ],
-      ),
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 300),
-        child: _showScanner ? _buildScannerView(context) : _buildInputView(context, isLoading),
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: bottomSpacing,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 5),
+          ],
+        ),
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          child: _showScanner ? _buildScannerView(context) : _buildInputView(context, isLoading),
+        ),
       ),
     );
   }

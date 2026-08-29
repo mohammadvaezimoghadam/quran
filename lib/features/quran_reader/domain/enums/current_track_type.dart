@@ -1,0 +1,4 @@
+enum CurrentTrackType {
+  quran,
+  translation,
+}

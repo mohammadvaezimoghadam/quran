@@ -8,6 +8,7 @@ import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
+import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 import 'ayah_list_item.dart';
 
 class SurahAyahPageView extends ConsumerStatefulWidget {
@@ -111,7 +112,7 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
               index: targetIndex,
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeOutCubic,
-              alignment: 0.08,
+              alignment: 0.14,
             );
           }
         }
@@ -134,7 +135,7 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                 index: targetIndex,
                 duration: const Duration(milliseconds: 500),
                 curve: Curves.easeOutCubic,
-                alignment: 0.08,
+                alignment: 0.14,
               );
             }
           }
@@ -154,6 +155,27 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
             ref.read(quranAudioControllerProvider.notifier).suspendAutoScroll();
           }
         }
+        
+        // Track reading progress on scroll end
+        if (notification is ScrollEndNotification) {
+          final positions = _itemPositionsListener.itemPositions.value;
+          if (positions.isNotEmpty && state.ayahs.isNotEmpty) {
+            // Find the item that is currently near the top (index 0)
+            final firstVisible = positions.reduce((min, position) =>
+                position.itemLeadingEdge < min.itemLeadingEdge ? position : min);
+            
+            final index = firstVisible.index;
+            if (index >= 0 && index < state.ayahs.length) {
+              final ayah = state.ayahs[index];
+              ref.read(continueReadingControllerProvider.notifier).updateStateInMemory(
+                surahId: widget.surahId,
+                surahName: widget.surahName,
+                ayahNumber: ayah.ayahNumber,
+                totalAyahs: state.ayahs.length,
+              );
+            }
+          }
+        }
         return false;
       },
       child: ScrollablePositionedList.builder(
@@ -164,8 +186,8 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
         padding: EdgeInsets.only(
           left: AppDimens.marginPage,
           right: AppDimens.marginPage,
-          top: AppDimens.stackSm,
-          bottom: MediaQuery.paddingOf(context).bottom + 100,
+          top: MediaQuery.paddingOf(context).top + kToolbarHeight + 42,
+          bottom: MediaQuery.paddingOf(context).bottom + 160,
         ),
         itemCount: state.ayahs.length,
         itemBuilder: (context, index) {

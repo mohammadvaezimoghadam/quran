@@ -2,6 +2,9 @@ abstract interface class IPreferencesService {
   Future<bool> setString(String key, String value);
   String? getString(String key);
 
+  Future<bool> setStringList(String key, List<String> value);
+  List<String>? getStringList(String key);
+
   Future<bool> setInt(String key, int value);
   int? getInt(String key);
 

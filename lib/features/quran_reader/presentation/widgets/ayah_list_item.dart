@@ -21,6 +21,7 @@ import 'ayah_bottom_action_chips.dart';
 import '../../../translation_manager/application/controllers/ayah_translation_provider.dart';
 import '../../../translation_manager/presentation/widgets/ayah_translation_text.dart';
 import 'word_by_word_bottom_sheet.dart';
+import '../utils/reciter_download_helper.dart';
 
 /// Clean component for displaying an individual Ayah card.
 class AyahListItem extends ConsumerWidget {
@@ -95,8 +96,15 @@ class AyahListItem extends ConsumerWidget {
     final isAudioActive = isPlayingAyah && autoHighlight;
     final borderRadius = BorderRadius.circular(AppDimens.radiusSm);
 
-    return InkWell(
+    return RepaintBoundary(
+      child: InkWell(
       onTap: () {
+        final controlsState = ref.read(readerControlsProvider);
+        if (controlsState.isControlsHidden) {
+          ref.read(readerControlsProvider.notifier).revealControls();
+          return;
+        }
+
         final anySelected = ref.read(selectedAyahActionProvider) != null;
         if (anySelected) {
           // Tap anywhere dismisses the action menu
@@ -107,17 +115,46 @@ class AyahListItem extends ConsumerWidget {
           if (isAudioPlayingNow) {
             controller.pause();
           } else {
-            // User explicitly chose this ayah — resume auto-scroll from here
-            controller.resumeAutoScrollAndSync();
-            controller.playAyah(
-              surahId: ayah.surahId,
-              ayahNumber: ayah.ayahNumber,
-              totalAyahsInSurah: totalAyahsInSurah,
-            );
+            final reciter = ref.read(quranAudioControllerProvider).selectedReciter;
+            if (reciter != null) {
+              ReciterDownloadHelper.checkAndPromptSurahDownload(
+                context: context,
+                ref: ref,
+                reciter: reciter,
+                surahId: ayah.surahId,
+              ).then((isDownloaded) {
+                if (isDownloaded) {
+                  controller.resumeAutoScrollAndSync();
+                  controller.playAyah(
+                    surahId: ayah.surahId,
+                    ayahNumber: ayah.ayahNumber,
+                    totalAyahsInSurah: totalAyahsInSurah,
+                  );
+                }
+              });
+            } else {
+              controller.resumeAutoScrollAndSync();
+              controller.playAyah(
+                surahId: ayah.surahId,
+                ayahNumber: ayah.ayahNumber,
+                totalAyahsInSurah: totalAyahsInSurah,
+              );
+            }
           }
+        }
+
+        // If full-screen mode is active, hide headers and collapse controls again after clicking the ayah
+        if (controlsState.isFullScreen) {
+          ref.read(readerControlsProvider.notifier).toggleControls();
         }
       },
       onLongPress: () {
+        final controlsState = ref.read(readerControlsProvider);
+        if (controlsState.isControlsHidden) {
+          ref.read(readerControlsProvider.notifier).revealControls();
+          return;
+        }
+
         // Long Press opens context action menu for copy/share/bookmark
         ref
             .read(selectedAyahActionProvider.notifier)
@@ -172,11 +209,29 @@ class AyahListItem extends ConsumerWidget {
                             audioState.currentAyahNumber == ayah.ayahNumber) {
                           controller.resume();
                         } else {
-                          controller.playAyah(
-                            surahId: ayah.surahId,
-                            ayahNumber: ayah.ayahNumber,
-                            totalAyahsInSurah: totalAyahsInSurah,
-                          );
+                          final reciter = audioState.selectedReciter;
+                          if (reciter != null) {
+                            ReciterDownloadHelper.checkAndPromptSurahDownload(
+                              context: context,
+                              ref: ref,
+                              reciter: reciter,
+                              surahId: ayah.surahId,
+                            ).then((isDownloaded) {
+                              if (isDownloaded) {
+                                controller.playAyah(
+                                  surahId: ayah.surahId,
+                                  ayahNumber: ayah.ayahNumber,
+                                  totalAyahsInSurah: totalAyahsInSurah,
+                                );
+                              }
+                            });
+                          } else {
+                            controller.playAyah(
+                              surahId: ayah.surahId,
+                              ayahNumber: ayah.ayahNumber,
+                              totalAyahsInSurah: totalAyahsInSurah,
+                            );
+                          }
                         }
                       },
                       onCopyTap: () async {
@@ -295,6 +350,7 @@ class AyahListItem extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

@@ -41,7 +41,7 @@ class DownloadManagerSurahList extends ConsumerWidget {
       return Center(child: Text('خطا: ${surahState.errorMessage}'));
     }
 
-    final surahs = surahState.filteredSurahs;
+    final surahs = surahState.surahs;
 
     return GridView.builder(
       padding: const EdgeInsets.all(12),

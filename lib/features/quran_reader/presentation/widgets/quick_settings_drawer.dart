@@ -6,6 +6,7 @@ import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
 import '../../../../common/widgets/app_theme_toggle_button.dart';
+import '../../../../common/widgets/reciter/horizontal_reciter_selector.dart';
 import '../../../../common/widgets/reciter/reciter_selection_bottom_sheet.dart';
 import '../../../../common/widgets/settings_switch_tile.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -13,6 +14,7 @@ import '../../../../core/theme/presentation/theme_controller.dart';
 import '../../../translation_manager/presentation/widgets/translation_settings_section.dart';
 import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
+import '../../domain/enums/audio_playback_mode.dart';
 import 'ayah_number_marker.dart';
 import 'tashkeel_color_selector_tile.dart';
 
@@ -597,9 +599,8 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     required ColorScheme colorScheme,
   }) {
     // Targeted selectors: Audio ticks/duration updates do NOT trigger rebuilds here
-    final reciterName = ref.watch(
-      quranAudioControllerProvider
-          .select((s) => s.selectedReciter?.name ?? 'استاد پرهیزگار'),
+    final playbackMode = ref.watch(
+      quranAudioControllerProvider.select((s) => s.playbackMode),
     );
     final isAutoPlayNext = ref.watch(
       quranAudioControllerProvider.select((s) => s.isAutoPlayNext),
@@ -614,78 +615,129 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // GROUP 1: RECITER SELECTION
-        _buildSectionTitle('قاری و صدای تلاوت', textSecondary),
+        // GROUP 0: PLAYBACK MODE SELECTION
+        _buildSectionTitle('نحوه پخش صوت', textSecondary),
         6.0.vSpace,
-        _buildCardGroup(
-          cardBgColor: cardBgColor,
-          children: [
-            InkWell(
-              onTap: () => ReciterSelectionBottomSheet.show(context),
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14.0, vertical: 12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(CupertinoIcons.person_crop_circle,
-                            size: 20.0, color: accentColor),
-                        10.0.hSpace,
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'قاری تلاوت',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: textPrimary,
-                              ),
-                            ),
-                            2.0.vSpace,
-                            Text(
-                              reciterName,
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 11,
-                                color: textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          'تغییر',
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: cardBgColor,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: AudioPlaybackMode.values.map((mode) {
+              final isSelected = playbackMode == mode;
+              
+              String shortTitle;
+              switch (mode) {
+                case AudioPlaybackMode.onlyQuran:
+                  shortTitle = 'تلاوت';
+                  break;
+                case AudioPlaybackMode.onlyTranslation:
+                  shortTitle = 'ترجمه';
+                  break;
+                case AudioPlaybackMode.quranThenTranslation:
+                  shortTitle = 'تلاوت+ترجمه';
+                  break;
+                case AudioPlaybackMode.translationThenQuran:
+                  shortTitle = 'ترجمه+تلاوت';
+                  break;
+              }
+
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  child: InkWell(
+                    onTap: () {
+                      ref
+                          .read(quranAudioControllerProvider.notifier)
+                          .setPlaybackMode(mode);
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accentColor.withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        border: isSelected
+                            ? Border.all(color: accentColor, width: 1.2)
+                            : Border.all(color: Colors.transparent, width: 1.2),
+                      ),
+                      child: Center(
+                        child: Text(
+                          shortTitle,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            color: accentColor,
+                            fontSize: 10.5,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            color: isSelected ? accentColor : textSecondary,
                           ),
                         ),
-                        4.0.hSpace,
-                        Icon(
-                          CupertinoIcons.chevron_left,
-                          size: 14,
-                          color: accentColor,
-                        ),
-                      ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
+              );
+            }).toList(),
+          ),
         ),
 
         16.0.vSpace,
+
+        // GROUP 1: ARABIC RECITER SELECTION
+        if (playbackMode.includesQuran) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSectionTitle('قاری تلاوت قرآن', textSecondary),
+              InkWell(
+                onTap: () => ReciterSelectionBottomSheet.show(context,
+                    checkDownloadStatus: true),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Row(
+                    children: [
+                      Text(
+                        'لیست کامل',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
+                        ),
+                      ),
+                      4.0.hSpace,
+                      Icon(
+                        CupertinoIcons.chevron_left,
+                        size: 13,
+                        color: accentColor,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          6.0.vSpace,
+          const HorizontalReciterSelector(
+              isTranslationMode: false, checkDownloadStatus: true),
+          16.0.vSpace,
+        ],
+
+        // GROUP 2: AUDIO TRANSLATION SELECTION
+        if (playbackMode.includesTranslation) ...[
+          _buildSectionTitle('گوینده ترجمه گویا', textSecondary),
+          6.0.vSpace,
+          const HorizontalReciterSelector(
+              isTranslationMode: true, checkDownloadStatus: true),
+          16.0.vSpace,
+        ],
 
         // GROUP 2: AUDIO PLAYBACK OPTIONS
         _buildSectionTitle('گزینه‌های پخش صوت', textSecondary),

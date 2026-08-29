@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app_cached_network_image.dart';
 import '../../../core/services/audio/audio_player_state.dart';
 import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
+import '../../../features/quran_reader/domain/enums/current_track_type.dart';
 import 'reciter_selection_bottom_sheet.dart';
 
 /// Reusable circular button displaying reciter avatar with a slow rotating ambient glow ring.
@@ -51,9 +52,15 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
     final audioState = ref.watch(quranAudioControllerProvider);
     final isPlaying = audioState.status == AudioStatus.playing;
     final isLoading = audioState.status == AudioStatus.loading;
-    final selectedReciter = audioState.selectedReciter;
-    final reciterName = selectedReciter?.name ?? '';
-    final imageUrl = selectedReciter?.imageUrl;
+    final isActive = isPlaying || isLoading;
+    final currentTrackType = audioState.currentTrackType;
+
+    // Show the correct reciter based on what's currently playing
+    final displayReciter = isActive && currentTrackType == CurrentTrackType.translation
+        ? audioState.selectedTranslationReciter
+        : audioState.selectedReciter;
+    final reciterName = displayReciter?.name ?? '';
+    final imageUrl = displayReciter?.imageUrl;
 
 
     // Start or stop rotation animation based on audio status

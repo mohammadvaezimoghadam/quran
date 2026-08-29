@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
+import '../../../quran_reader/application/controllers/reciter_providers.dart';
+import '../../application/states/download_manager_state.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
@@ -11,10 +14,12 @@ import '../widgets/download_manager_action_bar.dart';
 
 class AudioDownloadManagerScreen extends ConsumerStatefulWidget {
   final int? initialSurahId;
+  final bool isTranslationMode;
 
   const AudioDownloadManagerScreen({
     super.key,
     this.initialSurahId,
+    this.isTranslationMode = false,
   });
 
   @override
@@ -27,9 +32,42 @@ class _AudioDownloadManagerScreenState
   @override
   void initState() {
     super.initState();
-    // Ensure no Surah is pre-selected upon entering the screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(downloadManagerSelectedSurahsProvider.notifier).setSurahs({});
+      if (widget.initialSurahId != null) {
+        ref
+            .read(downloadManagerSelectedSurahsProvider.notifier)
+            .setSurahs({widget.initialSurahId!});
+      } else {
+        ref.read(downloadManagerSelectedSurahsProvider.notifier).setSurahs({});
+      }
+
+      final audioState = ref.read(quranAudioControllerProvider);
+      if (widget.isTranslationMode) {
+        final currentTrans = audioState.selectedTranslationReciter;
+        if (currentTrans != null) {
+          ref
+              .read(downloadManagerSelectedReciterProvider.notifier)
+              .setReciter(currentTrans);
+        } else {
+          final transList = ref
+              .read(translationRecitersListProvider)
+              .asData
+              ?.value
+              .tryGetSuccess();
+          if (transList != null && transList.isNotEmpty) {
+            ref
+                .read(downloadManagerSelectedReciterProvider.notifier)
+                .setReciter(transList.first);
+          }
+        }
+      } else {
+        final currentReciter = audioState.selectedReciter;
+        if (currentReciter != null) {
+          ref
+              .read(downloadManagerSelectedReciterProvider.notifier)
+              .setReciter(currentReciter);
+        }
+      }
     });
   }
 
@@ -43,16 +81,20 @@ class _AudioDownloadManagerScreenState
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: IslamicKatibahAppBar(
-        surahName: 'مدیریت دانلود صوت',
+        surahName: widget.isTranslationMode
+            ? 'مدیریت دانلود ترجمه صوتی'
+            : 'مدیریت دانلود صوت',
         fontFamily: fontFamily,
       ),
-      body: const Column(
+      body: Column(
         children: [
-          DownloadManagerReciterSelector(),
-          Expanded(
+          DownloadManagerReciterSelector(
+            isTranslationMode: widget.isTranslationMode,
+          ),
+          const Expanded(
             child: DownloadManagerSurahList(),
           ),
-          DownloadManagerActionBar(),
+          const DownloadManagerActionBar(),
         ],
       ),
     );

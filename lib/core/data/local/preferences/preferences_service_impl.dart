@@ -15,6 +15,13 @@ class PreferencesServiceImpl implements IPreferencesService {
   String? getString(String key) => _prefs.getString(key);
 
   @override
+  Future<bool> setStringList(String key, List<String> value) =>
+      _prefs.setStringList(key, value);
+
+  @override
+  List<String>? getStringList(String key) => _prefs.getStringList(key);
+
+  @override
   Future<bool> setInt(String key, int value) => _prefs.setInt(key, value);
 
   @override

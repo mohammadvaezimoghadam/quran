@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,6 +20,7 @@ import '../widgets/audio_player_bottom_bar.dart';
 import '../widgets/quran_info_bar.dart';
 import '../widgets/quick_settings_drawer.dart';
 import '../widgets/surah_ayah_page_view.dart';
+import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 
 class QuranReaderScreen extends ConsumerStatefulWidget {
   final int surahId;
@@ -38,24 +40,83 @@ class QuranReaderScreen extends ConsumerStatefulWidget {
   ConsumerState<QuranReaderScreen> createState() => _QuranReaderScreenState();
 }
 
-class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
+class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with WidgetsBindingObserver {
   late PageController _pageController;
+  late final ContinueReadingController _continueReadingNotifier;
+
+  // Full-screen mode state
+  bool _isFullScreen = false;
+  bool _isControlsVisible = true;
+  bool _isAudioBarCollapsed = false;
 
   @override
   void initState() {
     super.initState();
+    _continueReadingNotifier = ref.read(continueReadingControllerProvider.notifier);
     _pageController = PageController(initialPage: widget.surahId - 1);
 
     // Fetch ayahs when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(quranReaderControllerProvider.notifier).fetchAyahs(widget.surahId);
     });
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
+    if (_isFullScreen) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+    // Save reading progress when leaving screen
+    _continueReadingNotifier.saveStateToStorage();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _continueReadingNotifier.saveStateToStorage();
+    }
+  }
+
+  void _syncProviderState() {
+    ref.read(readerControlsProvider.notifier).updateState(
+      isFullScreen: _isFullScreen,
+      isControlsVisible: _isControlsVisible,
+      isAudioBarCollapsed: _isAudioBarCollapsed,
+    );
+  }
+
+  void _enterFullScreen() {
+    // Immediately hide header & collapse audio player capsule upon entering full screen
+    setState(() {
+      _isFullScreen = true;
+      _isControlsVisible = false;
+      _isAudioBarCollapsed = true;
+    });
+    _syncProviderState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
+
+  void _exitFullScreen() {
+    setState(() {
+      _isFullScreen = false;
+      _isControlsVisible = true;
+      _isAudioBarCollapsed = false;
+    });
+    _syncProviderState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
+
+  void _toggleControls() {
+    if (!_isFullScreen) return;
+    setState(() {
+      _isControlsVisible = !_isControlsVisible;
+      _isAudioBarCollapsed = !_isControlsVisible;
+    });
+    _syncProviderState();
   }
 
   void _onPageChanged(int pageIndex) {
@@ -90,6 +151,18 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to readerControlsProvider so taps on AyahItems correctly toggle screen controls
+    ref.listen<ReaderControlsState>(readerControlsProvider, (previous, next) {
+      if (next.isFullScreen &&
+          (next.isControlsVisible != _isControlsVisible ||
+              next.isAudioBarCollapsed != _isAudioBarCollapsed)) {
+        setState(() {
+          _isControlsVisible = next.isControlsVisible;
+          _isAudioBarCollapsed = next.isAudioBarCollapsed;
+        });
+      }
+    });
+
     final currentSurahId = ref.watch(
       quranReaderControllerProvider.select((s) => s.currentSurahId),
     );
@@ -106,6 +179,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
       if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
         final errorMessage = next.errorMessage!;
         final isDownloadRelated = errorMessage.contains('دانلود');
+        final isTranslation = errorMessage.contains('ترجمه');
 
         if (isDownloadRelated) {
           AppSnackBar.showInfo(
@@ -113,14 +187,17 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
             errorMessage,
             duration: const Duration(seconds: 3),
             action: SnackBarAction(
-              label: 'دانلود صوت',
+              label: isTranslation ? 'دانلود ترجمه' : 'دانلود صوت',
               textColor: Theme.of(context).colorScheme.primary,
               onPressed: () {
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 final targetSurahId = next.currentSurahId ?? widget.surahId;
                 context.pushNamed(
                   audioDownloadManagerRoute,
-                  queryParameters: {'surahId': targetSurahId.toString()},
+                  queryParameters: {
+                    'surahId': targetSurahId.toString(),
+                    if (isTranslation) 'isTranslation': 'true',
+                  },
                 );
               },
             ),
@@ -166,67 +243,208 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
 
     final currentSurahName = _getSurahName(ref, currentSurahId);
 
+    // Controls state in full-screen mode
+    final bool controlsHidden = _isFullScreen && !_isControlsVisible;
+    final double topPadding = MediaQuery.paddingOf(context).top;
+    final double appBarHeight = topPadding + kToolbarHeight;
+
     return Scaffold(
-        extendBody: true,
-        appBar: IslamicKatibahAppBar(
-          surahName: currentSurahName,
-        surahNumber: currentSurahId,
-        fontFamily: fontFamily,
-        actions: [
-          IconButton(
-            icon: const Icon(
-              CupertinoIcons.slider_horizontal_3,
-              size: 20,
-              color: Color(0xFFF4E0A5),
-            ),
-            tooltip: 'تنظیمات نمایش',
-            onPressed: () => QuickSettingsDrawer.show(context),
-          ),
-        ],
-      ),
-      body: Column(
+      extendBody: true,
+      body: Stack(
         children: [
-          const QuranInfoBar(),
-          Expanded(
-            child: Stack(
-              children: [
-                GestureDetector(
-                  onTap: () => ref.read(selectedAyahActionProvider.notifier).clearSelection(),
-                  behavior: HitTestBehavior.translucent,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: 114,
-                    onPageChanged: _onPageChanged,
-                    physics: const BouncingScrollPhysics(),
-                    itemBuilder: (context, pageIndex) {
-                      final pageSurahId = pageIndex + 1;
-                      return SurahAyahPageView(
-                        key: ValueKey('surah_page_$pageSurahId'),
-                        surahId: pageSurahId,
-                        surahName: _getSurahName(ref, pageSurahId),
-                        isCurrentPage: pageSurahId == currentSurahId,
-                        initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
-                        translationId: widget.translationId,
-                      );
-                    },
+          // 1. Quran PageView (Completely stationary Positioned.fill — zero layout jumps or shifts during animations!)
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: GestureDetector(
+                onTap: () {
+                  if (_isFullScreen) {
+                    _toggleControls();
+                  }
+                },
+                behavior: HitTestBehavior.translucent,
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: 114,
+                  onPageChanged: _onPageChanged,
+                  physics: const BouncingScrollPhysics(),
+                  itemBuilder: (context, pageIndex) {
+                    final pageSurahId = pageIndex + 1;
+                    return SurahAyahPageView(
+                      key: ValueKey('surah_page_$pageSurahId'),
+                      surahId: pageSurahId,
+                      surahName: _getSurahName(ref, pageSurahId),
+                      isCurrentPage: pageSurahId == currentSurahId,
+                      initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
+                      translationId: widget.translationId,
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+
+          // 2. Top Header & QuranInfoBar (GPU AnimatedSlide transform — zero list relayout!)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: RepaintBoundary(
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOutCubic,
+                offset: controlsHidden ? const Offset(0, -1.2) : Offset.zero,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: appBarHeight,
+                      child: IslamicKatibahAppBar(
+                        surahName: currentSurahName,
+                        surahNumber: currentSurahId,
+                        fontFamily: fontFamily,
+                        actions: [
+                          IconButton(
+                            icon: const Icon(
+                              CupertinoIcons.bookmark,
+                              size: 20,
+                              color: Color(0xFFF4E0A5),
+                            ),
+                            tooltip: 'ذخیره نشانک (بوک‌مارک)',
+                            onPressed: () {
+                              final currentState = _continueReadingNotifier.state;
+                              if (currentState != null) {
+                                ref.read(manualBookmarkControllerProvider.notifier).saveBookmark(currentState);
+                                AppSnackBar.showInfo(
+                                  context,
+                                  'نشانک با موفقیت برای این آیه ذخیره شد.',
+                                  duration: const Duration(seconds: 2),
+                                );
+                              }
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              CupertinoIcons.slider_horizontal_3,
+                              size: 20,
+                              color: Color(0xFFF4E0A5),
+                            ),
+                            tooltip: 'تنظیمات نمایش',
+                            onPressed: () => QuickSettingsDrawer.show(context),
+                          ),
+                          PopupMenuButton<String>(
+                            icon: const Icon(
+                              CupertinoIcons.ellipsis_vertical,
+                              size: 22,
+                              color: Color(0xFFF4E0A5),
+                            ),
+                            tooltip: 'منو',
+                            onSelected: (value) {
+                              if (value == 'fullscreen') {
+                                _enterFullScreen();
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem<String>(
+                                value: 'fullscreen',
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(CupertinoIcons.fullscreen, size: 18),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'حالت تمام صفحه',
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontFamily,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const QuranInfoBar(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Bottom Audio Player Bar (Positioned at bottom, capsule slides behind disc)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: RepaintBoundary(
+              child: isAudioPlayingOtherSurah
+                  ? const MiniAudioPlayerBar()
+                  : AudioPlayerBottomBar(
+                      surahId: currentSurahId,
+                      isFullScreen: _isFullScreen,
+                      isCollapsed: _isAudioBarCollapsed,
+                      onToggleCollapse: () {
+                        _toggleControls();
+                      },
+                    ),
+            ),
+          ),
+
+          // 4. Exit Full-Screen Button – ALWAYS visible in fullscreen mode!
+          if (_isFullScreen)
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOutCubic,
+              top: controlsHidden
+                  ? topPadding + 10
+                  : appBarHeight + 36,
+              left: 12,
+              child: RepaintBoundary(
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  elevation: 6,
+                  child: InkWell(
+                    onTap: _exitFullScreen,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            CupertinoIcons.fullscreen_exit,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'خروج از تمام‌صفحه',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: isAudioPlayingOtherSurah
-                      ? const MiniAudioPlayerBar()
-                      : AudioPlayerBottomBar(surahId: currentSurahId),
-                ),
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 }
-
-

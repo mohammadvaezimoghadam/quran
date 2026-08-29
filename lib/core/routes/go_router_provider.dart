@@ -49,8 +49,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: audioDownloadManagerRoute,
         builder: (context, state) {
           final surahIdStr = state.uri.queryParameters['surahId'];
+          final isTranslationStr = state.uri.queryParameters['isTranslation'];
           final surahId = surahIdStr != null ? int.tryParse(surahIdStr) : null;
-          return AudioDownloadManagerScreen(initialSurahId: surahId);
+          final isTranslationMode = isTranslationStr == 'true';
+          return AudioDownloadManagerScreen(
+            initialSurahId: surahId,
+            isTranslationMode: isTranslationMode,
+          );
         },
       ),
     ],

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$QuranAudioState {
 
- ReciterEntity? get selectedReciter; int? get currentSurahId; int? get currentAyahNumber; int? get totalAyahsInSurah; AudioStatus get status; Duration get position; Duration get duration; bool get isAutoPlayNext; bool get isSingleAyahMode; bool get isAutoScrollSuspended; String? get errorMessage;
+ ReciterEntity? get selectedReciter; ReciterEntity? get selectedTranslationReciter; AudioPlaybackMode get playbackMode; CurrentTrackType get currentTrackType; int? get currentSurahId; int? get currentAyahNumber; int? get totalAyahsInSurah; AudioStatus get status; Duration get position; Duration get duration; bool get isAutoPlayNext; bool get isSingleAyahMode; bool get isAutoScrollSuspended; String? get errorMessage;
 /// Create a copy of QuranAudioState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $QuranAudioStateCopyWith<QuranAudioState> get copyWith => _$QuranAudioStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuranAudioState&&(identical(other.selectedReciter, selectedReciter) || other.selectedReciter == selectedReciter)&&(identical(other.currentSurahId, currentSurahId) || other.currentSurahId == currentSurahId)&&(identical(other.currentAyahNumber, currentAyahNumber) || other.currentAyahNumber == currentAyahNumber)&&(identical(other.totalAyahsInSurah, totalAyahsInSurah) || other.totalAyahsInSurah == totalAyahsInSurah)&&(identical(other.status, status) || other.status == status)&&(identical(other.position, position) || other.position == position)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.isAutoPlayNext, isAutoPlayNext) || other.isAutoPlayNext == isAutoPlayNext)&&(identical(other.isSingleAyahMode, isSingleAyahMode) || other.isSingleAyahMode == isSingleAyahMode)&&(identical(other.isAutoScrollSuspended, isAutoScrollSuspended) || other.isAutoScrollSuspended == isAutoScrollSuspended)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuranAudioState&&(identical(other.selectedReciter, selectedReciter) || other.selectedReciter == selectedReciter)&&(identical(other.selectedTranslationReciter, selectedTranslationReciter) || other.selectedTranslationReciter == selectedTranslationReciter)&&(identical(other.playbackMode, playbackMode) || other.playbackMode == playbackMode)&&(identical(other.currentTrackType, currentTrackType) || other.currentTrackType == currentTrackType)&&(identical(other.currentSurahId, currentSurahId) || other.currentSurahId == currentSurahId)&&(identical(other.currentAyahNumber, currentAyahNumber) || other.currentAyahNumber == currentAyahNumber)&&(identical(other.totalAyahsInSurah, totalAyahsInSurah) || other.totalAyahsInSurah == totalAyahsInSurah)&&(identical(other.status, status) || other.status == status)&&(identical(other.position, position) || other.position == position)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.isAutoPlayNext, isAutoPlayNext) || other.isAutoPlayNext == isAutoPlayNext)&&(identical(other.isSingleAyahMode, isSingleAyahMode) || other.isSingleAyahMode == isSingleAyahMode)&&(identical(other.isAutoScrollSuspended, isAutoScrollSuspended) || other.isAutoScrollSuspended == isAutoScrollSuspended)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,selectedReciter,currentSurahId,currentAyahNumber,totalAyahsInSurah,status,position,duration,isAutoPlayNext,isSingleAyahMode,isAutoScrollSuspended,errorMessage);
+int get hashCode => Object.hash(runtimeType,selectedReciter,selectedTranslationReciter,playbackMode,currentTrackType,currentSurahId,currentAyahNumber,totalAyahsInSurah,status,position,duration,isAutoPlayNext,isSingleAyahMode,isAutoScrollSuspended,errorMessage);
 
 @override
 String toString() {
-  return 'QuranAudioState(selectedReciter: $selectedReciter, currentSurahId: $currentSurahId, currentAyahNumber: $currentAyahNumber, totalAyahsInSurah: $totalAyahsInSurah, status: $status, position: $position, duration: $duration, isAutoPlayNext: $isAutoPlayNext, isSingleAyahMode: $isSingleAyahMode, isAutoScrollSuspended: $isAutoScrollSuspended, errorMessage: $errorMessage)';
+  return 'QuranAudioState(selectedReciter: $selectedReciter, selectedTranslationReciter: $selectedTranslationReciter, playbackMode: $playbackMode, currentTrackType: $currentTrackType, currentSurahId: $currentSurahId, currentAyahNumber: $currentAyahNumber, totalAyahsInSurah: $totalAyahsInSurah, status: $status, position: $position, duration: $duration, isAutoPlayNext: $isAutoPlayNext, isSingleAyahMode: $isSingleAyahMode, isAutoScrollSuspended: $isAutoScrollSuspended, errorMessage: $errorMessage)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $QuranAudioStateCopyWith<$Res>  {
   factory $QuranAudioStateCopyWith(QuranAudioState value, $Res Function(QuranAudioState) _then) = _$QuranAudioStateCopyWithImpl;
 @useResult
 $Res call({
- ReciterEntity? selectedReciter, int? currentSurahId, int? currentAyahNumber, int? totalAyahsInSurah, AudioStatus status, Duration position, Duration duration, bool isAutoPlayNext, bool isSingleAyahMode, bool isAutoScrollSuspended, String? errorMessage
+ ReciterEntity? selectedReciter, ReciterEntity? selectedTranslationReciter, AudioPlaybackMode playbackMode, CurrentTrackType currentTrackType, int? currentSurahId, int? currentAyahNumber, int? totalAyahsInSurah, AudioStatus status, Duration position, Duration duration, bool isAutoPlayNext, bool isSingleAyahMode, bool isAutoScrollSuspended, String? errorMessage
 });
 
 
-$ReciterEntityCopyWith<$Res>? get selectedReciter;
+$ReciterEntityCopyWith<$Res>? get selectedReciter;$ReciterEntityCopyWith<$Res>? get selectedTranslationReciter;
 
 }
 /// @nodoc
@@ -62,10 +62,13 @@ class _$QuranAudioStateCopyWithImpl<$Res>
 
 /// Create a copy of QuranAudioState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? selectedReciter = freezed,Object? currentSurahId = freezed,Object? currentAyahNumber = freezed,Object? totalAyahsInSurah = freezed,Object? status = null,Object? position = null,Object? duration = null,Object? isAutoPlayNext = null,Object? isSingleAyahMode = null,Object? isAutoScrollSuspended = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? selectedReciter = freezed,Object? selectedTranslationReciter = freezed,Object? playbackMode = null,Object? currentTrackType = null,Object? currentSurahId = freezed,Object? currentAyahNumber = freezed,Object? totalAyahsInSurah = freezed,Object? status = null,Object? position = null,Object? duration = null,Object? isAutoPlayNext = null,Object? isSingleAyahMode = null,Object? isAutoScrollSuspended = null,Object? errorMessage = freezed,}) {
   return _then(_self.copyWith(
 selectedReciter: freezed == selectedReciter ? _self.selectedReciter : selectedReciter // ignore: cast_nullable_to_non_nullable
-as ReciterEntity?,currentSurahId: freezed == currentSurahId ? _self.currentSurahId : currentSurahId // ignore: cast_nullable_to_non_nullable
+as ReciterEntity?,selectedTranslationReciter: freezed == selectedTranslationReciter ? _self.selectedTranslationReciter : selectedTranslationReciter // ignore: cast_nullable_to_non_nullable
+as ReciterEntity?,playbackMode: null == playbackMode ? _self.playbackMode : playbackMode // ignore: cast_nullable_to_non_nullable
+as AudioPlaybackMode,currentTrackType: null == currentTrackType ? _self.currentTrackType : currentTrackType // ignore: cast_nullable_to_non_nullable
+as CurrentTrackType,currentSurahId: freezed == currentSurahId ? _self.currentSurahId : currentSurahId // ignore: cast_nullable_to_non_nullable
 as int?,currentAyahNumber: freezed == currentAyahNumber ? _self.currentAyahNumber : currentAyahNumber // ignore: cast_nullable_to_non_nullable
 as int?,totalAyahsInSurah: freezed == totalAyahsInSurah ? _self.totalAyahsInSurah : totalAyahsInSurah // ignore: cast_nullable_to_non_nullable
 as int?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -89,6 +92,18 @@ $ReciterEntityCopyWith<$Res>? get selectedReciter {
 
   return $ReciterEntityCopyWith<$Res>(_self.selectedReciter!, (value) {
     return _then(_self.copyWith(selectedReciter: value));
+  });
+}/// Create a copy of QuranAudioState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ReciterEntityCopyWith<$Res>? get selectedTranslationReciter {
+    if (_self.selectedTranslationReciter == null) {
+    return null;
+  }
+
+  return $ReciterEntityCopyWith<$Res>(_self.selectedTranslationReciter!, (value) {
+    return _then(_self.copyWith(selectedTranslationReciter: value));
   });
 }
 }
@@ -172,10 +187,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ReciterEntity? selectedReciter,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QuranAudioState() when $default != null:
-return $default(_that.selectedReciter,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.errorMessage);case _:
+return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.errorMessage);case _:
   return orElse();
 
 }
@@ -193,10 +208,10 @@ return $default(_that.selectedReciter,_that.currentSurahId,_that.currentAyahNumb
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ReciterEntity? selectedReciter,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  String? errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  String? errorMessage)  $default,) {final _that = this;
 switch (_that) {
 case _QuranAudioState():
-return $default(_that.selectedReciter,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.errorMessage);case _:
+return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.errorMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -213,10 +228,10 @@ return $default(_that.selectedReciter,_that.currentSurahId,_that.currentAyahNumb
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ReciterEntity? selectedReciter,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  String? errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  String? errorMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _QuranAudioState() when $default != null:
-return $default(_that.selectedReciter,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.errorMessage);case _:
+return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.errorMessage);case _:
   return null;
 
 }
@@ -228,10 +243,13 @@ return $default(_that.selectedReciter,_that.currentSurahId,_that.currentAyahNumb
 
 
 class _QuranAudioState implements QuranAudioState {
-  const _QuranAudioState({this.selectedReciter, this.currentSurahId, this.currentAyahNumber, this.totalAyahsInSurah, this.status = AudioStatus.initial, this.position = Duration.zero, this.duration = Duration.zero, this.isAutoPlayNext = true, this.isSingleAyahMode = false, this.isAutoScrollSuspended = false, this.errorMessage});
+  const _QuranAudioState({this.selectedReciter, this.selectedTranslationReciter, this.playbackMode = AudioPlaybackMode.onlyQuran, this.currentTrackType = CurrentTrackType.quran, this.currentSurahId, this.currentAyahNumber, this.totalAyahsInSurah, this.status = AudioStatus.initial, this.position = Duration.zero, this.duration = Duration.zero, this.isAutoPlayNext = true, this.isSingleAyahMode = false, this.isAutoScrollSuspended = false, this.errorMessage});
   
 
 @override final  ReciterEntity? selectedReciter;
+@override final  ReciterEntity? selectedTranslationReciter;
+@override@JsonKey() final  AudioPlaybackMode playbackMode;
+@override@JsonKey() final  CurrentTrackType currentTrackType;
 @override final  int? currentSurahId;
 @override final  int? currentAyahNumber;
 @override final  int? totalAyahsInSurah;
@@ -253,16 +271,16 @@ _$QuranAudioStateCopyWith<_QuranAudioState> get copyWith => __$QuranAudioStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuranAudioState&&(identical(other.selectedReciter, selectedReciter) || other.selectedReciter == selectedReciter)&&(identical(other.currentSurahId, currentSurahId) || other.currentSurahId == currentSurahId)&&(identical(other.currentAyahNumber, currentAyahNumber) || other.currentAyahNumber == currentAyahNumber)&&(identical(other.totalAyahsInSurah, totalAyahsInSurah) || other.totalAyahsInSurah == totalAyahsInSurah)&&(identical(other.status, status) || other.status == status)&&(identical(other.position, position) || other.position == position)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.isAutoPlayNext, isAutoPlayNext) || other.isAutoPlayNext == isAutoPlayNext)&&(identical(other.isSingleAyahMode, isSingleAyahMode) || other.isSingleAyahMode == isSingleAyahMode)&&(identical(other.isAutoScrollSuspended, isAutoScrollSuspended) || other.isAutoScrollSuspended == isAutoScrollSuspended)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuranAudioState&&(identical(other.selectedReciter, selectedReciter) || other.selectedReciter == selectedReciter)&&(identical(other.selectedTranslationReciter, selectedTranslationReciter) || other.selectedTranslationReciter == selectedTranslationReciter)&&(identical(other.playbackMode, playbackMode) || other.playbackMode == playbackMode)&&(identical(other.currentTrackType, currentTrackType) || other.currentTrackType == currentTrackType)&&(identical(other.currentSurahId, currentSurahId) || other.currentSurahId == currentSurahId)&&(identical(other.currentAyahNumber, currentAyahNumber) || other.currentAyahNumber == currentAyahNumber)&&(identical(other.totalAyahsInSurah, totalAyahsInSurah) || other.totalAyahsInSurah == totalAyahsInSurah)&&(identical(other.status, status) || other.status == status)&&(identical(other.position, position) || other.position == position)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.isAutoPlayNext, isAutoPlayNext) || other.isAutoPlayNext == isAutoPlayNext)&&(identical(other.isSingleAyahMode, isSingleAyahMode) || other.isSingleAyahMode == isSingleAyahMode)&&(identical(other.isAutoScrollSuspended, isAutoScrollSuspended) || other.isAutoScrollSuspended == isAutoScrollSuspended)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,selectedReciter,currentSurahId,currentAyahNumber,totalAyahsInSurah,status,position,duration,isAutoPlayNext,isSingleAyahMode,isAutoScrollSuspended,errorMessage);
+int get hashCode => Object.hash(runtimeType,selectedReciter,selectedTranslationReciter,playbackMode,currentTrackType,currentSurahId,currentAyahNumber,totalAyahsInSurah,status,position,duration,isAutoPlayNext,isSingleAyahMode,isAutoScrollSuspended,errorMessage);
 
 @override
 String toString() {
-  return 'QuranAudioState(selectedReciter: $selectedReciter, currentSurahId: $currentSurahId, currentAyahNumber: $currentAyahNumber, totalAyahsInSurah: $totalAyahsInSurah, status: $status, position: $position, duration: $duration, isAutoPlayNext: $isAutoPlayNext, isSingleAyahMode: $isSingleAyahMode, isAutoScrollSuspended: $isAutoScrollSuspended, errorMessage: $errorMessage)';
+  return 'QuranAudioState(selectedReciter: $selectedReciter, selectedTranslationReciter: $selectedTranslationReciter, playbackMode: $playbackMode, currentTrackType: $currentTrackType, currentSurahId: $currentSurahId, currentAyahNumber: $currentAyahNumber, totalAyahsInSurah: $totalAyahsInSurah, status: $status, position: $position, duration: $duration, isAutoPlayNext: $isAutoPlayNext, isSingleAyahMode: $isSingleAyahMode, isAutoScrollSuspended: $isAutoScrollSuspended, errorMessage: $errorMessage)';
 }
 
 
@@ -273,11 +291,11 @@ abstract mixin class _$QuranAudioStateCopyWith<$Res> implements $QuranAudioState
   factory _$QuranAudioStateCopyWith(_QuranAudioState value, $Res Function(_QuranAudioState) _then) = __$QuranAudioStateCopyWithImpl;
 @override @useResult
 $Res call({
- ReciterEntity? selectedReciter, int? currentSurahId, int? currentAyahNumber, int? totalAyahsInSurah, AudioStatus status, Duration position, Duration duration, bool isAutoPlayNext, bool isSingleAyahMode, bool isAutoScrollSuspended, String? errorMessage
+ ReciterEntity? selectedReciter, ReciterEntity? selectedTranslationReciter, AudioPlaybackMode playbackMode, CurrentTrackType currentTrackType, int? currentSurahId, int? currentAyahNumber, int? totalAyahsInSurah, AudioStatus status, Duration position, Duration duration, bool isAutoPlayNext, bool isSingleAyahMode, bool isAutoScrollSuspended, String? errorMessage
 });
 
 
-@override $ReciterEntityCopyWith<$Res>? get selectedReciter;
+@override $ReciterEntityCopyWith<$Res>? get selectedReciter;@override $ReciterEntityCopyWith<$Res>? get selectedTranslationReciter;
 
 }
 /// @nodoc
@@ -290,10 +308,13 @@ class __$QuranAudioStateCopyWithImpl<$Res>
 
 /// Create a copy of QuranAudioState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? selectedReciter = freezed,Object? currentSurahId = freezed,Object? currentAyahNumber = freezed,Object? totalAyahsInSurah = freezed,Object? status = null,Object? position = null,Object? duration = null,Object? isAutoPlayNext = null,Object? isSingleAyahMode = null,Object? isAutoScrollSuspended = null,Object? errorMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? selectedReciter = freezed,Object? selectedTranslationReciter = freezed,Object? playbackMode = null,Object? currentTrackType = null,Object? currentSurahId = freezed,Object? currentAyahNumber = freezed,Object? totalAyahsInSurah = freezed,Object? status = null,Object? position = null,Object? duration = null,Object? isAutoPlayNext = null,Object? isSingleAyahMode = null,Object? isAutoScrollSuspended = null,Object? errorMessage = freezed,}) {
   return _then(_QuranAudioState(
 selectedReciter: freezed == selectedReciter ? _self.selectedReciter : selectedReciter // ignore: cast_nullable_to_non_nullable
-as ReciterEntity?,currentSurahId: freezed == currentSurahId ? _self.currentSurahId : currentSurahId // ignore: cast_nullable_to_non_nullable
+as ReciterEntity?,selectedTranslationReciter: freezed == selectedTranslationReciter ? _self.selectedTranslationReciter : selectedTranslationReciter // ignore: cast_nullable_to_non_nullable
+as ReciterEntity?,playbackMode: null == playbackMode ? _self.playbackMode : playbackMode // ignore: cast_nullable_to_non_nullable
+as AudioPlaybackMode,currentTrackType: null == currentTrackType ? _self.currentTrackType : currentTrackType // ignore: cast_nullable_to_non_nullable
+as CurrentTrackType,currentSurahId: freezed == currentSurahId ? _self.currentSurahId : currentSurahId // ignore: cast_nullable_to_non_nullable
 as int?,currentAyahNumber: freezed == currentAyahNumber ? _self.currentAyahNumber : currentAyahNumber // ignore: cast_nullable_to_non_nullable
 as int?,totalAyahsInSurah: freezed == totalAyahsInSurah ? _self.totalAyahsInSurah : totalAyahsInSurah // ignore: cast_nullable_to_non_nullable
 as int?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -318,6 +339,18 @@ $ReciterEntityCopyWith<$Res>? get selectedReciter {
 
   return $ReciterEntityCopyWith<$Res>(_self.selectedReciter!, (value) {
     return _then(_self.copyWith(selectedReciter: value));
+  });
+}/// Create a copy of QuranAudioState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ReciterEntityCopyWith<$Res>? get selectedTranslationReciter {
+    if (_self.selectedTranslationReciter == null) {
+    return null;
+  }
+
+  return $ReciterEntityCopyWith<$Res>(_self.selectedTranslationReciter!, (value) {
+    return _then(_self.copyWith(selectedTranslationReciter: value));
   });
 }
 }

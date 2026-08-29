@@ -71,3 +71,72 @@ final activeItemPositionsListenerProvider = NotifierProvider<
   ActiveItemPositionsListenerNotifier.new,
 );
 
+/// Manages full-screen mode & controls visibility state in QuranReaderScreen
+class ReaderControlsState {
+  final bool isFullScreen;
+  final bool isControlsVisible;
+  final bool isAudioBarCollapsed;
+
+  const ReaderControlsState({
+    this.isFullScreen = false,
+    this.isControlsVisible = true,
+    this.isAudioBarCollapsed = false,
+  });
+
+  bool get isControlsHidden => isFullScreen && !isControlsVisible;
+
+  ReaderControlsState copyWith({
+    bool? isFullScreen,
+    bool? isControlsVisible,
+    bool? isAudioBarCollapsed,
+  }) {
+    return ReaderControlsState(
+      isFullScreen: isFullScreen ?? this.isFullScreen,
+      isControlsVisible: isControlsVisible ?? this.isControlsVisible,
+      isAudioBarCollapsed: isAudioBarCollapsed ?? this.isAudioBarCollapsed,
+    );
+  }
+}
+
+class ReaderControlsNotifier extends Notifier<ReaderControlsState> {
+  @override
+  ReaderControlsState build() => const ReaderControlsState();
+
+  void updateState({
+    bool? isFullScreen,
+    bool? isControlsVisible,
+    bool? isAudioBarCollapsed,
+  }) {
+    state = state.copyWith(
+      isFullScreen: isFullScreen,
+      isControlsVisible: isControlsVisible,
+      isAudioBarCollapsed: isAudioBarCollapsed,
+    );
+  }
+
+  void revealControls() {
+    if (state.isFullScreen) {
+      state = state.copyWith(
+        isControlsVisible: true,
+        isAudioBarCollapsed: false,
+      );
+    }
+  }
+
+  void toggleControls() {
+    if (state.isFullScreen) {
+      final nextVisible = !state.isControlsVisible;
+      state = state.copyWith(
+        isControlsVisible: nextVisible,
+        isAudioBarCollapsed: !nextVisible,
+      );
+    }
+  }
+}
+
+final readerControlsProvider =
+    NotifierProvider<ReaderControlsNotifier, ReaderControlsState>(
+  ReaderControlsNotifier.new,
+);
+
+

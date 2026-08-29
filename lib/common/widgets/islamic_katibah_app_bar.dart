@@ -34,7 +34,7 @@ class IslamicKatibahAppBar extends StatefulWidget implements PreferredSizeWidget
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(showSearchField ? 130.0 : 76.0);
+  Size get preferredSize => Size.fromHeight(showSearchField ? 146.0 : 76.0);
 
   @override
   State<IslamicKatibahAppBar> createState() => _IslamicKatibahAppBarState();
@@ -125,49 +125,54 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Top Row: Back button, Surah Title, Actions
+                // Top Row: Back button, Surah Title (truly centered), Actions
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Row(
-                    children: [
-                      // Back Button (If pop available)
-                      if (Navigator.of(context).canPop())
-                        IconButton(
-                          icon: const Icon(
-                            CupertinoIcons.chevron_forward,
-                            size: 20,
-                            color: softGoldText,
-                          ),
-                          tooltip: 'بازگشت',
-                          onPressed: widget.onBackPressed ?? () => Navigator.of(context).pop(),
-                        )
-                      else
-                        const SizedBox(width: 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: SizedBox(
+                    height: 48,
+                    child: Row(
+                      children: [
+                        // 1. Back Button
+                        if (Navigator.of(context).canPop())
+                          IconButton(
+                            icon: const Icon(
+                              CupertinoIcons.chevron_forward,
+                              size: 20,
+                              color: softGoldText,
+                            ),
+                            tooltip: 'بازگشت',
+                            onPressed: widget.onBackPressed ?? () => Navigator.of(context).pop(),
+                          )
+                        else
+                          const SizedBox(width: 16),
 
-                      // Center Surah Title with custom or default Typography
-                      Expanded(
-                        child: Text(
-                          widget.surahName,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.katibahTitle.copyWith(
-                            fontFamily: widget.fontFamily ?? AppTypography.fontFamily,
-                            shadows: const [
-                              Shadow(
-                                color: Colors.black45,
-                                blurRadius: 6,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                        // 2. Surah Title (attached to back button)
+                        Expanded(
+                          child: Text(
+                            widget.surahName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.katibahTitle.copyWith(
+                              fontFamily: widget.fontFamily ?? AppTypography.fontFamily,
+                              shadows: const [
+                                Shadow(
+                                  color: Colors.black45,
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
 
-                      // Right Actions Slot (if any)
-                      if (widget.actions != null && widget.actions!.isNotEmpty)
-                        Row(mainAxisSize: MainAxisSize.min, children: widget.actions!)
-                      else
-                        const SizedBox(width: 40),
-                    ],
+                        // 3. Actions
+                        if (widget.actions != null && widget.actions!.isNotEmpty)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: widget.actions!,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -201,7 +206,7 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
   /// Builds a prominent, perfectly aligned UI Search TextField
   Widget _buildSearchTextField(Color textGold) {
     return Container(
-      height: 44,
+      height: 52,
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(AppDimens.radiusDefault),

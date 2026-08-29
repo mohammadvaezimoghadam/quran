@@ -62,7 +62,7 @@ final class AyahTranslationProvider
   }
 }
 
-String _$ayahTranslationHash() => r'bdf2560c0ff5ad67546078e26b58329b701c22cb';
+String _$ayahTranslationHash() => r'1d8a5e08ce82f9aaa30e755541e88a3a0e2a9bad';
 
 /// Provides the translated text for a specific Ayah using the currently active translation.
 

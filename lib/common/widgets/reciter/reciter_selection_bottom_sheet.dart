@@ -11,6 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../features/quran_reader/application/controllers/reciter_providers.dart';
 import '../../../features/quran_reader/domain/entities/reciter_entity.dart';
+import '../../../features/quran_reader/presentation/utils/reciter_download_helper.dart';
 
 /// Model representing a unique Reciter person with all their recitation variants.
 class ReciterGroup {
@@ -28,17 +29,23 @@ class ReciterGroup {
 /// Modal Bottom Sheet for selecting reciters with high contrast inline variant popup menu.
 class ReciterSelectionBottomSheet extends ConsumerStatefulWidget {
   final bool isDownloadMode;
+  final bool checkDownloadStatus;
+  final bool isTranslationMode;
   final Function(ReciterEntity)? onReciterSelected;
 
   const ReciterSelectionBottomSheet({
     super.key,
     this.isDownloadMode = false,
+    this.checkDownloadStatus = false,
+    this.isTranslationMode = false,
     this.onReciterSelected,
   });
 
   static Future<void> show(
     BuildContext context, {
     bool isDownloadMode = false,
+    bool checkDownloadStatus = false,
+    bool isTranslationMode = false,
     Function(ReciterEntity)? onReciterSelected,
   }) {
     return showModalBottomSheet(
@@ -48,6 +55,8 @@ class ReciterSelectionBottomSheet extends ConsumerStatefulWidget {
       barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (context) => ReciterSelectionBottomSheet(
         isDownloadMode: isDownloadMode,
+        checkDownloadStatus: checkDownloadStatus,
+        isTranslationMode: isTranslationMode,
         onReciterSelected: onReciterSelected,
       ),
     );
@@ -156,7 +165,9 @@ class _ReciterSelectionBottomSheetState
     final selectedStyleId = ref.watch(selectedReciterStyleIdProvider);
 
     final stylesAsync = ref.watch(recitationStylesProvider);
-    final recitersAsync = ref.watch(recitersListProvider);
+    final recitersAsync = widget.isTranslationMode
+        ? ref.watch(translationRecitersListProvider)
+        : ref.watch(recitersListProvider);
     final sheetHeight = MediaQuery.sizeOf(context).height * 0.75;
 
     return Container(
@@ -215,7 +226,9 @@ class _ReciterSelectionBottomSheetState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppConstants.selectReciterTitle,
+                          widget.isTranslationMode
+                              ? 'انتخاب گوینده ترجمه'
+                              : AppConstants.selectReciterTitle,
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 16.0,
@@ -225,7 +238,9 @@ class _ReciterSelectionBottomSheetState
                         ),
                         2.vSpace,
                         Text(
-                          'قاری مورد نظر خود را جهت پخش صوتی انتخاب کنید',
+                          widget.isTranslationMode
+                              ? 'گوینده ترجمه گویای مورد نظر خود را انتخاب کنید'
+                              : 'قاری مورد نظر خود را جهت پخش صوتی انتخاب کنید',
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 11.5,
@@ -351,15 +366,29 @@ class _ReciterSelectionBottomSheetState
                         return Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: () {
+                            onTap: () async {
                               if (widget.isDownloadMode) {
                                 widget.onReciterSelected?.call(activeVariant);
+                                Navigator.of(context).pop();
                               } else {
-                                ref
-                                    .read(quranAudioControllerProvider.notifier)
-                                    .selectReciter(activeVariant);
+                                if (widget.isTranslationMode) {
+                                  ref
+                                      .read(quranAudioControllerProvider.notifier)
+                                      .selectTranslationReciter(activeVariant);
+                                } else {
+                                  ref
+                                      .read(quranAudioControllerProvider.notifier)
+                                      .selectReciter(activeVariant);
+                                }
+                                Navigator.of(context).pop();
+                                if (widget.checkDownloadStatus) {
+                                  await ReciterDownloadHelper.checkAndPromptSurahDownload(
+                                    context: context,
+                                    ref: ref,
+                                    reciter: activeVariant,
+                                  );
+                                }
                               }
-                              Navigator.of(context).pop();
                             },
                             borderRadius: BorderRadius.circular(16.0),
                             child: Column(
@@ -446,15 +475,22 @@ class _ReciterSelectionBottomSheetState
                                               variant;
                                         });
                                         
-                                        if (widget.isDownloadMode) {
-                                          widget.onReciterSelected?.call(variant);
-                                          Navigator.of(context).pop();
-                                        } else {
-                                          ref
-                                              .read(quranAudioControllerProvider
-                                                  .notifier)
-                                              .selectReciter(variant);
-                                        }
+                                         if (widget.isDownloadMode) {
+                                           widget.onReciterSelected?.call(variant);
+                                           Navigator.of(context).pop();
+                                         } else {
+                                           if (widget.isTranslationMode) {
+                                             ref
+                                                 .read(quranAudioControllerProvider
+                                                     .notifier)
+                                                 .selectTranslationReciter(variant);
+                                           } else {
+                                             ref
+                                                 .read(quranAudioControllerProvider
+                                                     .notifier)
+                                                 .selectReciter(variant);
+                                           }
+                                         }
                                       },
                                       itemBuilder: (popupContext) =>
                                           group.variants.map((v) {

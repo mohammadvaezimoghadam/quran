@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../common/constants/app_constants.dart';
+
 part 'surah_entity.freezed.dart';
 
 /// Domain entity representing a Surah
@@ -26,5 +28,8 @@ extension SurahEntityX on SurahEntity {
   String get revelationTypeFa => isMeccan ? 'مکی' : 'مدنی';
 
   int get startHizb => ((startJuz - 1) * 2) + 1;
+
+  int get revelationOrder =>
+      AppConstants.surahRevelationOrderMap[number] ?? number;
 }
 
