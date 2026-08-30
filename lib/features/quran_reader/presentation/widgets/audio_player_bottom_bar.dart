@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -373,38 +374,55 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                   ),
                 ),
 
-                // 3. Ultra-sleek mini Re-Sync Pill placed centered right above the reciter avatar
+                // 3. Ultra-sleek Floating Capsule Pill for Re-Sync with Live Equalizer Animation ("ادامه تلاوت • آیه ۲۴")
                 if (isAutoScrollSuspended && audioStatus != AudioStatus.stopped && currentAyahNumber != null)
                   Positioned(
+                    left: 0,
                     right: 0,
                     top: 0,
-                    child: SizedBox(
-                      width: discDiameter,
-                      child: Center(
-                        child: Material(
-                          color: colorScheme.primary,
-                          elevation: 6,
+                    child: Center(
+                      child: Material(
+                        color: colorScheme.primary,
+                        elevation: 6,
+                        borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                        child: InkWell(
+                          onTap: () {
+                            ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                            audioController.resumeAutoScrollAndSync();
+                          },
                           borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                          child: InkWell(
-                            onTap: () {
-                              ref.read(selectedAyahActionProvider.notifier).clearSelection();
-                              audioController.resumeAutoScrollAndSync();
-                            },
-                            borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.25),
+                                width: 1,
                               ),
-                              child: const Text(
-                                'ادامه تلاوت',
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const _AnimatedAudioEqualizer(
                                   color: Colors.white,
-                                  height: 1.1,
+                                  height: 13.0,
                                 ),
-                              ),
+                                const SizedBox(width: 7),
+                                Text(
+                                  'بازگشت به تلاوت • ${AppConstants.ayahLabel} ${currentAyahNumber.toPersianDigit()}',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    height: 1.1,
+                                    fontFamily: AppTypography.fontFamily,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -415,6 +433,76 @@ class AudioPlayerBottomBar extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Compact micro 3-bar animated audio equalizer widget
+class _AnimatedAudioEqualizer extends StatefulWidget {
+  final Color color;
+  final double height;
+
+  const _AnimatedAudioEqualizer({
+    required this.color,
+    this.height = 13.0,
+  });
+
+  @override
+  State<_AnimatedAudioEqualizer> createState() => _AnimatedAudioEqualizerState();
+}
+
+class _AnimatedAudioEqualizerState extends State<_AnimatedAudioEqualizer>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final val = _controller.value;
+        return SizedBox(
+          height: widget.height,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _buildBar(0.35 + 0.65 * (val * 1.0 % 1.0)),
+              const SizedBox(width: 2),
+              _buildBar(0.25 + 0.75 * ((val + 0.33) % 1.0)),
+              const SizedBox(width: 2),
+              _buildBar(0.45 + 0.55 * ((val + 0.66) % 1.0)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBar(double factor) {
+    final clampedFactor = factor.clamp(0.2, 1.0);
+    return Container(
+      width: 2.5,
+      height: widget.height * clampedFactor,
+      decoration: BoxDecoration(
+        color: widget.color,
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }
