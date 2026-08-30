@@ -16,6 +16,8 @@ class QuranDisplaySettingsController
         prefs.getDouble(PreferencesKeys.arabicFontSize) ?? 28.0;
     final translationFontSize =
         prefs.getDouble(PreferencesKeys.translationFontSize) ?? 16.0;
+    final translationFontFamily =
+        prefs.getString(PreferencesKeys.translationFontFamily) ?? 'Vazirmatn';
     final showTranslation =
         prefs.getBool(PreferencesKeys.showTranslation) ?? true;
     final showAyahNumbers =
@@ -33,6 +35,7 @@ class QuranDisplaySettingsController
     return QuranDisplaySettingsState(
       arabicFontSize: arabicFontSize,
       translationFontSize: translationFontSize,
+      translationFontFamily: translationFontFamily,
       showTranslation: showTranslation,
       showAyahNumbers: showAyahNumbers,
       autoHighlight: autoHighlight,
@@ -63,6 +66,10 @@ class QuranDisplaySettingsController
       PreferencesKeys.translationFontSize,
       state.translationFontSize,
     );
+    prefs.setString(
+      PreferencesKeys.translationFontFamily,
+      state.translationFontFamily,
+    );
     prefs.setBool(PreferencesKeys.showTranslation, state.showTranslation);
     prefs.setBool(PreferencesKeys.showAyahNumbers, state.showAyahNumbers);
     prefs.setBool(PreferencesKeys.autoHighlight, state.autoHighlight);
@@ -83,6 +90,10 @@ class QuranDisplaySettingsController
 
   void updateTranslationFontSize(double size) {
     state = state.copyWith(translationFontSize: size);
+  }
+
+  void updateTranslationFontFamily(String family) {
+    state = state.copyWith(translationFontFamily: family);
   }
 
   void toggleTranslation(bool show) {
@@ -126,6 +137,7 @@ class QuranDisplaySettingsController
     final prefs = ref.read(preferencesServiceProvider);
     prefs.remove(PreferencesKeys.arabicFontSize);
     prefs.remove(PreferencesKeys.translationFontSize);
+    prefs.remove(PreferencesKeys.translationFontFamily);
     prefs.remove(PreferencesKeys.showTranslation);
     prefs.remove(PreferencesKeys.showAyahNumbers);
     prefs.remove(PreferencesKeys.autoHighlight);

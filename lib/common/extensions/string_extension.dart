@@ -5,7 +5,7 @@ extension StringSearchNormalizeExtension on String {
     final regex = RegExp(r'[\(\[\{\（\［\｛].*?[\)\]\}\）\］\｝]');
     String cleanText = replaceAll(regex, '');
     // Clean up orphan spaces before punctuation (e.g. " ." -> ".")
-    cleanText = cleanText.replaceAll(RegExp(r'\s+([.,;:؛،!؟])'), r'$1');
+    cleanText = cleanText.replaceAllMapped(RegExp(r'\s+([.,;:؛،!؟])'), (match) => match[1]!);
     return cleanText.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 

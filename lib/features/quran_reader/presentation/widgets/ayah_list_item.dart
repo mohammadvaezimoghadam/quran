@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../common/extensions/ayah_extension.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
@@ -21,6 +22,7 @@ import 'ayah_bottom_action_chips.dart';
 import '../../../translation_manager/application/controllers/ayah_translation_provider.dart';
 import '../../../translation_manager/presentation/widgets/ayah_translation_text.dart';
 import 'word_by_word_bottom_sheet.dart';
+import 'quran_ornamental_divider.dart';
 import '../utils/reciter_download_helper.dart';
 
 /// Clean component for displaying an individual Ayah card.
@@ -29,6 +31,7 @@ class AyahListItem extends ConsumerWidget {
   final String surahName;
   final int totalAyahsInSurah;
   final bool isPageStart;
+  final bool isHizbStart;
   final String? translationId;
   final VoidCallback? onBookmarkTap;
   final VoidCallback? onPlayTap;
@@ -40,6 +43,7 @@ class AyahListItem extends ConsumerWidget {
     required this.surahName,
     required this.totalAyahsInSurah,
     this.isPageStart = false,
+    this.isHizbStart = false,
     this.translationId,
     this.onBookmarkTap,
     this.onPlayTap,
@@ -290,22 +294,53 @@ class AyahListItem extends ConsumerWidget {
               ),
             ),
 
-            if (isPageStart)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, right: 12.0),
-                  child: Text(
-                    'صفحه ${ayah.page}',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.goldAccent,
+            if (isPageStart || (isHizbStart && ayah.hizb != null))
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0, left: 8.0, right: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (isPageStart)
+                          Text(
+                            'صفحه ${ayah.page?.toPersianDigit() ?? ''}',
+                            style: const TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.goldAccent,
+                            ),
+                            textDirection: TextDirection.rtl,
+                          )
+                        else
+                          const SizedBox.shrink(),
+
+                        if (isHizbStart && ayah.hizb != null)
+                          Text(
+                            'حزب ${ayah.hizb!.toPersianDigit()}',
+                            style: const TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.goldAccent,
+                            ),
+                            textDirection: TextDirection.rtl,
+                          )
+                        else
+                          const SizedBox.shrink(),
+                      ],
                     ),
-                    textDirection: TextDirection.rtl,
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: QuranOrnamentalDivider(
+                      color: AppColors.goldAccent.withValues(alpha: 0.6),
+                      height: 16,
+                    ),
+                  ),
+                ],
               ),
 
             // Main Arabic Ayah Text with Embedded Ayah Marker

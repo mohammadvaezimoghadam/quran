@@ -8,6 +8,7 @@ import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
+import '../../domain/entities/ayah_entity.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 import 'ayah_list_item.dart';
 
@@ -186,20 +187,25 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
         padding: EdgeInsets.only(
           left: AppDimens.marginPage,
           right: AppDimens.marginPage,
-          top: MediaQuery.paddingOf(context).top + kToolbarHeight + 42,
-          bottom: MediaQuery.paddingOf(context).bottom + 160,
+          top: 12.0,
+          bottom: MediaQuery.paddingOf(context).bottom + 140,
         ),
         itemCount: state.ayahs.length,
         itemBuilder: (context, index) {
           final ayah = state.ayahs[index];
           final previousAyah = index > 0 ? state.ayahs[index - 1] : null;
+          
           final isPageStart = previousAyah == null || previousAyah.page != ayah.page;
+          final isHizbStart = (previousAyah != null)
+              ? (ayah.hizb != null && previousAyah.hizb != ayah.hizb)
+              : (ayah.hizbQuarter != null && (ayah.hizbQuarter! % 2 != 0));
           
           return AyahListItem(
             ayah: ayah,
             surahName: widget.surahName,
             totalAyahsInSurah: state.ayahs.length,
             isPageStart: isPageStart,
+            isHizbStart: isHizbStart,
             translationId: widget.translationId,
           );
         },

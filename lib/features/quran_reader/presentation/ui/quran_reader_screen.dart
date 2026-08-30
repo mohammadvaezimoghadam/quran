@@ -248,129 +248,137 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     final double topPadding = MediaQuery.paddingOf(context).top;
     final double appBarHeight = topPadding + kToolbarHeight;
 
+    final double infoBarHeight = 35.0;
+    final double headerHeight = appBarHeight + infoBarHeight;
+
     return Scaffold(
       extendBody: true,
       body: Stack(
         children: [
-          // 1. Quran PageView (Completely stationary Positioned.fill — zero layout jumps or shifts during animations!)
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: GestureDetector(
-                onTap: () {
-                  if (_isFullScreen) {
-                    _toggleControls();
-                  }
-                },
-                behavior: HitTestBehavior.translucent,
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: 114,
-                  onPageChanged: _onPageChanged,
-                  physics: const BouncingScrollPhysics(),
-                  itemBuilder: (context, pageIndex) {
-                    final pageSurahId = pageIndex + 1;
-                    return SurahAyahPageView(
-                      key: ValueKey('surah_page_$pageSurahId'),
-                      surahId: pageSurahId,
-                      surahName: _getSurahName(ref, pageSurahId),
-                      isCurrentPage: pageSurahId == currentSurahId,
-                      initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
-                      translationId: widget.translationId,
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-
-          // 2. Top Header & QuranInfoBar (GPU AnimatedSlide transform — zero list relayout!)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: RepaintBoundary(
-              child: AnimatedSlide(
+          // 1. Column containing Header (AppBar + InfoBar) and Bounded PageView (Expanded)
+          Column(
+            children: [
+              // Top Header & QuranInfoBar (AnimatedContainer collapses height in full-screen)
+              AnimatedContainer(
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeInOutCubic,
-                offset: controlsHidden ? const Offset(0, -1.2) : Offset.zero,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      height: appBarHeight,
-                      child: IslamicKatibahAppBar(
-                        surahName: currentSurahName,
-                        surahNumber: currentSurahId,
-                        fontFamily: fontFamily,
-                        actions: [
-                          IconButton(
-                            icon: const Icon(
-                              CupertinoIcons.bookmark,
-                              size: 20,
-                              color: Color(0xFFF4E0A5),
-                            ),
-                            tooltip: 'ذخیره نشانک (بوک‌مارک)',
-                            onPressed: () {
-                              final currentState = _continueReadingNotifier.state;
-                              if (currentState != null) {
-                                ref.read(manualBookmarkControllerProvider.notifier).saveBookmark(currentState);
-                                AppSnackBar.showInfo(
-                                  context,
-                                  'نشانک با موفقیت برای این آیه ذخیره شد.',
-                                  duration: const Duration(seconds: 2),
-                                );
-                              }
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              CupertinoIcons.slider_horizontal_3,
-                              size: 20,
-                              color: Color(0xFFF4E0A5),
-                            ),
-                            tooltip: 'تنظیمات نمایش',
-                            onPressed: () => QuickSettingsDrawer.show(context),
-                          ),
-                          PopupMenuButton<String>(
-                            icon: const Icon(
-                              CupertinoIcons.ellipsis_vertical,
-                              size: 22,
-                              color: Color(0xFFF4E0A5),
-                            ),
-                            tooltip: 'منو',
-                            onSelected: (value) {
-                              if (value == 'fullscreen') {
-                                _enterFullScreen();
-                              }
-                            },
-                            itemBuilder: (context) => [
-                              const PopupMenuItem<String>(
-                                value: 'fullscreen',
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(CupertinoIcons.fullscreen, size: 18),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'حالت تمام صفحه',
-                                      style: TextStyle(
-                                        fontFamily: AppTypography.fontFamily,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
+                height: controlsHidden ? 0 : headerHeight,
+                child: ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment.bottomCenter,
+                    minHeight: 0,
+                    maxHeight: headerHeight,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: appBarHeight,
+                          child: IslamicKatibahAppBar(
+                            surahName: currentSurahName,
+                            surahNumber: currentSurahId,
+                            fontFamily: fontFamily,
+                            actions: [
+                              IconButton(
+                                icon: const Icon(
+                                  CupertinoIcons.bookmark,
+                                  size: 20,
+                                  color: Color(0xFFF4E0A5),
                                 ),
+                                tooltip: 'ذخیره نشانک (بوک‌مارک)',
+                                onPressed: () {
+                                  final currentState = _continueReadingNotifier.state;
+                                  if (currentState != null) {
+                                    ref.read(manualBookmarkControllerProvider.notifier).saveBookmark(currentState);
+                                    AppSnackBar.showInfo(
+                                      context,
+                                      'نشانک با موفقیت برای این آیه ذخیره شد.',
+                                      duration: const Duration(seconds: 2),
+                                    );
+                                  }
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  CupertinoIcons.slider_horizontal_3,
+                                  size: 20,
+                                  color: Color(0xFFF4E0A5),
+                                ),
+                                tooltip: 'تنظیمات نمایش',
+                                onPressed: () => QuickSettingsDrawer.show(context),
+                              ),
+                              PopupMenuButton<String>(
+                                icon: const Icon(
+                                  CupertinoIcons.ellipsis_vertical,
+                                  size: 22,
+                                  color: Color(0xFFF4E0A5),
+                                ),
+                                tooltip: 'منو',
+                                onSelected: (value) {
+                                  if (value == 'fullscreen') {
+                                    _enterFullScreen();
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem<String>(
+                                    value: 'fullscreen',
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(CupertinoIcons.fullscreen, size: 18),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'حالت تمام صفحه',
+                                          style: TextStyle(
+                                            fontFamily: AppTypography.fontFamily,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        const QuranInfoBar(),
+                      ],
                     ),
-                    const QuranInfoBar(),
-                  ],
+                  ),
                 ),
               ),
-            ),
+
+              // Quran PageView (Bounded directly below QuranInfoBar — zero scroll under header!)
+              Expanded(
+                child: RepaintBoundary(
+                  child: GestureDetector(
+                    onTap: () {
+                      if (_isFullScreen) {
+                        _toggleControls();
+                      }
+                    },
+                    behavior: HitTestBehavior.translucent,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: 114,
+                      onPageChanged: _onPageChanged,
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, pageIndex) {
+                        final pageSurahId = pageIndex + 1;
+                        return SurahAyahPageView(
+                          key: ValueKey('surah_page_$pageSurahId'),
+                          surahId: pageSurahId,
+                          surahName: _getSurahName(ref, pageSurahId),
+                          isCurrentPage: pageSurahId == currentSurahId,
+                          initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
+                          translationId: widget.translationId,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
 
           // 3. Bottom Audio Player Bar (Positioned at bottom, capsule slides behind disc)

@@ -6,7 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
-import 'package:zxing2/qrcode.dart';
+import 'package:zxing2/qrcode.dart' hide BarcodeFormat;
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/size_extension.dart';
@@ -36,7 +37,10 @@ class PageNavigationBottomSheet extends ConsumerStatefulWidget {
 
 class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottomSheet> {
   final _pageController = TextEditingController();
-  final MobileScannerController _scannerController = MobileScannerController();
+  final MobileScannerController _scannerController = MobileScannerController(
+    detectionSpeed: DetectionSpeed.unrestricted,
+    formats: [BarcodeFormat.qrCode],
+  );
   bool _showScanner = false;
   bool _isProcessingScanner = false;
 
@@ -45,6 +49,19 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
     _pageController.dispose();
     _scannerController.dispose();
     super.dispose();
+  }
+
+  Future<void> _requestCameraPermission() async {
+    final status = await Permission.camera.request();
+    if (status.isGranted) {
+      await _scannerController.start();
+      if (mounted) setState(() {});
+    } else if (status.isPermanentlyDenied) {
+      await openAppSettings();
+    } else {
+      await _scannerController.start();
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _pickImage() async {
@@ -352,6 +369,61 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                 MobileScanner(
                   controller: _scannerController,
                   onDetect: _onDetect,
+                  errorBuilder: (context, error, child) {
+                    return Container(
+                      color: Colors.black87,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.camera_alt_outlined, color: Colors.orangeAccent, size: 44),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'دسترسی به دوربین فعال نیست',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'برای اسکن کد QR صفحه قرآن، نیاز به دسترسی دوربین است.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: _requestCameraPermission,
+                            icon: const Icon(Icons.security, size: 16),
+                            label: const Text(
+                              'اعطای دسترسی به دوربین',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 Center(
                   child: SizedBox(

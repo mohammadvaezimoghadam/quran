@@ -5,6 +5,7 @@ abstract final class PreferencesKeys {
   // Quran Reader Display Settings Keys
   static const String arabicFontSize = 'quran_arabic_font_size';
   static const String translationFontSize = 'quran_translation_font_size';
+  static const String translationFontFamily = 'quran_translation_font_family';
   static const String showTranslation = 'quran_show_translation';
   static const String showAyahNumbers = 'quran_show_ayah_numbers';
   static const String fontScript = 'quran_font_script';

@@ -91,8 +91,10 @@ class _AudioDownloadManagerScreenState
           DownloadManagerReciterSelector(
             isTranslationMode: widget.isTranslationMode,
           ),
-          const Expanded(
-            child: DownloadManagerSurahList(),
+          Expanded(
+            child: DownloadManagerSurahList(
+              initialSurahId: widget.initialSurahId,
+            ),
           ),
           const DownloadManagerActionBar(),
         ],

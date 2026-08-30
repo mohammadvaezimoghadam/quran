@@ -8,6 +8,7 @@ abstract class QuranDisplaySettingsState with _$QuranDisplaySettingsState {
   const factory QuranDisplaySettingsState({
     @Default(28.0) double arabicFontSize,
     @Default(16.0) double translationFontSize,
+    @Default('Vazirmatn') String translationFontFamily,
     @Default(true) bool showTranslation,
     @Default(true) bool showArabicText,
     @Default(true) bool showAyahNumbers,

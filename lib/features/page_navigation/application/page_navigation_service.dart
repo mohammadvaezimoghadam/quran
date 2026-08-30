@@ -22,9 +22,25 @@ class PageNavigationService {
 
   Future<Result<PageNavigationTarget, Failure>> getTargetFromQrData(String qrData) async {
     try {
-      // Logic for parsing QR data is separated here in the Service Layer
-      final pageNumber = int.tryParse(qrData.trim());
-      
+      final cleanData = qrData.trim();
+      int? pageNumber = int.tryParse(cleanData);
+
+      // Support 'P150' or 'p150'
+      if (pageNumber == null && cleanData.toUpperCase().startsWith('P')) {
+        pageNumber = int.tryParse(cleanData.substring(1));
+      }
+
+      // Extract numbers from URL e.g. https://quran.com/page/150
+      if (pageNumber == null) {
+        final match = RegExp(r'/page/(\d{1,3})|/(\d{1,3})|(\d{1,3})').firstMatch(cleanData);
+        if (match != null) {
+          final matchedGroup = match.group(1) ?? match.group(2) ?? match.group(3);
+          if (matchedGroup != null) {
+            pageNumber = int.tryParse(matchedGroup);
+          }
+        }
+      }
+
       if (pageNumber == null || pageNumber <= 0 || pageNumber > 604) {
         final shortData = qrData.length > 20 ? '${qrData.substring(0, 20)}...' : qrData;
         return Error(Failure(message: 'کد اسکن شده ($shortData) معتبر نیست.'));

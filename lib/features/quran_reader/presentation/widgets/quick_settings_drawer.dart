@@ -388,12 +388,15 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                     TranslationSettingsSection(
                       showTranslation: settings.showTranslation,
                       translationFontSize: settings.translationFontSize,
+                      translationFontFamily: settings.translationFontFamily,
                       removeTranslationBrackets:
                           settings.removeTranslationBrackets,
                       onToggleTranslation: (val) =>
                           displayNotifier.toggleTranslation(val),
                       onFontSizeChanged: (val) =>
                           displayNotifier.updateTranslationFontSize(val),
+                      onFontFamilyChanged: (val) =>
+                          displayNotifier.updateTranslationFontFamily(val),
                       onToggleRemoveBrackets: (val) =>
                           displayNotifier.toggleRemoveTranslationBrackets(val),
                       accentColor: accentColor,
@@ -563,7 +566,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
               style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
+                fontFamily: settings.translationFontFamily,
                 fontSize: settings.translationFontSize,
                 color: textSecondary,
                 height: 1.35,

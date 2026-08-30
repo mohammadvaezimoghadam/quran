@@ -9,9 +9,11 @@ import 'translation_dropdown_selector.dart';/// An encapsulated UI section for T
 class TranslationSettingsSection extends StatelessWidget {
   final bool showTranslation;
   final double translationFontSize;
+  final String translationFontFamily;
   final bool removeTranslationBrackets;
   final ValueChanged<bool> onToggleTranslation;
   final ValueChanged<double> onFontSizeChanged;
+  final ValueChanged<String>? onFontFamilyChanged;
   final ValueChanged<bool>? onToggleRemoveBrackets;
   
   /// Colors injected from the parent (e.g., drawer) to match its theme
@@ -23,9 +25,11 @@ class TranslationSettingsSection extends StatelessWidget {
     super.key,
     required this.showTranslation,
     required this.translationFontSize,
+    this.translationFontFamily = 'Vazirmatn',
     this.removeTranslationBrackets = true,
     required this.onToggleTranslation,
     required this.onFontSizeChanged,
+    this.onFontFamilyChanged,
     this.onToggleRemoveBrackets,
     required this.accentColor,
     required this.textPrimary,
@@ -57,6 +61,11 @@ class TranslationSettingsSection extends StatelessWidget {
           child: showTranslation
               ? Column(
                   children: [
+                    _buildInnerDivider(colorScheme),
+
+                    // Translation Font Family Selector (وزیر / نازنین)
+                    _buildFontFamilyTile(context, colorScheme),
+
                     _buildInnerDivider(colorScheme),
 
                     // Translation Font Size
@@ -99,6 +108,88 @@ class TranslationSettingsSection extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+
+  Widget _buildFontFamilyTile(BuildContext context, ColorScheme colorScheme) {
+    final fonts = [
+      {'name': 'وزیر', 'family': 'Vazirmatn'},
+      {'name': 'نازنین', 'family': 'BNazanin'},
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(CupertinoIcons.textformat_alt, size: 18.0, color: accentColor),
+              8.0.hSpace,
+              Text(
+                'فونت متن ترجمه',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                ),
+              ),
+            ],
+          ),
+          Container(
+            height: 34,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: fonts.map((f) {
+                final isSelected = translationFontFamily == f['family'];
+                return GestureDetector(
+                  onTap: () {
+                    if (onFontFamilyChanged != null) {
+                      onFontFamilyChanged!(f['family']!);
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? colorScheme.surface
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(7),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              )
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        f['name']!,
+                        style: TextStyle(
+                          fontFamily: f['family'],
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                          color: isSelected ? accentColor : textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

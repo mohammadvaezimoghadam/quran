@@ -19,5 +19,5 @@ abstract class AyahEntity with _$AyahEntity {
 }
 
 extension AyahEntityHizb on AyahEntity {
-  int? get hizb => hizbQuarter != null ? ((hizbQuarter! + 3) ~/ 4) : null;
+  int? get hizb => hizbQuarter != null ? ((hizbQuarter! + 1) ~/ 2) : null;
 }

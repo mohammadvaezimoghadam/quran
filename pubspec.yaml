@@ -129,4 +129,6 @@ flutter:
     - family: ScheherazadeNew
       fonts:
         - asset: assets/fonts/ScheherazadeNew-Regular.ttf
-
+    - family: BNazanin
+      fonts:
+        - asset: assets/fonts/BNazanin.ttf

@@ -52,6 +52,7 @@ class QuranInfoBar extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
+      height: 35.0,
       padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),

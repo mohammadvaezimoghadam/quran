@@ -49,6 +49,9 @@ class AyahTranslationText extends ConsumerWidget {
     final removeBrackets = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.removeTranslationBrackets),
     );
+    final translationFontFamily = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.translationFontFamily),
+    );
 
     final rawTranslation = translationAsync.value ?? fallbackText;
     final textToClean = removeBrackets ? rawTranslation.removeTranslatorExplanations() : rawTranslation;
@@ -65,6 +68,7 @@ class AyahTranslationText extends ConsumerWidget {
         : colorScheme.onSurfaceVariant;
 
     final style = AppTypography.translationText.copyWith(
+      fontFamily: translationFontFamily,
       fontSize: fontSize,
       color: textColor,
     );

@@ -14,7 +14,7 @@ import '../../application/controllers/audio_download_controller.dart';
 import '../../application/controllers/surah_downloaded_ayahs_provider.dart';
 import '../../domain/entities/audio_download_task.dart';
 
-class DownloadManagerSurahList extends ConsumerWidget {
+class DownloadManagerSurahList extends ConsumerStatefulWidget {
   final int? initialSurahId;
 
   const DownloadManagerSurahList({
@@ -23,7 +23,41 @@ class DownloadManagerSurahList extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DownloadManagerSurahList> createState() =>
+      _DownloadManagerSurahListState();
+}
+
+class _DownloadManagerSurahListState
+    extends ConsumerState<DownloadManagerSurahList> {
+  late ScrollController _scrollController;
+  bool _hasScrolled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Calculate the initial scroll offset for the given surah number
+  double _calcOffset(double gridWidth, int surahNumber) {
+    // Total horizontal padding: 12 (left) + 12 (right) = 24
+    // Total cross axis spacing: 8 * 3 = 24
+    final availableWidth = gridWidth - 24 - 24;
+    final itemWidth = availableWidth / 4;
+    final itemHeight = itemWidth / 0.95; // childAspectRatio = 0.95
+    final rowIndex = (surahNumber - 1) ~/ 4;
+    // Each row = itemHeight + 8 (mainAxisSpacing), minus the top padding offset
+    return rowIndex * (itemHeight + 8.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final surahState = ref.watch(surahListControllerProvider);
     final selectedReciter = ref.watch(downloadManagerSelectedReciterProvider);
     final selectedSurahs = ref.watch(downloadManagerSelectedSurahsProvider);
@@ -42,26 +76,52 @@ class DownloadManagerSurahList extends ConsumerWidget {
     }
 
     final surahs = surahState.surahs;
+    final initialSurahId = widget.initialSurahId;
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: surahs.length,
-      itemBuilder: (context, index) {
-        final surah = surahs[index];
-        final isSelected = selectedSurahs.contains(surah.number);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Jump smoothly to the surah position only once on first load
+        if (!_hasScrolled &&
+            initialSurahId != null &&
+            initialSurahId > 4 &&
+            surahs.isNotEmpty) {
+          _hasScrolled = true;
+          final targetOffset = _calcOffset(constraints.maxWidth, initialSurahId);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (!mounted || !_scrollController.hasClients) return;
+              final maxScroll = _scrollController.position.maxScrollExtent;
+              _scrollController.animateTo(
+                targetOffset.clamp(0.0, maxScroll),
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+              );
+            });
+          });
+        }
 
-        return _SurahGridItem(
-          key: ValueKey('surah_${surah.number}'),
-          surah: surah,
-          fontFamily: fontFamily,
-          selectedReciter: selectedReciter,
-          isSelected: isSelected,
+        return GridView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(12),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.95,
+          ),
+          itemCount: surahs.length,
+          itemBuilder: (context, index) {
+            final surah = surahs[index];
+            final isSelected = selectedSurahs.contains(surah.number);
+
+            return _SurahGridItem(
+              key: ValueKey('surah_${surah.number}'),
+              surah: surah,
+              fontFamily: fontFamily,
+              selectedReciter: selectedReciter,
+              isSelected: isSelected,
+            );
+          },
         );
       },
     );
@@ -177,109 +237,146 @@ class _SurahGridItem extends ConsumerWidget {
             ),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top: Surah Number & Arabic Name
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${surah.number}.',
+              // Top Right: Ayah Count / Progress Badge
+              Align(
+                alignment: Alignment.topRight,
+                child: ayahProgressText != null
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isDownloading
+                              ? AppColors.goldAccent.withValues(alpha: 0.15)
+                              : Colors.orange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          ayahProgressText,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: isDownloading
+                                ? AppColors.goldAccent
+                                : Colors.orange,
+                          ),
+                        ),
+                      )
+                    : Text(
+                        '${surah.numberOfAyahs} آیه',
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: isDownloaded
-                              ? colorScheme.primary
-                              : isDownloading || isSelected
-                                  ? AppColors.goldAccent
-                                  : hasPartialDownload
-                                      ? Colors.orange
-                                      : colorScheme.onSurfaceVariant,
+                          fontSize: 9,
+                          color: colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.8),
                         ),
                       ),
-                      const SizedBox(width: 2),
-                      Text(
-                        surah.name,
-                        style: TextStyle(
-                          fontFamily: fontFamily,
-                          fontSize: 13,
-                          color: isDownloaded
-                              ? colorScheme.primary
-                              : isDownloading || isSelected
-                                  ? AppColors.goldAccent
-                                  : hasPartialDownload
-                                      ? Colors.orange
-                                      : colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
 
-              // Middle: Status Icon
-              if (isDownloaded)
-                Icon(Icons.check_circle,
-                    color: colorScheme.primary, size: 18)
-              else if (isDownloading)
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    value: downloadTask.progress > 0
-                        ? downloadTask.progress
-                        : null,
-                    strokeWidth: 2,
-                    color: AppColors.goldAccent,
-                    backgroundColor:
-                        AppColors.goldAccent.withValues(alpha: 0.2),
-                  ),
-                )
-              else if (isSelected)
-                const Icon(Icons.check_circle,
-                    color: AppColors.goldAccent, size: 18)
-              else
-                Icon(
-                  Icons.radio_button_unchecked,
-                  color: colorScheme.outlineVariant,
-                  size: 14,
-                ),
-
-              // Bottom: Ayah progress badge or Ayah count
-              if (ayahProgressText != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 4, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: isDownloading
-                        ? AppColors.goldAccent.withValues(alpha: 0.15)
-                        : Colors.orange.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    ayahProgressText,
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: isDownloading
-                          ? AppColors.goldAccent
-                          : Colors.orange,
+              // Main content (Centered vertically)
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Surah Number & Arabic Name
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              '${surah.number}.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isDownloaded
+                                    ? colorScheme.primary
+                                    : isDownloading || isSelected
+                                        ? AppColors.goldAccent
+                                        : hasPartialDownload
+                                            ? Colors.orange
+                                            : colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              surah.name,
+                              style: TextStyle(
+                                fontFamily: fontFamily,
+                                fontSize: 18,
+                                color: isDownloaded
+                                    ? colorScheme.primary
+                                    : isDownloading || isSelected
+                                        ? AppColors.goldAccent
+                                        : hasPartialDownload
+                                            ? Colors.orange
+                                            : colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                )
-              else
-                Text(
-                  '${surah.numberOfAyahs} آیه',
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: colorScheme.onSurfaceVariant
-                        .withValues(alpha: 0.7),
-                  ),
+                    const SizedBox(height: 6),
+
+                    // Status Icon & Text
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (isDownloaded) ...[
+                          Icon(Icons.check_circle,
+                              color: colorScheme.primary, size: 14),
+                          const SizedBox(width: 4),
+                          Text('دانلود شده',
+                              style: TextStyle(
+                                  fontSize: 9, color: colorScheme.primary)),
+                        ] else if (isDownloading) ...[
+                          SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              value: downloadTask.progress > 0
+                                  ? downloadTask.progress
+                                  : null,
+                              strokeWidth: 2,
+                              color: AppColors.goldAccent,
+                              backgroundColor:
+                                  AppColors.goldAccent.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text('در حال دانلود',
+                              style: TextStyle(
+                                  fontSize: 9, color: AppColors.goldAccent)),
+                        ] else if (isSelected) ...[
+                          const Icon(Icons.check_circle,
+                              color: AppColors.goldAccent, size: 14),
+                          const SizedBox(width: 4),
+                          const Text('انتخاب شده',
+                              style: TextStyle(
+                                  fontSize: 9, color: AppColors.goldAccent)),
+                        ] else ...[
+                          Icon(
+                            Icons.radio_button_unchecked,
+                            color: colorScheme.outlineVariant,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text('دانلود نشده',
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.7))),
+                        ]
+                      ],
+                    ),
+                  ],
                 ),
+              ),
             ],
           ),
         );

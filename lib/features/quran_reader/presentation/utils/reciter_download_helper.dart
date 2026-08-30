@@ -30,9 +30,11 @@ abstract class ReciterDownloadHelper {
     final quranReciter = audioState.selectedReciter;
     final translationReciter = audioState.selectedTranslationReciter;
 
+    final readerSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
     final activeSurahId = surahId ??
+        (readerSurahId != 0 ? readerSurahId : null) ??
         audioState.currentSurahId ??
-        ref.read(quranReaderControllerProvider).currentSurahId;
+        1;
 
     // Determine which sources need to be checked
     final needsQuran = mode.includesQuran;
@@ -89,9 +91,11 @@ abstract class ReciterDownloadHelper {
     required ReciterEntity reciter,
     int? surahId,
   }) async {
+    final readerSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
     final activeSurahId = surahId ??
+        (readerSurahId != 0 ? readerSurahId : null) ??
         ref.read(quranAudioControllerProvider).currentSurahId ??
-        ref.read(quranReaderControllerProvider).currentSurahId;
+        1;
 
     final isReady = await _isReciterSurahDownloaded(
       ref: ref,

@@ -36,6 +36,15 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchController.clear();
+      ref.read(surahListControllerProvider.notifier).searchSurahs('');
+    });
+  }
+
+  @override
   void dispose() {
     _searchFocusNode.dispose();
     _searchController.dispose();
@@ -59,7 +68,14 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
     );
     final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
-    return Scaffold(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          _searchController.clear();
+          ref.read(surahListControllerProvider.notifier).searchSurahs('');
+        }
+      },
+      child: Scaffold(
       extendBody: true,
       appBar: IslamicKatibahAppBar(
         surahName: isOnlyFavorites ? 'فهرست شخصی' : AppConstants.surahListScreenTitle,
@@ -69,6 +85,15 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
         searchController: _searchController,
         searchPrefixWidget: const ReciterAvatarButton(radius: 25, showLabel: false),
         actions: [
+          IconButton(
+            icon: const Icon(
+              CupertinoIcons.device_laptop,
+              color: AppColors.softGoldText,
+              size: 22,
+            ),
+            tooltip: 'دستگاه هوشمند NodeMCU',
+            onPressed: () => context.pushNamed(smartDeviceRoute),
+          ),
           PopupMenuButton<String>(
             icon: const Icon(
               CupertinoIcons.ellipsis_vertical,
@@ -81,6 +106,8 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
                 SurahSortBottomSheet.show(context);
               } else if (value == 'custom_list') {
                 ref.read(surahListControllerProvider.notifier).toggleOnlyFavorites();
+              } else if (value == 'smart_device') {
+                context.pushNamed(smartDeviceRoute);
               }
             },
             itemBuilder: (context) => [
@@ -120,6 +147,26 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
                   ],
                 ),
               ),
+              const PopupMenuItem<String>(
+                value: 'smart_device',
+                child: Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.device_laptop,
+                      size: 20,
+                      color: AppColors.goldAccent,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'دستگاه هوشمند NodeMCU',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -147,8 +194,9 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
         elevation: 4,
       ),
       bottomNavigationBar: const MiniAudioPlayerBar(),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildBody(
     BuildContext context,

@@ -18,6 +18,7 @@ class TranslationManagerBottomSheet extends ConsumerStatefulWidget {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const TranslationManagerBottomSheet(),
     );
@@ -137,23 +138,25 @@ class _TranslationManagerBottomSheetState
 
     return ScaffoldMessenger(
       child: Container(
-        height: MediaQuery.sizeOf(context).height * 0.45,
+        height: MediaQuery.sizeOf(context).height * 0.48,
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Builder(
             builder: (context) => Directionality(
             textDirection: TextDirection.rtl,
-            child: Container(
-              decoration: BoxDecoration(
-          color: sheetBgColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
-        ),
-        padding: const EdgeInsets.only(
-          top: 10,
-          bottom: 20,
-          left: 16,
-          right: 16,
-        ),
+            child: SafeArea(
+              top: false,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: sheetBgColor,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+                ),
+                padding: const EdgeInsets.only(
+                  top: 10,
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                ),
         child: Column(
           children: [
             // Top Drag Handle
@@ -331,10 +334,11 @@ class _TranslationManagerBottomSheetState
           ],
         ),
       ),
-      ),
-      ),
-      ),
-      ),
+    ),
+    ),
+    ),
+    ),
+    ),
     );
   }
 }
