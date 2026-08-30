@@ -400,54 +400,104 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
             ),
           ),
 
-          // 4. Exit Full-Screen Button – ALWAYS visible in fullscreen mode!
+          // 4. Exit Full-Screen & Hide Controls Buttons – Visible in fullscreen mode!
           if (_isFullScreen)
             AnimatedPositioned(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               top: controlsHidden
                   ? topPadding + 10
-                  : appBarHeight + 36,
+                  : appBarHeight + 44,
               left: 12,
               child: RepaintBoundary(
-                child: Material(
-                  color: Colors.black.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(20),
-                  elevation: 6,
-                  child: InkWell(
-                    onTap: _exitFullScreen,
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          width: 1,
-                        ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Exit Full-Screen Button
+                    Material(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      elevation: 6,
+                      child: InkWell(
+                        onTap: _exitFullScreen,
                         borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            CupertinoIcons.fullscreen_exit,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'خروج از تمام‌صفحه',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.25),
+                              width: 1,
                             ),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                        ],
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                CupertinoIcons.fullscreen_exit,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'خروج از تمام‌صفحه',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+
+                    // Hide Controls Button (Shown when controls are expanded)
+                    if (_isControlsVisible) ...[
+                      const SizedBox(width: 8),
+                      Material(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(20),
+                        elevation: 6,
+                        child: InkWell(
+                          onTap: _toggleControls,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.25),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  CupertinoIcons.eye_slash,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'پنهان‌سازی منوها',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
