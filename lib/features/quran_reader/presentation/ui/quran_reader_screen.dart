@@ -483,7 +483,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                 ),
                                 SizedBox(width: 4),
                                 Text(
-                                  'پنهان‌سازی منوها',
+                                  'پنهان‌سازی',
                                   style: TextStyle(
                                     fontFamily: AppTypography.fontFamily,
                                     fontSize: 11,
