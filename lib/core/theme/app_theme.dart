@@ -90,6 +90,12 @@ class AppTheme {
         bodySmall: TextStyle(color: darkOnSurfaceVariant, fontSize: 14),
         labelMedium: TextStyle(color: darkOnSurfaceVariant, fontSize: 12),
       ),
+      inputDecorationTheme: const InputDecorationTheme(
+        hintStyle: TextStyle(color: darkOnSurfaceVariant),
+        labelStyle: TextStyle(color: darkOnSurface),
+        prefixIconColor: darkOnSurfaceVariant,
+        suffixIconColor: darkOnSurfaceVariant,
+      ),
     );
   }
 }

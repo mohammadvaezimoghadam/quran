@@ -9,21 +9,22 @@ import 'ayah_number_marker.dart';
 /// Renders the Arabic text of an Ayah with an inline number marker
 /// and custom diacritics (Tashkeel) coloring.
 ///
-/// Uses a single [RichText] widget with per-rune [TextSpan] splitting.
-/// Flutter's text shaping engine (HarfBuzz) processes the entire paragraph
-/// as one unit regardless of [TextSpan] boundaries, so Arabic cursive
-/// joining and glyph positioning are fully preserved. The span boundaries
-/// only switch the paint color between base letters and diacritics.
+/// If [ayahNumber] is 1 and Bismillah is prefixed inside the Ayah text
+/// (as is standard for Surahs 2 to 114, excluding Surah 9), Bismillah
+/// is extracted and rendered centered on its own dedicated top line,
+/// followed by the main Ayah text on the next line.
 class AyahArabicText extends ConsumerWidget {
   final String text;
   final int ayahNumber;
   final bool isActive;
+  final int surahId;
 
   const AyahArabicText({
     super.key,
     required this.text,
     required this.ayahNumber,
     this.isActive = false,
+    this.surahId = 0,
   });
 
   @override
@@ -50,30 +51,40 @@ class AyahArabicText extends ConsumerWidget {
     );
 
     final sanitizedText = ArabicTextHelper.removeAnnotationMarks(text);
-
     final bool useCustomColor = harakatColor != null &&
         harakatColor != colorScheme.onSurface;
 
-    final List<InlineSpan> textChildren;
+    String? bismillahText;
+    String mainText = sanitizedText;
 
-    if (useCustomColor) {
-      textChildren = [
-        ...ArabicTextHelper.buildColoredSpans(
-          text: sanitizedText,
+    // Extract Bismillah for Surahs 2..114 (except Surah 9) on Ayah 1
+    if (ayahNumber == 1 && surahId != 1 && surahId != 9) {
+      final cleaned = sanitizedText.trim().replaceAll(RegExp(r'[\uFEFF\u200B-\u200F\uFFFD]'), '');
+      final tokens = cleaned.split(RegExp(r'\s+'));
+      if (tokens.length >= 5) {
+        bismillahText = tokens.sublist(0, 4).join(' ');
+        mainText = tokens.sublist(4).join(' ');
+      }
+    }
+
+    List<InlineSpan> buildSpans(String rawText) {
+      if (useCustomColor) {
+        return ArabicTextHelper.buildColoredSpans(
+          text: rawText,
           baseStyle: baseStyle,
           baseColor: colorScheme.onSurface,
           harakatColor: harakatColor,
-        ),
-      ];
-    } else {
-      textChildren = [
-        TextSpan(text: sanitizedText),
-      ];
+        );
+      } else {
+        return [TextSpan(text: rawText)];
+      }
     }
 
-    // Append the Ayah number marker at the end.
-    textChildren.add(const TextSpan(text: '\u200F'));
-    textChildren.add(
+    final List<InlineSpan> mainTextChildren = List<InlineSpan>.from(buildSpans(mainText));
+
+    // Append the Ayah number marker at the end of the main text.
+    mainTextChildren.add(const TextSpan(text: '\u200F'));
+    mainTextChildren.add(
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,
         child: AyahNumberMarker(
@@ -82,14 +93,44 @@ class AyahArabicText extends ConsumerWidget {
         ),
       ),
     );
-    textChildren.add(const TextSpan(text: '\u200F'));
+    mainTextChildren.add(const TextSpan(text: '\u200F'));
+
+    if (bismillahText != null) {
+      final bismillahSpans = buildSpans(bismillahText);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: RichText(
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.rtl,
+              text: TextSpan(
+                style: baseStyle.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                children: bismillahSpans,
+              ),
+            ),
+          ),
+          RichText(
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+            text: TextSpan(
+              style: baseStyle,
+              children: mainTextChildren,
+            ),
+          ),
+        ],
+      );
+    }
 
     return RichText(
       textAlign: TextAlign.center,
       textDirection: TextDirection.rtl,
       text: TextSpan(
         style: baseStyle,
-        children: textChildren,
+        children: mainTextChildren,
       ),
     );
   }

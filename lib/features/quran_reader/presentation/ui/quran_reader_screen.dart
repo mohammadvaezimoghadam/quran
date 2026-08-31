@@ -8,6 +8,7 @@ import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
+import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
@@ -126,6 +127,15 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
 
     ref.read(quranReaderControllerProvider.notifier).fetchAyahs(newSurahId);
     ref.read(selectedAyahActionProvider.notifier).clearSelection();
+  }
+
+  void _handleTargetSelected(AyahTarget target) {
+    ref.read(activeAyahProvider.notifier).setActiveAyah(target.ayahNumber);
+
+    final currentSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
+    if (_pageController.hasClients && target.surahId != currentSurahId) {
+      _pageController.jumpToPage(target.surahId - 1);
+    }
   }
 
   String _getSurahName(WidgetRef ref, int surahId) {
@@ -248,7 +258,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     final double topPadding = MediaQuery.paddingOf(context).top;
     final double appBarHeight = topPadding + kToolbarHeight;
 
-    final double infoBarHeight = 35.0;
+    final double infoBarHeight = 38.0;
     final double headerHeight = appBarHeight + infoBarHeight;
 
     return Scaffold(
@@ -286,7 +296,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                 ),
                                 tooltip: 'ذخیره نشانک (بوک‌مارک)',
                                 onPressed: () {
-                                  final currentState = _continueReadingNotifier.state;
+                                  final currentState = ref.read(continueReadingControllerProvider);
                                   if (currentState != null) {
                                     ref.read(manualBookmarkControllerProvider.notifier).saveBookmark(currentState);
                                     AppSnackBar.showInfo(
@@ -341,7 +351,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                             ],
                           ),
                         ),
-                        const QuranInfoBar(),
+                        QuranInfoBar(
+                          onTargetSelected: _handleTargetSelected,
+                        ),
                       ],
                     ),
                   ),

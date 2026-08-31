@@ -3,13 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../domain/entities/ayah_entity.dart';
+import 'quran_quick_jump_bottom_sheet.dart';
 
 /// A sticky info bar displayed below the AppBar that shows the current
-/// Juz, Hizb, Page, and Ayah based on the user's scroll position.
+/// Juz, Hizb, Page, and Ayah with interactive chips for Quick Jump.
 class QuranInfoBar extends ConsumerWidget {
-  const QuranInfoBar({super.key});
+  final ValueChanged<AyahTarget>? onTargetSelected;
+
+  const QuranInfoBar({
+    super.key,
+    this.onTargetSelected,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,10 +59,10 @@ class QuranInfoBar extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      height: 35.0,
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      height: 38.0,
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.85),
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
@@ -64,75 +71,69 @@ class QuranInfoBar extends ConsumerWidget {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Text(
-            'آیه $ayahStr',
-            style: TextStyle(
-              fontFamily: 'Vazirmatn',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              '•',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                fontSize: 14,
-              ),
-            ),
-          ),
-          Text(
-            'جزء $juzStr',
-            style: TextStyle(
-              fontFamily: 'Vazirmatn',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              '•',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                fontSize: 14,
-              ),
-            ),
-          ),
-          Text(
-            'حزب $hizbStr',
-            style: TextStyle(
-              fontFamily: 'Vazirmatn',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              '•',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                fontSize: 14,
-              ),
-            ),
-          ),
-          Text(
-            'صفحه $pageStr',
-            style: TextStyle(
-              fontFamily: 'Vazirmatn',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          _buildChip(context, 'آیه $ayahStr', QuickJumpTab.surah),
+          _buildDotDivider(context),
+          _buildChip(context, 'جزء $juzStr', QuickJumpTab.juz),
+          _buildDotDivider(context),
+          _buildChip(context, 'حزب $hizbStr', QuickJumpTab.hizb),
+          _buildDotDivider(context),
+          _buildChip(context, 'صفحه $pageStr', QuickJumpTab.page),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChip(BuildContext context, String text, QuickJumpTab tab) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: () async {
+        final target = await QuranQuickJumpBottomSheet.show(
+          context,
+          initialTab: tab,
+        );
+        if (target != null) {
+          onTargetSelected?.call(target);
+        }
+      },
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              style: TextStyle(
+                fontFamily: 'Vazirmatn',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDotDivider(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Text(
+        '•',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+          fontSize: 12,
+        ),
       ),
     );
   }

@@ -31,6 +31,7 @@ class AyahListItem extends ConsumerWidget {
   final String surahName;
   final int totalAyahsInSurah;
   final bool isPageStart;
+  final bool isJuzStart;
   final bool isHizbStart;
   final String? translationId;
   final VoidCallback? onBookmarkTap;
@@ -43,6 +44,7 @@ class AyahListItem extends ConsumerWidget {
     required this.surahName,
     required this.totalAyahsInSurah,
     this.isPageStart = false,
+    this.isJuzStart = false,
     this.isHizbStart = false,
     this.translationId,
     this.onBookmarkTap,
@@ -294,42 +296,70 @@ class AyahListItem extends ConsumerWidget {
               ),
             ),
 
-            if (isPageStart || (isHizbStart && ayah.hizb != null))
+            if (isPageStart || (isJuzStart && ayah.juz != null) || (isHizbStart && ayah.hizb != null))
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6.0, left: 8.0, right: 8.0),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (isPageStart)
-                          Text(
-                            'صفحه ${ayah.page?.toPersianDigit() ?? ''}',
-                            style: const TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.goldAccent,
-                            ),
-                            textDirection: TextDirection.rtl,
-                          )
-                        else
-                          const SizedBox.shrink(),
+                        // Page Number (Right in RTL)
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: isPageStart
+                                ? Text(
+                                    'صفحه ${ayah.page?.toPersianDigit() ?? ''}',
+                                    style: const TextStyle(
+                                      fontFamily: AppTypography.fontFamily,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.goldAccent,
+                                    ),
+                                    textDirection: TextDirection.rtl,
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ),
 
-                        if (isHizbStart && ayah.hizb != null)
-                          Text(
-                            'حزب ${ayah.hizb!.toPersianDigit()}',
-                            style: const TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.goldAccent,
-                            ),
-                            textDirection: TextDirection.rtl,
-                          )
-                        else
-                          const SizedBox.shrink(),
+                        // Juz Number (Center)
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: (isJuzStart && ayah.juz != null)
+                                ? Text(
+                                    'جزء ${ayah.juz!.toPersianDigit()}',
+                                    style: const TextStyle(
+                                      fontFamily: AppTypography.fontFamily,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.goldAccent,
+                                    ),
+                                    textDirection: TextDirection.rtl,
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ),
+
+                        // Hizb Number (Left in RTL)
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: (isHizbStart && ayah.hizb != null)
+                                ? Text(
+                                    'حزب ${ayah.hizb!.toPersianDigit()}',
+                                    style: const TextStyle(
+                                      fontFamily: AppTypography.fontFamily,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.goldAccent,
+                                    ),
+                                    textDirection: TextDirection.rtl,
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -349,6 +379,7 @@ class AyahListItem extends ConsumerWidget {
                 text: ayah.arabicText,
                 ayahNumber: ayah.ayahNumber,
                 isActive: isAudioActive,
+                surahId: ayah.surahId,
               ),
 
             // Ayah Persian Translation

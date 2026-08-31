@@ -38,10 +38,18 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
   bool _hasUsedInitialScroll = false;
 
   int _getInitialScrollIndex(List<dynamic> ayahs) {
-    if (_hasUsedInitialScroll || widget.initialAyahNumber == null) return 0;
-    _hasUsedInitialScroll = true; // Mark as used
-    final index = ayahs.indexWhere((a) => a.ayahNumber == widget.initialAyahNumber);
-    return index != -1 ? index : 0;
+    if (_hasUsedInitialScroll) return 0;
+
+    final targetAyah = widget.initialAyahNumber ?? ref.read(activeAyahProvider);
+    if (targetAyah != null) {
+      final index = ayahs.indexWhere((a) => a.ayahNumber == targetAyah);
+      if (index != -1) {
+        _hasUsedInitialScroll = true;
+        return index;
+      }
+    }
+    _hasUsedInitialScroll = true;
+    return 0;
   }
 
   @override
@@ -97,25 +105,24 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
       return const Center(child: Text(AppConstants.noAyahFound));
     }
 
-    // Auto-scroll listener with suspension support (gated by surah match)
+    // Auto-scroll listener for ayah navigation and audio playback
     ref.listen<int?>(activeAyahProvider, (previous, next) {
-      if (next != null && next != previous) {
-        final audioSurahId = ref.read(quranAudioControllerProvider).currentSurahId;
-        if (audioSurahId != widget.surahId) return;
+      if (next != null) {
+        final targetIndex = state.ayahs.indexWhere((a) => a.ayahNumber == next);
+        if (targetIndex != -1 && _itemScrollController.isAttached) {
+          final isAudioPlaying = ref.read(quranAudioControllerProvider).status == AudioStatus.playing;
+          final isSuspended = ref.read(
+            quranAudioControllerProvider.select((s) => s.isAutoScrollSuspended),
+          );
 
-        final isSuspended = ref.read(
-          quranAudioControllerProvider.select((s) => s.isAutoScrollSuspended),
-        );
-        if (!isSuspended) {
-          final targetIndex = state.ayahs.indexWhere((a) => a.ayahNumber == next);
-          if (targetIndex != -1 && _itemScrollController.isAttached) {
-            _itemScrollController.scrollTo(
-              index: targetIndex,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOutCubic,
-              alignment: 0.14,
-            );
-          }
+          if (isAudioPlaying && isSuspended) return;
+
+          _itemScrollController.scrollTo(
+            index: targetIndex,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
+            alignment: 0.0,
+          );
         }
       }
     });
@@ -134,9 +141,9 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
             if (targetIndex != -1 && _itemScrollController.isAttached) {
               _itemScrollController.scrollTo(
                 index: targetIndex,
-                duration: const Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 400),
                 curve: Curves.easeOutCubic,
-                alignment: 0.14,
+                alignment: 0.0,
               );
             }
           }
@@ -196,15 +203,19 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
           final previousAyah = index > 0 ? state.ayahs[index - 1] : null;
           
           final isPageStart = previousAyah == null || previousAyah.page != ayah.page;
+          final isJuzStart = (previousAyah != null)
+              ? (ayah.juz != null && previousAyah.juz != ayah.juz)
+              : (ayah.juz != null);
           final isHizbStart = (previousAyah != null)
               ? (ayah.hizb != null && previousAyah.hizb != ayah.hizb)
-              : (ayah.hizbQuarter != null && (ayah.hizbQuarter! % 2 != 0));
+              : (ayah.hizb != null);
           
           return AyahListItem(
             ayah: ayah,
             surahName: widget.surahName,
             totalAyahsInSurah: state.ayahs.length,
             isPageStart: isPageStart,
+            isJuzStart: isJuzStart,
             isHizbStart: isHizbStart,
             translationId: widget.translationId,
           );
