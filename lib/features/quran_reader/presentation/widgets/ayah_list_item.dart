@@ -100,7 +100,23 @@ class AyahListItem extends ConsumerWidget {
     );
 
     final isAudioActive = isPlayingAyah && autoHighlight;
-    final borderRadius = BorderRadius.circular(AppDimens.radiusSm);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color defaultBgColor = isDark
+        ? (ayah.ayahNumber % 2 == 0
+            ? const Color(0xFF16191C)
+            : const Color(0xFF21252A))
+        : (ayah.ayahNumber % 2 == 0
+            ? const Color(0xFFFAF6E4)
+            : const Color(0xFFEBE7CE));
+
+    final Color effectiveBgColor = isAudioActive
+        ? (isDark
+            ? colorScheme.primary.withValues(alpha: 0.3)
+            : const Color(0xFFFFECB3))
+        : (isSelectedForAction
+            ? colorScheme.primary.withValues(alpha: 0.15)
+            : defaultBgColor);
 
     return RepaintBoundary(
       child: InkWell(
@@ -166,19 +182,16 @@ class AyahListItem extends ConsumerWidget {
             .read(selectedAyahActionProvider.notifier)
             .selectAyah(ayah.ayahNumber);
       },
-      borderRadius: borderRadius,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.symmetric(vertical: AppDimens.stackXs),
-        padding: const EdgeInsets.all(AppDimens.stackSmMd),
+        margin: EdgeInsets.zero,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimens.stackMd,
+          vertical: AppDimens.stackSmMd,
+        ),
         decoration: BoxDecoration(
-          color: isAudioActive
-              ? colorScheme.primary.withValues(alpha: 0.1)
-              : (isSelectedForAction
-                    ? colorScheme.surfaceContainerHigh
-                    : Colors.transparent),
-          borderRadius: borderRadius,
+          color: effectiveBgColor,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

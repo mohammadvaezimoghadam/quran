@@ -5,7 +5,6 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../common/constants/app_constants.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../domain/entities/ayah_entity.dart';
@@ -192,9 +191,9 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
         itemScrollController: _itemScrollController,
         itemPositionsListener: _itemPositionsListener,
         padding: EdgeInsets.only(
-          left: AppDimens.marginPage,
-          right: AppDimens.marginPage,
-          top: 12.0,
+          left: 0.0,
+          right: 0.0,
+          top: 0.0,
           bottom: MediaQuery.paddingOf(context).bottom + 140,
         ),
         itemCount: state.ayahs.length,
