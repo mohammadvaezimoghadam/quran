@@ -44,7 +44,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
         calculationParameters: params,
       ).fajr;
 
-      final sunsetTime = adhanTimes.sunset;
+      // Adjust sunset by +1 minute to align with Bade Saba rounding
+      final sunsetTime = adhanTimes.sunset.add(const Duration(minutes: 1));
       final midnightDiff =
           fajrNextDay.difference(sunsetTime).inMilliseconds ~/ 2;
       final shiaMidnight =
@@ -72,7 +73,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
         sunrise: adhanTimes.sunrise.toLocal(),
         dhuhr: adhanTimes.dhuhr.toLocal(),
         asr: adhanTimes.asr.toLocal(),
-        sunset: adhanTimes.sunset.toLocal(),
+        sunset: sunsetTime.toLocal(),
         maghrib: adhanTimes.maghrib.toLocal(),
         isha: adhanTimes.isha.toLocal(),
         midnight: shiaMidnight.toLocal(),
