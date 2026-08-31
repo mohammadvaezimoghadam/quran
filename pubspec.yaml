@@ -74,6 +74,12 @@ dependencies:
   image: ^4.9.2
   sqlite3: ^3.5.2
 
+  # Prayer Times & Islamic Calendar
+  adhan_dart: ^2.0.1
+  shamsi_date: ^1.0.4
+  hijri: ^3.0.0
+  geolocator: ^13.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -104,6 +110,7 @@ flutter:
     - assets/images/
     - assets/database/
     - assets/icons/
+    - assets/json/
 
   fonts:
     - family: Vazirmatn

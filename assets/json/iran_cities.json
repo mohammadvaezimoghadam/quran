@@ -1,0 +1,1955 @@
+[
+  {
+    "id": "tehran",
+    "namePersian": "تهران",
+    "nameEnglish": "Tehran",
+    "province": "تهران",
+    "latitude": 35.6892,
+    "longitude": 51.389,
+    "isDefault": true
+  },
+  {
+    "id": "shahriar",
+    "namePersian": "شهریار",
+    "nameEnglish": "Shahriar",
+    "province": "تهران",
+    "latitude": 35.6597,
+    "longitude": 51.0589,
+    "isDefault": false
+  },
+  {
+    "id": "varamin",
+    "namePersian": "ورامین",
+    "nameEnglish": "Varamin",
+    "province": "تهران",
+    "latitude": 35.3228,
+    "longitude": 51.6475,
+    "isDefault": false
+  },
+  {
+    "id": "islamshahr",
+    "namePersian": "اسلامشهر",
+    "nameEnglish": "Islamshahr",
+    "province": "تهران",
+    "latitude": 35.5413,
+    "longitude": 51.2331,
+    "isDefault": false
+  },
+  {
+    "id": "qods",
+    "namePersian": "قدس",
+    "nameEnglish": "Qods",
+    "province": "تهران",
+    "latitude": 35.7208,
+    "longitude": 51.1097,
+    "isDefault": false
+  },
+  {
+    "id": "pakdasht",
+    "namePersian": "پاکدشت",
+    "nameEnglish": "Pakdasht",
+    "province": "تهران",
+    "latitude": 35.48,
+    "longitude": 51.68,
+    "isDefault": false
+  },
+  {
+    "id": "damavand",
+    "namePersian": "دماوند",
+    "nameEnglish": "Damavand",
+    "province": "تهران",
+    "latitude": 35.7178,
+    "longitude": 52.065,
+    "isDefault": false
+  },
+  {
+    "id": "pardis",
+    "namePersian": "پردیس",
+    "nameEnglish": "Pardis",
+    "province": "تهران",
+    "latitude": 35.738,
+    "longitude": 51.8,
+    "isDefault": false
+  },
+  {
+    "id": "robak_karim",
+    "namePersian": "رباط کریم",
+    "nameEnglish": "Robat Karim",
+    "province": "تهران",
+    "latitude": 35.4847,
+    "longitude": 51.0828,
+    "isDefault": false
+  },
+  {
+    "id": "malard",
+    "namePersian": "ملارد",
+    "nameEnglish": "Malard",
+    "province": "تهران",
+    "latitude": 35.6658,
+    "longitude": 50.9767,
+    "isDefault": false
+  },
+  {
+    "id": "firuzkuh",
+    "namePersian": "فیروزکوه",
+    "nameEnglish": "Firuzkuh",
+    "province": "تهران",
+    "latitude": 35.7567,
+    "longitude": 52.7706,
+    "isDefault": false
+  },
+  {
+    "id": "shemiranat",
+    "namePersian": "تجریش (شمیرانات)",
+    "nameEnglish": "Tajrish",
+    "province": "تهران",
+    "latitude": 35.8053,
+    "longitude": 51.4319,
+    "isDefault": false
+  },
+  {
+    "id": "mashhad",
+    "namePersian": "مشهد",
+    "nameEnglish": "Mashhad",
+    "province": "خراسان رضوی",
+    "latitude": 36.2972,
+    "longitude": 59.6067,
+    "isDefault": false
+  },
+  {
+    "id": "neyshabur",
+    "namePersian": "نیشابور",
+    "nameEnglish": "Neyshabur",
+    "province": "خراسان رضوی",
+    "latitude": 36.2133,
+    "longitude": 58.7958,
+    "isDefault": false
+  },
+  {
+    "id": "sabzevar",
+    "namePersian": "سبزوار",
+    "nameEnglish": "Sabzevar",
+    "province": "خراسان رضوی",
+    "latitude": 36.2156,
+    "longitude": 57.6764,
+    "isDefault": false
+  },
+  {
+    "id": "torbat_heydarieh",
+    "namePersian": "تربت حیدریه",
+    "nameEnglish": "Torbat-e Heydarieh",
+    "province": "خراسان رضوی",
+    "latitude": 35.2744,
+    "longitude": 59.2194,
+    "isDefault": false
+  },
+  {
+    "id": "torbat_jam",
+    "namePersian": "تربت جام",
+    "nameEnglish": "Torbat-e Jam",
+    "province": "خراسان رضوی",
+    "latitude": 35.2439,
+    "longitude": 60.6225,
+    "isDefault": false
+  },
+  {
+    "id": "quchan",
+    "namePersian": "قوچان",
+    "nameEnglish": "Quchan",
+    "province": "خراسان رضوی",
+    "latitude": 37.1061,
+    "longitude": 58.5094,
+    "isDefault": false
+  },
+  {
+    "id": "kashmar",
+    "namePersian": "کاشمر",
+    "nameEnglish": "Kashmar",
+    "province": "خراسان رضوی",
+    "latitude": 35.2383,
+    "longitude": 58.4656,
+    "isDefault": false
+  },
+  {
+    "id": "gonabad",
+    "namePersian": "گناباد",
+    "nameEnglish": "Gonabad",
+    "province": "خراسان رضوی",
+    "latitude": 34.3528,
+    "longitude": 58.6836,
+    "isDefault": false
+  },
+  {
+    "id": "chenaran",
+    "namePersian": "چناران",
+    "nameEnglish": "Chenaran",
+    "province": "خراسان رضوی",
+    "latitude": 36.6458,
+    "longitude": 59.1211,
+    "isDefault": false
+  },
+  {
+    "id": "taybad",
+    "namePersian": "تایباد",
+    "nameEnglish": "Taybad",
+    "province": "خراسان رضوی",
+    "latitude": 34.74,
+    "longitude": 60.7756,
+    "isDefault": false
+  },
+  {
+    "id": "sarakhs",
+    "namePersian": "سرخس",
+    "nameEnglish": "Sarakhs",
+    "province": "خراسان رضوی",
+    "latitude": 36.5447,
+    "longitude": 61.1578,
+    "isDefault": false
+  },
+  {
+    "id": "dargaz",
+    "namePersian": "درگز",
+    "nameEnglish": "Dargaz",
+    "province": "خراسان رضوی",
+    "latitude": 37.4964,
+    "longitude": 59.1083,
+    "isDefault": false
+  },
+  {
+    "id": "bardaskan",
+    "namePersian": "بردسکن",
+    "nameEnglish": "Bardaskan",
+    "province": "خراسان رضوی",
+    "latitude": 35.2617,
+    "longitude": 57.9714,
+    "isDefault": false
+  },
+  {
+    "id": "isfahan",
+    "namePersian": "اصفهان",
+    "nameEnglish": "Isfahan",
+    "province": "اصفهان",
+    "latitude": 32.6546,
+    "longitude": 51.668,
+    "isDefault": false
+  },
+  {
+    "id": "kashan",
+    "namePersian": "کاشان",
+    "nameEnglish": "Kashan",
+    "province": "اصفهان",
+    "latitude": 33.985,
+    "longitude": 51.41,
+    "isDefault": false
+  },
+  {
+    "id": "najafabad",
+    "namePersian": "نجف‌آباد",
+    "nameEnglish": "Najafabad",
+    "province": "اصفهان",
+    "latitude": 32.6342,
+    "longitude": 51.3667,
+    "isDefault": false
+  },
+  {
+    "id": "shahinshahr",
+    "namePersian": "شاهین‌شهر",
+    "nameEnglish": "Shahin Shahr",
+    "province": "اصفهان",
+    "latitude": 32.8631,
+    "longitude": 51.5475,
+    "isDefault": false
+  },
+  {
+    "id": "shahreza",
+    "namePersian": "شهرضا",
+    "nameEnglish": "Shahreza",
+    "province": "اصفهان",
+    "latitude": 32.0089,
+    "longitude": 51.8669,
+    "isDefault": false
+  },
+  {
+    "id": "khomeinishahr",
+    "namePersian": "خمینی‌شهر",
+    "nameEnglish": "Khomeyni Shahr",
+    "province": "اصفهان",
+    "latitude": 32.6756,
+    "longitude": 51.5361,
+    "isDefault": false
+  },
+  {
+    "id": "nain",
+    "namePersian": "نائین",
+    "nameEnglish": "Nain",
+    "province": "اصفهان",
+    "latitude": 32.86,
+    "longitude": 53.0875,
+    "isDefault": false
+  },
+  {
+    "id": "natanz",
+    "namePersian": "نطنز",
+    "nameEnglish": "Natanz",
+    "province": "اصفهان",
+    "latitude": 33.5119,
+    "longitude": 51.9164,
+    "isDefault": false
+  },
+  {
+    "id": "golpayegan",
+    "namePersian": "گلپایگان",
+    "nameEnglish": "Golpayegan",
+    "province": "اصفهان",
+    "latitude": 33.4536,
+    "longitude": 50.2883,
+    "isDefault": false
+  },
+  {
+    "id": "khunsar",
+    "namePersian": "خوانسار",
+    "nameEnglish": "Khunsar",
+    "province": "اصفهان",
+    "latitude": 33.2236,
+    "longitude": 50.315,
+    "isDefault": false
+  },
+  {
+    "id": "mobarakeh",
+    "namePersian": "مبارکه",
+    "nameEnglish": "Mobarakeh",
+    "province": "اصفهان",
+    "latitude": 32.3481,
+    "longitude": 51.5042,
+    "isDefault": false
+  },
+  {
+    "id": "flavarjan",
+    "namePersian": "فلاورجان",
+    "nameEnglish": "Falavarjan",
+    "province": "اصفهان",
+    "latitude": 32.555,
+    "longitude": 51.5094,
+    "isDefault": false
+  },
+  {
+    "id": "aran_bidgol",
+    "namePersian": "آران و بیدگل",
+    "nameEnglish": "Aran o Bidgol",
+    "province": "اصفهان",
+    "latitude": 34.0578,
+    "longitude": 51.4828,
+    "isDefault": false
+  },
+  {
+    "id": "shiraz",
+    "namePersian": "شیراز",
+    "nameEnglish": "Shiraz",
+    "province": "فارس",
+    "latitude": 29.5918,
+    "longitude": 52.5837,
+    "isDefault": false
+  },
+  {
+    "id": "marvdasht",
+    "namePersian": "مرودشت",
+    "nameEnglish": "Marvdasht",
+    "province": "فارس",
+    "latitude": 29.8742,
+    "longitude": 52.8025,
+    "isDefault": false
+  },
+  {
+    "id": "jahrom",
+    "namePersian": "جهرم",
+    "nameEnglish": "Jahrom",
+    "province": "فارس",
+    "latitude": 28.5,
+    "longitude": 53.56,
+    "isDefault": false
+  },
+  {
+    "id": "fasa",
+    "namePersian": "فسا",
+    "nameEnglish": "Fasa",
+    "province": "فارس",
+    "latitude": 28.9383,
+    "longitude": 53.6481,
+    "isDefault": false
+  },
+  {
+    "id": "kazerun",
+    "namePersian": "کازرون",
+    "nameEnglish": "Kazerun",
+    "province": "فارس",
+    "latitude": 29.6194,
+    "longitude": 51.6542,
+    "isDefault": false
+  },
+  {
+    "id": "lar",
+    "namePersian": "لار",
+    "nameEnglish": "Lar",
+    "province": "فارس",
+    "latitude": 27.6833,
+    "longitude": 54.3333,
+    "isDefault": false
+  },
+  {
+    "id": "abadeh",
+    "namePersian": "آباده",
+    "nameEnglish": "Abadeh",
+    "province": "فارس",
+    "latitude": 31.1608,
+    "longitude": 52.6506,
+    "isDefault": false
+  },
+  {
+    "id": "darab",
+    "namePersian": "داراب",
+    "nameEnglish": "Darab",
+    "province": "فارس",
+    "latitude": 28.7519,
+    "longitude": 54.5444,
+    "isDefault": false
+  },
+  {
+    "id": "firuzabad",
+    "namePersian": "فیروزآباد",
+    "nameEnglish": "Firuzabad",
+    "province": "فارس",
+    "latitude": 28.8439,
+    "longitude": 52.5703,
+    "isDefault": false
+  },
+  {
+    "id": "neyriz",
+    "namePersian": "نی‌ریز",
+    "nameEnglish": "Neyriz",
+    "province": "فارس",
+    "latitude": 29.1986,
+    "longitude": 54.3278,
+    "isDefault": false
+  },
+  {
+    "id": "estahban",
+    "namePersian": "استهبان",
+    "nameEnglish": "Estahban",
+    "province": "فارس",
+    "latitude": 29.1264,
+    "longitude": 54.0419,
+    "isDefault": false
+  },
+  {
+    "id": "lamerd",
+    "namePersian": "لامرد",
+    "nameEnglish": "Lamerd",
+    "province": "فارس",
+    "latitude": 27.3342,
+    "longitude": 53.1789,
+    "isDefault": false
+  },
+  {
+    "id": "tabriz",
+    "namePersian": "تبریز",
+    "nameEnglish": "Tabriz",
+    "province": "آذربایجان شرقی",
+    "latitude": 38.0962,
+    "longitude": 46.269,
+    "isDefault": false
+  },
+  {
+    "id": "maragheh",
+    "namePersian": "مراغه",
+    "nameEnglish": "Maragheh",
+    "province": "آذربایجان شرقی",
+    "latitude": 37.3917,
+    "longitude": 46.2392,
+    "isDefault": false
+  },
+  {
+    "id": "marand",
+    "namePersian": "مرند",
+    "nameEnglish": "Marand",
+    "province": "آذربایجان شرقی",
+    "latitude": 38.4328,
+    "longitude": 45.7744,
+    "isDefault": false
+  },
+  {
+    "id": "mianeh",
+    "namePersian": "میانه",
+    "nameEnglish": "Mianeh",
+    "province": "آذربایجان شرقی",
+    "latitude": 37.4222,
+    "longitude": 47.7128,
+    "isDefault": false
+  },
+  {
+    "id": "ahar",
+    "namePersian": "اهر",
+    "nameEnglish": "Ahar",
+    "province": "آذربایجان شرقی",
+    "latitude": 38.4775,
+    "longitude": 47.07,
+    "isDefault": false
+  },
+  {
+    "id": "bonab",
+    "namePersian": "بناب",
+    "nameEnglish": "Bonab",
+    "province": "آذربایجان شرقی",
+    "latitude": 37.34,
+    "longitude": 46.0561,
+    "isDefault": false
+  },
+  {
+    "id": "sarab",
+    "namePersian": "سراب",
+    "nameEnglish": "Sarab",
+    "province": "آذربایجان شرقی",
+    "latitude": 37.9408,
+    "longitude": 47.5367,
+    "isDefault": false
+  },
+  {
+    "id": "jolfa",
+    "namePersian": "جلفا",
+    "nameEnglish": "Jolfa",
+    "province": "آذربایجان شرقی",
+    "latitude": 38.9372,
+    "longitude": 45.6328,
+    "isDefault": false
+  },
+  {
+    "id": "shabestar",
+    "namePersian": "شبستر",
+    "nameEnglish": "Shabestar",
+    "province": "آذربایجان شرقی",
+    "latitude": 38.1803,
+    "longitude": 45.7028,
+    "isDefault": false
+  },
+  {
+    "id": "urmia",
+    "namePersian": "ارومیه",
+    "nameEnglish": "Urmia",
+    "province": "آذربایجان غربی",
+    "latitude": 37.5527,
+    "longitude": 45.0761,
+    "isDefault": false
+  },
+  {
+    "id": "khoy",
+    "namePersian": "خوی",
+    "nameEnglish": "Khoy",
+    "province": "آذربایجان غربی",
+    "latitude": 38.5522,
+    "longitude": 44.9519,
+    "isDefault": false
+  },
+  {
+    "id": "miandoab",
+    "namePersian": "میاندوآب",
+    "nameEnglish": "Miandoab",
+    "province": "آذربایجان غربی",
+    "latitude": 36.9667,
+    "longitude": 46.1,
+    "isDefault": false
+  },
+  {
+    "id": "mahabad",
+    "namePersian": "مهاباد",
+    "nameEnglish": "Mahabad",
+    "province": "آذربایجان غربی",
+    "latitude": 36.7631,
+    "longitude": 45.7222,
+    "isDefault": false
+  },
+  {
+    "id": "bukan",
+    "namePersian": "بوکان",
+    "nameEnglish": "Bukan",
+    "province": "آذربایجان غربی",
+    "latitude": 36.5211,
+    "longitude": 46.2089,
+    "isDefault": false
+  },
+  {
+    "id": "salmas",
+    "namePersian": "سلماس",
+    "nameEnglish": "Salmas",
+    "province": "آذربایجان غربی",
+    "latitude": 38.1972,
+    "longitude": 44.7653,
+    "isDefault": false
+  },
+  {
+    "id": "piranshahr",
+    "namePersian": "پیرانشهر",
+    "nameEnglish": "Piranshahr",
+    "province": "آذربایجان غربی",
+    "latitude": 36.7003,
+    "longitude": 45.1417,
+    "isDefault": false
+  },
+  {
+    "id": "naghadeh",
+    "namePersian": "نقده",
+    "nameEnglish": "Naghadeh",
+    "province": "آذربایجان غربی",
+    "latitude": 36.9553,
+    "longitude": 45.3881,
+    "isDefault": false
+  },
+  {
+    "id": "maku",
+    "namePersian": "ماکو",
+    "nameEnglish": "Maku",
+    "province": "آذربایجان غربی",
+    "latitude": 39.2942,
+    "longitude": 44.4994,
+    "isDefault": false
+  },
+  {
+    "id": "ahvaz",
+    "namePersian": "اهواز",
+    "nameEnglish": "Ahvaz",
+    "province": "خوزستان",
+    "latitude": 31.3183,
+    "longitude": 48.6706,
+    "isDefault": false
+  },
+  {
+    "id": "dezful",
+    "namePersian": "دزفول",
+    "nameEnglish": "Dezful",
+    "province": "خوزستان",
+    "latitude": 32.3811,
+    "longitude": 48.4058,
+    "isDefault": false
+  },
+  {
+    "id": "abadan",
+    "namePersian": "آبادان",
+    "nameEnglish": "Abadan",
+    "province": "خوزستان",
+    "latitude": 30.3392,
+    "longitude": 48.3043,
+    "isDefault": false
+  },
+  {
+    "id": "khorramshahr",
+    "namePersian": "خرمشهر",
+    "nameEnglish": "Khorramshahr",
+    "province": "خوزستان",
+    "latitude": 30.4397,
+    "longitude": 48.1822,
+    "isDefault": false
+  },
+  {
+    "id": "mahshahr",
+    "namePersian": "بندر ماهشهر",
+    "nameEnglish": "Mahshahr",
+    "province": "خوزستان",
+    "latitude": 30.5589,
+    "longitude": 49.1981,
+    "isDefault": false
+  },
+  {
+    "id": "shush",
+    "namePersian": "شوش",
+    "nameEnglish": "Shush",
+    "province": "خوزستان",
+    "latitude": 32.1942,
+    "longitude": 48.2436,
+    "isDefault": false
+  },
+  {
+    "id": "shushtar",
+    "namePersian": "شوشتر",
+    "nameEnglish": "Shushtar",
+    "province": "خوزستان",
+    "latitude": 32.0456,
+    "longitude": 48.8569,
+    "isDefault": false
+  },
+  {
+    "id": "izeh",
+    "namePersian": "ایذه",
+    "nameEnglish": "Izeh",
+    "province": "خوزستان",
+    "latitude": 31.8317,
+    "longitude": 49.8694,
+    "isDefault": false
+  },
+  {
+    "id": "behbahan",
+    "namePersian": "بهبهان",
+    "nameEnglish": "Behbahan",
+    "province": "خوزستان",
+    "latitude": 30.5958,
+    "longitude": 50.2417,
+    "isDefault": false
+  },
+  {
+    "id": "masjed_soleyman",
+    "namePersian": "مسجدسلیمان",
+    "nameEnglish": "Masjed Soleyman",
+    "province": "خوزستان",
+    "latitude": 31.9364,
+    "longitude": 49.3039,
+    "isDefault": false
+  },
+  {
+    "id": "andimeshk",
+    "namePersian": "اندیمشک",
+    "nameEnglish": "Andimeshk",
+    "province": "خوزستان",
+    "latitude": 32.46,
+    "longitude": 48.3564,
+    "isDefault": false
+  },
+  {
+    "id": "ramhormoz",
+    "namePersian": "رامهرمز",
+    "nameEnglish": "Ramhormoz",
+    "province": "خوزستان",
+    "latitude": 31.28,
+    "longitude": 49.6036,
+    "isDefault": false
+  },
+  {
+    "id": "sari",
+    "namePersian": "ساری",
+    "nameEnglish": "Sari",
+    "province": "مازندران",
+    "latitude": 36.5659,
+    "longitude": 53.0586,
+    "isDefault": false
+  },
+  {
+    "id": "babol",
+    "namePersian": "بابل",
+    "nameEnglish": "Babol",
+    "province": "مازندران",
+    "latitude": 36.55,
+    "longitude": 52.6833,
+    "isDefault": false
+  },
+  {
+    "id": "amol",
+    "namePersian": "آمل",
+    "nameEnglish": "Amol",
+    "province": "مازندران",
+    "latitude": 36.4694,
+    "longitude": 52.3506,
+    "isDefault": false
+  },
+  {
+    "id": "qaemshahr",
+    "namePersian": "قائم‌شهر",
+    "nameEnglish": "Qaem Shahr",
+    "province": "مازندران",
+    "latitude": 36.4636,
+    "longitude": 52.8597,
+    "isDefault": false
+  },
+  {
+    "id": "behshahr",
+    "namePersian": "بهشهر",
+    "nameEnglish": "Behshahr",
+    "province": "مازندران",
+    "latitude": 36.6975,
+    "longitude": 53.5475,
+    "isDefault": false
+  },
+  {
+    "id": "chalus",
+    "namePersian": "چالوس",
+    "nameEnglish": "Chalus",
+    "province": "مازندران",
+    "latitude": 36.655,
+    "longitude": 51.4206,
+    "isDefault": false
+  },
+  {
+    "id": "nowshahr",
+    "namePersian": "نوشهر",
+    "nameEnglish": "Nowshahr",
+    "province": "مازندران",
+    "latitude": 36.6486,
+    "longitude": 51.4961,
+    "isDefault": false
+  },
+  {
+    "id": "tonekabon",
+    "namePersian": "تنکابن",
+    "nameEnglish": "Tonekabon",
+    "province": "مازندران",
+    "latitude": 36.8164,
+    "longitude": 50.8739,
+    "isDefault": false
+  },
+  {
+    "id": "ramsar",
+    "namePersian": "رامسر",
+    "nameEnglish": "Ramsar",
+    "province": "مازندران",
+    "latitude": 36.9172,
+    "longitude": 50.6725,
+    "isDefault": false
+  },
+  {
+    "id": "babolsar",
+    "namePersian": "بابلسر",
+    "nameEnglish": "Babolsar",
+    "province": "مازندران",
+    "latitude": 36.7022,
+    "longitude": 52.6583,
+    "isDefault": false
+  },
+  {
+    "id": "mahmudabad",
+    "namePersian": "محمودآباد",
+    "nameEnglish": "Mahmudabad",
+    "province": "مازندران",
+    "latitude": 36.6319,
+    "longitude": 52.2628,
+    "isDefault": false
+  },
+  {
+    "id": "nekau",
+    "namePersian": "نکا",
+    "nameEnglish": "Neka",
+    "province": "مازندران",
+    "latitude": 36.6508,
+    "longitude": 53.2992,
+    "isDefault": false
+  },
+  {
+    "id": "rasht",
+    "namePersian": "رشت",
+    "nameEnglish": "Rasht",
+    "province": "گیلان",
+    "latitude": 37.2808,
+    "longitude": 49.5832,
+    "isDefault": false
+  },
+  {
+    "id": "anzali",
+    "namePersian": "بندر انزلی",
+    "nameEnglish": "Bandar Anzali",
+    "province": "گیلان",
+    "latitude": 37.4744,
+    "longitude": 49.4636,
+    "isDefault": false
+  },
+  {
+    "id": "lahijan",
+    "namePersian": "لاهیجان",
+    "nameEnglish": "Lahijan",
+    "province": "گیلان",
+    "latitude": 37.2072,
+    "longitude": 50.0031,
+    "isDefault": false
+  },
+  {
+    "id": "langarud",
+    "namePersian": "لنگرود",
+    "nameEnglish": "Langarud",
+    "province": "گیلان",
+    "latitude": 37.1972,
+    "longitude": 50.1536,
+    "isDefault": false
+  },
+  {
+    "id": "astara",
+    "namePersian": "آستارا",
+    "nameEnglish": "Astara",
+    "province": "گیلان",
+    "latitude": 38.4239,
+    "longitude": 48.8717,
+    "isDefault": false
+  },
+  {
+    "id": "talysh",
+    "namePersian": "تالش (هشتپر)",
+    "nameEnglish": "Talysh",
+    "province": "گیلان",
+    "latitude": 37.7992,
+    "longitude": 48.9053,
+    "isDefault": false
+  },
+  {
+    "id": "fouman",
+    "namePersian": "فومن",
+    "nameEnglish": "Fouman",
+    "province": "گیلان",
+    "latitude": 37.2239,
+    "longitude": 49.3131,
+    "isDefault": false
+  },
+  {
+    "id": "somagh_sara",
+    "namePersian": "صومعه‌سرا",
+    "nameEnglish": "Somagh Sara",
+    "province": "گیلان",
+    "latitude": 37.3106,
+    "longitude": 49.3089,
+    "isDefault": false
+  },
+  {
+    "id": "rudsar",
+    "namePersian": "رودسر",
+    "nameEnglish": "Rudsar",
+    "province": "گیلان",
+    "latitude": 37.1375,
+    "longitude": 50.2881,
+    "isDefault": false
+  },
+  {
+    "id": "rudbar",
+    "namePersian": "رودبار",
+    "nameEnglish": "Rudbar",
+    "province": "گیلان",
+    "latitude": 36.8089,
+    "longitude": 49.4236,
+    "isDefault": false
+  },
+  {
+    "id": "karaj",
+    "namePersian": "کرج",
+    "nameEnglish": "Karaj",
+    "province": "البرز",
+    "latitude": 35.84,
+    "longitude": 50.9391,
+    "isDefault": false
+  },
+  {
+    "id": "fardis",
+    "namePersian": "فردیس",
+    "nameEnglish": "Fardis",
+    "province": "البرز",
+    "latitude": 35.7289,
+    "longitude": 50.9886,
+    "isDefault": false
+  },
+  {
+    "id": "hashtgerd",
+    "namePersian": "هشتگرد (ساوجبلاغ)",
+    "nameEnglish": "Hashtgerd",
+    "province": "البرز",
+    "latitude": 35.9619,
+    "longitude": 50.6803,
+    "isDefault": false
+  },
+  {
+    "id": "nazarabad",
+    "namePersian": "نظرآباد",
+    "nameEnglish": "Nazarabad",
+    "province": "البرز",
+    "latitude": 35.9547,
+    "longitude": 50.6053,
+    "isDefault": false
+  },
+  {
+    "id": "taleqan",
+    "namePersian": "طالقان",
+    "nameEnglish": "Taleqan",
+    "province": "البرز",
+    "latitude": 36.1772,
+    "longitude": 50.7628,
+    "isDefault": false
+  },
+  {
+    "id": "kerman",
+    "namePersian": "کرمان",
+    "nameEnglish": "Kerman",
+    "province": "کرمان",
+    "latitude": 30.2839,
+    "longitude": 57.0834,
+    "isDefault": false
+  },
+  {
+    "id": "rafsanjan",
+    "namePersian": "رفسنجان",
+    "nameEnglish": "Rafsanjan",
+    "province": "کرمان",
+    "latitude": 30.4067,
+    "longitude": 55.9939,
+    "isDefault": false
+  },
+  {
+    "id": "sirjan",
+    "namePersian": "سیرجان",
+    "nameEnglish": "Sirjan",
+    "province": "کرمان",
+    "latitude": 29.4522,
+    "longitude": 55.6814,
+    "isDefault": false
+  },
+  {
+    "id": "jiroft",
+    "namePersian": "جیرفت",
+    "nameEnglish": "Jiroft",
+    "province": "کرمان",
+    "latitude": 28.6781,
+    "longitude": 57.7406,
+    "isDefault": false
+  },
+  {
+    "id": "bam",
+    "namePersian": "بم",
+    "nameEnglish": "Bam",
+    "province": "کرمان",
+    "latitude": 29.106,
+    "longitude": 58.357,
+    "isDefault": false
+  },
+  {
+    "id": "zarand",
+    "namePersian": "زرند",
+    "nameEnglish": "Zarand",
+    "province": "کرمان",
+    "latitude": 30.8122,
+    "longitude": 56.5639,
+    "isDefault": false
+  },
+  {
+    "id": "baft",
+    "namePersian": "بافت",
+    "nameEnglish": "Baft",
+    "province": "کرمان",
+    "latitude": 29.2339,
+    "longitude": 56.6028,
+    "isDefault": false
+  },
+  {
+    "id": "kahnuj",
+    "namePersian": "کهنوج",
+    "nameEnglish": "Kahnuj",
+    "province": "کرمان",
+    "latitude": 27.9514,
+    "longitude": 57.7086,
+    "isDefault": false
+  },
+  {
+    "id": "zahedan",
+    "namePersian": "زاهدان",
+    "nameEnglish": "Zahedan",
+    "province": "سیستان و بلوچستان",
+    "latitude": 29.4963,
+    "longitude": 60.8629,
+    "isDefault": false
+  },
+  {
+    "id": "chabahar",
+    "namePersian": "چابهار",
+    "nameEnglish": "Chabahar",
+    "province": "سیستان و بلوچستان",
+    "latitude": 25.2919,
+    "longitude": 60.643,
+    "isDefault": false
+  },
+  {
+    "id": "zabol",
+    "namePersian": "زابل",
+    "nameEnglish": "Zabol",
+    "province": "سیستان و بلوچستان",
+    "latitude": 31.0308,
+    "longitude": 61.4942,
+    "isDefault": false
+  },
+  {
+    "id": "iranshahr",
+    "namePersian": "ایرانشهر",
+    "nameEnglish": "Iranshahr",
+    "province": "سیستان و بلوچستان",
+    "latitude": 27.2025,
+    "longitude": 60.6847,
+    "isDefault": false
+  },
+  {
+    "id": "saravan",
+    "namePersian": "سراوان",
+    "nameEnglish": "Saravan",
+    "province": "سیستان و بلوچستان",
+    "latitude": 27.3711,
+    "longitude": 62.3342,
+    "isDefault": false
+  },
+  {
+    "id": "khash",
+    "namePersian": "خاش",
+    "nameEnglish": "Khash",
+    "province": "سیستان و بلوچستان",
+    "latitude": 28.2211,
+    "longitude": 61.2158,
+    "isDefault": false
+  },
+  {
+    "id": "nikshahr",
+    "namePersian": "نیک‌شهر",
+    "nameEnglish": "Nikshahr",
+    "province": "سیستان و بلوچستان",
+    "latitude": 26.2258,
+    "longitude": 60.2142,
+    "isDefault": false
+  },
+  {
+    "id": "bandar_abbas",
+    "namePersian": "بندرعباس",
+    "nameEnglish": "Bandar Abbas",
+    "province": "هرمزگان",
+    "latitude": 27.1832,
+    "longitude": 56.2666,
+    "isDefault": false
+  },
+  {
+    "id": "kish",
+    "namePersian": "کیش",
+    "nameEnglish": "Kish",
+    "province": "هرمزگان",
+    "latitude": 26.5578,
+    "longitude": 54.0194,
+    "isDefault": false
+  },
+  {
+    "id": "qeshm",
+    "namePersian": "قشم",
+    "nameEnglish": "Qeshm",
+    "province": "هرمزگان",
+    "latitude": 26.9581,
+    "longitude": 56.2719,
+    "isDefault": false
+  },
+  {
+    "id": "minab",
+    "namePersian": "میناب",
+    "nameEnglish": "Minab",
+    "province": "هرمزگان",
+    "latitude": 27.1467,
+    "longitude": 57.08,
+    "isDefault": false
+  },
+  {
+    "id": "bandar_lengeh",
+    "namePersian": "بندرلنگه",
+    "nameEnglish": "Bandar Lengeh",
+    "province": "هرمزگان",
+    "latitude": 26.5578,
+    "longitude": 54.8806,
+    "isDefault": false
+  },
+  {
+    "id": "jask",
+    "namePersian": "جاسک",
+    "nameEnglish": "Jask",
+    "province": "هرمزگان",
+    "latitude": 25.6439,
+    "longitude": 57.7744,
+    "isDefault": false
+  },
+  {
+    "id": "hajiabad_hormozgan",
+    "namePersian": "حاجی‌آباد",
+    "nameEnglish": "Hajiabad",
+    "province": "هرمزگان",
+    "latitude": 28.3092,
+    "longitude": 55.9017,
+    "isDefault": false
+  },
+  {
+    "id": "kermanshah",
+    "namePersian": "کرمانشاه",
+    "nameEnglish": "Kermanshah",
+    "province": "کرمانشاه",
+    "latitude": 34.3142,
+    "longitude": 47.065,
+    "isDefault": false
+  },
+  {
+    "id": "islamabad_gharb",
+    "namePersian": "اسلام‌آباد غرب",
+    "nameEnglish": "Islamabad-e Gharb",
+    "province": "کرمانشاه",
+    "latitude": 34.1094,
+    "longitude": 46.5275,
+    "isDefault": false
+  },
+  {
+    "id": "paveh",
+    "namePersian": "پاوه",
+    "nameEnglish": "Paveh",
+    "province": "کرمانشاه",
+    "latitude": 35.0433,
+    "longitude": 46.3564,
+    "isDefault": false
+  },
+  {
+    "id": "sarpol_zohab",
+    "namePersian": "سرپل ذهاب",
+    "nameEnglish": "Sarpol-e Zahab",
+    "province": "کرمانشاه",
+    "latitude": 34.4614,
+    "longitude": 45.8647,
+    "isDefault": false
+  },
+  {
+    "id": "kangavar",
+    "namePersian": "کنگاور",
+    "nameEnglish": "Kangavar",
+    "province": "کرمانشاه",
+    "latitude": 34.5044,
+    "longitude": 47.9653,
+    "isDefault": false
+  },
+  {
+    "id": "sonqor",
+    "namePersian": "سنقر",
+    "nameEnglish": "Sonqor",
+    "province": "کرمانشاه",
+    "latitude": 34.7836,
+    "longitude": 47.5994,
+    "isDefault": false
+  },
+  {
+    "id": "hamadan",
+    "namePersian": "همدان",
+    "nameEnglish": "Hamadan",
+    "province": "همدان",
+    "latitude": 34.7983,
+    "longitude": 48.5147,
+    "isDefault": false
+  },
+  {
+    "id": "malayer",
+    "namePersian": "ملایر",
+    "nameEnglish": "Malayer",
+    "province": "همدان",
+    "latitude": 34.2953,
+    "longitude": 48.8239,
+    "isDefault": false
+  },
+  {
+    "id": "nahavand",
+    "namePersian": "نهاوند",
+    "nameEnglish": "Nahavand",
+    "province": "همدان",
+    "latitude": 34.1889,
+    "longitude": 48.3778,
+    "isDefault": false
+  },
+  {
+    "id": "tuyserkan",
+    "namePersian": "تویسرکان",
+    "nameEnglish": "Tuyserkan",
+    "province": "همدان",
+    "latitude": 34.5481,
+    "longitude": 48.4467,
+    "isDefault": false
+  },
+  {
+    "id": "kabudarahang",
+    "namePersian": "کبودراهنگ",
+    "nameEnglish": "Kabudarahang",
+    "province": "همدان",
+    "latitude": 35.2078,
+    "longitude": 48.7236,
+    "isDefault": false
+  },
+  {
+    "id": "yazd",
+    "namePersian": "یزد",
+    "nameEnglish": "Yazd",
+    "province": "یزد",
+    "latitude": 31.8974,
+    "longitude": 54.3569,
+    "isDefault": false
+  },
+  {
+    "id": "meybod",
+    "namePersian": "میبد",
+    "nameEnglish": "Meybod",
+    "province": "یزد",
+    "latitude": 32.25,
+    "longitude": 54.0167,
+    "isDefault": false
+  },
+  {
+    "id": "ardakan",
+    "namePersian": "اردکان",
+    "nameEnglish": "Ardakan",
+    "province": "یزد",
+    "latitude": 32.31,
+    "longitude": 54.0175,
+    "isDefault": false
+  },
+  {
+    "id": "bafq",
+    "namePersian": "بافق",
+    "nameEnglish": "Bafq",
+    "province": "یزد",
+    "latitude": 31.6047,
+    "longitude": 55.4022,
+    "isDefault": false
+  },
+  {
+    "id": "mehriz",
+    "namePersian": "مهریز",
+    "nameEnglish": "Mehriz",
+    "province": "یزد",
+    "latitude": 31.5858,
+    "longitude": 54.4406,
+    "isDefault": false
+  },
+  {
+    "id": "taft",
+    "namePersian": "تفت",
+    "nameEnglish": "Taft",
+    "province": "یزد",
+    "latitude": 31.7475,
+    "longitude": 54.205,
+    "isDefault": false
+  },
+  {
+    "id": "qom",
+    "namePersian": "قم",
+    "nameEnglish": "Qom",
+    "province": "قم",
+    "latitude": 34.6401,
+    "longitude": 50.8764,
+    "isDefault": false
+  },
+  {
+    "id": "arak",
+    "namePersian": "اراک",
+    "nameEnglish": "Arak",
+    "province": "مرکزی",
+    "latitude": 34.0954,
+    "longitude": 49.7013,
+    "isDefault": false
+  },
+  {
+    "id": "saveh",
+    "namePersian": "ساوه",
+    "nameEnglish": "Saveh",
+    "province": "مرکزی",
+    "latitude": 35.0211,
+    "longitude": 50.3564,
+    "isDefault": false
+  },
+  {
+    "id": "khomein",
+    "namePersian": "خمین",
+    "nameEnglish": "Khomein",
+    "province": "مرکزی",
+    "latitude": 33.6411,
+    "longitude": 50.0789,
+    "isDefault": false
+  },
+  {
+    "id": "mahallat",
+    "namePersian": "محلات",
+    "nameEnglish": "Mahallat",
+    "province": "مرکزی",
+    "latitude": 33.9056,
+    "longitude": 50.4578,
+    "isDefault": false
+  },
+  {
+    "id": "delijan",
+    "namePersian": "دلیجان",
+    "nameEnglish": "Delijan",
+    "province": "مرکزی",
+    "latitude": 33.9903,
+    "longitude": 50.6836,
+    "isDefault": false
+  },
+  {
+    "id": "shazand",
+    "namePersian": "شازند",
+    "nameEnglish": "Shazand",
+    "province": "مرکزی",
+    "latitude": 33.9275,
+    "longitude": 49.4128,
+    "isDefault": false
+  },
+  {
+    "id": "zanjan",
+    "namePersian": "زنجان",
+    "nameEnglish": "Zanjan",
+    "province": "زنجان",
+    "latitude": 36.6736,
+    "longitude": 48.4963,
+    "isDefault": false
+  },
+  {
+    "id": "abhar",
+    "namePersian": "ابهر",
+    "nameEnglish": "Abhar",
+    "province": "زنجان",
+    "latitude": 36.1468,
+    "longitude": 49.218,
+    "isDefault": false
+  },
+  {
+    "id": "khorramdarreh",
+    "namePersian": "خرمدره",
+    "nameEnglish": "Khorramdarreh",
+    "province": "زنجان",
+    "latitude": 36.2053,
+    "longitude": 49.1869,
+    "isDefault": false
+  },
+  {
+    "id": "ghidar",
+    "namePersian": "قیدار (خدابنده)",
+    "nameEnglish": "Ghidar",
+    "province": "زنجان",
+    "latitude": 36.1206,
+    "longitude": 48.5919,
+    "isDefault": false
+  },
+  {
+    "id": "sanandaj",
+    "namePersian": "سنندج",
+    "nameEnglish": "Sanandaj",
+    "province": "کردستان",
+    "latitude": 35.3144,
+    "longitude": 46.9923,
+    "isDefault": false
+  },
+  {
+    "id": "saqqez",
+    "namePersian": "سقز",
+    "nameEnglish": "Saqqez",
+    "province": "کردستان",
+    "latitude": 36.2497,
+    "longitude": 46.2733,
+    "isDefault": false
+  },
+  {
+    "id": "marivan",
+    "namePersian": "مریوان",
+    "nameEnglish": "Marivan",
+    "province": "کردستان",
+    "latitude": 35.5269,
+    "longitude": 46.1761,
+    "isDefault": false
+  },
+  {
+    "id": "baneh",
+    "namePersian": "بانه",
+    "nameEnglish": "Baneh",
+    "province": "کردستان",
+    "latitude": 35.9975,
+    "longitude": 45.8853,
+    "isDefault": false
+  },
+  {
+    "id": "qorveh",
+    "namePersian": "قروه",
+    "nameEnglish": "Qorveh",
+    "province": "کردستان",
+    "latitude": 35.1664,
+    "longitude": 47.8047,
+    "isDefault": false
+  },
+  {
+    "id": "bijar",
+    "namePersian": "بیجار",
+    "nameEnglish": "Bijar",
+    "province": "کردستان",
+    "latitude": 35.8733,
+    "longitude": 47.605,
+    "isDefault": false
+  },
+  {
+    "id": "kamyaran",
+    "namePersian": "کامیاران",
+    "nameEnglish": "Kamyaran",
+    "province": "کردستان",
+    "latitude": 34.7944,
+    "longitude": 46.9356,
+    "isDefault": false
+  },
+  {
+    "id": "qazvin",
+    "namePersian": "قزوین",
+    "nameEnglish": "Qazvin",
+    "province": "قزوین",
+    "latitude": 36.2797,
+    "longitude": 50.0049,
+    "isDefault": false
+  },
+  {
+    "id": "takestan",
+    "namePersian": "تاکستان",
+    "nameEnglish": "Takestan",
+    "province": "قزوین",
+    "latitude": 36.0697,
+    "longitude": 49.6958,
+    "isDefault": false
+  },
+  {
+    "id": "alvand",
+    "namePersian": "الوند",
+    "nameEnglish": "Alvand",
+    "province": "قزوین",
+    "latitude": 36.1892,
+    "longitude": 50.0642,
+    "isDefault": false
+  },
+  {
+    "id": "abyek",
+    "namePersian": "آبیک",
+    "nameEnglish": "Abyek",
+    "province": "قزوین",
+    "latitude": 36.0542,
+    "longitude": 50.5306,
+    "isDefault": false
+  },
+  {
+    "id": "khorramabad",
+    "namePersian": "خرم‌آباد",
+    "nameEnglish": "Khorramabad",
+    "province": "لرستان",
+    "latitude": 33.4878,
+    "longitude": 48.3558,
+    "isDefault": false
+  },
+  {
+    "id": "borujerd",
+    "namePersian": "بروجرد",
+    "nameEnglish": "Borujerd",
+    "province": "لرستان",
+    "latitude": 33.8972,
+    "longitude": 48.7517,
+    "isDefault": false
+  },
+  {
+    "id": "dorud",
+    "namePersian": "دورود",
+    "nameEnglish": "Dorud",
+    "province": "لرستان",
+    "latitude": 33.4933,
+    "longitude": 49.0578,
+    "isDefault": false
+  },
+  {
+    "id": "kuhdasht",
+    "namePersian": "کوهدشت",
+    "nameEnglish": "Kuhdasht",
+    "province": "لرستان",
+    "latitude": 33.5322,
+    "longitude": 47.6061,
+    "isDefault": false
+  },
+  {
+    "id": "aligudarz",
+    "namePersian": "الیگودرز",
+    "nameEnglish": "Aligudarz",
+    "province": "لرستان",
+    "latitude": 33.4006,
+    "longitude": 49.6947,
+    "isDefault": false
+  },
+  {
+    "id": "nurabad_lorestan",
+    "namePersian": "نورآباد (دلفان)",
+    "nameEnglish": "Nurabad",
+    "province": "لرستان",
+    "latitude": 34.0733,
+    "longitude": 47.9725,
+    "isDefault": false
+  },
+  {
+    "id": "azna",
+    "namePersian": "ازنا",
+    "nameEnglish": "Azna",
+    "province": "لرستان",
+    "latitude": 33.4564,
+    "longitude": 49.4539,
+    "isDefault": false
+  },
+  {
+    "id": "gorgan",
+    "namePersian": "گرگان",
+    "nameEnglish": "Gorgan",
+    "province": "گلستان",
+    "latitude": 36.8426,
+    "longitude": 54.4439,
+    "isDefault": false
+  },
+  {
+    "id": "gonbad_qabus",
+    "namePersian": "گنبد کاووس",
+    "nameEnglish": "Gonbad-e Qabus",
+    "province": "گلستان",
+    "latitude": 37.25,
+    "longitude": 55.1667,
+    "isDefault": false
+  },
+  {
+    "id": "aliabad_katul",
+    "namePersian": "علی‌آباد کتول",
+    "nameEnglish": "Aliabad-e Katul",
+    "province": "گلستان",
+    "latitude": 36.91,
+    "longitude": 54.8689,
+    "isDefault": false
+  },
+  {
+    "id": "kordkuy",
+    "namePersian": "کردکوی",
+    "nameEnglish": "Kordkuy",
+    "province": "گلستان",
+    "latitude": 36.7933,
+    "longitude": 54.1122,
+    "isDefault": false
+  },
+  {
+    "id": "bandar_torkaman",
+    "namePersian": "بندر ترکمن",
+    "nameEnglish": "Bandar Torkaman",
+    "province": "گلستان",
+    "latitude": 36.9,
+    "longitude": 54.07,
+    "isDefault": false
+  },
+  {
+    "id": "azadshahr",
+    "namePersian": "آزادشهر",
+    "nameEnglish": "Azadshahr",
+    "province": "گلستان",
+    "latitude": 37.0869,
+    "longitude": 55.1742,
+    "isDefault": false
+  },
+  {
+    "id": "bojnourd",
+    "namePersian": "بجنورد",
+    "nameEnglish": "Bojnourd",
+    "province": "خراسان شمالی",
+    "latitude": 37.4747,
+    "longitude": 57.3292,
+    "isDefault": false
+  },
+  {
+    "id": "shirvan",
+    "namePersian": "شیروان",
+    "nameEnglish": "Shirvan",
+    "province": "خراسان شمالی",
+    "latitude": 37.3967,
+    "longitude": 57.9294,
+    "isDefault": false
+  },
+  {
+    "id": "esfarayen",
+    "namePersian": "اسفراین",
+    "nameEnglish": "Esfarayen",
+    "province": "خراسان شمالی",
+    "latitude": 37.0764,
+    "longitude": 57.51,
+    "isDefault": false
+  },
+  {
+    "id": "jajarm",
+    "namePersian": "جاجرم",
+    "nameEnglish": "Jajarm",
+    "province": "خراسان شمالی",
+    "latitude": 36.95,
+    "longitude": 56.38,
+    "isDefault": false
+  },
+  {
+    "id": "birjand",
+    "namePersian": "بیرجند",
+    "nameEnglish": "Birjand",
+    "province": "خراسان جنوبی",
+    "latitude": 32.8663,
+    "longitude": 59.2211,
+    "isDefault": false
+  },
+  {
+    "id": "qaen",
+    "namePersian": "قائن",
+    "nameEnglish": "Qaen",
+    "province": "خراسان جنوبی",
+    "latitude": 33.7267,
+    "longitude": 59.1844,
+    "isDefault": false
+  },
+  {
+    "id": "ferdowsi",
+    "namePersian": "فردوس",
+    "nameEnglish": "Ferdows",
+    "province": "خراسان جنوبی",
+    "latitude": 34.0186,
+    "longitude": 58.1722,
+    "isDefault": false
+  },
+  {
+    "id": "tabas",
+    "namePersian": "طبس",
+    "nameEnglish": "Tabas",
+    "province": "خراسان جنوبی",
+    "latitude": 33.5958,
+    "longitude": 56.9244,
+    "isDefault": false
+  },
+  {
+    "id": "boshruyeh",
+    "namePersian": "بشرویه",
+    "nameEnglish": "Boshruyeh",
+    "province": "خراسان جنوبی",
+    "latitude": 33.8711,
+    "longitude": 57.4264,
+    "isDefault": false
+  },
+  {
+    "id": "semnan",
+    "namePersian": "سمنان",
+    "nameEnglish": "Semnan",
+    "province": "سمنان",
+    "latitude": 35.5729,
+    "longitude": 53.3971,
+    "isDefault": false
+  },
+  {
+    "id": "shahroud",
+    "namePersian": "شاهرود",
+    "nameEnglish": "Shahroud",
+    "province": "سمنان",
+    "latitude": 36.4181,
+    "longitude": 54.9764,
+    "isDefault": false
+  },
+  {
+    "id": "damghan",
+    "namePersian": "دامغان",
+    "nameEnglish": "Damghan",
+    "province": "سمنان",
+    "latitude": 36.1683,
+    "longitude": 54.3481,
+    "isDefault": false
+  },
+  {
+    "id": "garmsar",
+    "namePersian": "گرمسار",
+    "nameEnglish": "Garmsar",
+    "province": "سمنان",
+    "latitude": 35.2181,
+    "longitude": 52.3408,
+    "isDefault": false
+  },
+  {
+    "id": "mehdishahr",
+    "namePersian": "مهدی‌شهر (سنگسر)",
+    "nameEnglish": "Mehdishahr",
+    "province": "سمنان",
+    "latitude": 35.7117,
+    "longitude": 53.3547,
+    "isDefault": false
+  },
+  {
+    "id": "bushehr",
+    "namePersian": "بوشهر",
+    "nameEnglish": "Bushehr",
+    "province": "بوشهر",
+    "latitude": 28.9234,
+    "longitude": 50.8203,
+    "isDefault": false
+  },
+  {
+    "id": "borazjan",
+    "namePersian": "برازجان (دشتستان)",
+    "nameEnglish": "Borazjan",
+    "province": "بوشهر",
+    "latitude": 29.2678,
+    "longitude": 51.2158,
+    "isDefault": false
+  },
+  {
+    "id": "genaveh",
+    "namePersian": "بندر گناوه",
+    "nameEnglish": "Ganaveh",
+    "province": "بوشهر",
+    "latitude": 29.5792,
+    "longitude": 50.5172,
+    "isDefault": false
+  },
+  {
+    "id": "kangan",
+    "namePersian": "بندر کنگان",
+    "nameEnglish": "Kangan",
+    "province": "بوشهر",
+    "latitude": 27.8342,
+    "longitude": 52.0628,
+    "isDefault": false
+  },
+  {
+    "id": "asaluyeh",
+    "namePersian": "عسلویه",
+    "nameEnglish": "Asaluyeh",
+    "province": "بوشهر",
+    "latitude": 27.4764,
+    "longitude": 52.6075,
+    "isDefault": false
+  },
+  {
+    "id": "dayyer",
+    "namePersian": "بندر دیر",
+    "nameEnglish": "Dayyer",
+    "province": "بوشهر",
+    "latitude": 27.84,
+    "longitude": 51.9378,
+    "isDefault": false
+  },
+  {
+    "id": "ilam",
+    "namePersian": "ایلام",
+    "nameEnglish": "Ilam",
+    "province": "ایلام",
+    "latitude": 33.6374,
+    "longitude": 46.4227,
+    "isDefault": false
+  },
+  {
+    "id": "dehloran",
+    "namePersian": "دهلران",
+    "nameEnglish": "Dehloran",
+    "province": "ایلام",
+    "latitude": 32.6942,
+    "longitude": 47.2678,
+    "isDefault": false
+  },
+  {
+    "id": "mehran",
+    "namePersian": "مهران",
+    "nameEnglish": "Mehran",
+    "province": "ایلام",
+    "latitude": 33.1222,
+    "longitude": 46.1647,
+    "isDefault": false
+  },
+  {
+    "id": "eyvan",
+    "namePersian": "ایوان",
+    "nameEnglish": "Eyvan",
+    "province": "ایلام",
+    "latitude": 33.8292,
+    "longitude": 46.3086,
+    "isDefault": false
+  },
+  {
+    "id": "shahrekord",
+    "namePersian": "شهرکرد",
+    "nameEnglish": "Shahrekord",
+    "province": "چهارمحال و بختیاری",
+    "latitude": 32.3256,
+    "longitude": 50.8644,
+    "isDefault": false
+  },
+  {
+    "id": "borujen",
+    "namePersian": "بروجن",
+    "nameEnglish": "Borujen",
+    "province": "چهارمحال و بختیاری",
+    "latitude": 31.9683,
+    "longitude": 51.2883,
+    "isDefault": false
+  },
+  {
+    "id": "lordegan",
+    "namePersian": "لردگان",
+    "nameEnglish": "Lordegan",
+    "province": "چهارمحال و بختیاری",
+    "latitude": 31.5097,
+    "longitude": 50.8294,
+    "isDefault": false
+  },
+  {
+    "id": "farsan",
+    "namePersian": "فارسان",
+    "nameEnglish": "Farsan",
+    "province": "چهارمحال و بختیاری",
+    "latitude": 32.2575,
+    "longitude": 50.5639,
+    "isDefault": false
+  },
+  {
+    "id": "yasuj",
+    "namePersian": "یاسوج",
+    "nameEnglish": "Yasuj",
+    "province": "کهگیلویه و بویراحمد",
+    "latitude": 30.6684,
+    "longitude": 51.5876,
+    "isDefault": false
+  },
+  {
+    "id": "gachsaran",
+    "namePersian": "گچساران (دوگنبدان)",
+    "nameEnglish": "Gachsaran",
+    "province": "کهگیلویه و بویراحمد",
+    "latitude": 30.3586,
+    "longitude": 50.7981,
+    "isDefault": false
+  },
+  {
+    "id": "dehdasht",
+    "namePersian": "دهدشت",
+    "nameEnglish": "Dehdasht",
+    "province": "کهگیلویه و بویراحمد",
+    "latitude": 30.7936,
+    "longitude": 50.5647,
+    "isDefault": false
+  },
+  {
+    "id": "ardabil",
+    "namePersian": "اردبیل",
+    "nameEnglish": "Ardabil",
+    "province": "اردبیل",
+    "latitude": 38.2498,
+    "longitude": 48.2973,
+    "isDefault": false
+  },
+  {
+    "id": "meshginshahr",
+    "namePersian": "مشگین‌شهر",
+    "nameEnglish": "Meshginshahr",
+    "province": "اردبیل",
+    "latitude": 38.3989,
+    "longitude": 47.6817,
+    "isDefault": false
+  },
+  {
+    "id": "parsabad",
+    "namePersian": "پارس‌آباد",
+    "nameEnglish": "Parsabad",
+    "province": "اردبیل",
+    "latitude": 39.6483,
+    "longitude": 47.9175,
+    "isDefault": false
+  },
+  {
+    "id": "khalkhal",
+    "namePersian": "خلخال",
+    "nameEnglish": "Khalkhal",
+    "province": "اردبیل",
+    "latitude": 37.6189,
+    "longitude": 48.5258,
+    "isDefault": false
+  },
+  {
+    "id": "germi",
+    "namePersian": "گرمی",
+    "nameEnglish": "Germi",
+    "province": "اردبیل",
+    "latitude": 39.0211,
+    "longitude": 48.08,
+    "isDefault": false
+  }
+]
