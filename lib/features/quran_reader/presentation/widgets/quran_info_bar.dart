@@ -4,12 +4,14 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
+import '../../../surah_list/application/controllers/surah_list_controller.dart';
+import '../../../surah_list/domain/entities/surah_entity.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../domain/entities/ayah_entity.dart';
 import 'quran_quick_jump_bottom_sheet.dart';
 
 /// A sticky info bar displayed below the AppBar that shows the current
-/// Juz, Hizb, Page, and Ayah with interactive chips for Quick Jump.
+/// Total Ayahs, Ayah, Juz, Hizb, and Page with interactive chips for Quick Jump.
 class QuranInfoBar extends ConsumerWidget {
   final ValueChanged<AyahTarget>? onTargetSelected;
 
@@ -23,10 +25,12 @@ class QuranInfoBar extends ConsumerWidget {
     final ayahs = ref.watch(quranReaderControllerProvider.select((s) => s.ayahs));
     if (ayahs.isEmpty) return const SizedBox.shrink();
 
+    final surahs = ref.watch(surahListControllerProvider.select((s) => s.surahs));
+
     final itemPositionsListener = ref.watch(activeItemPositionsListenerProvider);
 
     if (itemPositionsListener == null) {
-      return _buildContent(context, ayahs.first);
+      return _buildContent(context, ref, ayahs.first, surahs);
     }
 
     return ValueListenableBuilder<Iterable<ItemPosition>>(
@@ -46,12 +50,15 @@ class QuranInfoBar extends ConsumerWidget {
           currentIndex = 0;
         }
 
-        return _buildContent(context, ayahs[currentIndex]);
+        return _buildContent(context, ref, ayahs[currentIndex], surahs);
       },
     );
   }
 
-  Widget _buildContent(BuildContext context, AyahEntity currentAyah) {
+  Widget _buildContent(BuildContext context, WidgetRef ref, AyahEntity currentAyah, List<SurahEntity> surahs) {
+    final surah = surahs.where((s) => s.number == currentAyah.surahId).firstOrNull;
+    final totalAyahsStr = surah != null ? surah.numberOfAyahs.toPersianDigit() : '؟';
+
     final ayahStr = currentAyah.ayahNumber.toPersianDigit();
     final juzStr = currentAyah.juz?.toPersianDigit() ?? '؟';
     final hizbStr = currentAyah.hizb?.toPersianDigit() ?? '؟';
@@ -73,6 +80,8 @@ class QuranInfoBar extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          _buildStaticChip(context, '$totalAyahsStr آیه'),
+          _buildDotDivider(context),
           _buildChip(context, 'آیه $ayahStr', QuickJumpTab.surah),
           _buildDotDivider(context),
           _buildChip(context, 'جزء $juzStr', QuickJumpTab.juz),
@@ -81,6 +90,23 @@ class QuranInfoBar extends ConsumerWidget {
           _buildDotDivider(context),
           _buildChip(context, 'صفحه $pageStr', QuickJumpTab.page),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStaticChip(BuildContext context, String text) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'Vazirmatn',
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+        ),
       ),
     );
   }
