@@ -51,11 +51,20 @@ class AyahNumberMarker extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         textDirection: TextDirection.rtl,
         children: [
-          // Right Bracket (Ra_bracket)
-          SvgPicture.asset(
-            'assets/icons/ic_bracket_right.svg',
-            height: 24,
-            colorFilter: ColorFilter.mode(bracketColor, BlendMode.srcIn),
+          // Right Bracket (Ra_bracket) + Invisible Text for Selection
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              const Text(
+                ' ﴿',
+                style: TextStyle(fontSize: 0.1, color: Colors.transparent),
+              ),
+              SvgPicture.asset(
+                'assets/icons/ic_bracket_right.svg',
+                height: 24,
+                colorFilter: ColorFilter.mode(bracketColor, BlendMode.srcIn),
+              ),
+            ],
           ),
           
           const SizedBox(width: 3), // Balanced gap
@@ -83,11 +92,20 @@ class AyahNumberMarker extends ConsumerWidget {
           
           const SizedBox(width: 3), // Balanced gap
           
-          // Left Bracket (La_bracket)
-          SvgPicture.asset(
-            'assets/icons/ic_bracket_left.svg',
-            height: 24,
-            colorFilter: ColorFilter.mode(bracketColor, BlendMode.srcIn),
+          // Left Bracket (La_bracket) + Invisible Text for Selection
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              const Text(
+                '﴾',
+                style: TextStyle(fontSize: 0.1, color: Colors.transparent),
+              ),
+              SvgPicture.asset(
+                'assets/icons/ic_bracket_left.svg',
+                height: 24,
+                colorFilter: ColorFilter.mode(bracketColor, BlendMode.srcIn),
+              ),
+            ],
           ),
         ],
       ),

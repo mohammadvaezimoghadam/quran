@@ -102,36 +102,36 @@ class AyahArabicText extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(bottom: 12.0),
-            child: RichText(
-              textAlign: TextAlign.center,
-              textDirection: TextDirection.rtl,
-              text: TextSpan(
+            child: Text.rich(
+              TextSpan(
                 style: baseStyle.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
                 children: bismillahSpans,
               ),
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.rtl,
             ),
           ),
-          RichText(
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
-            text: TextSpan(
+          Text.rich(
+            TextSpan(
               style: baseStyle,
               children: mainTextChildren,
             ),
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
           ),
         ],
       );
     }
 
-    return RichText(
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.rtl,
-      text: TextSpan(
+    return Text.rich(
+      TextSpan(
         style: baseStyle,
         children: mainTextChildren,
       ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.rtl,
     );
   }
 }

@@ -21,6 +21,7 @@ import '../widgets/audio_player_bottom_bar.dart';
 import '../widgets/quran_info_bar.dart';
 import '../widgets/quick_settings_drawer.dart';
 import '../widgets/surah_ayah_page_view.dart';
+import '../widgets/word_by_word_bottom_sheet.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 
 class QuranReaderScreen extends ConsumerStatefulWidget {
@@ -159,6 +160,56 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     return widget.surahName;
   }
 
+  // --- Gesture Zoom State ---
+  final Map<int, Offset> _activePointers = {};
+  double? _initialDistance;
+  double? _initialArabicFontSize;
+  double? _initialTranslationFontSize;
+
+  void _onPointerDown(PointerDownEvent event) {
+    _activePointers[event.pointer] = event.position;
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if (!_activePointers.containsKey(event.pointer)) return;
+    _activePointers[event.pointer] = event.position;
+
+    if (_activePointers.length == 2) {
+      final positions = _activePointers.values.toList();
+      final distance = (positions[0] - positions[1]).distance;
+
+      if (_initialDistance == null) {
+        _initialDistance = distance;
+        final settings = ref.read(quranDisplaySettingsControllerProvider);
+        _initialArabicFontSize = settings.arabicFontSize;
+        _initialTranslationFontSize = settings.translationFontSize;
+      } else {
+        final scale = distance / _initialDistance!;
+        
+        final newArabic = (_initialArabicFontSize! * scale).clamp(18.0, 42.0);
+        final newTranslation = (_initialTranslationFontSize! * scale).clamp(12.0, 26.0);
+        
+        ref.read(quranDisplaySettingsControllerProvider.notifier)
+            .updateArabicFontSize(newArabic);
+        ref.read(quranDisplaySettingsControllerProvider.notifier)
+            .updateTranslationFontSize(newTranslation);
+      }
+    }
+  }
+
+  void _onPointerUp(PointerEvent event) {
+    _activePointers.remove(event.pointer);
+    if (_activePointers.length < 2) {
+      if (_initialDistance != null) {
+        // Only save to preferences if a pinch zoom actually happened
+        ref.read(quranDisplaySettingsControllerProvider.notifier).saveSettingsIfChanged();
+      }
+      _initialDistance = null;
+      _initialArabicFontSize = null;
+      _initialTranslationFontSize = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Listen to readerControlsProvider so taps on AyahItems correctly toggle screen controls
@@ -251,6 +302,12 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
           s.status != AudioStatus.stopped),
     );
 
+    // OPTIMIZATION: Only rebuild the entire screen when entering/exiting selection mode.
+    // The specific count changes are handled locally via a Consumer around the AppBar.
+    final isSelectionMode = ref.watch(
+      selectedAyahActionProvider.select((set) => set.isNotEmpty),
+    );
+
     final currentSurahName = _getSurahName(ref, currentSurahId);
 
     // Controls state in full-screen mode
@@ -264,11 +321,18 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBgColor = isDark ? const Color(0xFF16191C) : const Color(0xFFEBE7CE);
 
-    return Scaffold(
-      backgroundColor: scaffoldBgColor,
-      extendBody: true,
-      body: Stack(
-        children: [
+    return PopScope(
+      canPop: !isSelectionMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && isSelectionMode) {
+          ref.read(selectedAyahActionProvider.notifier).clearSelection();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: scaffoldBgColor,
+        extendBody: true,
+        body: Stack(
+          children: [
           // 1. Column containing Header (AppBar + InfoBar) and Bounded PageView (Expanded)
           Column(
             children: [
@@ -287,73 +351,136 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                       children: [
                         SizedBox(
                           height: appBarHeight,
-                          child: IslamicKatibahAppBar(
-                            surahName: currentSurahName,
-                            surahNumber: currentSurahId,
-                            fontFamily: fontFamily,
-                            actions: [
-                              IconButton(
-                                icon: const Icon(
-                                  CupertinoIcons.bookmark,
-                                  size: 20,
-                                  color: Color(0xFFF4E0A5),
-                                ),
-                                tooltip: 'ذخیره نشانک (بوک‌مارک)',
-                                onPressed: () {
-                                  final currentState = ref.read(continueReadingControllerProvider);
-                                  if (currentState != null) {
-                                    ref.read(manualBookmarkControllerProvider.notifier).saveBookmark(currentState);
-                                    AppSnackBar.showInfo(
-                                      context,
-                                      'نشانک با موفقیت برای این آیه ذخیره شد.',
-                                      duration: const Duration(seconds: 2),
-                                    );
-                                  }
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final selectedCount = ref.watch(
+                                selectedAyahActionProvider.select((set) => set.length),
+                              );
+                              return IslamicKatibahAppBar(
+                                surahName: currentSurahName,
+                                surahNumber: currentSurahId,
+                                fontFamily: fontFamily,
+                                isSelectionMode: isSelectionMode,
+                                selectedCount: selectedCount,
+                                onClearSelection: () {
+                                  ref.read(selectedAyahActionProvider.notifier).clearSelection();
                                 },
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  CupertinoIcons.slider_horizontal_3,
-                                  size: 20,
-                                  color: Color(0xFFF4E0A5),
-                                ),
-                                tooltip: 'تنظیمات نمایش',
-                                onPressed: () => QuickSettingsDrawer.show(context),
-                              ),
-                              PopupMenuButton<String>(
-                                icon: const Icon(
-                                  CupertinoIcons.ellipsis_vertical,
-                                  size: 22,
-                                  color: Color(0xFFF4E0A5),
-                                ),
-                                tooltip: 'منو',
-                                onSelected: (value) {
-                                  if (value == 'fullscreen') {
-                                    _enterFullScreen();
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem<String>(
-                                    value: 'fullscreen',
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(CupertinoIcons.fullscreen, size: 18),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          'حالت تمام صفحه',
-                                          style: TextStyle(
-                                            fontFamily: AppTypography.fontFamily,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            onCopySelected: () {
+                              final allAyahs = ref.read(quranReaderControllerProvider).ayahs;
+                              ref.read(selectedAyahActionProvider.notifier).copySelectedAyahs(
+                                    context: context,
+                                    ayahs: allAyahs,
+                                    surahName: currentSurahName,
+                                  );
+                            },
+                            onShareSelected: () {
+                              final allAyahs = ref.read(quranReaderControllerProvider).ayahs;
+                              ref.read(selectedAyahActionProvider.notifier).shareSelectedAyahs(
+                                    context: context,
+                                    ayahs: allAyahs,
+                                    surahName: currentSurahName,
+                                  );
+                            },
+                            onDictionarySelected: () {
+                              final selectedSet = ref.read(selectedAyahActionProvider);
+                              if (selectedSet.isNotEmpty) {
+                                final firstAyahNum = selectedSet.first;
+                                ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                                WordByWordBottomSheet.show(
+                                  context,
+                                  surahId: currentSurahId,
+                                  surahName: currentSurahName,
+                                  ayahNumber: firstAyahNum,
+                                );
+                              }
+                            },
+                             onBookmarkPressed: () {
+                               final currentState = ref.read(continueReadingControllerProvider);
+                               if (currentState != null) {
+                                 ref.read(manualBookmarkControllerProvider.notifier).saveBookmark(currentState);
+                                 AppSnackBar.showInfo(
+                                   context,
+                                   'نشانک با موفقیت برای این آیه ذخیره شد.',
+                                   duration: const Duration(seconds: 2),
+                                 );
+                               }
+                             },
+                             onMenuSelected: (value) {
+                               if (value == 'fullscreen') {
+                                 _enterFullScreen();
+                               } else if (value == 'settings') {
+                                 QuickSettingsDrawer.show(context);
+                               } else if (value == 'toggle_brackets') {
+                                 final notifier = ref.read(quranDisplaySettingsControllerProvider.notifier);
+                                 final isRemoved = ref.read(quranDisplaySettingsControllerProvider).removeTranslationBrackets;
+                                 notifier.toggleRemoveTranslationBrackets(!isRemoved);
+                                 notifier.saveSettingsIfChanged();
+                                 AppSnackBar.showInfo(
+                                   context,
+                                   !isRemoved ? 'توضیحات مترجم مخفی شد' : 'توضیحات مترجم نمایش داده شد',
+                                   duration: const Duration(seconds: 2),
+                                 );
+                               }
+                             },
+                             menuItemBuilder: (context) {
+                               final isRemoved = ref.read(quranDisplaySettingsControllerProvider).removeTranslationBrackets;
+                               return [
+                                 PopupMenuItem<String>(
+                                   value: 'toggle_brackets',
+                                   child: Row(
+                                     mainAxisSize: MainAxisSize.min,
+                                     children: [
+                                       Icon(isRemoved ? CupertinoIcons.text_quote : CupertinoIcons.textbox, size: 18),
+                                       const SizedBox(width: 8),
+                                       Text(
+                                         isRemoved ? 'نمایش توضیحات مترجم' : 'حذف پرانتزهای ترجمه',
+                                         style: const TextStyle(
+                                           fontFamily: AppTypography.fontFamily,
+                                           fontSize: 13,
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                                 const PopupMenuItem<String>(
+                                   value: 'settings',
+                                   child: Row(
+                                     mainAxisSize: MainAxisSize.min,
+                                     children: [
+                                       Icon(CupertinoIcons.slider_horizontal_3, size: 18),
+                                       SizedBox(width: 8),
+                                       Text(
+                                         'تنظیمات نمایش',
+                                         style: TextStyle(
+                                           fontFamily: AppTypography.fontFamily,
+                                           fontSize: 13,
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                                 const PopupMenuItem<String>(
+                                   value: 'fullscreen',
+                                   child: Row(
+                                     mainAxisSize: MainAxisSize.min,
+                                     children: [
+                                       Icon(CupertinoIcons.fullscreen, size: 18),
+                                       SizedBox(width: 8),
+                                       Text(
+                                         'حالت تمام صفحه',
+                                         style: TextStyle(
+                                           fontFamily: AppTypography.fontFamily,
+                                           fontSize: 13,
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                               ];
+                             },
+                           );
+                         },
+                       ),
                         ),
                         QuranInfoBar(
                           onTargetSelected: _handleTargetSelected,
@@ -367,29 +494,35 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
               // Quran PageView (Bounded directly below QuranInfoBar — zero scroll under header!)
               Expanded(
                 child: RepaintBoundary(
-                  child: GestureDetector(
-                    onTap: () {
-                      if (_isFullScreen) {
-                        _toggleControls();
-                      }
-                    },
-                    behavior: HitTestBehavior.translucent,
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: 114,
-                      onPageChanged: _onPageChanged,
-                      physics: const BouncingScrollPhysics(),
-                      itemBuilder: (context, pageIndex) {
-                        final pageSurahId = pageIndex + 1;
-                        return SurahAyahPageView(
-                          key: ValueKey('surah_page_$pageSurahId'),
-                          surahId: pageSurahId,
-                          surahName: _getSurahName(ref, pageSurahId),
-                          isCurrentPage: pageSurahId == currentSurahId,
-                          initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
-                          translationId: widget.translationId,
-                        );
+                  child: Listener(
+                    onPointerDown: _onPointerDown,
+                    onPointerMove: _onPointerMove,
+                    onPointerUp: _onPointerUp,
+                    onPointerCancel: _onPointerUp,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (_isFullScreen) {
+                          _toggleControls();
+                        }
                       },
+                      behavior: HitTestBehavior.translucent,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: 114,
+                        onPageChanged: _onPageChanged,
+                        physics: const BouncingScrollPhysics(),
+                        itemBuilder: (context, pageIndex) {
+                          final pageSurahId = pageIndex + 1;
+                          return SurahAyahPageView(
+                            key: ValueKey('surah_page_$pageSurahId'),
+                            surahId: pageSurahId,
+                            surahName: _getSurahName(ref, pageSurahId),
+                            isCurrentPage: pageSurahId == currentSurahId,
+                            initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
+                            translationId: widget.translationId,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -519,6 +652,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
             ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
