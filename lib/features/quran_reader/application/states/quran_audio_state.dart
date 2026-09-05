@@ -25,5 +25,6 @@ abstract class QuranAudioState with _$QuranAudioState {
     @Default(false) bool isSingleAyahMode,
     @Default(false) bool isAutoScrollSuspended,
     String? errorMessage,
+    int? lastAttemptedAyahNumber,
   }) = _QuranAudioState;
 }

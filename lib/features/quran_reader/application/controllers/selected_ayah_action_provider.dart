@@ -9,6 +9,7 @@ import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../domain/entities/ayah_entity.dart';
 import 'quran_audio_controller.dart';
+import 'quran_display_settings_controller.dart';
 
 /// Provider for managing multi-selected Ayahs for copy and share actions.
 final selectedAyahActionProvider =
@@ -60,10 +61,15 @@ class SelectedAyahActionController extends Notifier<Set<int>> {
 
     if (selectedAyahsList.isEmpty) return;
 
+    final removeBrackets = ref.read(quranDisplaySettingsControllerProvider).removeTranslationBrackets;
+
     final buffer = StringBuffer();
     for (int i = 0; i < selectedAyahsList.length; i++) {
       final item = selectedAyahsList[i];
-      buffer.writeln(item.toShareableText(surahName: surahName));
+      buffer.writeln(item.toShareableText(
+        surahName: surahName,
+        removeBrackets: removeBrackets,
+      ));
       if (i < selectedAyahsList.length - 1) {
         buffer.writeln(); // Spacing between ayahs
       }
@@ -98,10 +104,15 @@ class SelectedAyahActionController extends Notifier<Set<int>> {
 
     if (selectedAyahsList.isEmpty) return;
 
+    final removeBrackets = ref.read(quranDisplaySettingsControllerProvider).removeTranslationBrackets;
+
     final buffer = StringBuffer();
     for (int i = 0; i < selectedAyahsList.length; i++) {
       final item = selectedAyahsList[i];
-      buffer.writeln(item.toShareableText(surahName: surahName));
+      buffer.writeln(item.toShareableText(
+        surahName: surahName,
+        removeBrackets: removeBrackets,
+      ));
       if (i < selectedAyahsList.length - 1) {
         buffer.writeln();
       }

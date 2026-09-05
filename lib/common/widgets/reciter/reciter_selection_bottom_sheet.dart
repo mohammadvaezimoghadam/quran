@@ -469,7 +469,7 @@ class _ReciterSelectionBottomSheetState
                                         ),
                                       ),
                                       tooltip: 'تغییر سبک تلاوت',
-                                      onSelected: (variant) {
+                                      onSelected: (variant) async {
                                         setState(() {
                                           _selectedVariantsMap[group.baseName] =
                                               variant;
@@ -489,6 +489,13 @@ class _ReciterSelectionBottomSheetState
                                                  .read(quranAudioControllerProvider
                                                      .notifier)
                                                  .selectReciter(variant);
+                                           }
+                                           if (widget.checkDownloadStatus) {
+                                             await ReciterDownloadHelper.checkAndPromptSurahDownload(
+                                               context: context,
+                                               ref: ref,
+                                               reciter: variant,
+                                             );
                                            }
                                          }
                                       },

@@ -1,23 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../common/enums/prayer_type.dart';
 import 'city_entity.dart';
 
 part 'prayer_times_entity.freezed.dart';
-
-/// Enum representing Islamic Prayer & Astronomical timings
-enum PrayerType {
-  fajr('صبح'),
-  sunrise('طلوع'),
-  dhuhr('ظهر'),
-  asr('عصر'),
-  sunset('غروب'),
-  maghrib('مغرب'),
-  isha('عشاء'),
-  midnight('نیمه‌شب');
-
-  final String titleFa;
-  const PrayerType(this.titleFa);
-}
 
 /// Domain entity holding calculated prayer timings & triple calendar dates
 @freezed

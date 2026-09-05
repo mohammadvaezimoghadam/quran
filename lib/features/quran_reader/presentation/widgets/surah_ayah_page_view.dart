@@ -6,6 +6,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../application/controllers/quran_audio_controller.dart';
+import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../domain/entities/ayah_entity.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
@@ -145,6 +146,34 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                 alignment: 0.0,
               );
             }
+          }
+        }
+      },
+    );
+
+    // Maintain scroll offset when display settings change (e.g. font size, brackets)
+    // because height changes cause ListView to jump
+    ref.listen(
+      quranDisplaySettingsControllerProvider,
+      (previous, next) {
+        if (previous != next && _itemScrollController.isAttached) {
+          final positions = _itemPositionsListener.itemPositions.value;
+          if (positions.isNotEmpty) {
+            // Find the item that is currently near the top
+            final firstVisible = positions.reduce((min, position) =>
+                position.itemLeadingEdge.abs() < min.itemLeadingEdge.abs() ? position : min);
+            
+            final index = firstVisible.index;
+            final alignment = firstVisible.itemLeadingEdge > 0 ? 0.0 : firstVisible.itemLeadingEdge;
+            
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_itemScrollController.isAttached) {
+                _itemScrollController.jumpTo(
+                  index: index,
+                  alignment: alignment,
+                );
+              }
+            });
           }
         }
       },

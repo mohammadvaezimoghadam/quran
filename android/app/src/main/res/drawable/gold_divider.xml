@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Thin horizontal gold accent line -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:startColor="#00C9A96E"
+        android:centerColor="#C9A96E"
+        android:endColor="#00C9A96E"
+        android:angle="0" />
+    <size android:height="1dp" />
+</shape>

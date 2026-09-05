@@ -8,7 +8,6 @@ import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/routes/route_name.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_dimens.dart';
-import '../../../../../common/widgets/app_snackbar.dart';
 import '../../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
 /// Quick Access Action Item Model
@@ -46,9 +45,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
       _QuickAccessItem(
         title: AppConstants.settingsTitle,
         iconData: CupertinoIcons.gear_alt,
-        onTap: () {
-          AppSnackBar.showInfo(context, AppConstants.settingsComingSoon);
-        },
+        onTap: () => context.pushNamed(settingsRoute),
       ),
     ];
 

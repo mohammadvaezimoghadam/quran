@@ -1,8 +1,17 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/entities/city_entity.dart';
+
+/// Helper function to parse JSON in isolate
+List<CityEntity> _parseCities(String jsonString) {
+  final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
+  return jsonList
+      .map((item) => CityEntity.fromJson(item as Map<String, dynamic>))
+      .toList();
+}
 
 /// Infrastructure data source for loading cities asset & persisting user preferences
 class PrayerTimesLocalDataSource {
@@ -18,11 +27,8 @@ class PrayerTimesLocalDataSource {
   Future<List<CityEntity>> getIranianCities() async {
     try {
       final jsonString = await rootBundle.loadString(_assetCitiesJson);
-      final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
-
-      return jsonList
-          .map((item) => CityEntity.fromJson(item as Map<String, dynamic>))
-          .toList();
+      // Run JSON parsing and mapping in a separate isolate to prevent UI stutter
+      return await compute(_parseCities, jsonString);
     } catch (_) {
       // Fallback default city (Tehran) if asset loading fails
       return [

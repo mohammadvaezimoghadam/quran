@@ -265,14 +265,27 @@ class _HorizontalReciterSelectorState
                                 ),
                               ),
                               tooltip: 'تغییر سبک تلاوت',
-                              onSelected: (variant) {
+                              onSelected: (variant) async {
                                 setState(() {
                                   _selectedVariantsMap[group.baseName] =
                                       variant;
                                 });
-                                ref
-                                    .read(quranAudioControllerProvider.notifier)
-                                    .selectReciter(variant);
+                                if (widget.isTranslationMode) {
+                                  ref
+                                      .read(quranAudioControllerProvider.notifier)
+                                      .selectTranslationReciter(variant);
+                                } else {
+                                  ref
+                                      .read(quranAudioControllerProvider.notifier)
+                                      .selectReciter(variant);
+                                }
+                                if (widget.checkDownloadStatus) {
+                                  await ReciterDownloadHelper.checkAndPromptSurahDownload(
+                                    context: context,
+                                    ref: ref,
+                                    reciter: variant,
+                                  );
+                                }
                               },
                               itemBuilder: (popupContext) => group.variants.map((v) {
                                 final vStyle = _getTranslatedVariant(

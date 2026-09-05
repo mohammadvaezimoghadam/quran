@@ -7,7 +7,7 @@ import 'package:shamsi_date/shamsi_date.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
-import '../../../../common/widgets/app_loading_indicator.dart';
+import '../../../../common/enums/prayer_type.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -15,6 +15,7 @@ import '../../application/controllers/prayer_times_controller.dart';
 import '../../application/services/prayer_times_calculator_service.dart';
 import '../../domain/entities/prayer_times_entity.dart';
 import 'city_selection_bottom_sheet.dart';
+import '../../../../features/adhan_manager/presentation/widgets/adhan_status_widget.dart';
 
 /// Bade Saba Style Premium Calendar & Prayer Times Card
 class PrayerTimesCard extends ConsumerStatefulWidget {
@@ -77,22 +78,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     final colorScheme = theme.colorScheme;
 
     if (state.isLoading) {
-      return const _CardWrapper(
-        height: 240,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AppLoadingIndicator(),
-              SizedBox(height: AppDimens.stackSm),
-              Text(
-                'در حال دریافت اطلاعات تقویم و اوقات شرعی...',
-                style: AppTypography.statusMessage,
-              ),
-            ],
-          ),
-        ),
-      );
+      return const _PrayerTimesSkeletonCard();
     }
 
     if (state.errorMessage != null) {
@@ -442,38 +428,45 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Horizon Header ("افق [شهر] >")
-              InkWell(
-                onTap: () => CitySelectionBottomSheet.show(context),
-                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        CupertinoIcons.sun_max_fill,
-                        color: AppColors.goldMetallic,
-                        size: 16,
+              // Horizon Header ("افق [شهر] >") & Adhan Status Widget
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  InkWell(
+                    onTap: () => CitySelectionBottomSheet.show(context),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            CupertinoIcons.sun_max_fill,
+                            color: AppColors.goldMetallic,
+                            size: 16,
+                          ),
+                          6.hSpace,
+                          Text(
+                            'افق ${selectedCity.namePersian}',
+                            style: AppTypography.cardHeader.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          4.hSpace,
+                          const Icon(
+                            CupertinoIcons.chevron_left,
+                            color: Colors.white70,
+                            size: 12,
+                          ),
+                        ],
                       ),
-                      6.hSpace,
-                      Text(
-                        'افق ${selectedCity.namePersian}',
-                        style: AppTypography.cardHeader.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      4.hSpace,
-                      const Icon(
-                        CupertinoIcons.chevron_left,
-                        color: Colors.white70,
-                        size: 12,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  const AdhanStatusWidget(),
+                ],
               ),
               8.vSpace,
 
@@ -787,6 +780,281 @@ class _CardWrapper extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Shimmering 2-Card Skeleton for PrayerTimesCard to avoid layout shifts during startup
+class _PrayerTimesSkeletonCard extends StatefulWidget {
+  const _PrayerTimesSkeletonCard();
+
+  @override
+  State<_PrayerTimesSkeletonCard> createState() => _PrayerTimesSkeletonCardState();
+}
+
+class _PrayerTimesSkeletonCardState extends State<_PrayerTimesSkeletonCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
+  late final Animation<double> _opacityAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _opacityAnim = Tween<double>(begin: 0.20, end: 0.50).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+
+    return AnimatedBuilder(
+      animation: _opacityAnim,
+      builder: (context, child) {
+        final boxColor = Colors.white.withValues(alpha: _opacityAnim.value);
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 1. Top Calendar Skeleton Box (Exact structure of loaded top card)
+            _CardWrapper(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Left Side: Month/Year Skeleton
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 90,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: boxColor,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            6.vSpace,
+                            Container(
+                              width: 65,
+                              height: 11,
+                              decoration: BoxDecoration(
+                                color: boxColor,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Center Circle: Shamsi Day Number Skeleton
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: boxColor,
+                        ),
+                      ),
+
+                      // Right Side: Day of Week + Hijri Skeleton
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              width: 80,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: boxColor,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            6.vSpace,
+                            Container(
+                              width: 55,
+                              height: 11,
+                              decoration: BoxDecoration(
+                                color: boxColor,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  14.vSpace,
+
+                  // Weekly Day Strip Container Skeleton
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8, horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      borderRadius:
+                          BorderRadius.circular(AppDimens.radiusDefault),
+                    ),
+                    child: Column(
+                      children: [
+                        // Weekday Titles Header Skeleton
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: List.generate(
+                            7,
+                            (_) => Container(
+                              width: 24,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: boxColor,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ),
+                        ),
+                        6.vSpace,
+
+                        // 7 Circles Skeleton Row
+                        SizedBox(
+                          height: 36,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: List.generate(
+                              7,
+                              (_) => Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: boxColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        2.vSpace,
+
+                        // Expand Chevron Skeleton Icon
+                        Icon(
+                          CupertinoIcons.chevron_down,
+                          color: boxColor,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            12.vSpace,
+
+            // 2. Separate Standalone Prayer Times Skeleton Card (Exact structure of loaded bottom card)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimens.gutterGrid,
+                vertical: AppDimens.cardPaddingVertical,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? colorScheme.primaryContainer : AppColors.primary,
+                borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Horizon Header Skeleton Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            CupertinoIcons.sun_max_fill,
+                            color: AppColors.goldMetallic.withValues(alpha: 0.4),
+                            size: 16,
+                          ),
+                          6.hSpace,
+                          Container(
+                            width: 90,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: boxColor,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        width: 50,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: boxColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                  8.vSpace,
+
+                  // Single-Row Grid of 8 Prayer Columns Skeleton
+                  Row(
+                    children: List.generate(
+                      8,
+                      (_) => Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 2, vertical: 6),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 22,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: boxColor,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                              4.vSpace,
+                              Container(
+                                width: 28,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: boxColor,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

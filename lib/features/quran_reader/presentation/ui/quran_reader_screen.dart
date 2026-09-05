@@ -411,37 +411,16 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                } else if (value == 'settings') {
                                  QuickSettingsDrawer.show(context);
                                } else if (value == 'toggle_brackets') {
+                                 final current = ref.read(quranDisplaySettingsControllerProvider).removeTranslationBrackets;
                                  final notifier = ref.read(quranDisplaySettingsControllerProvider.notifier);
-                                 final isRemoved = ref.read(quranDisplaySettingsControllerProvider).removeTranslationBrackets;
-                                 notifier.toggleRemoveTranslationBrackets(!isRemoved);
+                                 notifier.recordInitialState();
+                                 notifier.toggleRemoveTranslationBrackets(!current);
                                  notifier.saveSettingsIfChanged();
-                                 AppSnackBar.showInfo(
-                                   context,
-                                   !isRemoved ? 'توضیحات مترجم مخفی شد' : 'توضیحات مترجم نمایش داده شد',
-                                   duration: const Duration(seconds: 2),
-                                 );
                                }
                              },
                              menuItemBuilder: (context) {
-                               final isRemoved = ref.read(quranDisplaySettingsControllerProvider).removeTranslationBrackets;
+                               final removeBrackets = ref.watch(quranDisplaySettingsControllerProvider.select((s) => s.removeTranslationBrackets));
                                return [
-                                 PopupMenuItem<String>(
-                                   value: 'toggle_brackets',
-                                   child: Row(
-                                     mainAxisSize: MainAxisSize.min,
-                                     children: [
-                                       Icon(isRemoved ? CupertinoIcons.text_quote : CupertinoIcons.textbox, size: 18),
-                                       const SizedBox(width: 8),
-                                       Text(
-                                         isRemoved ? 'نمایش توضیحات مترجم' : 'حذف پرانتزهای ترجمه',
-                                         style: const TextStyle(
-                                           fontFamily: AppTypography.fontFamily,
-                                           fontSize: 13,
-                                         ),
-                                       ),
-                                     ],
-                                   ),
-                                 ),
                                  const PopupMenuItem<String>(
                                    value: 'settings',
                                    child: Row(
@@ -452,6 +431,26 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                        Text(
                                          'تنظیمات نمایش',
                                          style: TextStyle(
+                                           fontFamily: AppTypography.fontFamily,
+                                           fontSize: 13,
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                                 PopupMenuItem<String>(
+                                   value: 'toggle_brackets',
+                                   child: Row(
+                                     mainAxisSize: MainAxisSize.min,
+                                     children: [
+                                       Icon(
+                                         removeBrackets ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+                                         size: 18,
+                                       ),
+                                       const SizedBox(width: 8),
+                                       Text(
+                                         removeBrackets ? 'نمایش متن داخل پرانتز' : 'مخفی کردن متن داخل پرانتز',
+                                         style: const TextStyle(
                                            fontFamily: AppTypography.fontFamily,
                                            fontSize: 13,
                                          ),

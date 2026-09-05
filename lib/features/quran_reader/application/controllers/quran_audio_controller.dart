@@ -284,11 +284,11 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
   /// Select reciter safely without stream interruption crashes
   Future<void> selectReciter(ReciterEntity reciter) async {
-    final wasPlaying = state.status == AudioStatus.playing;
+    final isActuallyPlayingOrPaused = state.status == AudioStatus.playing || state.status == AudioStatus.loading || state.status == AudioStatus.paused;
     state = state.copyWith(selectedReciter: reciter);
     ref.read(preferencesServiceProvider).setInt('selected_reciter_id', reciter.id);
 
-    if (wasPlaying && state.currentTrackType == CurrentTrackType.quran && state.currentSurahId != null && state.currentAyahNumber != null) {
+    if (isActuallyPlayingOrPaused && state.currentTrackType == CurrentTrackType.quran && state.currentSurahId != null && state.currentAyahNumber != null) {
       final audioService = ref.read(audioPlayerServiceProvider);
       await audioService.stop();
       await _playTrack(
@@ -303,11 +303,11 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
   /// Select translation reciter (گوینده ترجمه صوتی)
   Future<void> selectTranslationReciter(ReciterEntity reciter) async {
-    final wasPlaying = state.status == AudioStatus.playing;
+    final isActuallyPlayingOrPaused = state.status == AudioStatus.playing || state.status == AudioStatus.loading || state.status == AudioStatus.paused;
     state = state.copyWith(selectedTranslationReciter: reciter);
     ref.read(preferencesServiceProvider).setInt('selected_translation_reciter_id', reciter.id);
 
-    if (wasPlaying && state.currentTrackType == CurrentTrackType.translation && state.currentSurahId != null && state.currentAyahNumber != null) {
+    if (isActuallyPlayingOrPaused && state.currentTrackType == CurrentTrackType.translation && state.currentSurahId != null && state.currentAyahNumber != null) {
       final audioService = ref.read(audioPlayerServiceProvider);
       await audioService.stop();
       await _playTrack(
@@ -374,6 +374,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       currentTrackType: trackType,
       isSingleAyahMode: isSingleAyahMode,
       status: AudioStatus.loading,
+      lastAttemptedAyahNumber: null,
     );
 
     final surahName = SurahConstants.getSurahName(surahId);
@@ -405,6 +406,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
           : 'صوت آیه $ayahNumber';
       state = state.copyWith(
         errorMessage: '$errorPrefix دانلود نشده است. لطفاً ابتدا دانلود کنید.',
+        lastAttemptedAyahNumber: ayahNumber,
       );
       return;
     }

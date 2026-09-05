@@ -28,12 +28,12 @@ class _SplashScreenState extends State<SplashScreen>
 
     _entryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 350),
     );
 
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(milliseconds: 800),
     );
 
     final curvedAnimation = CurvedAnimation(
@@ -80,7 +80,8 @@ class _SplashScreenState extends State<SplashScreen>
       } catch (_) {}
     }
 
-    await Future.delayed(const Duration(milliseconds: 2600));
+    // Delay reduced from 2600ms to 400ms to make app start extremely fast
+    await Future.delayed(const Duration(milliseconds: 400));
     if (mounted) {
       context.goNamed(quranHomeRoute);
     }

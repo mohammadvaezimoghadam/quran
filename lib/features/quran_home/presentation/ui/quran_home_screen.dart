@@ -142,6 +142,7 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen> {
                                   AppConstants.appTitle,
                                   textAlign: TextAlign.center,
                                   style: AppTypography.appBarTitle.copyWith(
+                                    fontFamily: AppTypography.thuluthFont,
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
                                   ),

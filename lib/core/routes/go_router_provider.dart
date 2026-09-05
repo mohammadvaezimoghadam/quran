@@ -1,12 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/adhan_manager/presentation/ui/adhan_settings_screen.dart';
+import '../../features/audio_manager/presentation/ui/audio_download_manager_screen.dart';
+import '../../features/permission_manager/presentation/ui/permission_management_screen.dart';
 import '../../features/quran_home/presentation/ui/quran_home_screen.dart';
 import '../../features/quran_reader/presentation/ui/quran_reader_screen.dart';
+import '../../features/settings/presentation/ui/settings_screen.dart';
+import '../../features/smart_device/presentation/ui/smart_device_settings_screen.dart';
 import '../../features/splash/presentation/ui/splash_screen.dart';
 import '../../features/surah_list/presentation/ui/surah_list_screen.dart';
-import '../../features/audio_manager/presentation/ui/audio_download_manager_screen.dart';
-import '../../features/smart_device/presentation/ui/smart_device_settings_screen.dart';
 import 'route_name.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -27,6 +30,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/surah-list',
         name: surahListRoute,
         builder: (context, state) => const SurahListScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: settingsRoute,
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/smart-device',
@@ -63,6 +71,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             isTranslationMode: isTranslationMode,
           );
         },
+      ),
+      GoRoute(
+        path: '/adhan-settings',
+        name: adhanSettingsRoute,
+        builder: (context, state) => const AdhanSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/permission-management',
+        name: permissionManagementRoute,
+        builder: (context, state) => const PermissionManagementScreen(),
       ),
     ],
   );

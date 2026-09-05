@@ -83,7 +83,7 @@ class AyahArabicText extends ConsumerWidget {
     final List<InlineSpan> mainTextChildren = List<InlineSpan>.from(buildSpans(mainText));
 
     // Append the Ayah number marker at the end of the main text.
-    mainTextChildren.add(const TextSpan(text: '\u200F'));
+    mainTextChildren.add(const TextSpan(text: ' \u200F'));
     mainTextChildren.add(
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,

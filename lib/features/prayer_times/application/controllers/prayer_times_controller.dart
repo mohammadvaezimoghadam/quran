@@ -42,10 +42,20 @@ final prayerTimesControllerProvider =
 });
 
 class PrayerTimesController extends Notifier<PrayerTimesState> {
+  bool _isDisposed = false;
+
   @override
   PrayerTimesState build() {
-    // Fetch initial data asynchronously after building
-    Future.microtask(() => loadInitialData());
+    ref.onDispose(() {
+      _isDisposed = true;
+    });
+    
+    // Fetch initial data asynchronously after a short delay to prevent UI stutter during navigation
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!_isDisposed) {
+        loadInitialData();
+      }
+    });
     return const PrayerTimesState();
   }
 

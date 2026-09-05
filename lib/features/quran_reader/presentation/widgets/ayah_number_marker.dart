@@ -56,7 +56,7 @@ class AyahNumberMarker extends ConsumerWidget {
             alignment: Alignment.center,
             children: [
               const Text(
-                ' ﴿',
+                '(',
                 style: TextStyle(fontSize: 0.1, color: Colors.transparent),
               ),
               SvgPicture.asset(
@@ -97,7 +97,7 @@ class AyahNumberMarker extends ConsumerWidget {
             alignment: Alignment.center,
             children: [
               const Text(
-                '﴾',
+                ')',
                 style: TextStyle(fontSize: 0.1, color: Colors.transparent),
               ),
               SvgPicture.asset(

@@ -31,10 +31,10 @@ class AppTypography {
     }
   }
 
-  /// Main App Bar Title Style (Thuluth Calligraphy in Gold Accent)
+  /// Main App Bar Title Style (Vazirmatn in Gold Accent)
   static const TextStyle appBarTitle = TextStyle(
-    fontFamily: thuluthFont,
-    fontSize: 30,
+    fontFamily: vazirmatnFont,
+    fontSize: 20,
     fontWeight: FontWeight.bold,
     color: AppColors.goldAccent,
   );
