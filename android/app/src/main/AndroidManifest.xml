@@ -1,8 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -21,21 +19,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <!-- Required for media playback notifications on Android 13+ (API 33) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-    <!-- ═══════════ Adhan Manager Permissions ═══════════ -->
-    <!-- Exact alarm scheduling for precise adhan timing (Android 12+) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
-    <!-- Reschedule adhan alarms after device reboot -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <!-- Bypass battery optimization to prevent alarm killing -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-    <!-- Show adhan screen on lock screen (Android 14+) -->
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
-    <!-- Display over other apps (screen wake overlay) -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <!-- Vibrate during adhan -->
-    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:label="quran"
@@ -84,43 +67,6 @@
             tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
-            </intent-filter>
-        </receiver>
-
-        <!-- ═══════════ Adhan Manager Components ═══════════ -->
-
-        <!-- Native screen for lock-screen adhan playback -->
-        <activity
-            android:name=".AdhanActivity"
-            android:showOnLockScreen="true"
-            android:excludeFromRecents="true"
-            android:taskAffinity=""
-            android:launchMode="singleInstance"
-            android:screenOrientation="portrait"
-            android:exported="false" />
-
-        <!-- Foreground service for adhan audio playback -->
-        <service
-            android:name=".AdhanForegroundService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="false" />
-
-        <!-- Receives exact alarm broadcasts at adhan time -->
-        <receiver
-            android:name=".AdhanAlarmReceiver"
-            android:enabled="true"
-            android:exported="false" />
-
-        <!-- Reschedules adhan alarms after device reboot -->
-        <receiver
-            android:name=".AdhanBootReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
-                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
 

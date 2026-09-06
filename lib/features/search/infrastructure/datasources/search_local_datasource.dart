@@ -164,60 +164,47 @@ class SearchLocalDataSource implements ISearchLocalDataSource {
     // Check if query is a pure number (e.g. searching surah # or ayah #)
     final queryNumber = int.tryParse(cleanQuery.normalizeForSearch());
 
-    // 1. Search Surahs (if filter allows)
-    if (filter == SearchFilterType.all || filter == SearchFilterType.surahs) {
-      for (final surah in _cachedSurahs!) {
-        final matchesName = surah.normalizedName.contains(normalizedQuery);
-        final matchesEnglish = surah.normalizedEnglishName.contains(queryLower);
-        final matchesNumber = queryNumber != null && surah.number == queryNumber;
+    // 1. Search Surahs
+    for (final surah in _cachedSurahs!) {
+      final matchesName = surah.normalizedName.contains(normalizedQuery);
+      final matchesEnglish = surah.normalizedEnglishName.contains(queryLower);
+      final matchesNumber = queryNumber != null && surah.number == queryNumber;
 
-        if (matchesName || matchesEnglish || matchesNumber) {
-          results.add(SearchResultItem(
-            kind: SearchResultKind.surah,
-            surahNumber: surah.number,
-            surahName: surah.name,
-            englishName: surah.englishName,
-            numberOfAyahs: surah.numberOfAyahs,
-            revelationType: surah.revelationType,
-          ));
-        }
+      if (matchesName || matchesEnglish || matchesNumber) {
+        results.add(SearchResultItem(
+          kind: SearchResultKind.surah,
+          surahNumber: surah.number,
+          surahName: surah.name,
+          englishName: surah.englishName,
+          numberOfAyahs: surah.numberOfAyahs,
+          revelationType: surah.revelationType,
+        ));
       }
     }
 
-    // 2. Search Ayahs (Arabic and/or Translation)
-    if (filter != SearchFilterType.surahs) {
-      final searchArabic = filter == SearchFilterType.all || filter == SearchFilterType.ayahs;
-      final searchTranslation = filter == SearchFilterType.all || filter == SearchFilterType.translations;
+    // 2. Search Ayahs (Arabic & Translation)
+    for (final ayah in _cachedAyahs!) {
+      final matchesArabic = ayah.normalizedArabic.contains(normalizedQuery);
+      final matchesTranslation =
+          ayah.normalizedTranslation.contains(normalizedQuery);
 
-      for (final ayah in _cachedAyahs!) {
-        bool matchesArabic = false;
-        bool matchesTranslation = false;
-
-        if (searchArabic && ayah.normalizedArabic.contains(normalizedQuery)) {
-          matchesArabic = true;
-        }
-
-        if (searchTranslation && ayah.normalizedTranslation.contains(normalizedQuery)) {
-          matchesTranslation = true;
-        }
-
-        if (matchesArabic || matchesTranslation) {
-          final surah = _surahMap?[ayah.surahNumber];
-          results.add(SearchResultItem(
-            kind: SearchResultKind.ayah,
-            surahNumber: ayah.surahNumber,
-            surahName: surah?.name ?? 'سوره ${ayah.surahNumber}',
-            englishName: surah?.englishName ?? '',
-            numberOfAyahs: surah?.numberOfAyahs,
-            revelationType: surah?.revelationType,
-            ayahNumber: ayah.ayahNumber,
-            arabicText: ayah.arabicText,
-            translationText: ayah.translationText,
-            pageNumber: ayah.page,
-            juzNumber: ayah.juz,
-            matchedInTranslation: !matchesArabic && matchesTranslation,
-          ));
-        }
+      if (matchesArabic || matchesTranslation) {
+        final surah = _surahMap?[ayah.surahNumber];
+        results.add(SearchResultItem(
+          kind: SearchResultKind.ayah,
+          surahNumber: ayah.surahNumber,
+          surahName: surah?.name ?? 'سوره ${ayah.surahNumber}',
+          englishName: surah?.englishName ?? '',
+          numberOfAyahs: surah?.numberOfAyahs,
+          revelationType: surah?.revelationType,
+          ayahNumber: ayah.ayahNumber,
+          arabicText: ayah.arabicText,
+          translationText: ayah.translationText,
+          pageNumber: ayah.page,
+          juzNumber: ayah.juz,
+          matchedInArabic: matchesArabic,
+          matchedInTranslation: matchesTranslation,
+        ));
       }
     }
 

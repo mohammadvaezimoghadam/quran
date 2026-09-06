@@ -50,10 +50,15 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     final savedReciterId = prefs.getInt('selected_reciter_id');
     final savedTranslationReciterId = prefs.getInt('selected_translation_reciter_id');
     final savedModeIndex = prefs.getInt('audio_playback_mode');
+    final savedSpeed = prefs.getDouble('audio_playback_speed') ?? 1.0;
 
     AudioPlaybackMode initialMode = AudioPlaybackMode.onlyQuran;
     if (savedModeIndex != null && savedModeIndex >= 0 && savedModeIndex < AudioPlaybackMode.values.length) {
       initialMode = AudioPlaybackMode.values[savedModeIndex];
+    }
+
+    if (savedSpeed != 1.0) {
+      ref.read(audioPlayerServiceProvider).setSpeed(savedSpeed);
     }
 
     final result = await repo.getAllReciters();
@@ -93,6 +98,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
             selectedReciter: defaultReciter,
             selectedTranslationReciter: defaultTranslationReciter,
             playbackMode: initialMode,
+            speed: savedSpeed,
           );
         }
       },
@@ -414,6 +420,9 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     try {
       final audioService = ref.read(audioPlayerServiceProvider);
       await audioService.play(localPath);
+      if (state.speed != 1.0) {
+        await audioService.setSpeed(state.speed);
+      }
     } catch (e) {
       _isTransitioningTrack = false;
       await stop();
@@ -572,5 +581,48 @@ class QuranAudioController extends Notifier<QuranAudioState> {
   void setPlaybackMode(AudioPlaybackMode mode) {
     state = state.copyWith(playbackMode: mode);
     ref.read(preferencesServiceProvider).setInt('audio_playback_mode', mode.index);
+  }
+
+  /// Seek forward by specified duration (default: 5 seconds)
+  Future<void> seekForward([Duration offset = const Duration(seconds: 5)]) async {
+    final currentPos = state.position;
+    final totalDuration = state.duration;
+    var newPos = currentPos + offset;
+    if (totalDuration > Duration.zero && newPos > totalDuration) {
+      newPos = totalDuration;
+    }
+    final audioService = ref.read(audioPlayerServiceProvider);
+    await audioService.seek(newPos);
+  }
+
+  /// Seek backward by specified duration (default: 5 seconds)
+  Future<void> seekBackward([Duration offset = const Duration(seconds: 5)]) async {
+    final currentPos = state.position;
+    var newPos = currentPos - offset;
+    if (newPos < Duration.zero) {
+      newPos = Duration.zero;
+    }
+    final audioService = ref.read(audioPlayerServiceProvider);
+    await audioService.seek(newPos);
+  }
+
+  /// Change audio playback speed (e.g. 0.75, 1.0, 1.25, 1.5)
+  Future<void> setPlaybackSpeed(double speed) async {
+    state = state.copyWith(speed: speed);
+    ref.read(preferencesServiceProvider).setDouble('audio_playback_speed', speed);
+    final audioService = ref.read(audioPlayerServiceProvider);
+    await audioService.setSpeed(speed);
+  }
+
+  /// Cycle through standard playback speeds (1.0 -> 1.25 -> 1.5 -> 0.75 -> 1.0)
+  Future<void> cyclePlaybackSpeed() async {
+    const speeds = [0.75, 1.0, 1.25, 1.5];
+    final currentSpeed = state.speed;
+    int currentIndex = speeds.indexWhere((s) => (s - currentSpeed).abs() < 0.05);
+    if (currentIndex == -1) {
+      currentIndex = 1; // default to 1.0
+    }
+    final nextIndex = (currentIndex + 1) % speeds.length;
+    await setPlaybackSpeed(speeds[nextIndex]);
   }
 }

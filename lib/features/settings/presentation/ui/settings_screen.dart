@@ -18,7 +18,6 @@ class SettingsScreen extends StatelessWidget {
     final cardBgColor = isDark ? const Color(0xFF162220) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF1C1B1B);
     final subtitleColor = isDark ? Colors.white70 : const Color(0xFF666666);
-    final dividerColor = isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEAE7E3);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -39,30 +38,6 @@ class SettingsScreen extends StatelessWidget {
             context: context,
             child: Column(
               children: [
-                // Adhan Management
-                _buildSettingsTile(
-                  context: context,
-                  icon: CupertinoIcons.speaker_2_fill,
-                  title: 'مدیریت اذان‌گو',
-                  subtitle: 'تنظیم مؤذن‌ها، ولوم، زمان‌بندی و پخش اذان',
-                  textColor: textColor,
-                  subtitleColor: subtitleColor,
-                  onTap: () => context.pushNamed(adhanSettingsRoute),
-                ),
-                Divider(height: 1, color: dividerColor),
-
-                // Permissions Management
-                _buildSettingsTile(
-                  context: context,
-                  icon: CupertinoIcons.shield_fill,
-                  title: 'مدیریت دسترسی‌ها',
-                  subtitle: 'دسترسی‌های GPS، اعلان‌ها، باتری و پس‌زمینه',
-                  textColor: textColor,
-                  subtitleColor: subtitleColor,
-                  onTap: () => context.pushNamed(permissionManagementRoute),
-                ),
-                Divider(height: 1, color: dividerColor),
-
                 // Audio Downloads
                 _buildSettingsTile(
                   context: context,

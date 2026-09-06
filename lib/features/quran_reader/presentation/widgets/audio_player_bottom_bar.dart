@@ -45,6 +45,34 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     return cleaned;
   }
 
+  Widget _buildControlButton({
+    required IconData icon,
+    required double size,
+    required Color color,
+    required String tooltip,
+    required VoidCallback? onPressed,
+    double width = 34,
+    double height = 32,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkResponse(
+          onTap: onPressed,
+          radius: 17,
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Center(
+              child: Icon(icon, size: size, color: color),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -58,6 +86,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     final playbackMode = ref.watch(quranAudioControllerProvider.select((s) => s.playbackMode));
     final currentAyahNumber = ref.watch(quranAudioControllerProvider.select((s) => s.currentAyahNumber));
     final totalAyahsInSurah = ref.watch(quranAudioControllerProvider.select((s) => s.totalAyahsInSurah));
+    final playbackSpeed = ref.watch(quranAudioControllerProvider.select((s) => s.speed));
     
     final audioController = ref.read(quranAudioControllerProvider.notifier);
 
@@ -97,334 +126,394 @@ class AudioPlayerBottomBar extends ConsumerWidget {
         audioController.playAyah(
           surahId: surahId,
           ayahNumber: startAyah,
-          totalAyahsInSurah: ayahs.isNotEmpty ? ayahs.length : 7,
+          totalAyahsInSurah: ayahs.isNotEmpty ? ayahs.length : 1,
         );
       }
     }
 
-    const double discRadius = 42.0;
-    const double discDiameter = discRadius * 2; // 84.0px
+    // Original prominent disc dimensions (Radius: 38dp, Diameter: 76dp + 8dp margin = 84dp total)
+    const double discRadius = 38.0;
+    const double discSize = discRadius * 2 + 8; // 84.0px
+    const double playerHeight = 90.0;
 
     return SafeArea(
+      top: false,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            color: Colors.transparent,
-            margin: const EdgeInsets.symmetric(
-              horizontal: AppDimens.marginPage,
-              vertical: AppDimens.stackSm,
+          // ── 1. Floating Capsule Pill for Re-Sync ("بازگشت به تلاوت • آیه ۲۴") ──
+          if (isAutoScrollSuspended && audioStatus != AudioStatus.stopped && currentAyahNumber != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Center(
+                child: Material(
+                  color: colorScheme.primary,
+                  elevation: 6,
+                  borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                  child: InkWell(
+                    onTap: () {
+                      ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                      audioController.resumeAutoScrollAndSync();
+                    },
+                    borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const _AnimatedAudioEqualizer(
+                            color: Colors.white,
+                            height: 13.0,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'بازگشت به تلاوت • ${AppConstants.ayahLabel} ${currentAyahNumber.toPersianDigit()}',
+                            style: const TextStyle(
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              height: 1.1,
+                              fontFamily: AppTypography.fontFamily,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            height: discDiameter + 36, // 120.0px total stack height (proportional scaled height)
-            child: Stack(
-              alignment: Alignment.centerRight,
-              clipBehavior: Clip.none,
-              children: [
-                // 1. Sleek horizontal capsule bar — slides right (behind reciter avatar disc) when collapsed
-                Positioned(
-                  left: 0,
-                  right: discRadius + 4,
-                  top: 36,
-                  bottom: 8,
-                  child: AnimatedSlide(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeInOutCubic,
-                    offset: isCollapsed ? const Offset(1.2, 0) : Offset.zero,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 250),
-                      opacity: isCollapsed ? 0.0 : 1.0,
-                      child: IgnorePointer(
-                        ignoring: isCollapsed,
-                        child: Container(
-                          padding: const EdgeInsets.only(
-                            left: AppDimens.stackXs,
-                            right: discRadius + 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHigh,
-                            borderRadius: const BorderRadius.horizontal(
-                              left: Radius.circular(AppDimens.radiusFull),
-                              right: Radius.circular(AppDimens.radiusSm),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.12),
-                                blurRadius: 14,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                            border: Border.all(
-                              color: colorScheme.primary.withValues(alpha: 0.18),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            textDirection: TextDirection.ltr,
-                            children: [
-                              // 1. Settings Button (Visual Left - prominent & larger)
-                              IconButton(
-                                iconSize: 28,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                                icon: Icon(
-                                  CupertinoIcons.gear_alt_fill,
-                                  color: colorScheme.primary,
-                                ),
-                                tooltip: 'تنظیمات نمایش',
-                                onPressed: () => QuickSettingsDrawer.show(context),
-                              ),
 
-                              // 2. Next Ayah Button (Left of Middle Section)
-                              IconButton(
-                                iconSize: 18,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                icon: Icon(
-                                  CupertinoIcons.backward_fill,
-                                  color: (currentAyahNumber != null &&
-                                          totalAyahsInSurah != null &&
-                                          currentAyahNumber < totalAyahsInSurah)
-                                      ? colorScheme.onSurface
-                                      : colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
-                                ),
-                                tooltip: 'آیه بعدی',
-                                onPressed: (currentAyahNumber != null &&
-                                        totalAyahsInSurah != null &&
-                                        currentAyahNumber < totalAyahsInSurah)
-                                    ? () => audioController.playNextAyah()
-                                    : null,
-                              ),
+          // ── 2. Full-Width Bottom Dock & Hero Reciter Disc ──
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final screenWidth = constraints.maxWidth;
 
-                              // 3. Middle Section: Reciter Name, Ayah Number & Constant-Height Mini Slider
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppDimens.stackXs,
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Directionality(
-                                        textDirection: TextDirection.rtl,
-                                        child: GestureDetector(
-                                          onTap: () => ReciterSelectionBottomSheet.show(context),
-                                          behavior: HitTestBehavior.opaque,
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+              return SizedBox(
+                width: screenWidth,
+                height: playerHeight,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    // ── A. Full-Width Player Dock (Slides down on collapse) ──
+                    AnimatedSlide(
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeInOutCubic,
+                      offset: isCollapsed ? const Offset(0, 1.25) : Offset.zero,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 250),
+                        opacity: isCollapsed ? 0.0 : 1.0,
+                        child: IgnorePointer(
+                          ignoring: isCollapsed,
+                          child: Container(
+                            width: screenWidth,
+                            height: playerHeight,
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHigh,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(22),
+                              ),
+                              border: Border(
+                                top: BorderSide(
+                                  color: colorScheme.primary.withValues(alpha: 0.22),
+                                  width: 1.0,
+                                ),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.16),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, -4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+
+                                // Content area with 3 functional zones
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10.0,
+                                      vertical: 3.0,
+                                    ),
+                                    child: Row(
+                                      textDirection: TextDirection.rtl,
+                                      children: [
+                                        // Zone 1: Reserved slot for the Hero Reciter Avatar Disc
+                                        const SizedBox(width: discSize),
+
+                                        const SizedBox(width: 8),
+
+                                        // Main Controls Area (Unified 2 Rows for perfect horizontal & vertical alignment)
+                                        Expanded(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                             children: [
-                                              Flexible(
-                                                child: Text(
-                                                  '$activeReciterName • ${AppConstants.ayahLabel} ${currentAyahNumber ?? 1}',
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  textAlign: TextAlign.center,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelSmall
-                                                      ?.copyWith(
-                                                        fontWeight: FontWeight.bold,
-                                                        color: colorScheme.primary,
-                                                        fontSize: 12.5,
+                                              // ── Row 1: Reciter Title on Right, Settings on Left ──
+                                              Row(
+                                                textDirection: TextDirection.rtl,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  // Reciter & Ayah Title (Clickable)
+                                                  Expanded(
+                                                    child: GestureDetector(
+                                                      onTap: () => ReciterSelectionBottomSheet.show(context),
+                                                      behavior: HitTestBehavior.opaque,
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Flexible(
+                                                            child: Text(
+                                                              '$activeReciterName • ${AppConstants.ayahLabel} ${currentAyahNumber ?? 1}',
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                                                    fontWeight: FontWeight.bold,
+                                                                    color: colorScheme.primary,
+                                                                    fontSize: 12.0,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          if (isMixedMode && isActive) ...[
+                                                            const SizedBox(width: 4),
+                                                            Container(
+                                                              padding: const EdgeInsets.symmetric(
+                                                                horizontal: 4,
+                                                                vertical: 1,
+                                                              ),
+                                                              decoration: BoxDecoration(
+                                                                color: colorScheme.primary.withValues(alpha: 0.12),
+                                                                borderRadius: BorderRadius.circular(4),
+                                                                border: Border.all(
+                                                                  color: colorScheme.primary.withValues(alpha: 0.3),
+                                                                  width: 0.5,
+                                                                ),
+                                                              ),
+                                                              child: Text(
+                                                                trackTypeLabel,
+                                                                style: TextStyle(
+                                                                  fontSize: 8.0,
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: colorScheme.primary,
+                                                                  fontFamily: AppTypography.fontFamily,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                          const SizedBox(width: 3),
+                                                          Icon(
+                                                            CupertinoIcons.chevron_down,
+                                                            size: 11,
+                                                            color: colorScheme.primary.withValues(alpha: 0.7),
+                                                          ),
+                                                        ],
                                                       ),
-                                                ),
-                                              ),
-                                              if (isMixedMode && isActive) ...[
-                                                const SizedBox(width: 4),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                                  decoration: BoxDecoration(
-                                                    color: colorScheme.primary.withValues(alpha: 0.1),
-                                                    borderRadius: BorderRadius.circular(4),
-                                                    border: Border.all(
-                                                      color: colorScheme.primary.withValues(alpha: 0.3),
-                                                      width: 0.5,
-                                                    )
-                                                  ),
-                                                  child: Text(
-                                                    trackTypeLabel,
-                                                    style: TextStyle(
-                                                      fontSize: 8.5,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: colorScheme.primary,
-                                                      fontFamily: AppTypography.fontFamily,
                                                     ),
                                                   ),
-                                                ),
-                                              ],
-                                              const SizedBox(width: 2),
-                                              Icon(
-                                                CupertinoIcons.chevron_down,
-                                                size: 14,
-                                                color: colorScheme.primary.withValues(alpha: 0.75),
+
+                                                  const SizedBox(width: 6),
+
+                                                  // Settings Button (Top Left)
+                                                  _buildControlButton(
+                                                    icon: CupertinoIcons.gear_alt_fill,
+                                                    size: 23,
+                                                    width: 40,
+                                                    height: 32,
+                                                    color: colorScheme.primary,
+                                                    tooltip: 'تنظیمات نمایش',
+                                                    onPressed: () => QuickSettingsDrawer.show(context),
+                                                  ),
+                                                ],
+                                              ),
+
+                                              // ── Row 2: Transport Controls + Speed Chip (Vertically Aligned!) ──
+                                              Row(
+                                                textDirection: TextDirection.rtl,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  // 4 Transport Controls evenly spaced
+                                                  Expanded(
+                                                    child: Row(
+                                                      textDirection: TextDirection.rtl,
+                                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                                      children: [
+                                                        // 1. -5s Rewind (points right towards beginning)
+                                                        _buildControlButton(
+                                                          icon: Icons.forward_5_rounded,
+                                                          size: 22,
+                                                          color: isActive
+                                                              ? colorScheme.primary
+                                                              : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                                                          tooltip: '۵ ثانیه عقب',
+                                                          onPressed: isActive ? () => audioController.seekBackward() : null,
+                                                        ),
+
+                                                        // 2. Previous Ayah (points right towards earlier ayahs)
+                                                        _buildControlButton(
+                                                          icon: CupertinoIcons.forward_fill,
+                                                          size: 20,
+                                                          color: (currentAyahNumber != null && currentAyahNumber > 1)
+                                                              ? colorScheme.onSurface
+                                                              : colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
+                                                          tooltip: 'آیه قبلی',
+                                                          onPressed: (currentAyahNumber != null && currentAyahNumber > 1)
+                                                              ? () => audioController.playPreviousAyah()
+                                                              : null,
+                                                        ),
+
+                                                        // 3. Next Ayah (points left towards next ayahs)
+                                                        _buildControlButton(
+                                                          icon: CupertinoIcons.backward_fill,
+                                                          size: 20,
+                                                          color: (currentAyahNumber != null &&
+                                                                  totalAyahsInSurah != null &&
+                                                                  currentAyahNumber < totalAyahsInSurah)
+                                                              ? colorScheme.onSurface
+                                                              : colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
+                                                          tooltip: 'آیه بعدی',
+                                                          onPressed: (currentAyahNumber != null &&
+                                                                  totalAyahsInSurah != null &&
+                                                                  currentAyahNumber < totalAyahsInSurah)
+                                                              ? () => audioController.playNextAyah()
+                                                              : null,
+                                                        ),
+
+                                                        // 4. +5s Fast Forward (points left towards end)
+                                                        _buildControlButton(
+                                                          icon: Icons.replay_5_rounded,
+                                                          size: 22,
+                                                          color: isActive
+                                                              ? colorScheme.primary
+                                                              : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                                                          tooltip: '۵ ثانیه جلو',
+                                                          onPressed: isActive ? () => audioController.seekForward() : null,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+
+                                                  const SizedBox(width: 6),
+
+                                                  // Speed Dropdown Button (Bottom Left - opens speed selection dropdown menu)
+                                                  SizedBox(
+                                                    width: 40,
+                                                    height: 32,
+                                                    child: Center(
+                                                      child: Theme(
+                                                        data: Theme.of(context).copyWith(
+                                                          hoverColor: Colors.transparent,
+                                                          splashColor: Colors.transparent,
+                                                          highlightColor: Colors.transparent,
+                                                        ),
+                                                        child: PopupMenuButton<double>(
+                                                          initialValue: playbackSpeed,
+                                                          tooltip: 'تنظیم سرعت پخش',
+                                                          color: colorScheme.surfaceContainerHigh,
+                                                          elevation: 8,
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(14),
+                                                            side: BorderSide(
+                                                              color: colorScheme.primary.withValues(alpha: 0.25),
+                                                              width: 1,
+                                                            ),
+                                                          ),
+                                                          onSelected: (double speed) {
+                                                            audioController.setPlaybackSpeed(speed);
+                                                          },
+                                                          itemBuilder: (BuildContext context) {
+                                                            const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+                                                            return speeds.map((speed) {
+                                                              final isSelected = (speed - playbackSpeed).abs() < 0.05;
+                                                              final label = '${speed.toString().replaceAll(RegExp(r'\.0$'), '')}x';
+                                                              return PopupMenuItem<double>(
+                                                                value: speed,
+                                                                height: 38,
+                                                                child: Row(
+                                                                  textDirection: TextDirection.rtl,
+                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                  children: [
+                                                                    Text(
+                                                                      label,
+                                                                      style: TextStyle(
+                                                                        fontFamily: AppTypography.fontFamily,
+                                                                        fontSize: 13,
+                                                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                                        color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+                                                                      ),
+                                                                    ),
+                                                                    if (isSelected)
+                                                                      Icon(
+                                                                        Icons.check_rounded,
+                                                                        size: 16,
+                                                                        color: colorScheme.primary,
+                                                                      ),
+                                                                  ],
+                                                                ),
+                                                              );
+                                                            }).toList();
+                                                          },
+                                                          child: Container(
+                                                            height: 26,
+                                                            alignment: Alignment.center,
+                                                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                                                            decoration: BoxDecoration(
+                                                              color: colorScheme.primary.withValues(alpha: 0.12),
+                                                              borderRadius: BorderRadius.circular(8),
+                                                              border: Border.all(
+                                                                color: colorScheme.primary.withValues(alpha: 0.32),
+                                                                width: 0.9,
+                                                              ),
+                                                            ),
+                                                            child: Text(
+                                                              '${playbackSpeed.toString().replaceAll(RegExp(r'\.0$'), '')}x',
+                                                              textAlign: TextAlign.center,
+                                                              style: TextStyle(
+                                                                fontFamily: AppTypography.fontFamily,
+                                                                fontSize: 11.5,
+                                                                fontWeight: FontWeight.bold,
+                                                                color: colorScheme.primary,
+                                                                height: 1.0,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      // Always present slider widget
-                                      const AudioMiniProgressSlider(),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // 4. Previous Ayah Button (Right of Middle Section)
-                              IconButton(
-                                iconSize: 18,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                icon: Icon(
-                                  CupertinoIcons.forward_fill,
-                                  color: (currentAyahNumber != null && currentAyahNumber > 1)
-                                      ? colorScheme.onSurface
-                                      : colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
-                                ),
-                                tooltip: 'آیه قبلی',
-                                onPressed: (currentAyahNumber != null && currentAyahNumber > 1)
-                                    ? () => audioController.playPreviousAyah()
-                                    : null,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 2. Side Handle Tab (زائده کشویی یکپارچه) – rendered BEHIND reciter disc so it seamlessly emerges from under the disc
-                Positioned(
-                  right: discRadius - 4, // 38.0px from right edge, physically anchored underneath reciter avatar disc
-                  top: 43,
-                  child: AnimatedSlide(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeOutCubic,
-                    offset: isCollapsed ? Offset.zero : const Offset(0.8, 0),
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 250),
-                      opacity: isCollapsed ? 1.0 : 0.0,
-                      child: IgnorePointer(
-                        ignoring: !isCollapsed,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: onToggleCollapse,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              bottomLeft: Radius.circular(20),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.only(
-                                left: 12,
-                                right: discRadius + 8, // Extends under avatar disc while exposing label & icon cleanly
-                                top: 7,
-                                bottom: 7,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorScheme.surfaceContainerHigh,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(20),
-                                  bottomLeft: Radius.circular(20),
-                                ),
-                                border: Border.all(
-                                  color: colorScheme.primary.withValues(alpha: 0.35),
-                                  width: 1.2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.18),
-                                    blurRadius: 10,
-                                    offset: const Offset(-4, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    CupertinoIcons.chevron_left_2,
-                                    size: 16,
-                                    color: colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'پلیر',
-                                    style: TextStyle(
-                                      fontFamily: AppTypography.fontFamily,
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.primary,
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 3. Overlapping Floating Reciter Disc Avatar (anchored over top of the side handle tab)
-                Positioned(
-                  right: 0,
-                  top: 24,
-                  child: ReciterAvatarButton(
-                    radius: discRadius,
-                    isPlayButton: true,
-                    onTap: onTogglePlay,
-                  ),
-                ),
-
-                // 3. Ultra-sleek Floating Capsule Pill for Re-Sync with Live Equalizer Animation ("ادامه تلاوت • آیه ۲۴")
-                if (isAutoScrollSuspended && audioStatus != AudioStatus.stopped && currentAyahNumber != null)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    child: Center(
-                      child: Material(
-                        color: colorScheme.primary,
-                        elevation: 6,
-                        borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                        child: InkWell(
-                          onTap: () {
-                            ref.read(selectedAyahActionProvider.notifier).clearSelection();
-                            audioController.resumeAutoScrollAndSync();
-                          },
-                          borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary,
-                              borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const _AnimatedAudioEqualizer(
-                                  color: Colors.white,
-                                  height: 13.0,
                                 ),
-                                const SizedBox(width: 7),
-                                Text(
-                                  'بازگشت به تلاوت • ${AppConstants.ayahLabel} ${currentAyahNumber.toPersianDigit()}',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    height: 1.1,
-                                    fontFamily: AppTypography.fontFamily,
-                                  ),
+
+                                // Full-width Bottom Edge Progress Bar (RTL) - 100% width across flat bottom edge
+                                const AudioTopEdgeProgressBar(
+                                  padding: EdgeInsets.zero,
                                 ),
                               ],
                             ),
@@ -432,9 +521,24 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
+
+
+                    // ── C. Hero Reciter Disc (Original prominent size, stays on top in both states) ──
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeInOutCubic,
+                      right: isCollapsed ? 12.0 : 10.0,
+                      bottom: isCollapsed ? 6.0 : 2.0,
+                      child: ReciterAvatarButton(
+                        radius: discRadius,
+                        isPlayButton: true,
+                        onTap: onTogglePlay,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

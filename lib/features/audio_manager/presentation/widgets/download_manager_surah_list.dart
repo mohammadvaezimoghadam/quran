@@ -315,6 +315,7 @@ class _SurahGridItem extends ConsumerWidget {
                               style: TextStyle(
                                 fontFamily: fontFamily,
                                 fontSize: 18,
+                                fontWeight: FontWeight.bold,
                                 color: isDownloaded
                                     ? colorScheme.primary
                                     : isDownloading || isSelected

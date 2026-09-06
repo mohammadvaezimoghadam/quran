@@ -17,24 +17,4 @@ abstract final class PreferencesKeys {
   // Selected Preferences Keys
   static const String selectedReciterId = 'quran_selected_reciter_id';
   static const String selectedTranslationId = 'quran_selected_translation_id';
-
-  // Adhan Manager Keys
-  static const String adhanGlobalEnabled = 'adhan_global_enabled';
-  static const String adhanFajrEnabled = 'adhan_fajr_enabled';
-  static const String adhanDhuhrEnabled = 'adhan_dhuhr_enabled';
-  static const String adhanAsrEnabled = 'adhan_asr_enabled';
-  static const String adhanMaghribEnabled = 'adhan_maghrib_enabled';
-  static const String adhanIshaEnabled = 'adhan_isha_enabled';
-  
-  static const String adhanFajrMoezzin = 'adhan_fajr_moezzin_id';
-  static const String adhanDhuhrMoezzin = 'adhan_dhuhr_moezzin_id';
-  static const String adhanAsrMoezzin = 'adhan_asr_moezzin_id';
-  static const String adhanMaghribMoezzin = 'adhan_maghrib_moezzin_id';
-  static const String adhanIshaMoezzin = 'adhan_isha_moezzin_id';
-  static const String adhanPreAlertMinutes = 'adhan_pre_alert_minutes';
-  static const String adhanVolume = 'adhan_volume_level';
-  static const String adhanVibration = 'adhan_vibration_enabled';
-  static const String adhanPlayInSilent = 'adhan_play_in_silent_mode';
-  static const String adhanAscendingVolume = 'adhan_ascending_volume';
-  static const String adhanScreenWake = 'adhan_screen_wake';
 }

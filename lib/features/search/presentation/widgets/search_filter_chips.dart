@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/search_filter_type.dart';
 
@@ -8,6 +9,7 @@ class SearchFilterChips extends StatelessWidget {
   final int totalResults;
   final int surahCount;
   final int ayahCount;
+  final int translationCount;
 
   const SearchFilterChips({
     super.key,
@@ -16,6 +18,7 @@ class SearchFilterChips extends StatelessWidget {
     this.totalResults = 0,
     this.surahCount = 0,
     this.ayahCount = 0,
+    this.translationCount = 0,
   });
 
   @override
@@ -33,12 +36,25 @@ class SearchFilterChips extends StatelessWidget {
 
           String countSuffix = '';
           if (totalResults > 0) {
-            if (filter == SearchFilterType.all) {
-              countSuffix = ' ($totalResults)';
-            } else if (filter == SearchFilterType.surahs && surahCount > 0) {
-              countSuffix = ' ($surahCount)';
-            } else if (filter == SearchFilterType.ayahs && ayahCount > 0) {
-              countSuffix = ' ($ayahCount)';
+            switch (filter) {
+              case SearchFilterType.all:
+                countSuffix = ' (${totalResults.toPersianDigit()})';
+                break;
+              case SearchFilterType.surahs:
+                countSuffix = surahCount > 0
+                    ? ' (${surahCount.toPersianDigit()})'
+                    : ' (۰)';
+                break;
+              case SearchFilterType.ayahs:
+                countSuffix = ayahCount > 0
+                    ? ' (${ayahCount.toPersianDigit()})'
+                    : ' (۰)';
+                break;
+              case SearchFilterType.translations:
+                countSuffix = translationCount > 0
+                    ? ' (${translationCount.toPersianDigit()})'
+                    : ' (۰)';
+                break;
             }
           }
 

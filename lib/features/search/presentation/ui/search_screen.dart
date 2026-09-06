@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../application/controllers/recent_searches_controller.dart';
 import '../../application/controllers/search_controller.dart';
 import '../../application/states/search_state.dart';
+import '../../domain/entities/search_filter_type.dart';
 import '../../domain/entities/search_result_item.dart';
 import '../widgets/search_empty_state.dart';
 import '../widgets/search_filter_chips.dart';
@@ -235,12 +236,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   searchControllerProvider.select((s) => s.totalCount),
                 );
                 final surahCount = ref.watch(
-                  searchControllerProvider
-                      .select((s) => s.surahResults.length),
+                  searchControllerProvider.select((s) => s.surahCount),
                 );
                 final ayahCount = ref.watch(
-                  searchControllerProvider
-                      .select((s) => s.ayahResults.length),
+                  searchControllerProvider.select((s) => s.ayahCount),
+                );
+                final translationCount = ref.watch(
+                  searchControllerProvider.select((s) => s.translationCount),
                 );
 
                 return Padding(
@@ -255,6 +257,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     totalResults: totalCount,
                     surahCount: surahCount,
                     ayahCount: ayahCount,
+                    translationCount: translationCount,
                   ),
                 );
               },
@@ -299,26 +302,44 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     );
                   }
 
-                  // C. No Results Found
-                  if (!searchState.hasResults && !searchState.isLoading) {
+                  // C. No Results Found for active filter
+                  final displayedResults = searchState.displayedResults;
+                  if (displayedResults.isEmpty && !searchState.isLoading) {
                     return SearchEmptyState(query: searchState.query);
                   }
 
                   // D. Results List
-                  final surahResults = searchState.surahResults;
-                  final ayahResults = searchState.ayahResults;
+                  final surahs = (searchState.activeFilter == SearchFilterType.all ||
+                          searchState.activeFilter == SearchFilterType.surahs)
+                      ? searchState.surahResults
+                      : <SearchResultItem>[];
+
+                  final ayahs = searchState.activeFilter == SearchFilterType.surahs
+                      ? <SearchResultItem>[]
+                      : (searchState.activeFilter == SearchFilterType.ayahs
+                          ? searchState.arabicAyahResults
+                          : (searchState.activeFilter == SearchFilterType.translations
+                              ? searchState.translationAyahResults
+                              : searchState.results.where((i) => i.isAyah).toList()));
+
+                  final ayahHeaderTitle = searchState.activeFilter == SearchFilterType.translations
+                      ? 'ترجمه فارسی (${ayahs.length.toPersianDigit()})'
+                      : (searchState.activeFilter == SearchFilterType.ayahs
+                          ? 'متن آیات (${ayahs.length.toPersianDigit()})'
+                          : 'آیات و ترجمه‌ها (${ayahs.length.toPersianDigit()})');
 
                   return ListView.builder(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.only(top: 4.0, bottom: 24.0),
-                    itemCount: _calculateItemCount(searchState),
+                    itemCount: _calculateItemCount(surahs, ayahs),
                     itemBuilder: (context, index) {
                       return _buildItemAt(
-                        context,
-                        index,
-                        searchState,
-                        surahResults,
-                        ayahResults,
+                        context: context,
+                        index: index,
+                        searchState: searchState,
+                        surahs: surahs,
+                        ayahs: ayahs,
+                        ayahHeaderTitle: ayahHeaderTitle,
                       );
                     },
                   );
@@ -331,27 +352,25 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  int _calculateItemCount(SearchState searchState) {
+  int _calculateItemCount(List<SearchResultItem> surahs, List<SearchResultItem> ayahs) {
     int count = 0;
-    final hasSurahs = searchState.surahResults.isNotEmpty;
-    final hasAyahs = searchState.ayahResults.isNotEmpty;
-
-    if (hasSurahs) {
-      count += 1 + searchState.surahResults.length;
+    if (surahs.isNotEmpty) {
+      count += 1 + surahs.length;
     }
-    if (hasAyahs) {
-      count += 1 + searchState.ayahResults.length;
+    if (ayahs.isNotEmpty) {
+      count += 1 + ayahs.length;
     }
     return count;
   }
 
-  Widget _buildItemAt(
-    BuildContext context,
-    int index,
-    SearchState searchState,
-    List<SearchResultItem> surahs,
-    List<SearchResultItem> ayahs,
-  ) {
+  Widget _buildItemAt({
+    required BuildContext context,
+    required int index,
+    required SearchState searchState,
+    required List<SearchResultItem> surahs,
+    required List<SearchResultItem> ayahs,
+    required String ayahHeaderTitle,
+  }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final hasSurahs = surahs.isNotEmpty;
@@ -376,10 +395,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     final ayahStartIndex = hasSurahs ? surahs.length + 1 : 0;
     if (index == ayahStartIndex) {
-      return _buildSectionHeader(
-        'آیات (${ayahs.length.toPersianDigit()})',
-        isDark,
-      );
+      return _buildSectionHeader(ayahHeaderTitle, isDark);
     }
 
     final ayahIndex = index - ayahStartIndex - 1;

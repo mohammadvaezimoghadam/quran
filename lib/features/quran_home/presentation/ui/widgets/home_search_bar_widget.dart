@@ -90,21 +90,7 @@ class HomeSearchBarWidget extends StatelessWidget {
                   ),
                 ),
 
-                // Filter / Voice Action Indicator
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : const Color(0xFFF7F5F0),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    CupertinoIcons.slider_horizontal_3,
-                    size: 16,
-                    color: isDark ? Colors.white54 : Colors.black45,
-                  ),
-                ),
+
               ],
             ),
           ),

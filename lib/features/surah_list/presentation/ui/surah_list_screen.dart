@@ -11,7 +11,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/surah_list_controller.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.dart';
-import '../../../page_navigation/presentation/widgets/page_navigation_bottom_sheet.dart';
 import '../../../../common/widgets/reciter/reciter_avatar_button.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
@@ -86,15 +85,6 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
         searchController: _searchController,
         searchPrefixWidget: const ReciterAvatarButton(radius: 25, showLabel: false),
         actions: [
-          IconButton(
-            icon: const Icon(
-              CupertinoIcons.device_laptop,
-              color: AppColors.softGoldText,
-              size: 22,
-            ),
-            tooltip: 'دستگاه هوشمند NodeMCU',
-            onPressed: () => context.pushNamed(smartDeviceRoute),
-          ),
           PopupMenuButton<String>(
             icon: const Icon(
               CupertinoIcons.ellipsis_vertical,
@@ -176,24 +166,6 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
         },
       ),
       body: _buildBody(context, isLoading, errorMessage, isOnlyFavorites),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          PageNavigationBottomSheet.show(context);
-        },
-        label: const Text(
-          'تلاوت نور',
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.softGoldText,
-          ),
-        ),
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.darkPrimaryContainer
-            : Theme.of(context).colorScheme.primary,
-        elevation: 4,
-      ),
       bottomNavigationBar: const MiniAudioPlayerBar(),
     ),
   );

@@ -27,9 +27,6 @@ class JustAudioPlayerService implements IAudioPlayerService {
   /// Maximum number of retry attempts for transient network failures.
   static const int _maxRetries = 2;
 
-  /// Delay between retry attempts (doubles each retry for exponential backoff).
-  static const Duration _retryBaseDelay = Duration(milliseconds: 800);
-
   JustAudioPlayerService({AudioPlayer? audioPlayer})
       : _audioPlayer = audioPlayer ?? AudioPlayer() {
     _initListeners();

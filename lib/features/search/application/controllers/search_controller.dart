@@ -37,9 +37,6 @@ class QuranSearchController extends Notifier<SearchState> {
   void setFilter(SearchFilterType filter) {
     if (state.activeFilter == filter) return;
     state = state.copyWith(activeFilter: filter);
-    if (state.query.trim().isNotEmpty) {
-      _executeSearch(state.query, filter);
-    }
   }
 
   void onQueryChanged(String query) {
@@ -64,7 +61,7 @@ class QuranSearchController extends Notifier<SearchState> {
     // 1. Debounce Search Execution
     _debounceSearchTimer?.cancel();
     _debounceSearchTimer = Timer(_searchDebounce, () {
-      _executeSearch(query, state.activeFilter);
+      _executeSearch(query);
     });
 
     // 2. Debounce History Save (wait 2.5 seconds to see if user has finished their sentence)
@@ -92,11 +89,11 @@ class QuranSearchController extends Notifier<SearchState> {
     _debounceSearchTimer?.cancel();
     _historySaveTimer?.cancel();
     state = state.copyWith(query: query, isLoading: true);
-    await _executeSearch(query, state.activeFilter);
+    await _executeSearch(query);
     _commitCurrentQueryToHistory();
   }
 
-  Future<void> _executeSearch(String query, SearchFilterType filter) async {
+  Future<void> _executeSearch(String query) async {
     final clean = query.trim();
     if (clean.isEmpty) {
       state = state.copyWith(results: const [], isLoading: false);
@@ -106,7 +103,7 @@ class QuranSearchController extends Notifier<SearchState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final results = await _repository.search(query: clean, filter: filter);
+      final results = await _repository.search(query: clean, filter: SearchFilterType.all);
       state = state.copyWith(
         results: results,
         isLoading: false,

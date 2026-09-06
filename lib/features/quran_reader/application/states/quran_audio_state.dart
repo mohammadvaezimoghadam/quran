@@ -24,6 +24,7 @@ abstract class QuranAudioState with _$QuranAudioState {
     @Default(true) bool isAutoPlayNext,
     @Default(false) bool isSingleAyahMode,
     @Default(false) bool isAutoScrollSuspended,
+    @Default(1.0) double speed,
     String? errorMessage,
     int? lastAttemptedAyahNumber,
   }) = _QuranAudioState;
