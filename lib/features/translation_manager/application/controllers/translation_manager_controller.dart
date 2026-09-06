@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/entities/translation_entity.dart';
@@ -9,8 +10,16 @@ part 'translation_manager_controller.g.dart';
 
 @Riverpod(keepAlive: true)
 class TranslationManagerController extends _$TranslationManagerController {
+  final Map<String, CancelToken> _cancelTokens = {};
+
   @override
   FutureOr<TranslationManagerState> build() async {
+    ref.onDispose(() {
+      for (final token in _cancelTokens.values) {
+        token.cancel();
+      }
+      _cancelTokens.clear();
+    });
     return _loadInitialState();
   }
 
@@ -49,9 +58,13 @@ class TranslationManagerController extends _$TranslationManagerController {
       errorMessage: null,
     ));
 
+    final cancelToken = CancelToken();
+    _cancelTokens[translation.id] = cancelToken;
+
     final repository = ref.read(translationRepositoryProvider);
     final downloadResult = await repository.downloadTranslation(
       translation,
+      cancelToken: cancelToken,
       onReceiveProgress: (received, total) {
         // Many APIs don't send content-length (total == -1). 
         // We estimate a typical translation JSON size to be ~1.5MB for a smooth determinate loading bar.
@@ -63,6 +76,8 @@ class TranslationManagerController extends _$TranslationManagerController {
         state = AsyncData(state.value!.copyWith(downloadProgress: updatedProgress));
       },
     );
+
+    _cancelTokens.remove(translation.id);
 
     await downloadResult.when(
       (success) async {
@@ -87,6 +102,19 @@ class TranslationManagerController extends _$TranslationManagerController {
         ));
       },
     );
+  }
+
+  /// Cancels an ongoing download for a translation
+  void cancelDownload(String translationId) {
+    if (_cancelTokens.containsKey(translationId)) {
+      _cancelTokens[translationId]?.cancel('توسط کاربر لغو شد');
+      _cancelTokens.remove(translationId);
+    }
+    if (state.value?.downloadProgress.containsKey(translationId) ?? false) {
+      final finalProgress = Map<String, double>.from(state.value?.downloadProgress ?? {});
+      finalProgress.remove(translationId);
+      state = AsyncData(state.value!.copyWith(downloadProgress: finalProgress));
+    }
   }
 
   /// Deletes a downloaded translation from local storage

@@ -17,6 +17,7 @@ import '../../../../common/widgets/smart_selection_area.dart';
 import '../utils/reciter_download_helper.dart';
 import 'ayah_arabic_text.dart';
 import 'quran_ornamental_divider.dart';
+import 'single_ayah_action_bottom_sheet.dart';
 
 /// Clean component for displaying an individual Ayah card with Telegram-style selection.
 class AyahListItem extends ConsumerWidget {
@@ -188,10 +189,23 @@ class AyahListItem extends ConsumerWidget {
             return;
           }
 
+          final currentSelected = ref.read(selectedAyahActionProvider);
+          final isFirstAyahSelection = currentSelected.isEmpty;
+
           // Long Press toggles selection mode for this Ayah
           ref
               .read(selectedAyahActionProvider.notifier)
               .toggleAyah(ayah.ayahNumber);
+
+          // If this is the first Ayah being selected via long-press, open the dedicated action sheet
+          if (isFirstAyahSelection) {
+            SingleAyahActionBottomSheet.show(
+              context,
+              ayah: ayah,
+              surahName: surahName,
+              totalAyahsInSurah: totalAyahsInSurah,
+            );
+          }
         },
         child: Stack(
           children: [

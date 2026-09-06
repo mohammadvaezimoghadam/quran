@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:multiple_result/multiple_result.dart';
 import '../../../../common/exceptions/failure.dart';
 import '../entities/translation_entity.dart';
@@ -9,7 +10,11 @@ abstract class ITranslationRepository {
   Future<Result<List<TranslationEntity>, Failure>> getAllTranslations();
 
   /// Downloads a translation and saves it to local storage.
-  Future<Result<void, Failure>> downloadTranslation(TranslationEntity translation, {void Function(int, int)? onReceiveProgress});
+  Future<Result<void, Failure>> downloadTranslation(
+    TranslationEntity translation, {
+    void Function(int, int)? onReceiveProgress,
+    CancelToken? cancelToken,
+  });
 
   /// Preloads a translation from a local JSON asset file into Hive.
   Future<Result<void, Failure>> preloadTranslationFromJson(String translationId, String assetPath);

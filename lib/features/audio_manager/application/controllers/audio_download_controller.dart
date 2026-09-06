@@ -7,7 +7,10 @@ import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../../core/services/audio/audio_url_helper.dart';
 import '../../../quran_reader/application/ayah_service.dart';
 import '../../../quran_reader/domain/entities/reciter_entity.dart';
+import '../../../../core/services/network/network_info_helper.dart';
+import '../../../download_manager/infrastructure/datasources/download_manager_local_datasource.dart';
 import '../../domain/entities/audio_download_task.dart';
+import 'surah_downloaded_ayahs_provider.dart';
 
 typedef DownloadTaskMap = Map<String, AudioDownloadTask>;
 
@@ -29,6 +32,14 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
     return {};
   }
 
+  Future<void> cancelAllDownloads() async {
+    for (final token in _cancelTokens.values) {
+      token.cancel('لغو به دلیل پاک‌سازی کلی');
+    }
+    _cancelTokens.clear();
+    state = {};
+  }
+
   String _buildKey(int reciterId, int surahId) => 'r${reciterId}_s$surahId';
 
   Future<void> startDownload({
@@ -38,6 +49,17 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
     final key = _buildKey(reciter.id, surahId);
     
     if (state[key]?.status == DownloadTaskStatus.downloading) return;
+
+    // Check Wi-Fi Only constraint
+    final localDataSource = ref.read(downloadManagerLocalDataSourceProvider);
+    final isWifiOnly = localDataSource.getWifiOnlyPreference();
+    if (isWifiOnly) {
+      final isWifi = await NetworkInfoHelper.isWifiConnected();
+      if (!isWifi) {
+        _markAsFailed(key, 'دانلود انجام نشد: تنظیم «فقط با وای‌فای» فعال است.');
+        return;
+      }
+    }
 
     final ayahService = ref.read(ayahServiceProvider);
     final ayahsResult = await ayahService.getAyahsBySurah(surahId);
@@ -54,6 +76,9 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
     }
 
     final totalAyahs = ayahs.length;
+    final existingTask = state[key];
+    final initialCompleted = existingTask?.completedAyahs ?? 0;
+    final initialProgress = totalAyahs > 0 ? (initialCompleted / totalAyahs).clamp(0.0, 1.0) : 0.0;
 
     state = {
       ...state,
@@ -62,8 +87,9 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
         reciterId: reciter.id,
         status: DownloadTaskStatus.downloading,
         totalAyahs: totalAyahs,
-        currentAyah: 1,
-        completedAyahs: 0,
+        currentAyah: existingTask?.currentAyah ?? 1,
+        completedAyahs: initialCompleted,
+        progress: initialProgress,
       ),
     };
 
@@ -173,19 +199,48 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
     }
   }
 
-  void cancelDownload(int reciterId, int surahId) {
+  void pauseDownload(int reciterId, int surahId) {
     final key = _buildKey(reciterId, surahId);
     if (state[key]?.status == DownloadTaskStatus.downloading) {
-      _cancelTokens[key]?.cancel('توسط کاربر لغو شد');
-      _cancelTokens.remove(key);
       final currentTask = state[key];
       if (currentTask != null) {
         state = {
           ...state,
-          key: currentTask.copyWith(status: DownloadTaskStatus.canceled),
+          key: currentTask.copyWith(status: DownloadTaskStatus.paused),
         };
       }
+      _cancelTokens[key]?.cancel('توسط کاربر متوقف شد');
+      _cancelTokens.remove(key);
     }
+  }
+
+  Future<void> resumeDownload({
+    required ReciterEntity reciter,
+    required int surahId,
+  }) async {
+    await startDownload(reciter: reciter, surahId: surahId);
+  }
+
+  Future<void> cancelDownload(int reciterId, int surahId) async {
+    final key = _buildKey(reciterId, surahId);
+    
+    // 1. Cancel running network download if active
+    _cancelTokens[key]?.cancel('توسط کاربر لغو شد');
+    _cancelTokens.remove(key);
+
+    // 2. Delete ALL partial/complete audio files from physical disk and Hive FIRST
+    final storage = ref.read(audioStorageServiceProvider);
+    await storage.deleteSurahAudio(reciterId: reciterId, surahId: surahId);
+
+    // 3. Remove the task completely from active state AFTER disk cleanup
+    if (state.containsKey(key)) {
+      final updatedState = Map<String, AudioDownloadTask>.from(state);
+      updatedState.remove(key);
+      state = updatedState;
+    }
+
+    // 4. Invalidate providers so UI surah grids immediately reflect 0 downloaded ayahs
+    ref.invalidate(surahDownloadedAyahsCountProvider);
   }
 
   void _markAsFailed(String key, String error) {

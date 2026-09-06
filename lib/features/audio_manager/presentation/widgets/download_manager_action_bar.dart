@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../core/services/network/network_info_helper.dart';
+import '../../../download_manager/infrastructure/datasources/download_manager_local_datasource.dart';
 import '../../application/states/download_manager_state.dart';
 import '../../application/states/download_manager_selected_surahs_provider.dart';
 import '../../application/controllers/audio_download_controller.dart';
@@ -24,7 +26,23 @@ class DownloadManagerActionBar extends ConsumerWidget {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: isEnabled
-                ? () {
+                ? () async {
+                    final isWifiOnly = ref
+                        .read(downloadManagerLocalDataSourceProvider)
+                        .getWifiOnlyPreference();
+                    if (isWifiOnly) {
+                      final isWifi = await NetworkInfoHelper.isWifiConnected();
+                      if (!isWifi) {
+                        if (context.mounted) {
+                          AppSnackBar.showError(
+                            context,
+                            'دانلود انجام نشد: تنظیم «فقط با وای‌فای» فعال است. لطفاً وای‌فای را روشن کرده یا این گزینه را در مدیریت دانلود غیرفعال کنید.',
+                          );
+                        }
+                        return;
+                      }
+                    }
+
                     final surahCount = selectedSurahs.length;
                     for (final surahId in selectedSurahs) {
                       ref
@@ -38,10 +56,12 @@ class DownloadManagerActionBar extends ConsumerWidget {
                         .read(downloadManagerSelectedSurahsProvider.notifier)
                         .setSurahs({});
 
-                    AppSnackBar.showSuccess(
-                      context,
-                      'دانلود $surahCount سوره شروع شد.',
-                    );
+                    if (context.mounted) {
+                      AppSnackBar.showSuccess(
+                        context,
+                        'دانلود $surahCount سوره شروع شد.',
+                      );
+                    }
                   }
                 : null,
             style: ElevatedButton.styleFrom(

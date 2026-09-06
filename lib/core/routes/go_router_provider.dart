@@ -3,9 +3,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/adhan_manager/presentation/ui/adhan_settings_screen.dart';
 import '../../features/audio_manager/presentation/ui/audio_download_manager_screen.dart';
+import '../../features/download_manager/presentation/ui/download_hub_screen.dart';
 import '../../features/permission_manager/presentation/ui/permission_management_screen.dart';
 import '../../features/quran_home/presentation/ui/quran_home_screen.dart';
 import '../../features/quran_reader/presentation/ui/quran_reader_screen.dart';
+import '../../features/quran_reader/presentation/ui/surah_dictionary_screen.dart';
+import '../../features/search/presentation/ui/search_screen.dart';
 import '../../features/settings/presentation/ui/settings_screen.dart';
 import '../../features/smart_device/presentation/ui/smart_device_settings_screen.dart';
 import '../../features/splash/presentation/ui/splash_screen.dart';
@@ -30,6 +33,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/surah-list',
         name: surahListRoute,
         builder: (context, state) => const SurahListScreen(),
+      ),
+      GoRoute(
+        path: '/search',
+        name: searchRoute,
+        builder: (context, state) => const SearchScreen(),
       ),
       GoRoute(
         path: '/settings',
@@ -73,6 +81,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/download-hub',
+        name: downloadHubRoute,
+        builder: (context, state) => const DownloadHubScreen(),
+      ),
+      GoRoute(
         path: '/adhan-settings',
         name: adhanSettingsRoute,
         builder: (context, state) => const AdhanSettingsScreen(),
@@ -81,6 +94,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/permission-management',
         name: permissionManagementRoute,
         builder: (context, state) => const PermissionManagementScreen(),
+      ),
+      GoRoute(
+        path: '/surah-dictionary/:id',
+        name: surahDictionaryRoute,
+        builder: (context, state) {
+          final surahId =
+              int.tryParse(state.pathParameters['id'] ?? '1') ?? 1;
+          final surahName = state.uri.queryParameters['name'] ?? '';
+          return SurahDictionaryScreen(
+            surahId: surahId,
+            surahName: surahName,
+          );
+        },
       ),
     ],
   );

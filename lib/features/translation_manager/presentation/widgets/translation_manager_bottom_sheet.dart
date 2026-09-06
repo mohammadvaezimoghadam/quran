@@ -137,7 +137,7 @@ class _TranslationManagerBottomSheetState
     final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
     return ScaffoldMessenger(
-      child: Container(
+      child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.48,
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -377,7 +377,7 @@ class _TranslationStatusIcon extends ConsumerWidget {
           child: CircularProgressIndicator(
             value: progress,
             strokeWidth: 2,
-            backgroundColor: colorScheme.primary.withOpacity(0.2),
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
             color: colorScheme.primary,
           ),
         ),

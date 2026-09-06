@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 /// A smart wrapper that enables native partial text selection (Telegram style).
 /// When [isSelectable] is true, a long press inside this widget will trigger
 /// Flutter's native text selection handles for highlighting specific words.
-/// It intelligently overrides the native context menu to ONLY show 'Copy' 
-/// and 'Select All' to keep the UI clean and focused on reading.
+/// It intelligently overrides the native context menu to show 'Copy', 
+/// 'Select All', and 'Ask AI ✨'.
 class SmartSelectionArea extends StatefulWidget {
   final Widget child;
   final bool isSelectable;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onAskAi;
 
   /// Tracks if ANY text is currently selected globally across the app.
   static bool hasGlobalSelection = false;
@@ -18,6 +19,7 @@ class SmartSelectionArea extends StatefulWidget {
     required this.child,
     this.isSelectable = false,
     this.onTap,
+    this.onAskAi,
   });
 
   @override
@@ -27,6 +29,7 @@ class SmartSelectionArea extends StatefulWidget {
 class _SmartSelectionAreaState extends State<SmartSelectionArea> {
   DateTime? _downTime;
   Offset _downPosition = Offset.zero;
+  String _selectedText = '';
 
   @override
   Widget build(BuildContext context) {
@@ -55,11 +58,14 @@ class _SmartSelectionAreaState extends State<SmartSelectionArea> {
       },
       child: SelectionArea(
         onSelectionChanged: (content) {
-          SmartSelectionArea.hasGlobalSelection = content != null && content.plainText.isNotEmpty;
+          final text = content?.plainText ?? '';
+          _selectedText = text;
+          SmartSelectionArea.hasGlobalSelection = text.isNotEmpty;
         },
         contextMenuBuilder: (context, selectableRegionState) {
           final List<ContextMenuButtonItem> buttonItems = [];
-          
+
+          // 1. Copy
           for (final item in selectableRegionState.contextMenuButtonItems) {
             if (item.type == ContextMenuButtonType.copy) {
               buttonItems.add(ContextMenuButtonItem(
@@ -74,6 +80,21 @@ class _SmartSelectionAreaState extends State<SmartSelectionArea> {
                 label: 'انتخاب همه',
               ));
             }
+          }
+
+          // 2. Ask AI Action Item
+          if (widget.onAskAi != null && _selectedText.trim().isNotEmpty) {
+            buttonItems.insert(
+              0,
+              ContextMenuButtonItem(
+                onPressed: () {
+                  final text = _selectedText.trim();
+                  selectableRegionState.hideToolbar();
+                  widget.onAskAi!(text);
+                },
+                label: 'پرسش از هوش مصنوعی ✨',
+              ),
+            );
           }
 
           return AdaptiveTextSelectionToolbar.buttonItems(

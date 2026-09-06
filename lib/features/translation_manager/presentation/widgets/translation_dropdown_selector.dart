@@ -213,7 +213,7 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
                               child: CircularProgressIndicator(
                                 value: progress,
                                 strokeWidth: 2,
-                                backgroundColor: widget.accentColor.withOpacity(0.2),
+                                backgroundColor: widget.accentColor.withValues(alpha: 0.2),
                                 color: widget.accentColor,
                               ),
                             );

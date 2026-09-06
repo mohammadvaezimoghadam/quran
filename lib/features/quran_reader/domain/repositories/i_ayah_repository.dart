@@ -9,4 +9,7 @@ abstract interface class IAyahRepository {
   
   /// Fetches Word-by-Word translation for a specific Ayah
   Future<Result<List<WordEntity>, Failure>> getAyahWords(int surahId, int ayahNumber);
+
+  /// Fetches all Word-by-Word entries for an entire Surah
+  Future<Result<List<WordEntity>, Failure>> getSurahWords(int surahId);
 }

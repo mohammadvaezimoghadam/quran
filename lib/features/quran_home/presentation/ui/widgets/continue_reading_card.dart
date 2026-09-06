@@ -19,14 +19,11 @@ class ContinueReadingCard extends ConsumerStatefulWidget {
   final ContinueReadingState? autoState;
   final ContinueReadingState? bookmarkState;
 
-  const ContinueReadingCard({
-    super.key,
-    this.autoState,
-    this.bookmarkState,
-  });
+  const ContinueReadingCard({super.key, this.autoState, this.bookmarkState});
 
   @override
-  ConsumerState<ContinueReadingCard> createState() => _ContinueReadingCardState();
+  ConsumerState<ContinueReadingCard> createState() =>
+      _ContinueReadingCardState();
 }
 
 class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
@@ -62,20 +59,41 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
   }
 
   void _onCardTap() {
-    final state = _selectedTabNotifier.value == 0 ? widget.autoState! : widget.bookmarkState!;
-    ref.read(quranDisplaySettingsControllerProvider.notifier).toggleArabicText(true);
-    Future.microtask(() {
-      if (mounted) {
+    final state = _selectedTabNotifier.value == 0
+        ? widget.autoState
+        : widget.bookmarkState;
+    if (state != null) {
+      ref
+          .read(quranDisplaySettingsControllerProvider.notifier)
+          .toggleArabicText(true);
+      Future.microtask(() {
+        if (mounted) {
+          context.pushNamed(
+            quranReaderRoute,
+            pathParameters: {'id': state.surahId.toString()},
+            queryParameters: {
+              'name': state.surahName,
+              'ayah': state.ayahNumber.toString(),
+            },
+          );
+        }
+      });
+    } else {
+      if (_selectedTabNotifier.value == 0) {
+        // Start reading from Surah Al-Fatihah
+        ref
+            .read(quranDisplaySettingsControllerProvider.notifier)
+            .toggleArabicText(true);
         context.pushNamed(
           quranReaderRoute,
-          pathParameters: {'id': state.surahId.toString()},
-          queryParameters: {
-            'name': state.surahName,
-            'ayah': state.ayahNumber.toString(),
-          },
+          pathParameters: {'id': '1'},
+          queryParameters: {'name': 'الفاتحة', 'ayah': '1'},
         );
+      } else {
+        // Go to Surah List
+        context.pushNamed(surahListRoute);
       }
-    });
+    }
   }
 
   @override
@@ -88,11 +106,15 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
     final cardBorderColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : const Color(0xFFEAE7E3);
-        
+
     final headerColor = isDark ? const Color(0xFF52C498) : AppColors.primary;
-    final titleColor = isDark ? const Color(0xFFF4E0A5) : const Color(0xFF947124);
-    final subtitleColor = isDark ? const Color(0xFF9CA3AF) : const Color(0xFF525252);
-    
+    final titleColor = isDark
+        ? const Color(0xFFF4E0A5)
+        : const Color(0xFF947124);
+    final subtitleColor = isDark
+        ? const Color(0xFF9CA3AF)
+        : const Color(0xFF525252);
+
     final buttonBgColor = AppColors.primary;
     final buttonTextColor = const Color(0xFFF4E0A5);
     final gaugeColor = isDark ? const Color(0xFF52C498) : AppColors.primary;
@@ -100,62 +122,67 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
     return ValueListenableBuilder<int>(
       valueListenable: _selectedTabNotifier,
       builder: (context, selectedTab, child) {
-        final hasBoth = widget.autoState != null && widget.bookmarkState != null;
-        final state = selectedTab == 0 ? widget.autoState! : widget.bookmarkState!;
-        
-        final double progress = state.totalAyahs > 0 ? (state.ayahNumber / state.totalAyahs).clamp(0.0, 1.0) : 0.0;
-        final String ayahInfoText = 'آیه ${state.ayahNumber.toPersianDigit()} از ${state.totalAyahs.toPersianDigit()}';
+        final state = selectedTab == 0
+            ? widget.autoState
+            : widget.bookmarkState;
+        final isEmpty = state == null;
+
+        final double progress = (state != null && state.totalAyahs > 0)
+            ? (state.ayahNumber / state.totalAyahs).clamp(0.0, 1.0)
+            : 0.0;
+        final String ayahInfoText = state != null
+            ? 'آیه ${state.ayahNumber.toPersianDigit()} از ${state.totalAyahs.toPersianDigit()}'
+            : (selectedTab == 0
+                  ? 'هنوز مطالعه‌ای ثبت نشده است'
+                  : 'هنوز نشانکی ثبت نشده است');
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (hasBoth) ...[
-              // Compact Tabs at the top
-              Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F0EC),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildSegmentTab(
-                        title: 'آخرین مطالعه',
-                        icon: CupertinoIcons.clock,
-                        isSelected: selectedTab == 0,
-                        onTap: () => _selectedTabNotifier.value = 0,
-                        activeColor: headerColor,
-                        inactiveColor: subtitleColor,
-                        isDark: isDark,
-                      ),
-                      _buildSegmentTab(
-                        title: 'نشانک من',
-                        icon: CupertinoIcons.bookmark,
-                        isSelected: selectedTab == 1,
-                        onTap: () => _selectedTabNotifier.value = 1,
-                        activeColor: headerColor,
-                        inactiveColor: subtitleColor,
-                        isDark: isDark,
-                      ),
-                    ],
-                  ),
+            // Compact Tabs at the top (Always available)
+            Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFF3F0EC),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.all(4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildSegmentTab(
+                      title: 'آخرین مطالعه',
+                      icon: CupertinoIcons.clock,
+                      isSelected: selectedTab == 0,
+                      onTap: () => _selectedTabNotifier.value = 0,
+                      activeColor: headerColor,
+                      inactiveColor: subtitleColor,
+                      isDark: isDark,
+                    ),
+                    _buildSegmentTab(
+                      title: 'آخرین نشانک',
+                      icon: CupertinoIcons.bookmark,
+                      isSelected: selectedTab == 1,
+                      onTap: () => _selectedTabNotifier.value = 1,
+                      activeColor: headerColor,
+                      inactiveColor: subtitleColor,
+                      isDark: isDark,
+                    ),
+                  ],
                 ),
               ),
-              12.vSpace,
-            ],
-            
+            ),
+            12.vSpace,
+
             // The Slim Card
             Container(
               decoration: BoxDecoration(
                 color: cardBgColor,
                 borderRadius: BorderRadius.circular(20.0),
-                border: Border.all(
-                  color: cardBorderColor,
-                  width: 1,
-                ),
+                border: Border.all(color: cardBorderColor, width: 1),
                 boxShadow: isDark
                     ? null
                     : [
@@ -180,47 +207,77 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // 1. Right Side (RTL): Compact Circular Progress
-                        TweenAnimationBuilder<double>(
-                          tween: Tween<double>(end: progress),
-                          duration: const Duration(milliseconds: 600),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, animatedProgress, child) {
-                            final int animatedPercent = (animatedProgress * 100).toInt();
-                            final String animatedPercentText = '${animatedPercent.toPersianDigit()}%';
+                        // 1. Right Side (RTL): Progress or Empty Icon
+                        if (!isEmpty)
+                          TweenAnimationBuilder<double>(
+                            tween: Tween<double>(end: progress),
+                            duration: const Duration(milliseconds: 600),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, animatedProgress, child) {
+                              final int animatedPercent =
+                                  (animatedProgress * 100).toInt();
+                              final String animatedPercentText =
+                                  '${animatedPercent.toPersianDigit()}%';
 
-                            return SizedBox(
-                              width: 54,
-                              height: 54,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 50,
-                                    height: 50,
-                                    child: CircularProgressIndicator(
-                                      value: animatedProgress,
-                                      strokeWidth: 4.5,
-                                      backgroundColor: isDark
-                                          ? Colors.white.withValues(alpha: 0.10)
-                                          : const Color(0xFFEFEFEF),
-                                      valueColor: AlwaysStoppedAnimation<Color>(gaugeColor),
-                                      strokeCap: StrokeCap.round,
+                              return SizedBox(
+                                width: 54,
+                                height: 54,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 50,
+                                      height: 50,
+                                      child: CircularProgressIndicator(
+                                        value: animatedProgress,
+                                        strokeWidth: 4.5,
+                                        backgroundColor: isDark
+                                            ? Colors.white.withValues(
+                                                alpha: 0.10,
+                                              )
+                                            : const Color(0xFFEFEFEF),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              gaugeColor,
+                                            ),
+                                        strokeCap: StrokeCap.round,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    animatedPercentText,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: gaugeColor,
+                                    Text(
+                                      animatedPercentText,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: gaugeColor,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
+                              );
+                            },
+                          )
+                        else
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: gaugeColor.withValues(
+                                alpha: isDark ? 0.15 : 0.08,
                               ),
-                            );
-                          },
-                        ),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: gaugeColor.withValues(alpha: 0.25),
+                                width: 1.2,
+                              ),
+                            ),
+                            child: Icon(
+                              selectedTab == 0
+                                  ? CupertinoIcons.book
+                                  : CupertinoIcons.bookmark,
+                              color: gaugeColor,
+                              size: 22,
+                            ),
+                          ),
                         14.hSpace,
 
                         // 2. Middle: Texts
@@ -230,7 +287,11 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                state.surahName,
+                                !isEmpty
+                                    ? state.surahName
+                                    : (selectedTab == 0
+                                          ? 'شروع قرائت قرآن'
+                                          : 'افزودن نشانک'),
                                 style: TextStyle(
                                   fontFamily: AppTypography.neyriziFont,
                                   fontSize: 16,
@@ -253,7 +314,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                           ),
                         ),
 
-                        // 3. Left Side: Compact Button
+                        // 3. Left Side: Action Button
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14.0,
@@ -274,7 +335,9 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'ادامه',
+                                !isEmpty
+                                    ? 'ادامه'
+                                    : (selectedTab == 0 ? 'شروع' : 'سوره‌ها'),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -317,7 +380,9 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? (isDark ? const Color(0xFF192220) : Colors.white) : Colors.transparent,
+          color: isSelected
+              ? (isDark ? const Color(0xFF192220) : Colors.white)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           boxShadow: isSelected && !isDark
               ? [
@@ -325,7 +390,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                     color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -335,7 +400,9 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
             Icon(
               icon,
               size: 14,
-              color: isSelected ? activeColor : inactiveColor.withValues(alpha: 0.6),
+              color: isSelected
+                  ? activeColor
+                  : inactiveColor.withValues(alpha: 0.6),
             ),
             4.hSpace,
             Text(
@@ -343,7 +410,9 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? activeColor : inactiveColor.withValues(alpha: 0.6),
+                color: isSelected
+                    ? activeColor
+                    : inactiveColor.withValues(alpha: 0.6),
               ),
             ),
           ],

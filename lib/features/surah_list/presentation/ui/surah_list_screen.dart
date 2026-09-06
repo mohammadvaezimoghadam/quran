@@ -73,6 +73,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
         if (didPop) {
           _searchController.clear();
           ref.read(surahListControllerProvider.notifier).searchSurahs('');
+          ref.read(surahListControllerProvider.notifier).setOnlyFavorites(false);
         }
       },
       child: Scaffold(

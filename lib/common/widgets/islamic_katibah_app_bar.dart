@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -35,6 +33,8 @@ class IslamicKatibahAppBar extends StatefulWidget
   final VoidCallback? onShareSelected;
   final VoidCallback? onDictionarySelected;
 
+  final bool isBookmarked;
+
   const IslamicKatibahAppBar({
     super.key,
     required this.surahName,
@@ -42,6 +42,7 @@ class IslamicKatibahAppBar extends StatefulWidget
     this.fontFamily,
     this.onBackPressed,
     this.onBookmarkPressed,
+    this.isBookmarked = false,
     this.onMenuSelected,
     this.menuItemBuilder,
     this.actions,
@@ -235,7 +236,7 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
           alignment: Alignment.centerRight,
           children: <Widget>[
             ...previousChildren,
-            if (currentChild != null) currentChild,
+            ?currentChild,
           ],
         );
       },
@@ -399,7 +400,9 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
                         if (widget.actions != null &&
                             widget.actions!.isNotEmpty)
                           ...widget.actions!
-                        else ...[
+                        else if (widget.isSelectionMode ||
+                            widget.onBookmarkPressed != null ||
+                            widget.onMenuSelected != null) ...[
                           // A) Independent Animated "واژه‌نامه" Capsule Button (Appears only when 1 Ayah is selected)
                           AnimatedSlide(
                             duration: const Duration(milliseconds: 500),
@@ -439,7 +442,7 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
                                 ? (widget.selectedCount == 1
                                       ? 'کپی آیه'
                                       : 'کپی آیات انتخاب‌شده')
-                                : 'ذخیره نشانک',
+                                : (widget.isBookmarked ? 'حذف نشانک' : 'ذخیره نشانک'),
                             onTap: widget.isSelectionMode
                                 ? widget.onCopySelected
                                 : widget.onBookmarkPressed,
@@ -451,11 +454,15 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
                                       size: 18,
                                       color: softGoldText,
                                     )
-                                  : const Icon(
-                                      CupertinoIcons.bookmark,
-                                      key: ValueKey('icon_bookmark'),
+                                  : Icon(
+                                      widget.isBookmarked
+                                          ? CupertinoIcons.bookmark_fill
+                                          : CupertinoIcons.bookmark,
+                                      key: ValueKey('icon_bookmark_${widget.isBookmarked}'),
                                       size: 18,
-                                      color: softGoldText,
+                                      color: widget.isBookmarked
+                                          ? const Color(0xFF52C498)
+                                          : softGoldText,
                                     ),
                             ),
                           ),

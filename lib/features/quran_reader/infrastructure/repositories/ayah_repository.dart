@@ -52,4 +52,20 @@ class AyahRepository implements IAyahRepository {
       ));
     }
   }
+
+  @override
+  Future<Result<List<WordEntity>, Failure>> getSurahWords(int surahId) async {
+    try {
+      final dtos = await _localDataSource.getSurahWords(surahId);
+      
+      final entities = dtos.map((dto) => dto.toDomain()).toList();
+      return Success(entities);
+    } catch (e, s) {
+      return Error(Failure(
+        message: 'خطا در واکشی لغت‌نامه سوره: ${e.toString()}',
+        exception: e is Exception ? e : Exception(e.toString()),
+        stackTrace: s,
+      ));
+    }
+  }
 }

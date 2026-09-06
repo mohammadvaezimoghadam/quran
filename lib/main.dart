@@ -11,6 +11,7 @@ import 'core/data/local/preferences/preferences_service_provider.dart';
 import 'core/services/audio/audio_player_providers.dart';
 import 'core/services/audio/quran_audio_handler.dart';
 import 'core/services/audio_storage/audio_storage_service_impl.dart';
+import 'features/bookmarks/infrastructure/datasources/bookmark_local_datasource.dart';
 import 'features/translation_manager/infrastructure/datasources/translation_local_datasource.dart';
 import 'main_widget.dart';
 
@@ -58,6 +59,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox(TranslationLocalDataSource.boxName);
   await Hive.openBox(AudioStorageServiceImpl.boxName);
+  await Hive.openBox(BookmarkLocalDataSource.boxName);
 
   final sharedPreferences = await SharedPreferences.getInstance();
 

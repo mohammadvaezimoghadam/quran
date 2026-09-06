@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/services/audio_storage/audio_storage_service_impl.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../audio_manager/application/controllers/audio_download_controller.dart';
@@ -50,9 +47,9 @@ class SurahAudioDownloadButton extends ConsumerWidget {
             downloadTask.status == DownloadTaskStatus.failed) &&
         downloadTask.completedAyahs > 0;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: Hive.box(AudioStorageServiceImpl.boxName).listenable(),
-      builder: (context, box, child) {
+    return ListenableBuilder(
+      listenable: storageService.downloadStatusListenable,
+      builder: (context, child) {
         final isDownloaded = selectedReciter != null &&
             storageService.isSurahDownloaded(selectedReciter.id, surah.number);
 

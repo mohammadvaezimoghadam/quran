@@ -22,6 +22,8 @@ import '../widgets/quran_info_bar.dart';
 import '../widgets/quick_settings_drawer.dart';
 import '../widgets/surah_ayah_page_view.dart';
 import '../widgets/word_by_word_bottom_sheet.dart';
+import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 
 class QuranReaderScreen extends ConsumerStatefulWidget {
@@ -356,12 +358,30 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                               final selectedCount = ref.watch(
                                 selectedAyahActionProvider.select((set) => set.length),
                               );
+                              final selectedSet = ref.watch(selectedAyahActionProvider);
+                              final continueReading = ref.watch(continueReadingControllerProvider);
+                              final targetAyah = selectedSet.isNotEmpty
+                                  ? selectedSet.first
+                                  : (continueReading?.surahId == currentSurahId
+                                      ? continueReading?.ayahNumber ?? 1
+                                      : 1);
+                              final isAyahBookmarked = ref.watch(
+                                bookmarksControllerProvider.select(
+                                  (list) => list.any(
+                                    (b) =>
+                                        b.surahId == currentSurahId &&
+                                        b.ayahNumber == targetAyah,
+                                  ),
+                                ),
+                              );
+
                               return IslamicKatibahAppBar(
                                 surahName: currentSurahName,
                                 surahNumber: currentSurahId,
                                 fontFamily: fontFamily,
                                 isSelectionMode: isSelectionMode,
                                 selectedCount: selectedCount,
+                                isBookmarked: isAyahBookmarked,
                                 onClearSelection: () {
                                   ref.read(selectedAyahActionProvider.notifier).clearSelection();
                                 },
@@ -394,15 +414,41 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                 );
                               }
                             },
-                             onBookmarkPressed: () {
+                             onBookmarkPressed: () async {
+                               final currentSelected = ref.read(selectedAyahActionProvider);
                                final currentState = ref.read(continueReadingControllerProvider);
-                               if (currentState != null) {
-                                 ref.read(manualBookmarkControllerProvider.notifier).saveBookmark(currentState);
-                                 AppSnackBar.showInfo(
-                                   context,
-                                   'نشانک با موفقیت برای این آیه ذخیره شد.',
-                                   duration: const Duration(seconds: 2),
-                                 );
+                               final ayahNum = currentSelected.isNotEmpty
+                                   ? currentSelected.first
+                                   : (currentState?.surahId == currentSurahId
+                                       ? currentState?.ayahNumber ?? 1
+                                       : 1);
+                               final totalAyahs = (currentState?.surahId == currentSurahId)
+                                   ? currentState?.totalAyahs ?? 0
+                                   : 0;
+
+                               final isAdded = await ref
+                                   .read(bookmarksControllerProvider.notifier)
+                                   .toggleBookmark(
+                                     surahId: currentSurahId,
+                                     surahName: currentSurahName,
+                                     ayahNumber: ayahNum,
+                                     totalAyahs: totalAyahs,
+                                   );
+
+                               HapticFeedback.lightImpact();
+                               if (context.mounted) {
+                                 if (isAdded) {
+                                   AppSnackBar.showSuccess(
+                                     context,
+                                     'آیه ${ayahNum.toPersianDigit()} سوره $currentSurahName به نشانه‌ها افزوده شد.',
+                                   );
+                                 } else {
+                                   AppSnackBar.showInfo(
+                                     context,
+                                     'نشانک آیه ${ayahNum.toPersianDigit()} سوره $currentSurahName حذف شد.',
+                                     duration: const Duration(seconds: 2),
+                                   );
+                                 }
                                }
                              },
                              onMenuSelected: (value) {

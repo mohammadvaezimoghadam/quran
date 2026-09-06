@@ -39,10 +39,18 @@ class TranslationRepositoryImpl with DioExceptionMapper implements ITranslationR
   }
 
   @override
-  Future<Result<void, Failure>> downloadTranslation(TranslationEntity translation, {void Function(int, int)? onReceiveProgress}) async {
+  Future<Result<void, Failure>> downloadTranslation(
+    TranslationEntity translation, {
+    void Function(int, int)? onReceiveProgress,
+    CancelToken? cancelToken,
+  }) async {
     try {
       // 1. Fetch from the specific API (AlQuran or Fawaz)
-      final parsedAyahs = await _remoteDataSource.fetchTranslation(translation.sourceUrl, onReceiveProgress: onReceiveProgress);
+      final parsedAyahs = await _remoteDataSource.fetchTranslation(
+        translation.sourceUrl,
+        onReceiveProgress: onReceiveProgress,
+        cancelToken: cancelToken,
+      );
       
       // 2. If successful and data exists, save directly to Hive
       if (parsedAyahs.isNotEmpty) {
@@ -52,6 +60,9 @@ class TranslationRepositoryImpl with DioExceptionMapper implements ITranslationR
         return const Error(Failure(message: 'داده‌های ترجمه دانلود شده خالی است.'));
       }
     } on DioException catch (e, stackTrace) {
+      if (CancelToken.isCancel(e)) {
+        return const Error(Failure(message: 'دانلود توسط کاربر لغو شد'));
+      }
       return Error(mapDioExceptionToFailure(e, stackTrace));
     } catch (e, stackTrace) {
       return Error(Failure(message: 'خطا در دانلود ترجمه: $e', stackTrace: stackTrace));

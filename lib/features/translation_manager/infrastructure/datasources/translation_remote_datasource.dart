@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/data/remote/network_service.dart';
 
 abstract class ITranslationRemoteDataSource {
-  Future<Map<String, String>> fetchTranslation(String sourceUrl, {void Function(int, int)? onReceiveProgress});
+  Future<Map<String, String>> fetchTranslation(
+    String sourceUrl, {
+    void Function(int, int)? onReceiveProgress,
+    CancelToken? cancelToken,
+  });
 }
 
 class TranslationRemoteDataSource implements ITranslationRemoteDataSource {
@@ -11,8 +15,16 @@ class TranslationRemoteDataSource implements ITranslationRemoteDataSource {
   TranslationRemoteDataSource(this._dio);
 
   @override
-  Future<Map<String, String>> fetchTranslation(String sourceUrl, {void Function(int, int)? onReceiveProgress}) async {
-    final response = await _dio.get(sourceUrl, onReceiveProgress: onReceiveProgress);
+  Future<Map<String, String>> fetchTranslation(
+    String sourceUrl, {
+    void Function(int, int)? onReceiveProgress,
+    CancelToken? cancelToken,
+  }) async {
+    final response = await _dio.get(
+      sourceUrl,
+      onReceiveProgress: onReceiveProgress,
+      cancelToken: cancelToken,
+    );
     final data = response.data;
     
     Map<String, String> parsedAyahs = {};

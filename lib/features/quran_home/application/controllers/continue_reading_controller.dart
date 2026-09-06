@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/data/local/preferences/preferences_service_provider.dart';
+import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
 import '../states/continue_reading_state.dart';
 
 final continueReadingControllerProvider =
@@ -68,39 +69,23 @@ final manualBookmarkControllerProvider =
 );
 
 class ManualBookmarkController extends Notifier<ContinueReadingState?> {
-  static const _prefsKey = 'manual_bookmark_state';
-
   @override
   ContinueReadingState? build() {
-    _loadState();
-    return state;
-  }
-
-  void _loadState() {
-    final prefs = ref.read(preferencesServiceProvider);
-    final jsonString = prefs.getString(_prefsKey);
-    if (jsonString != null && jsonString.isNotEmpty) {
-      try {
-        final Map<String, dynamic> json = jsonDecode(jsonString);
-        state = ContinueReadingState.fromJson(json);
-      } catch (e) {
-        state = null;
-      }
-    } else {
-      state = null;
-    }
+    final bookmarks = ref.watch(bookmarksControllerProvider);
+    if (bookmarks.isEmpty) return null;
+    return bookmarks.first.toContinueReadingState();
   }
 
   Future<void> saveBookmark(ContinueReadingState bookmarkState) async {
-    state = bookmarkState;
-    final prefs = ref.read(preferencesServiceProvider);
-    final jsonString = jsonEncode(bookmarkState.toJson());
-    await prefs.setString(_prefsKey, jsonString);
+    await ref.read(bookmarksControllerProvider.notifier).toggleBookmark(
+          surahId: bookmarkState.surahId,
+          surahName: bookmarkState.surahName,
+          ayahNumber: bookmarkState.ayahNumber,
+          totalAyahs: bookmarkState.totalAyahs,
+        );
   }
 
   Future<void> clearBookmark() async {
-    final prefs = ref.read(preferencesServiceProvider);
-    await prefs.remove(_prefsKey);
-    state = null;
+    await ref.read(bookmarksControllerProvider.notifier).clearAll();
   }
 }

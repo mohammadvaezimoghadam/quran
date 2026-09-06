@@ -5,6 +5,7 @@ part 'audio_download_task.freezed.dart';
 enum DownloadTaskStatus {
   idle,
   downloading,
+  paused,
   completed,
   failed,
   canceled,

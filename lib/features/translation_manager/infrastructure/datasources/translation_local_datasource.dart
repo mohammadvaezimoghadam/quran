@@ -26,11 +26,13 @@ class TranslationLocalDataSource implements ITranslationLocalDataSource {
   @override
   Future<void> saveTranslation(String translationId, Map<String, String> ayahs) async {
     await _box.put(translationId, ayahs);
+    await _prefs.setString('trans_downloaded_at_$translationId', DateTime.now().toIso8601String());
   }
 
   @override
   Future<void> deleteTranslation(String translationId) async {
     await _box.delete(translationId);
+    await _prefs.remove('trans_downloaded_at_$translationId');
   }
 
   @override

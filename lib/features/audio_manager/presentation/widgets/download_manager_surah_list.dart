@@ -1,13 +1,20 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
-import '../../../../core/services/audio_storage/audio_storage_service_impl.dart';
+import '../../../download_manager/application/controllers/download_hub_controller.dart';
+import '../../../download_manager/application/controllers/downloaded_items_controller.dart';
+import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
+import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
+import '../../../quran_reader/domain/entities/reciter_entity.dart';
+import '../../../quran_reader/domain/enums/audio_playback_mode.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
-import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../application/states/download_manager_state.dart';
 import '../../application/states/download_manager_selected_surahs_provider.dart';
 import '../../application/controllers/audio_download_controller.dart';
@@ -146,10 +153,10 @@ class _SurahGridItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: Hive.box(AudioStorageServiceImpl.boxName).listenable(),
-      builder: (context, box, child) {
-        final storageService = ref.read(audioStorageServiceProvider);
+    final storageService = ref.watch(audioStorageServiceProvider);
+    return ListenableBuilder(
+      listenable: storageService.downloadStatusListenable,
+      builder: (context, child) {
 
         final isDownloaded = selectedReciter != null
             ? storageService.isSurahDownloaded(
@@ -389,8 +396,21 @@ class _SurahGridItem extends ConsumerWidget {
         }
 
         return GestureDetector(
-          onTap: isDownloaded
-              ? null
+          onTap: (isDownloaded || hasPartialDownload)
+              ? () {
+                  if (selectedReciter != null) {
+                    _showSurahOptionsBottomSheet(
+                      context: context,
+                      ref: ref,
+                      surah: surah,
+                      reciter: selectedReciter,
+                      isDownloaded: isDownloaded,
+                      hasPartialDownload: hasPartialDownload,
+                      downloadedAyahsCount: downloadedAyahsCount,
+                      fontFamily: fontFamily,
+                    );
+                  }
+                }
               : isDownloading
                   ? () {
                       if (selectedReciter != null) {
@@ -410,6 +430,339 @@ class _SurahGridItem extends ConsumerWidget {
           child: itemCard,
         );
       },
+    );
+  }
+
+  void _showSurahOptionsBottomSheet({
+    required BuildContext context,
+    required WidgetRef ref,
+    required SurahEntity surah,
+    required ReciterEntity reciter,
+    required bool isDownloaded,
+    required bool hasPartialDownload,
+    required int? downloadedAyahsCount,
+    required String? fontFamily,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isAudioTranslation = reciter.styleId == 4;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return Material(
+          color: isDark ? const Color(0xFF1E2624) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: SafeArea(
+              child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag Handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Surah Info Header
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        isAudioTranslation
+                            ? CupertinoIcons.speaker_2_fill
+                            : CupertinoIcons.waveform,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'سوره ${surah.name} (${surah.number})',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: fontFamily,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isAudioTranslation
+                                ? 'گوینده: ${reciter.name}'
+                                : 'قاری: ${reciter.name}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white60 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Status Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDownloaded
+                            ? Colors.green.withValues(alpha: 0.12)
+                            : Colors.orange.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isDownloaded
+                            ? 'دانلود کامل'
+                            : '$downloadedAyahsCount/${surah.numberOfAyahs} آیه',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDownloaded ? Colors.green : Colors.orange,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
+
+                // Action 1: Play Surah (if downloaded)
+                if (isDownloaded)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        CupertinoIcons.play_circle_fill,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                    title: const Text(
+                      'پخش صوت سوره',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      isAudioTranslation
+                          ? 'پخش ترجمه گویا از آیه ۱'
+                          : 'پخش تلاوت از آیه ۱',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: isDark ? Colors.white54 : Colors.black45,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                    onTap: () async {
+                      Navigator.pop(sheetCtx);
+
+                      if (isAudioTranslation) {
+                        await ref
+                            .read(quranAudioControllerProvider.notifier)
+                            .selectTranslationReciter(reciter);
+                        ref
+                            .read(quranAudioControllerProvider.notifier)
+                            .setPlaybackMode(AudioPlaybackMode.onlyTranslation);
+                      } else {
+                        await ref
+                            .read(quranAudioControllerProvider.notifier)
+                            .selectReciter(reciter);
+                        ref
+                            .read(quranAudioControllerProvider.notifier)
+                            .setPlaybackMode(AudioPlaybackMode.onlyQuran);
+                      }
+
+                      if (context.mounted) {
+                        context.pushNamed(
+                          quranReaderRoute,
+                          pathParameters: {'id': surah.number.toString()},
+                        );
+                        ref.read(quranAudioControllerProvider.notifier).playAyah(
+                              surahId: surah.number,
+                              ayahNumber: 1,
+                              totalAyahsInSurah: surah.numberOfAyahs,
+                            );
+                      }
+                    },
+                  ),
+
+                // Action 2: Resume / Complete Download (if partial)
+                if (hasPartialDownload)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        CupertinoIcons.cloud_download_fill,
+                        color: Colors.green,
+                        size: 24,
+                      ),
+                    ),
+                    title: const Text(
+                      'ادامه و تکمیل دانلود',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'دانلود آیه‌های باقیمانده (${surah.numberOfAyahs - (downloadedAyahsCount ?? 0)} آیه)',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: isDark ? Colors.white54 : Colors.black45,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                    onTap: () {
+                      Navigator.pop(sheetCtx);
+                      ref
+                          .read(audioDownloadControllerProvider.notifier)
+                          .startDownload(
+                            reciter: reciter,
+                            surahId: surah.number,
+                          );
+                      AppSnackBar.showSuccess(
+                        context,
+                        'دانلود سوره ${surah.name} شروع شد.',
+                      );
+                    },
+                  ),
+
+                // Action 3: Delete from storage
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.trash_fill,
+                      color: AppColors.error,
+                      size: 22,
+                    ),
+                  ),
+                  title: const Text(
+                    'حذف از حافظه دستگاه',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.error,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'پاک‌سازی فایل‌های صوتی ذخیره شده این سوره',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.error,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.error),
+                  onTap: () {
+                    _showDeleteConfirmDialog(
+                      context: context,
+                      sheetContext: sheetCtx,
+                      ref: ref,
+                      surah: surah,
+                      reciter: reciter,
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+    );
+  }
+
+  void _showDeleteConfirmDialog({
+    required BuildContext context,
+    required BuildContext sheetContext,
+    required WidgetRef ref,
+    required SurahEntity surah,
+    required ReciterEntity reciter,
+  }) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(
+          'حذف صوت سوره ${surah.name}',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        content: Text(
+          'آیا از حذف کامل فایل‌های صوتی سوره ${surah.name} با صدای «${reciter.name}» از حافظه دستگاه اطمینان دارید؟',
+          style: const TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('انصراف'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              Navigator.pop(sheetContext);
+
+              final storage = ref.read(audioStorageServiceProvider);
+              await storage.deleteSurahAudio(
+                reciterId: reciter.id,
+                surahId: surah.number,
+              );
+
+              ref.invalidate(surahDownloadedAyahsCountProvider);
+              ref.read(downloadedItemsControllerProvider.notifier).loadItems();
+              ref.read(downloadHubControllerProvider.notifier).loadSummary();
+
+              if (context.mounted) {
+                AppSnackBar.showSuccess(
+                  context,
+                  'صوت سوره ${surah.name} با موفقیت از حافظه پاک شد.',
+                );
+              }
+            },
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
     );
   }
 }

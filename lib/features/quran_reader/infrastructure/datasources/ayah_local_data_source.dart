@@ -13,6 +13,7 @@ final ayahLocalDataSourceProvider = Provider<IAyahLocalDataSource>((ref) {
 abstract class IAyahLocalDataSource {
   Future<List<AyahDto>> getAyahsBySurah(int surahId);
   Future<List<WordDto>> getAyahWords(int surahId, int ayahNumber);
+  Future<List<WordDto>> getSurahWords(int surahId);
 }
 
 class AyahLocalDataSource implements IAyahLocalDataSource {
@@ -57,6 +58,22 @@ class AyahLocalDataSource implements IAyahLocalDataSource {
     final List<Map<String, dynamic>> maps = await _sqfliteService.rawQuery(
       sql,
       [surahId, ayahNumber],
+    );
+
+    return maps.map((map) => WordDto.fromSqlite(map)).toList();
+  }
+
+  @override
+  Future<List<WordDto>> getSurahWords(int surahId) async {
+    const sql = '''
+      SELECT * FROM words 
+      WHERE surah_id = ? 
+      ORDER BY ayah_number ASC, word_position ASC
+    ''';
+
+    final List<Map<String, dynamic>> maps = await _sqfliteService.rawQuery(
+      sql,
+      [surahId],
     );
 
     return maps.map((map) => WordDto.fromSqlite(map)).toList();
