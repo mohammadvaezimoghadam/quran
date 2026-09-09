@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -480,10 +481,6 @@ class _BookmarksManagerBottomSheetState
     required Color goldColor,
     required String arabicFontFamily,
   }) {
-    final cleanSurahName = item.surahName
-        .replaceFirst(RegExp(r'^(سورة|سوره)\s+'), '')
-        .trim();
-
     final hasArabicSnippet = item.arabicText != null && item.arabicText!.isNotEmpty;
 
     return Material(
@@ -555,13 +552,13 @@ class _BookmarksManagerBottomSheetState
                         children: [
                           Flexible(
                             child: Text(
-                              cleanSurahName,
+                              'سوره ${item.surahId.surahNameFa}',
                               style: TextStyle(
-                                fontFamily: arabicFontFamily,
-                                fontSize: 18,
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: goldColor,
-                                height: 1.1,
+                                height: 1.2,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -664,7 +661,7 @@ class _BookmarksManagerBottomSheetState
                     if (mounted) {
                       AppSnackBar.showInfo(
                         context,
-                        'نشانک سوره $cleanSurahName حذف شد.',
+                        'نشانک سوره ${item.surahId.surahNameFa} حذف شد.',
                       );
                     }
                   },

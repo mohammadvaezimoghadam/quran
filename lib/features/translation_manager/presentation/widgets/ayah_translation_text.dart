@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
@@ -61,6 +62,10 @@ class AyahTranslationText extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
+    final isRtl = Bidi.detectRtlDirectionality(translationText);
+    final textDirection = isRtl ? TextDirection.rtl : TextDirection.ltr;
+    final ayahNumStr = isRtl ? ayahNumber.toPersianDigit() : ayahNumber.toString();
+
     final colorScheme = Theme.of(context).colorScheme;
 
     final textColor = isActive
@@ -70,19 +75,27 @@ class AyahTranslationText extends ConsumerWidget {
     final style = AppTypography.translationText.copyWith(
       fontFamily: translationFontFamily,
       fontSize: fontSize,
+      fontWeight: translationFontFamily == 'BNazanin'
+          ? FontWeight.w600
+          : FontWeight.normal,
+      height: 1.65,
       color: textColor,
     );
 
-    return Column(
-      children: [
-        AppDimens.stackMd.vSpace,
-        Text(
-          '$translationText (${ayahNumber.toPersianDigit()})',
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
-          style: style,
-        ),
-      ],
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppDimens.stackMd.vSpace,
+          Text(
+            '$translationText ($ayahNumStr)',
+            textAlign: TextAlign.justify,
+            textDirection: textDirection,
+            style: style,
+          ),
+        ],
+      ),
     );
   }
 }

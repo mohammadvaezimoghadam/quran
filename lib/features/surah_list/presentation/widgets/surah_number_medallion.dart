@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -30,7 +31,7 @@ class SurahNumberMedallion extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            '$surahNumber',
+            surahNumber.toPersianDigit(),
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,

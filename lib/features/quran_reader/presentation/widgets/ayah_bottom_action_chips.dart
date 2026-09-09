@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 
 /// Soft, subtle action chips (Tafsir & Dictionary/Lughat) displayed at the bottom
 /// of an Ayah card when focused via long-press.
@@ -72,7 +73,7 @@ class AyahBottomActionChips extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontFamily: 'Vazirmatn',
+              fontFamily: AppTypography.fontFamily,
               fontSize: 12.5,
               fontWeight: FontWeight.w400,
               color: colorScheme.onSurfaceVariant,

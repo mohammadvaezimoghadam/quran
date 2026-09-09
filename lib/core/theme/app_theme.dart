@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'app_typography.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
@@ -32,7 +33,7 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: AppColors.background,
       useMaterial3: true,
-      fontFamily: 'Vazirmatn',
+      fontFamily: AppTypography.fontFamily,
       textTheme: const TextTheme(
         headlineLarge: TextStyle(color: AppColors.onSurface, fontWeight: FontWeight.bold),
         headlineMedium: TextStyle(color: AppColors.onSurface, fontWeight: FontWeight.bold),
@@ -79,7 +80,7 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: const Color(0xFF121416),
       useMaterial3: true,
-      fontFamily: 'Vazirmatn',
+      fontFamily: AppTypography.fontFamily,
       textTheme: const TextTheme(
         headlineLarge: TextStyle(color: darkOnSurface, fontWeight: FontWeight.bold),
         headlineMedium: TextStyle(color: darkOnSurface, fontWeight: FontWeight.bold),

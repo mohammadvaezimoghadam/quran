@@ -24,6 +24,7 @@ import '../widgets/surah_ayah_page_view.dart';
 import '../widgets/word_by_word_bottom_sheet.dart';
 import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 
 class QuranReaderScreen extends ConsumerStatefulWidget {
@@ -142,6 +143,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
   }
 
   String _getSurahName(WidgetRef ref, int surahId) {
+    if (surahId >= 1 && surahId <= 114) {
+      return 'سوره ${surahId.surahNameFa}';
+    }
     final surahs = ref.watch(surahListControllerProvider.select((s) => s.surahs));
     if (surahs.isNotEmpty) {
       final found = surahs.firstWhere(
@@ -157,7 +161,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
           startJuz: 1,
         ),
       );
-      return found.name;
+      return 'سوره ${found.nameFa}';
     }
     return widget.surahName;
   }
@@ -291,11 +295,6 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
       },
     );
 
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
     // Determine if audio is playing for a DIFFERENT surah
     final isAudioPlayingOtherSurah = ref.watch(
       quranAudioControllerProvider.select((s) =>
@@ -378,7 +377,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                               return IslamicKatibahAppBar(
                                 surahName: currentSurahName,
                                 surahNumber: currentSurahId,
-                                fontFamily: fontFamily,
+                                fontFamily: AppTypography.fontFamily,
                                 isSelectionMode: isSelectionMode,
                                 selectedCount: selectedCount,
                                 isBookmarked: isAyahBookmarked,
@@ -558,11 +557,14 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                         physics: const BouncingScrollPhysics(),
                         itemBuilder: (context, pageIndex) {
                           final pageSurahId = pageIndex + 1;
+                          final isTargetPage = pageSurahId == currentSurahId ||
+                              (currentSurahId != widget.surahId &&
+                                  pageSurahId == widget.surahId);
                           return SurahAyahPageView(
                             key: ValueKey('surah_page_$pageSurahId'),
                             surahId: pageSurahId,
                             surahName: _getSurahName(ref, pageSurahId),
-                            isCurrentPage: pageSurahId == currentSurahId,
+                            isCurrentPage: isTargetPage,
                             initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
                             translationId: widget.translationId,
                           );

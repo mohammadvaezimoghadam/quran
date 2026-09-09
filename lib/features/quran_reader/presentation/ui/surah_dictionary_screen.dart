@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -50,34 +51,16 @@ class SurahDictionaryScreen extends ConsumerWidget {
     final bool useCustomColor =
         harakatColor != null && harakatColor != baseArabicColor;
 
-    final cleanSurahName = surahName
-        .replaceAll('سورة', '')
-        .replaceAll('سوره', '')
-        .trim();
-
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF141C1A) : const Color(0xFFF9F7F2),
       appBar: AppBar(
-        title: Text.rich(
-          TextSpan(
-            text: 'لغت‌نامه سوره ',
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF2C2A29),
-            ),
-            children: [
-              TextSpan(
-                text: cleanSurahName,
-                style: TextStyle(
-                  fontFamily: fontFamily,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.goldAccent : AppColors.primary,
-                ),
-              ),
-            ],
+        title: Text(
+          'لغت‌نامه سوره ${surahId.surahNameFa}',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF2C2A29),
           ),
         ),
         centerTitle: true,

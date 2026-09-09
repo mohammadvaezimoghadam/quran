@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
@@ -85,10 +86,10 @@ class SearchResultAyahCard extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            item.surahName,
+                            'سوره ${item.surahNumber.surahNameFa}',
                             style: TextStyle(
-                              fontFamily: arabicFontFamily,
-                              fontSize: 15,
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.bold,
                               color: isDark
                                   ? AppColors.goldAccent

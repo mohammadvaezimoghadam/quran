@@ -45,7 +45,7 @@ abstract class AppConstants {
       'خطای غیرمنتظره‌ای در دریافت سوره‌ها رخ داد.';
 
   // UI App Titles & Theme Tooltips
-  static const String appTitle = 'قُرْآنٌ كَرِيمٌ';
+  static const String appTitle = 'قرآن تفکر';
   static const String surahListScreenTitle = 'فهرست سوره‌ها';
   static const String lightThemeTooltip = 'تم روشن';
   static const String darkThemeTooltip = 'تم تاریک';
@@ -66,7 +66,7 @@ abstract class AppConstants {
   static const String surahListTitle = 'سوره‌ها';
   static const String translationTitle = 'ترجمه';
   static const String settingsTitle = 'تنظیمات';
-  static const String homeWelcomeTitle = 'به اپلیکیشن قرآن کریم خوش آمدید';
+  static const String homeWelcomeTitle = 'به اپلیکیشن قرآن تفکر خوش آمدید';
   static const String translationComingSoon = 'بخش ترجمه به زودی اضافه می‌شود';
   static const String settingsComingSoon = 'بخش تنظیمات به زودی اضافه می‌شود';
 

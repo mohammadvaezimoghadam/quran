@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -84,7 +85,7 @@ class QuickAccessRow extends ConsumerWidget {
           context.pushNamed(
             surahDictionaryRoute,
             pathParameters: {'id': surah.number.toString()},
-            queryParameters: {'name': surah.name},
+            queryParameters: {'name': surah.nameFa},
           );
         }
         break;

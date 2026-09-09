@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../core/theme/app_typography.dart';
 
 /// AppHeader - Shared fixed header component for Hayat UI
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -73,7 +74,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
           Text(
             title,
             style: const TextStyle(
-              fontFamily: 'Vazirmatn',
+              fontFamily: AppTypography.fontFamily,
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: textPrimary,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -78,26 +79,14 @@ class WordByWordBottomSheet extends ConsumerWidget {
               // Title
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppDimens.stackLg),
-                child: RichText(
+                child: Text(
+                  'لغت‌نامه آیه ${ayahNumber.toPersianDigit()} سوره ${surahId.surahNameFa}',
                   textDirection: TextDirection.rtl,
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Vazirmatn',
-                      color: colorScheme.onSurface,
-                    ),
-                    children: [
-                      TextSpan(text: 'لغت‌نامه آیه ${ayahNumber.toPersianDigit()} سوره '),
-                      TextSpan(
-                        text: surahName,
-                        style: TextStyle(
-                          fontFamily: fontFamily,
-                          fontSize: 22, // Slightly larger to match Arabic fonts
-                          height: 1.2,
-                        ),
-                      ),
-                    ],
+                  style: TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: AppTypography.fontFamily,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -118,7 +107,7 @@ class WordByWordBottomSheet extends ConsumerWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: colorScheme.error,
-                          fontFamily: 'Vazirmatn',
+                          fontFamily: AppTypography.fontFamily,
                         ),
                       ),
                     ),
@@ -179,7 +168,7 @@ class WordByWordBottomSheet extends ConsumerWidget {
                                     word.translation,
                                     style: TextStyle(
                                       fontSize: 16,
-                                      fontFamily: 'Vazirmatn',
+                                      fontFamily: AppTypography.fontFamily,
                                       color: colorScheme.onSurfaceVariant,
                                       fontWeight: FontWeight.w500,
                                     ),

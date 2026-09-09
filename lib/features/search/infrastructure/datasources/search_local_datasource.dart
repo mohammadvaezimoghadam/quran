@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/data/local/sqflite/i_sqflite_service.dart';
 import '../../../../core/data/local/sqflite/sqflite_service_provider.dart';
 import '../../domain/entities/search_filter_type.dart';
@@ -24,6 +25,7 @@ class _IndexedSurah {
   final int numberOfAyahs;
   final String revelationType;
   final String normalizedName;
+  final String normalizedPersianName;
   final String normalizedEnglishName;
 
   _IndexedSurah({
@@ -33,6 +35,7 @@ class _IndexedSurah {
     required this.numberOfAyahs,
     required this.revelationType,
     required this.normalizedName,
+    required this.normalizedPersianName,
     required this.normalizedEnglishName,
   });
 }
@@ -100,6 +103,7 @@ class SearchLocalDataSource implements ISearchLocalDataSource {
           numberOfAyahs: numberOfAyahs,
           revelationType: revelationType,
           normalizedName: name.normalizeForSearch(),
+          normalizedPersianName: number.surahNameFa.normalizeForSearch(),
           normalizedEnglishName: englishName.toLowerCase(),
         );
         surahs.add(indexed);
@@ -167,10 +171,12 @@ class SearchLocalDataSource implements ISearchLocalDataSource {
     // 1. Search Surahs
     for (final surah in _cachedSurahs!) {
       final matchesName = surah.normalizedName.contains(normalizedQuery);
+      final matchesPersian =
+          surah.normalizedPersianName.contains(normalizedQuery);
       final matchesEnglish = surah.normalizedEnglishName.contains(queryLower);
       final matchesNumber = queryNumber != null && surah.number == queryNumber;
 
-      if (matchesName || matchesEnglish || matchesNumber) {
+      if (matchesName || matchesPersian || matchesEnglish || matchesNumber) {
         results.add(SearchResultItem(
           kind: SearchResultKind.surah,
           surahNumber: surah.number,

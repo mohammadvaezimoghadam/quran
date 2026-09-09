@@ -13,7 +13,6 @@ import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.da
 import '../../application/controllers/continue_reading_controller.dart';
 import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
 import 'widgets/continue_reading_card.dart';
-import 'widgets/daily_ayah_banner_widget.dart';
 import 'widgets/home_quick_access_grid.dart';
 import 'widgets/home_search_bar_widget.dart';
 import '../../../quick_access/presentation/ui/quick_access_row.dart';
@@ -37,14 +36,14 @@ class QuranHomeScreen extends ConsumerWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Centered Large Calligraphic Title "قرآن کریم"
+                // Centered Clean Title "قرآن تفکر" with IRANSans
                 Center(
                   child: Text(
-                    AppConstants.appTitle,
+                    AppConstants.appTitle.replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), ''),
                     textAlign: TextAlign.center,
                     style: AppTypography.appBarTitle.copyWith(
-                      fontFamily: AppTypography.thuluthFont,
-                      fontSize: 32,
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -89,11 +88,7 @@ class QuranHomeScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 1. Daily Ayah Banner (هر روز یک آیه)
-                  const DailyAyahBannerWidget(),
-                  AppDimens.stackLg.vSpace,
-
-                  // 2. Primary Navigation Action Buttons (سوره‌ها، ترجمه، تنظیمات)
+                  // 1. Primary Navigation Action Buttons (سوره‌ها، ترجمه، تنظیمات)
                   const HomeQuickAccessGrid(),
                   AppDimens.stackLg.vSpace,
 

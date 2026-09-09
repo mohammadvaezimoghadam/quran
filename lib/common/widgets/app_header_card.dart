@@ -179,7 +179,7 @@ class AppHeaderCard extends StatelessWidget {
                           ),
                           SizedBox(width: 4),
                           Text(
-                            'قرآن کریم',
+                            'قرآن تفکر',
                             style: TextStyle(
                               color: brightTurquoise,
                               fontSize: 11,

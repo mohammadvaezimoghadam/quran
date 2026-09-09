@@ -6,7 +6,6 @@ import '../../../quran_reader/application/controllers/reciter_providers.dart';
 import '../../application/states/download_manager_state.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
-import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../application/states/download_manager_selected_surahs_provider.dart';
 import '../widgets/download_manager_reciter_selector.dart';
 import '../widgets/download_manager_surah_list.dart';
@@ -73,18 +72,13 @@ class _AudioDownloadManagerScreenState
 
   @override
   Widget build(BuildContext context) {
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: IslamicKatibahAppBar(
         surahName: widget.isTranslationMode
             ? 'مدیریت دانلود ترجمه صوتی'
             : 'مدیریت دانلود صوت',
-        fontFamily: fontFamily,
+        fontFamily: AppTypography.fontFamily,
       ),
       body: Column(
         children: [

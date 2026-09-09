@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../common/constants/app_constants.dart';
+import '../../../../../common/extensions/int_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
+import '../../../../../common/extensions/surah_name_extension.dart';
 import '../../../../../common/widgets/app_loading_indicator.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_dimens.dart';
@@ -240,7 +242,7 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
                   ),
                 ),
                 child: Text(
-                  '${ayah.surahName} • ${AppConstants.ayahLabel} ${ayah.ayahNumber}',
+                  'سوره ${ayah.surahNumber.surahNameFa} • ${AppConstants.ayahLabel} ${ayah.ayahNumber.toPersianDigit()}',
                   style: AppTypography.badgeLabelSm,
                 ),
               ),

@@ -7,8 +7,9 @@ part 'quran_display_settings_state.freezed.dart';
 abstract class QuranDisplaySettingsState with _$QuranDisplaySettingsState {
   const factory QuranDisplaySettingsState({
     @Default(28.0) double arabicFontSize,
+    @Default(2.2) double arabicLineHeight,
     @Default(16.0) double translationFontSize,
-    @Default('Vazirmatn') String translationFontFamily,
+    @Default('BNazanin') String translationFontFamily,
     @Default(true) bool showTranslation,
     @Default(true) bool showArabicText,
     @Default(true) bool showAyahNumbers,

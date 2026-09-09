@@ -4,10 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
 import '../../application/controllers/pinned_surah_controller.dart';
@@ -78,11 +78,6 @@ class _PinnedSurahPickerBottomSheetState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final arabicFontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
     final surahs = ref.watch(surahListControllerProvider.select((s) => s.surahs));
     final currentPinnedId = widget.slotIndex != null
         ? ref.watch(quickAccessControllerProvider).slots[widget.slotIndex!]?.surahId
@@ -93,11 +88,13 @@ class _PinnedSurahPickerBottomSheetState
     final filteredSurahs = surahs.where((surah) {
       if (normalizedQuery.isEmpty) return true;
       final normalizedName = surah.name.normalizeForSearch();
+      final normalizedFa = surah.nameFa.normalizeForSearch();
       final normalizedEnglish = surah.englishName.normalizeForSearch();
       final numberStr = surah.number.toString();
       final persianNumberStr = numberStr.toPersianDigit();
 
       return normalizedName.contains(normalizedQuery) ||
+          normalizedFa.contains(normalizedQuery) ||
           normalizedEnglish.contains(normalizedQuery) ||
           numberStr.contains(normalizedQuery) ||
           persianNumberStr.contains(normalizedQuery);
@@ -156,9 +153,11 @@ class _PinnedSurahPickerBottomSheetState
                       children: [
                         Text(
                           widget.title ?? 'انتخاب سوره منتخب',
-                          style: const TextStyle(
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -166,6 +165,7 @@ class _PinnedSurahPickerBottomSheetState
                           widget.subtitle ??
                               'برای دسترسی سریع و قرائت مستقیم از صفحه اصلی',
                           style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
                             fontSize: 11.5,
                             color: isDark ? Colors.white60 : Colors.black54,
                           ),
@@ -301,6 +301,7 @@ class _PinnedSurahPickerBottomSheetState
                               child: Text(
                                 surah.number.toString().toPersianDigit(),
                                 style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   color: isSelected
@@ -314,27 +315,10 @@ class _PinnedSurahPickerBottomSheetState
                             title: Row(
                               children: [
                                 Text(
-                                  'سوره ',
+                                  'سوره ${surah.nameFa}',
                                   style: TextStyle(
                                     fontFamily: AppTypography.fontFamily,
-                                    fontSize: 13.5,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: isSelected
-                                        ? (isDark
-                                            ? AppColors.goldAccent
-                                            : AppColors.primary)
-                                        : (isDark
-                                            ? Colors.white70
-                                            : const Color(0xFF6E685F)),
-                                  ),
-                                ),
-                                Text(
-                                  surah.name,
-                                  style: TextStyle(
-                                    fontFamily: arabicFontFamily,
-                                    fontSize: 18,
+                                    fontSize: 15.5,
                                     fontWeight: isSelected
                                         ? FontWeight.bold
                                         : FontWeight.w600,
@@ -351,6 +335,7 @@ class _PinnedSurahPickerBottomSheetState
                                 Text(
                                   '(${surah.englishName})',
                                   style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
                                     fontSize: 11,
                                     color: isDark
                                         ? Colors.white38
@@ -364,6 +349,7 @@ class _PinnedSurahPickerBottomSheetState
                               child: Text(
                                 '${surah.numberOfAyahs.toString().toPersianDigit()} آیه • ${surah.revelationTypeFa} • صفحه ${surah.startPage.toString().toPersianDigit()}',
                                 style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
                                   fontSize: 11.5,
                                   color:
                                       isDark ? Colors.white54 : Colors.black54,
@@ -396,7 +382,7 @@ class _PinnedSurahPickerBottomSheetState
                                   Navigator.pop(context, surah);
                                   AppSnackBar.showSuccess(
                                     context,
-                                    'سوره ${surah.name} به عنوان سوره منتخب تنظیم شد.',
+                                    'سوره ${surah.nameFa} به عنوان سوره منتخب تنظیم شد.',
                                   );
                                 }
                               } else if (widget.autoSavePinned) {
@@ -407,7 +393,7 @@ class _PinnedSurahPickerBottomSheetState
                                   Navigator.pop(context, surah);
                                   AppSnackBar.showSuccess(
                                     context,
-                                    'سوره ${surah.name} به عنوان سوره منتخب تنظیم شد.',
+                                    'سوره ${surah.nameFa} به عنوان سوره منتخب تنظیم شد.',
                                   );
                                 }
                               } else {

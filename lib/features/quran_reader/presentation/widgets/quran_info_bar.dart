@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
@@ -102,7 +103,7 @@ class QuranInfoBar extends ConsumerWidget {
       child: Text(
         text,
         style: TextStyle(
-          fontFamily: 'Vazirmatn',
+          fontFamily: AppTypography.fontFamily,
           fontSize: 13,
           fontWeight: FontWeight.w600,
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
@@ -133,7 +134,7 @@ class QuranInfoBar extends ConsumerWidget {
             Text(
               text,
               style: TextStyle(
-                fontFamily: 'Vazirmatn',
+                fontFamily: AppTypography.fontFamily,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurfaceVariant,

@@ -4,8 +4,9 @@ import 'app_colors.dart';
 
 /// Sacred Serenity Typography System
 class AppTypography {
-  static const String fontFamily = 'Vazirmatn';
-  static const String vazirmatnFont = 'Vazirmatn';
+  static const String fontFamily = 'IRANSans';
+  static const String iransansFont = 'IRANSans';
+  static const String vazirmatnFont = 'IRANSans';
   static const String uthmanicFont = 'Uthmanic';
   static const String neyriziFont = 'Neyrizi';
   static const String thuluthFont = 'Thuluth';
@@ -31,9 +32,9 @@ class AppTypography {
     }
   }
 
-  /// Main App Bar Title Style (Vazirmatn in Gold Accent)
+  /// Main App Bar Title Style
   static const TextStyle appBarTitle = TextStyle(
-    fontFamily: vazirmatnFont,
+    fontFamily: fontFamily,
     fontSize: 20,
     fontWeight: FontWeight.bold,
     color: AppColors.goldAccent,
@@ -134,9 +135,9 @@ class AppTypography {
 
   /// Persian Translation Body Text
   static const TextStyle translationText = TextStyle(
-    fontFamily: fontFamily,
+    fontFamily: 'BNazanin',
     fontSize: 16,
-    fontWeight: FontWeight.normal,
+    fontWeight: FontWeight.w600,
     height: 1.6,
     color: AppColors.onSurfaceVariant,
   );
@@ -160,7 +161,7 @@ class AppTypography {
 
   /// Ayah Number & Small Metadata Labels (Compact)
   static const TextStyle badgeLabelSm = TextStyle(
-    fontFamily: neyriziFont,
+    fontFamily: fontFamily,
     fontSize: 13.5,
     fontWeight: FontWeight.normal,
     color: AppColors.secondaryContainer,

@@ -25,7 +25,7 @@ class TranslationSettingsSection extends StatelessWidget {
     super.key,
     required this.showTranslation,
     required this.translationFontSize,
-    this.translationFontFamily = 'Vazirmatn',
+    this.translationFontFamily = 'BNazanin',
     this.removeTranslationBrackets = true,
     required this.onToggleTranslation,
     required this.onFontSizeChanged,
@@ -113,8 +113,9 @@ class TranslationSettingsSection extends StatelessWidget {
 
   Widget _buildFontFamilyTile(BuildContext context, ColorScheme colorScheme) {
     final fonts = [
-      {'name': 'وزیر', 'family': 'Vazirmatn'},
       {'name': 'نازنین', 'family': 'BNazanin'},
+      {'name': 'ایران سنس', 'family': 'IRANSans'},
+      {'name': 'وزیر', 'family': 'Vazirmatn'},
     ];
 
     return Padding(

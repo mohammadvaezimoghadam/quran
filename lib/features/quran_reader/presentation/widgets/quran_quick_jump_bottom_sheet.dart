@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../../../../core/services/quran_navigation/quran_navigation_service_provider.dart';
@@ -100,7 +101,7 @@ class _QuranQuickJumpBottomSheetState
           final maxAyahs = _selectedSurah!.numberOfAyahs;
           if (ayahNum < 1 || ayahNum > maxAyahs) {
             AppSnackBar.showError(
-                context, 'شماره آیه سوره ${_selectedSurah!.name} باید بین ۱ تا $maxAyahs باشد.');
+                context, 'شماره آیه سوره ${_selectedSurah!.nameFa} باید بین ۱ تا $maxAyahs باشد.');
             return;
           }
           target = await navService.getTargetBySurah(_selectedSurah!.number,
@@ -421,8 +422,10 @@ class _QuranQuickJumpBottomSheetState
     final filteredSurahs = surahs.where((s) {
       if (query.isEmpty) return true;
       final normalizedName = s.name.normalizeForSearch();
+      final normalizedFaName = s.nameFa.normalizeForSearch();
       final normalizedEnglishName = s.englishName.normalizeForSearch();
       return normalizedName.contains(query) ||
+          normalizedFaName.contains(query) ||
           normalizedEnglishName.contains(query) ||
           s.number.toString() == query;
     }).toList();
@@ -491,10 +494,10 @@ class _QuranQuickJumpBottomSheetState
                       selected: isSelected,
                       selectedTileColor: AppColors.primary.withValues(alpha: 0.15),
                       title: Text(
-                        '${surah.number.toPersianDigit()}. سوره ${surah.name}',
+                        '${surah.number.toPersianDigit()}. سوره ${surah.nameFa}',
                         style: TextStyle(
-                          fontFamily: selectedFontFamily,
-                          fontSize: 16,
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 15.5,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           color: isSelected
                               ? AppColors.primary

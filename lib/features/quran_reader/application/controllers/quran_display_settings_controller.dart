@@ -14,10 +14,12 @@ class QuranDisplaySettingsController
 
     final arabicFontSize =
         prefs.getDouble(PreferencesKeys.arabicFontSize) ?? 28.0;
+    final arabicLineHeight =
+        prefs.getDouble(PreferencesKeys.arabicLineHeight) ?? 2.2;
     final translationFontSize =
         prefs.getDouble(PreferencesKeys.translationFontSize) ?? 16.0;
     final translationFontFamily =
-        prefs.getString(PreferencesKeys.translationFontFamily) ?? 'Vazirmatn';
+        prefs.getString(PreferencesKeys.translationFontFamily) ?? 'BNazanin';
     final showTranslation =
         prefs.getBool(PreferencesKeys.showTranslation) ?? true;
     final showAyahNumbers =
@@ -34,6 +36,7 @@ class QuranDisplaySettingsController
 
     return QuranDisplaySettingsState(
       arabicFontSize: arabicFontSize,
+      arabicLineHeight: arabicLineHeight,
       translationFontSize: translationFontSize,
       translationFontFamily: translationFontFamily,
       showTranslation: showTranslation,
@@ -62,6 +65,7 @@ class QuranDisplaySettingsController
 
     final prefs = ref.read(preferencesServiceProvider);
     prefs.setDouble(PreferencesKeys.arabicFontSize, state.arabicFontSize);
+    prefs.setDouble(PreferencesKeys.arabicLineHeight, state.arabicLineHeight);
     prefs.setDouble(
       PreferencesKeys.translationFontSize,
       state.translationFontSize,
@@ -86,6 +90,11 @@ class QuranDisplaySettingsController
 
   void updateArabicFontSize(double size) {
     state = state.copyWith(arabicFontSize: size);
+  }
+
+  void updateArabicLineHeight(double height) {
+    final clamped = double.parse(height.clamp(1.6, 3.2).toStringAsFixed(1));
+    state = state.copyWith(arabicLineHeight: clamped);
   }
 
   void updateTranslationFontSize(double size) {
@@ -136,6 +145,7 @@ class QuranDisplaySettingsController
     state = const QuranDisplaySettingsState();
     final prefs = ref.read(preferencesServiceProvider);
     prefs.remove(PreferencesKeys.arabicFontSize);
+    prefs.remove(PreferencesKeys.arabicLineHeight);
     prefs.remove(PreferencesKeys.translationFontSize);
     prefs.remove(PreferencesKeys.translationFontFamily);
     prefs.remove(PreferencesKeys.showTranslation);

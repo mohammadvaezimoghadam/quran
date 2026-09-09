@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/surah_entity.dart';
@@ -92,7 +93,7 @@ class SurahInfoContent extends ConsumerWidget {
 
             // Juz Info
             Text(
-              'جزء ${surah.startJuz}',
+              'جزء ${surah.startJuz.toPersianDigit()}',
               style: AppTypography.surahMetadata.copyWith(
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
@@ -102,7 +103,7 @@ class SurahInfoContent extends ConsumerWidget {
 
             // Ayah Count Badge
             SurahAyahBadge(
-              label: '${surah.numberOfAyahs} ${AppConstants.ayahLabel}',
+              label: '${surah.numberOfAyahs.toPersianDigit()} ${AppConstants.ayahLabel}',
               isDark: isDark,
             ),
           ],

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
+import '../../../../core/theme/app_typography.dart';
 
 /// Standalone interactive 360-Degree Circular Color Wheel Picker widget for customizing
 /// Quranic Tashkeel (Arabic diacritics & harakat) colors with zero scroll interference,
@@ -191,7 +192,7 @@ class _InlineTashkeelColorPickerState extends State<InlineTashkeelColorPicker> {
                           textDirection: TextDirection.rtl,
                           text: TextSpan(
                             style: TextStyle(
-                              fontFamily: 'Vazirmatn',
+                              fontFamily: AppTypography.fontFamily,
                               fontSize: 16,
                               height: 1.6,
                               color: widget.textPrimary,
@@ -199,7 +200,7 @@ class _InlineTashkeelColorPickerState extends State<InlineTashkeelColorPicker> {
                             children: ArabicTextHelper.buildColoredSpans(
                               text: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
                               baseStyle: TextStyle(
-                                fontFamily: 'Vazirmatn',
+                                fontFamily: AppTypography.fontFamily,
                                 fontSize: 16,
                                 height: 1.6,
                                 color: widget.textPrimary,

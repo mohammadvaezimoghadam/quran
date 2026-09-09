@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/translation_manager_controller.dart';
@@ -130,12 +131,6 @@ class _TranslationManagerBottomSheetState
     final surahs = surahState.surahs;
     final translations = translationState.value?.translations ?? [];
 
-    // Get the user's selected Arabic font for Surah names
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
     return ScaffoldMessenger(
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.48,
@@ -212,12 +207,11 @@ class _TranslationManagerBottomSheetState
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                     child: Text(
-                                      surah.name, // Arabic name
+                                      'سوره ${surah.nameFa}',
                                       style: AppTypography.bottomSheetItemLabel
                                           .copyWith(
-                                            fontFamily:
-                                                fontFamily, // User selected font!
-                                            fontSize: 18,
+                                            fontFamily: AppTypography.fontFamily,
+                                            fontSize: 16,
                                             color: colorScheme.onSurface,
                                           ),
                                     ),

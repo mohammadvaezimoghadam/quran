@@ -34,6 +34,9 @@ class AyahArabicText extends ConsumerWidget {
     final arabicFontSize = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.arabicFontSize),
     );
+    final arabicLineHeight = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.arabicLineHeight),
+    );
     final fontScript = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
     );
@@ -47,6 +50,7 @@ class AyahArabicText extends ConsumerWidget {
     final baseStyle = AppTypography.displayQuranReader.copyWith(
       fontFamily: fontFamily,
       fontSize: arabicFontSize,
+      height: arabicLineHeight,
       color: colorScheme.onSurface,
     );
 
@@ -118,7 +122,7 @@ class AyahArabicText extends ConsumerWidget {
               style: baseStyle,
               children: mainTextChildren,
             ),
-            textAlign: TextAlign.center,
+            textAlign: TextAlign.justify,
             textDirection: TextDirection.rtl,
           ),
         ],
@@ -130,7 +134,7 @@ class AyahArabicText extends ConsumerWidget {
         style: baseStyle,
         children: mainTextChildren,
       ),
-      textAlign: TextAlign.center,
+      textAlign: TextAlign.justify,
       textDirection: TextDirection.rtl,
     );
   }

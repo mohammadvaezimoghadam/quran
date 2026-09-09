@@ -51,7 +51,7 @@ class QuickSettingsDrawer extends ConsumerStatefulWidget {
 }
 
 class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
-  int _selectedTabIndex = 0; // 0: Display & Text, 1: Audio & Recitation
+  int _selectedTabIndex = 0; // 0: Quran Text, 1: Translation, 2: Audio & Recitation
 
   static const List<String> _fontNames = [
     'عثمان طه',
@@ -159,7 +159,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
 
               14.0.vSpace,
 
-              // 3. Tab Switcher without Icons (Higher height & clean layout)
+              // 3. Tab Switcher (3 Tabs: متن قرآن / ترجمه / صوت و تلاوت)
               Container(
                 height: 44,
                 padding: const EdgeInsets.all(4),
@@ -170,87 +170,26 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                 ),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () =>
-                            setState(() => _selectedTabIndex = 0),
-                        behavior: HitTestBehavior.opaque,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          decoration: BoxDecoration(
-                            color: _selectedTabIndex == 0
-                                ? cardBgColor
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(9),
-                            boxShadow: _selectedTabIndex == 0
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.black
-                                          .withValues(alpha: 0.07),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    )
-                                  ]
-                                : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              'متن و نمایش',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 13,
-                                fontWeight: _selectedTabIndex == 0
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                                color: _selectedTabIndex == 0
-                                    ? textPrimary
-                                    : textSecondary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    _buildTabButton(
+                      index: 0,
+                      title: 'متن قرآن',
+                      cardBgColor: cardBgColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
                     ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () =>
-                            setState(() => _selectedTabIndex = 1),
-                        behavior: HitTestBehavior.opaque,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          decoration: BoxDecoration(
-                            color: _selectedTabIndex == 1
-                                ? cardBgColor
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(9),
-                            boxShadow: _selectedTabIndex == 1
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.black
-                                          .withValues(alpha: 0.07),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    )
-                                  ]
-                                : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              'صوت و تلاوت',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 13,
-                                fontWeight: _selectedTabIndex == 1
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                                color: _selectedTabIndex == 1
-                                    ? textPrimary
-                                    : textSecondary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    _buildTabButton(
+                      index: 1,
+                      title: 'ترجمه',
+                      cardBgColor: cardBgColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                    ),
+                    _buildTabButton(
+                      index: 2,
+                      title: 'صوت و تلاوت',
+                      cardBgColor: cardBgColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
                     ),
                   ],
                 ),
@@ -261,7 +200,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
               // 4. Tab Content (Optimized: Isolated Subtree Watches to avoid unneeded rebuilds)
               Expanded(
                 child: _selectedTabIndex == 0
-                    ? _buildDisplayTab(
+                    ? _buildQuranTab(
                         context: context,
                         ref: ref,
                         displayNotifier: displayNotifier,
@@ -272,20 +211,28 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                         textSecondary: textSecondary,
                         colorScheme: colorScheme,
                       )
-                    : SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: _buildAudioTab(
-                          context: context,
-                          ref: ref,
-                          displayNotifier: displayNotifier,
-                          audioController: audioController,
-                          cardBgColor: cardBgColor,
-                          accentColor: accentColor,
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                          colorScheme: colorScheme,
-                        ),
-                      ),
+                    : _selectedTabIndex == 1
+                        ? _buildTranslationTab(
+                            context: context,
+                            ref: ref,
+                            displayNotifier: displayNotifier,
+                            cardBgColor: cardBgColor,
+                            accentColor: accentColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            colorScheme: colorScheme,
+                          )
+                        : _buildAudioTab(
+                            context: context,
+                            ref: ref,
+                            displayNotifier: displayNotifier,
+                            audioController: audioController,
+                            cardBgColor: cardBgColor,
+                            accentColor: accentColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            colorScheme: colorScheme,
+                          ),
               ),
             ],
           ),
@@ -294,8 +241,51 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     );
   }
 
-  // --- TAB 0: DISPLAY & TEXT (With Pinned Live Preview) ---
-  Widget _buildDisplayTab({
+  Widget _buildTabButton({
+    required int index,
+    required String title,
+    required Color cardBgColor,
+    required Color textPrimary,
+    required Color textSecondary,
+  }) {
+    final isSelected = _selectedTabIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedTabIndex = index),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          decoration: BoxDecoration(
+            color: isSelected ? cardBgColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.07),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    )
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 12.5,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? textPrimary : textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- TAB 0: QURAN TEXT & SCRIPT ---
+  Widget _buildQuranTab({
     required BuildContext context,
     required WidgetRef ref,
     required dynamic displayNotifier,
@@ -306,14 +296,13 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     required Color textSecondary,
     required ColorScheme colorScheme,
   }) {
-    // Only watch display settings when on Tab 0
     final settings = ref.watch(quranDisplaySettingsControllerProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. PINNED LIVE PREVIEW CARD (Stays fixed at the top of the tab)
-        _buildLivePreviewCard(
+        // Compact Pinned Quran Live Preview
+        _buildQuranLivePreviewCard(
           context: context,
           settings: settings,
           cardBgColor: cardBgColor,
@@ -325,35 +314,18 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
 
         12.0.vSpace,
 
-        // 2. SCROLLABLE SETTINGS OPTIONS
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // GROUP 1: TEXT & SCRIPT
-                _buildSectionTitle('تنظیمات متن و قرائت', textSecondary),
+                // GROUP 1: QURAN SCRIPT & CALLIGRAPHY
+                _buildSectionTitle('قلم و نگارش قرآن', textSecondary),
                 6.0.vSpace,
                 _buildCardGroup(
                   cardBgColor: cardBgColor,
                   children: [
-                    _buildSliderTile(
-                      context: context,
-                      title: 'اندازه متن عربی',
-                      valueLabel: '${settings.arabicFontSize.toInt()} pt',
-                      icon: CupertinoIcons.textformat_size,
-                      value: settings.arabicFontSize,
-                      min: 18,
-                      max: 42,
-                      divisions: 24,
-                      accentColor: accentColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      onChanged: (val) =>
-                          displayNotifier.updateArabicFontSize(val),
-                    ),
-                    _buildInnerDivider(colorScheme),
                     _buildFontScriptTile(
                       context: context,
                       settings: settings,
@@ -374,6 +346,48 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                           displayNotifier.updateHarakatColor(colorHex),
                     ),
                     _buildInnerDivider(colorScheme),
+                    _buildSliderTile(
+                      context: context,
+                      title: 'اندازه متن عربی',
+                      valueLabel: '${settings.arabicFontSize.toInt()} pt',
+                      icon: CupertinoIcons.textformat_size,
+                      value: settings.arabicFontSize,
+                      min: 18,
+                      max: 42,
+                      divisions: 24,
+                      accentColor: accentColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      onChanged: (val) =>
+                          displayNotifier.updateArabicFontSize(val),
+                    ),
+                    _buildInnerDivider(colorScheme),
+                    _buildSliderTile(
+                      context: context,
+                      title: 'فاصله خطوط متن عربی',
+                      valueLabel: settings.arabicLineHeight.toStringAsFixed(1),
+                      icon: CupertinoIcons.arrow_up_down,
+                      value: settings.arabicLineHeight,
+                      min: 1.6,
+                      max: 3.2,
+                      divisions: 16,
+                      accentColor: accentColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      onChanged: (val) =>
+                          displayNotifier.updateArabicLineHeight(val),
+                    ),
+                  ],
+                ),
+
+                16.0.vSpace,
+
+                // GROUP 2: DISPLAY OPTIONS & THEME
+                _buildSectionTitle('نمایش و صفحه', textSecondary),
+                6.0.vSpace,
+                _buildCardGroup(
+                  cardBgColor: cardBgColor,
+                  children: [
                     SettingsSwitchTile(
                       title: 'نمایش متن عربی',
                       subtitle: 'نمایش آیات به زبان عربی',
@@ -383,44 +397,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       onChanged: (val) => displayNotifier.toggleArabicText(val),
-                    ),
-                    _buildInnerDivider(colorScheme),
-                    TranslationSettingsSection(
-                      showTranslation: settings.showTranslation,
-                      translationFontSize: settings.translationFontSize,
-                      translationFontFamily: settings.translationFontFamily,
-                      removeTranslationBrackets:
-                          settings.removeTranslationBrackets,
-                      onToggleTranslation: (val) =>
-                          displayNotifier.toggleTranslation(val),
-                      onFontSizeChanged: (val) =>
-                          displayNotifier.updateTranslationFontSize(val),
-                      onFontFamilyChanged: (val) =>
-                          displayNotifier.updateTranslationFontFamily(val),
-                      onToggleRemoveBrackets: (val) =>
-                          displayNotifier.toggleRemoveTranslationBrackets(val),
-                      accentColor: accentColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                    ),
-                  ],
-                ),
-
-                16.0.vSpace,
-
-                // GROUP 2: THEME & DISPLAY OPTIONS
-                _buildSectionTitle('گزینه‌های عمومی و تم', textSecondary),
-                6.0.vSpace,
-                _buildCardGroup(
-                  cardBgColor: cardBgColor,
-                  children: [
-                    _buildThemeTile(
-                      context: context,
-                      activeThemeMode: activeThemeMode,
-                      accentColor: accentColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      colorScheme: colorScheme,
                     ),
                     _buildInnerDivider(colorScheme),
                     SettingsSwitchTile(
@@ -434,12 +410,21 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       onChanged: (val) =>
                           displayNotifier.toggleAyahNumbers(val),
                     ),
+                    _buildInnerDivider(colorScheme),
+                    _buildThemeTile(
+                      context: context,
+                      activeThemeMode: activeThemeMode,
+                      accentColor: accentColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      colorScheme: colorScheme,
+                    ),
                   ],
                 ),
 
                 16.0.vSpace,
 
-                // RESET DISPLAY SETTINGS
+                // RESET BUTTON
                 Center(
                   child: TextButton.icon(
                     onPressed: () => displayNotifier.resetToDefaults(),
@@ -449,7 +434,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       color: textSecondary,
                     ),
                     label: Text(
-                      'بازنشانی تنظیمات متن و نمایش',
+                      'بازنشانی تنظیمات متن و نگارش',
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 11.5,
@@ -473,8 +458,110 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     );
   }
 
-  // --- PINNED LIVE PREVIEW CARD ---
-  Widget _buildLivePreviewCard({
+  // --- TAB 1: TRANSLATION SETTINGS ---
+  Widget _buildTranslationTab({
+    required BuildContext context,
+    required WidgetRef ref,
+    required dynamic displayNotifier,
+    required Color cardBgColor,
+    required Color accentColor,
+    required Color textPrimary,
+    required Color textSecondary,
+    required ColorScheme colorScheme,
+  }) {
+    final settings = ref.watch(quranDisplaySettingsControllerProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Compact Pinned Translation Live Preview
+        _buildTranslationLivePreviewCard(
+          context: context,
+          settings: settings,
+          cardBgColor: cardBgColor,
+          accentColor: accentColor,
+          textPrimary: textPrimary,
+          textSecondary: textSecondary,
+          colorScheme: colorScheme,
+        ),
+
+        12.0.vSpace,
+
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionTitle('تنظیمات ترجمه فارسی', textSecondary),
+                6.0.vSpace,
+                _buildCardGroup(
+                  cardBgColor: cardBgColor,
+                  children: [
+                    TranslationSettingsSection(
+                      showTranslation: settings.showTranslation,
+                      translationFontSize: settings.translationFontSize,
+                      translationFontFamily: settings.translationFontFamily,
+                      removeTranslationBrackets:
+                          settings.removeTranslationBrackets,
+                      onToggleTranslation: (val) =>
+                          displayNotifier.toggleTranslation(val),
+                      onFontSizeChanged: (val) =>
+                          displayNotifier.updateTranslationFontSize(val),
+                      onFontFamilyChanged: (val) =>
+                          displayNotifier.updateTranslationFontFamily(val),
+                      onToggleRemoveBrackets: (val) =>
+                          displayNotifier.toggleRemoveTranslationBrackets(val),
+                      accentColor: accentColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                    ),
+                  ],
+                ),
+
+                16.0.vSpace,
+
+                // RESET TRANSLATION BUTTON
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () {
+                      displayNotifier.updateTranslationFontSize(16.0);
+                      displayNotifier.updateTranslationFontFamily('BNazanin');
+                      displayNotifier.toggleRemoveTranslationBrackets(true);
+                      displayNotifier.toggleTranslation(true);
+                    },
+                    icon: Icon(
+                      CupertinoIcons.refresh,
+                      size: 16,
+                      color: textSecondary,
+                    ),
+                    label: Text(
+                      'بازنشانی تنظیمات ترجمه',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: textSecondary,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                    ),
+                  ),
+                ),
+
+                8.0.vSpace,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- PINNED QURAN LIVE PREVIEW CARD ---
+  Widget _buildQuranLivePreviewCard({
     required BuildContext context,
     required dynamic settings,
     required Color cardBgColor,
@@ -488,15 +575,11 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     final harakatColor =
         ArabicTextHelper.parseHexColor(settings.harakatColor);
     const sampleArabicText = 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَالَمِينَ';
-    const rawSampleTranslationText =
-        '(خداوندی که) ستایش مخصوص اوست [که] پروردگار جهانیان است.';
-    final sampleTranslationText = settings.removeTranslationBrackets
-        ? rawSampleTranslationText.removeTranslatorExplanations()
-        : rawSampleTranslationText;
 
     final baseArabicStyle = AppTypography.displayQuranReader.copyWith(
       fontFamily: fontFamily,
       fontSize: settings.arabicFontSize,
+      height: settings.arabicLineHeight,
       color: textPrimary,
     );
 
@@ -535,7 +618,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: cardBgColor,
         borderRadius: BorderRadius.circular(14.0),
@@ -544,24 +627,58 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
           width: 1.0,
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Arabic Ayah Preview
-          if (settings.showArabicText)
-            RichText(
+      child: settings.showArabicText
+          ? RichText(
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
               text: TextSpan(
                 style: baseArabicStyle,
                 children: textChildren,
               ),
+            )
+          : Center(
+              child: Text(
+                'نمایش متن عربی غیرفعال است',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12,
+                  color: textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
             ),
+    );
+  }
 
-          // Translation Preview
-          if (settings.showTranslation) ...[
-            if (settings.showArabicText) 4.0.vSpace,
-            Text(
+  // --- PINNED TRANSLATION LIVE PREVIEW CARD ---
+  Widget _buildTranslationLivePreviewCard({
+    required BuildContext context,
+    required dynamic settings,
+    required Color cardBgColor,
+    required Color accentColor,
+    required Color textPrimary,
+    required Color textSecondary,
+    required ColorScheme colorScheme,
+  }) {
+    const rawSampleTranslationText =
+        '(خداوندی که) ستایش مخصوص اوست [که] پروردگار جهانیان است.';
+    final sampleTranslationText = settings.removeTranslationBrackets
+        ? rawSampleTranslationText.removeTranslatorExplanations()
+        : rawSampleTranslationText;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: cardBgColor,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(
+          color: accentColor.withValues(alpha: 0.2),
+          width: 1.0,
+        ),
+      ),
+      child: settings.showTranslation
+          ? Text(
               sampleTranslationText,
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
@@ -571,25 +688,22 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                 color: textSecondary,
                 height: 1.35,
               ),
-            ),
-          ],
-
-          if (!settings.showArabicText && !settings.showTranslation)
-            Text(
-              'نمایش متن عربی و ترجمه غیرفعال است',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 11,
-                color: textSecondary,
-                fontStyle: FontStyle.italic,
+            )
+          : Center(
+              child: Text(
+                'نمایش ترجمه غیرفعال است',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12,
+                  color: textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
-        ],
-      ),
     );
   }
 
-  // --- TAB 1: AUDIO & RECITATION (Optimized with targeted select watchers) ---
+  // --- TAB 2: AUDIO & RECITATION (Optimized with targeted select watchers) ---
   Widget _buildAudioTab({
     required BuildContext context,
     required WidgetRef ref,
@@ -615,19 +729,22 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
       quranDisplaySettingsControllerProvider.select((s) => s.autoHighlight),
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // GROUP 0: PLAYBACK MODE SELECTION
-        _buildSectionTitle('نحوه پخش صوت', textSecondary),
-        6.0.vSpace,
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: cardBgColor,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // GROUP 0: PLAYBACK MODE SELECTION
+          _buildSectionTitle('نحوه پخش صوت', textSecondary),
+          6.0.vSpace,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: cardBgColor,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
             children: AudioPlaybackMode.values.map((mode) {
               final isSelected = playbackMode == mode;
               
@@ -784,7 +901,8 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
         ),
 
         16.0.vSpace,
-      ],
+        ],
+      ),
     );
   }
 
@@ -811,6 +929,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     required List<Widget> children,
   }) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: cardBgColor,
         borderRadius: BorderRadius.circular(16.0),

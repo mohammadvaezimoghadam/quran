@@ -35,20 +35,74 @@ class SurahAyahPageView extends ConsumerStatefulWidget {
 class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
-  bool _hasUsedInitialScroll = false;
+  bool _hasScrolledToInitialAyah = false;
+  bool _hasCompletedInitialScroll = false;
+
+  @override
+  void didUpdateWidget(SurahAyahPageView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialAyahNumber != null &&
+        widget.initialAyahNumber != oldWidget.initialAyahNumber) {
+      _hasScrolledToInitialAyah = false;
+      _hasCompletedInitialScroll = false;
+      final ayahs = ref.read(quranReaderControllerProvider).ayahs;
+      if (ayahs.isNotEmpty) {
+        _scrollToInitialAyahIfNeeded(ayahs);
+      }
+    }
+  }
+
+  void _scrollToInitialAyahIfNeeded(List<AyahEntity> ayahs) {
+    if (_hasScrolledToInitialAyah) return;
+    final targetAyah = widget.initialAyahNumber;
+    if (targetAyah == null || ayahs.isEmpty) return;
+
+    final targetIndex = ayahs.indexWhere((a) => a.ayahNumber == targetAyah);
+    if (targetIndex == -1) return;
+
+    _hasScrolledToInitialAyah = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(activeAyahProvider.notifier).setActiveAyah(targetAyah);
+
+      void attemptScroll([int attempt = 0]) {
+        if (!mounted) return;
+        final hasPositions = _itemPositionsListener.itemPositions.value.isNotEmpty;
+        if (_itemScrollController.isAttached && hasPositions) {
+          try {
+            _hasCompletedInitialScroll = true;
+            if (targetIndex > 0) {
+              _itemScrollController.scrollTo(
+                index: targetIndex,
+                duration: const Duration(milliseconds: 450),
+                curve: Curves.easeInOutCubic,
+                alignment: 0.05,
+              );
+            }
+          } catch (_) {}
+        } else if (attempt < 15) {
+          Future.delayed(Duration(milliseconds: 60 + (attempt * 25)), () {
+            attemptScroll(attempt + 1);
+          });
+        }
+      }
+
+      // Small delay to allow the layout to settle before programmatic scroll
+      Future.delayed(const Duration(milliseconds: 100), () {
+        attemptScroll();
+      });
+    });
+  }
 
   int _getInitialScrollIndex(List<dynamic> ayahs) {
-    if (_hasUsedInitialScroll) return 0;
-
     final targetAyah = widget.initialAyahNumber ?? ref.read(activeAyahProvider);
     if (targetAyah != null) {
       final index = ayahs.indexWhere((a) => a.ayahNumber == targetAyah);
       if (index != -1) {
-        _hasUsedInitialScroll = true;
         return index;
       }
     }
-    _hasUsedInitialScroll = true;
     return 0;
   }
 
@@ -105,9 +159,19 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
       return const Center(child: Text(AppConstants.noAyahFound));
     }
 
+    // Perform initial scroll and highlight to target ayah if requested
+    if (widget.initialAyahNumber != null && !_hasScrolledToInitialAyah) {
+      _scrollToInitialAyahIfNeeded(state.ayahs);
+    }
+
     // Auto-scroll listener for ayah navigation and audio playback
     ref.listen<int?>(activeAyahProvider, (previous, next) {
       if (next != null) {
+        // Skip duplicate scroll while initial scroll is handling this ayah
+        if (next == widget.initialAyahNumber && !_hasCompletedInitialScroll) {
+          return;
+        }
+
         final targetIndex = state.ayahs.indexWhere((a) => a.ayahNumber == next);
         if (targetIndex != -1 && _itemScrollController.isAttached) {
           final isAudioPlaying = ref.read(quranAudioControllerProvider).status == AudioStatus.playing;
@@ -117,12 +181,16 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
 
           if (isAudioPlaying && isSuspended) return;
 
-          _itemScrollController.scrollTo(
-            index: targetIndex,
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOutCubic,
-            alignment: 0.0,
-          );
+          try {
+            if (_itemPositionsListener.itemPositions.value.isNotEmpty) {
+              _itemScrollController.scrollTo(
+                index: targetIndex,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCubic,
+                alignment: 0.0,
+              );
+            }
+          } catch (_) {}
         }
       }
     });
@@ -139,12 +207,16 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
           if (currentAyah != null) {
             final targetIndex = state.ayahs.indexWhere((a) => a.ayahNumber == currentAyah);
             if (targetIndex != -1 && _itemScrollController.isAttached) {
-              _itemScrollController.scrollTo(
-                index: targetIndex,
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOutCubic,
-                alignment: 0.0,
-              );
+              try {
+                if (_itemPositionsListener.itemPositions.value.isNotEmpty) {
+                  _itemScrollController.scrollTo(
+                    index: targetIndex,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutCubic,
+                    alignment: 0.0,
+                  );
+                }
+              } catch (_) {}
             }
           }
         }
@@ -168,10 +240,14 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
             
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (_itemScrollController.isAttached) {
-                _itemScrollController.jumpTo(
-                  index: index,
-                  alignment: alignment,
-                );
+                try {
+                  if (_itemPositionsListener.itemPositions.value.isNotEmpty) {
+                    _itemScrollController.jumpTo(
+                      index: index,
+                      alignment: alignment,
+                    );
+                  }
+                } catch (_) {}
               }
             });
           }

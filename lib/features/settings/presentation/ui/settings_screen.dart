@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../quran_reader/presentation/widgets/quick_settings_drawer.dart';
+import '../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -18,6 +18,9 @@ class SettingsScreen extends StatelessWidget {
     final cardBgColor = isDark ? const Color(0xFF162220) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF1C1B1B);
     final subtitleColor = isDark ? Colors.white70 : const Color(0xFF666666);
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFEAE7E3);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -38,15 +41,57 @@ class SettingsScreen extends StatelessWidget {
             context: context,
             child: Column(
               children: [
-                // Audio Downloads
+                // 1. Text & Quran Reader Display Settings
                 _buildSettingsTile(
                   context: context,
-                  icon: CupertinoIcons.arrow_down_circle_fill,
-                  title: 'مدیریت دانلودهای صوتی',
-                  subtitle: 'دانلود و مدیریت صوت قاریان و ترجمه‌ها',
+                  icon: CupertinoIcons.textformat_size,
+                  title: 'تنظیمات متن و قرائت',
+                  subtitle: 'اندازه قلم، نوع خط، فاصله خطوط و رنگ اعراب',
                   textColor: textColor,
                   subtitleColor: subtitleColor,
-                  onTap: () => context.pushNamed(audioDownloadManagerRoute),
+                  onTap: () => QuickSettingsDrawer.show(context),
+                ),
+                Divider(height: 1, color: dividerColor),
+
+                // 2. Translation Management
+                _buildSettingsTile(
+                  context: context,
+                  icon: CupertinoIcons.book_fill,
+                  title: 'مدیریت ترجمه‌ها',
+                  subtitle: 'انتخاب مترجم و تنظیمات نمایش ترجمه',
+                  textColor: textColor,
+                  subtitleColor: subtitleColor,
+                  onTap: () => TranslationManagerBottomSheet.show(context),
+                ),
+                Divider(height: 1, color: dividerColor),
+
+                // 3. About Quran Tafakor
+                _buildSettingsTile(
+                  context: context,
+                  icon: CupertinoIcons.info_circle_fill,
+                  title: 'درباره قرآن تفکر',
+                  subtitle: 'نسخه ۱.۰.۰',
+                  textColor: textColor,
+                  subtitleColor: subtitleColor,
+                  onTap: () {
+                    showAboutDialog(
+                      context: context,
+                      applicationName: 'قرآن تفکر',
+                      applicationVersion: '۱.۰.۰',
+                      applicationIcon: const Icon(
+                        CupertinoIcons.book,
+                        size: 40,
+                        color: AppColors.goldAccent,
+                      ),
+                      children: const [
+                        Text(
+                          'اپلیکیشن جامع قرآن تفکر با رسم‌الخط‌های استاندارد، ترجمه‌های معتبر و امکانات پیشرفته مطالعه قرآن کریم.',
+                          textAlign: TextAlign.justify,
+                          textDirection: TextDirection.rtl,
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

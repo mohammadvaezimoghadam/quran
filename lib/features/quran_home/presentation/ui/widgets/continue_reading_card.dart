@@ -7,6 +7,7 @@ import '../../../../quran_reader/application/controllers/quran_display_settings_
 
 import '../../../../../common/extensions/int_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
+import '../../../../../common/extensions/surah_name_extension.dart';
 import '../../../../../core/routes/route_name.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -246,6 +247,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                                     Text(
                                       animatedPercentText,
                                       style: TextStyle(
+                                        fontFamily: AppTypography.fontFamily,
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
                                         color: gaugeColor,
@@ -288,13 +290,13 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                             children: [
                               Text(
                                 !isEmpty
-                                    ? state.surahName
+                                    ? 'سوره ${state.surahId.surahNameFa}'
                                     : (selectedTab == 0
                                           ? 'شروع قرائت قرآن'
                                           : 'افزودن نشانک'),
                                 style: TextStyle(
-                                  fontFamily: AppTypography.neyriziFont,
-                                  fontSize: 16,
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                   color: titleColor,
                                   height: 1.2,
@@ -304,6 +306,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                               Text(
                                 ayahInfoText,
                                 style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                   color: subtitleColor,
@@ -339,6 +342,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                                     ? 'ادامه'
                                     : (selectedTab == 0 ? 'شروع' : 'سوره‌ها'),
                                 style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   color: buttonTextColor,
@@ -408,6 +412,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
             Text(
               title,
               style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                 color: isSelected

@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/download_hub_controller.dart';
 import '../../application/controllers/downloaded_items_controller.dart';
 import '../widgets/download_active_queue_section.dart';
@@ -21,16 +20,11 @@ class DownloadHubScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(downloadHubControllerProvider);
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: IslamicKatibahAppBar(
+      appBar: const IslamicKatibahAppBar(
         surahName: 'مدیریت دانلودها',
-        fontFamily: fontFamily,
+        fontFamily: AppTypography.fontFamily,
       ),
       body: RefreshIndicator(
         onRefresh: () async {

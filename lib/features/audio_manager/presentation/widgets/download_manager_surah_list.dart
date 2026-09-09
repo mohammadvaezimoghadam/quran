@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -500,11 +502,11 @@ class _SurahGridItem extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'سوره ${surah.name} (${surah.number})',
-                            style: TextStyle(
+                            'سوره ${surah.nameFa} (${surah.number.toPersianDigit()})',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              fontFamily: fontFamily,
+                              fontFamily: AppTypography.fontFamily,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -656,7 +658,7 @@ class _SurahGridItem extends ConsumerWidget {
                           );
                       AppSnackBar.showSuccess(
                         context,
-                        'دانلود سوره ${surah.name} شروع شد.',
+                        'دانلود سوره ${surah.nameFa} شروع شد.',
                       );
                     },
                   ),
@@ -723,17 +725,28 @@ class _SurahGridItem extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) => AlertDialog(
         title: Text(
-          'حذف صوت سوره ${surah.name}',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          'حذف صوت سوره ${surah.nameFa}',
+          style: const TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
         ),
         content: Text(
-          'آیا از حذف کامل فایل‌های صوتی سوره ${surah.name} با صدای «${reciter.name}» از حافظه دستگاه اطمینان دارید؟',
-          style: const TextStyle(fontSize: 14, height: 1.5),
+          'آیا از حذف کامل فایل‌های صوتی سوره ${surah.nameFa} با صدای «${reciter.name}» از حافظه دستگاه اطمینان دارید؟',
+          style: const TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 14,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('انصراف'),
+            child: const Text(
+              'انصراف',
+              style: TextStyle(fontFamily: AppTypography.fontFamily),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -756,11 +769,14 @@ class _SurahGridItem extends ConsumerWidget {
               if (context.mounted) {
                 AppSnackBar.showSuccess(
                   context,
-                  'صوت سوره ${surah.name} با موفقیت از حافظه پاک شد.',
+                  'صوت سوره ${surah.nameFa} با موفقیت از حافظه پاک شد.',
                 );
               }
             },
-            child: const Text('حذف'),
+            child: const Text(
+              'حذف',
+              style: TextStyle(fontFamily: AppTypography.fontFamily),
+            ),
           ),
         ],
       ),

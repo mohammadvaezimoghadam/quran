@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../common/extensions/int_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
+import '../../../../../common/extensions/surah_name_extension.dart';
 import '../../../../../core/routes/route_name.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
@@ -81,10 +82,6 @@ class DailyAyahBannerWidget extends ConsumerWidget {
             ),
           ),
           data: (item) {
-            final cleanSurahName = item.surahName
-                .replaceFirst(RegExp(r'^(سورة|سوره)\s+'), '')
-                .trim();
-
             return Stack(
               fit: StackFit.expand,
               children: [
@@ -177,7 +174,7 @@ class DailyAyahBannerWidget extends ConsumerWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      'سوره $cleanSurahName • آیه ${item.ayahNumber.toPersianDigit()}',
+                                      'سوره ${item.surahNumber.surahNameFa} • آیه ${item.ayahNumber.toPersianDigit()}',
                                       style: TextStyle(
                                         fontFamily: AppTypography.fontFamily,
                                         fontSize: 11,

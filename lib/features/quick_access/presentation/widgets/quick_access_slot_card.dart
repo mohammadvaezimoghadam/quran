@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../domain/entities/quick_access_tool_entity.dart';
 
 class QuickAccessSlotCard extends ConsumerStatefulWidget {
@@ -120,11 +120,6 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final arabicFontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
     final isEmpty = widget.tool == null;
 
     final cardBgColor = isDark
@@ -233,15 +228,17 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                (widget.tool!.surahName ?? widget.tool!.title)
-                                    .replaceAll('سورة', '')
-                                    .replaceAll('سوره', '')
-                                    .trim(),
+                                widget.tool!.surahId != null
+                                    ? widget.tool!.surahId!.surahNameFa
+                                    : (widget.tool!.surahName ?? widget.tool!.title)
+                                        .replaceAll('سورة', '')
+                                        .replaceAll('سوره', '')
+                                        .trim(),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 style: TextStyle(
-                                  fontFamily: arabicFontFamily,
-                                  fontSize: 16.0,
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 14.5,
                                   fontWeight: FontWeight.bold,
                                   color: isDark
                                       ? Colors.white

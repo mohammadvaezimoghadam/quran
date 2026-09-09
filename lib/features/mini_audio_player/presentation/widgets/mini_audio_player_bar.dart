@@ -137,7 +137,7 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                                   child: Text(
                                     'آیه $currentAyahNumber از $totalAyahsInSurah',
                                     style: const TextStyle(
-                                      fontFamily: AppTypography.vazirmatnFont,
+                                      fontFamily: AppTypography.fontFamily,
                                       fontSize: 10.5,
                                       fontWeight: FontWeight.w500,
                                       color: Colors.white70,

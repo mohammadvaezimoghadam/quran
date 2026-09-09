@@ -59,13 +59,9 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
     final errorMessage = ref.watch(
       surahListControllerProvider.select((s) => s.errorMessage),
     );
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
     final isOnlyFavorites = ref.watch(
       surahListControllerProvider.select((s) => s.isOnlyFavorites),
     );
-    final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -79,7 +75,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
       extendBody: true,
       appBar: IslamicKatibahAppBar(
         surahName: isOnlyFavorites ? 'فهرست شخصی' : AppConstants.surahListScreenTitle,
-        fontFamily: fontFamily,
+        fontFamily: AppTypography.fontFamily,
         showSearchField: true,
         searchFocusNode: _searchFocusNode,
         searchController: _searchController,
@@ -97,8 +93,6 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
                 SurahSortBottomSheet.show(context);
               } else if (value == 'custom_list') {
                 ref.read(surahListControllerProvider.notifier).toggleOnlyFavorites();
-              } else if (value == 'smart_device') {
-                context.pushNamed(smartDeviceRoute);
               }
             },
             itemBuilder: (context) => [
@@ -131,26 +125,6 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
                     Text(
                       isOnlyFavorites ? 'نمایش همه سوره‌ها' : 'فهرست شخصی',
                       style: const TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'smart_device',
-                child: Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.device_laptop,
-                      size: 20,
-                      color: AppColors.goldAccent,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'دستگاه هوشمند NodeMCU',
-                      style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 14,
                       ),

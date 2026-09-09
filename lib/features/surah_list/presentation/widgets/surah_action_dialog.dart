@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/surah_entity.dart';
@@ -55,12 +56,12 @@ class SurahActionDialog extends StatelessWidget {
           children: [
             const TextSpan(text: 'صوت سوره '),
             TextSpan(
-              text: surah.name,
-              style: TextStyle(
-                fontFamily: surahFontFamily,
-                fontSize: 20,
+              text: surah.nameFa,
+              style: const TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 17,
                 color: AppColors.goldAccent,
-                fontWeight: FontWeight.normal,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],

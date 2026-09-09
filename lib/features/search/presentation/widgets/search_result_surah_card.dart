@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../domain/entities/search_result_item.dart';
 import 'search_highlight_text.dart';
 
@@ -25,11 +25,6 @@ class SearchResultSurahCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final arabicFontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
@@ -100,11 +95,11 @@ class SearchResultSurahCard extends ConsumerWidget {
                       Row(
                         children: [
                           SearchHighlightText(
-                            text: item.surahName,
+                            text: 'سوره ${item.surahNumber.surahNameFa}',
                             query: query,
                             baseStyle: TextStyle(
-                              fontFamily: arabicFontFamily,
-                              fontSize: 20,
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 16.5,
                               fontWeight: FontWeight.bold,
                               height: 1.3,
                               color: isDark ? Colors.white : Colors.black87,
