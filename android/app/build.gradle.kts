@@ -15,7 +15,7 @@ configurations.all {
 }
 
 android {
-    namespace = "com.mohammadvaezimoghadam.quran"
+    namespace = "com.qurantafakor.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -26,7 +26,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.mohammadvaezimoghadam.quran"
+        applicationId = "com.qurantafakor.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

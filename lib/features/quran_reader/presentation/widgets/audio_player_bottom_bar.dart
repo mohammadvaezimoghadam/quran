@@ -358,33 +358,20 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                                       crossAxisAlignment: CrossAxisAlignment.center,
                                                       children: [
-                                                        // 1. -5s Rewind (points right towards beginning)
+                                                        // 1. +5s Forward
                                                         _buildControlButton(
                                                           icon: Icons.forward_5_rounded,
                                                           size: 22,
                                                           color: isActive
                                                               ? colorScheme.primary
                                                               : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                                                          tooltip: '۵ ثانیه عقب',
-                                                          onPressed: isActive ? () => audioController.seekBackward() : null,
+                                                          tooltip: '۵ ثانیه جلو',
+                                                          onPressed: isActive ? () => audioController.seekForward() : null,
                                                         ),
 
-                                                        // 2. Previous Ayah (points right towards earlier ayahs)
+                                                        // 2. Next Ayah
                                                         _buildControlButton(
                                                           icon: CupertinoIcons.forward_fill,
-                                                          size: 20,
-                                                          color: (currentAyahNumber != null && currentAyahNumber > 1)
-                                                              ? colorScheme.onSurface
-                                                              : colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
-                                                          tooltip: 'آیه قبلی',
-                                                          onPressed: (currentAyahNumber != null && currentAyahNumber > 1)
-                                                              ? () => audioController.playPreviousAyah()
-                                                              : null,
-                                                        ),
-
-                                                        // 3. Next Ayah (points left towards next ayahs)
-                                                        _buildControlButton(
-                                                          icon: CupertinoIcons.backward_fill,
                                                           size: 20,
                                                           color: (currentAyahNumber != null &&
                                                                   totalAyahsInSurah != null &&
@@ -399,15 +386,28 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                               : null,
                                                         ),
 
-                                                        // 4. +5s Fast Forward (points left towards end)
+                                                        // 3. Previous Ayah
+                                                        _buildControlButton(
+                                                          icon: CupertinoIcons.backward_fill,
+                                                          size: 20,
+                                                          color: (currentAyahNumber != null && currentAyahNumber > 1)
+                                                              ? colorScheme.onSurface
+                                                              : colorScheme.onSurfaceVariant.withValues(alpha: 0.25),
+                                                          tooltip: 'آیه قبلی',
+                                                          onPressed: (currentAyahNumber != null && currentAyahNumber > 1)
+                                                              ? () => audioController.playPreviousAyah()
+                                                              : null,
+                                                        ),
+
+                                                        // 4. -5s Rewind
                                                         _buildControlButton(
                                                           icon: Icons.replay_5_rounded,
                                                           size: 22,
                                                           color: isActive
                                                               ? colorScheme.primary
                                                               : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                                                          tooltip: '۵ ثانیه جلو',
-                                                          onPressed: isActive ? () => audioController.seekForward() : null,
+                                                          tooltip: '۵ ثانیه عقب',
+                                                          onPressed: isActive ? () => audioController.seekBackward() : null,
                                                         ),
                                                       ],
                                                     ),

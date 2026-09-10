@@ -91,9 +91,11 @@ class AyahArabicText extends ConsumerWidget {
     mainTextChildren.add(
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,
-        child: AyahNumberMarker(
-          number: ayahNumber,
-          isActive: isActive,
+        child: SelectionContainer.disabled(
+          child: AyahNumberMarker(
+            number: ayahNumber,
+            isActive: isActive,
+          ),
         ),
       ),
     );

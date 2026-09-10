@@ -1,4 +1,4 @@
-package com.mohammadvaezimoghadam.quran
+package com.qurantafakor.app
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

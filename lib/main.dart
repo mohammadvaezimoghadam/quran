@@ -48,7 +48,7 @@ void main() async {
   final audioHandler = await AudioService.init(
     builder: () => QuranAudioHandler(rawPlayer),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.mohammadvaezimoghadam.quran.audio',
+      androidNotificationChannelId: 'com.qurantafakor.app.audio',
       androidNotificationChannelName: 'پخش صوت قرآن',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,

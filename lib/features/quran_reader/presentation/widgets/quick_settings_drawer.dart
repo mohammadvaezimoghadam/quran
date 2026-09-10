@@ -336,16 +336,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       colorScheme: colorScheme,
                     ),
                     _buildInnerDivider(colorScheme),
-                    TashkeelColorSelectorTile(
-                      selectedColorHex: settings.harakatColor,
-                      accentColor: accentColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      colorScheme: colorScheme,
-                      onColorSelected: (colorHex) =>
-                          displayNotifier.updateHarakatColor(colorHex),
-                    ),
-                    _buildInnerDivider(colorScheme),
                     _buildSliderTile(
                       context: context,
                       title: 'اندازه متن عربی',
@@ -376,6 +366,16 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       textSecondary: textSecondary,
                       onChanged: (val) =>
                           displayNotifier.updateArabicLineHeight(val),
+                    ),
+                    _buildInnerDivider(colorScheme),
+                    TashkeelColorSelectorTile(
+                      selectedColorHex: settings.harakatColor,
+                      accentColor: accentColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      colorScheme: colorScheme,
+                      onColorSelected: (colorHex) =>
+                          displayNotifier.updateHarakatColor(colorHex),
                     ),
                   ],
                 ),

@@ -12,8 +12,8 @@ extension AyahEntityShareHelper on AyahEntity {
     final buffer = StringBuffer();
     final persianAyahNumber = ayahNumber.toPersianDigit();
     
-    // 1. Arabic Text with Ayah number
-    buffer.writeln('$arabicText ﴿$persianAyahNumber﴾');
+    // 1. Arabic Text (without Ayah number)
+    buffer.writeln(arabicText);
     
     // 2. Translation (if available) with Ayah number
     if (translationText != null && translationText!.isNotEmpty) {
@@ -23,7 +23,7 @@ extension AyahEntityShareHelper on AyahEntity {
           ? translationText!.removeTranslatorExplanations()
           : translationText!;
           
-      buffer.writeln('$processedTranslation (${ayahNumber.toPersianDigit()})');
+      buffer.writeln('$processedTranslation ($persianAyahNumber)');
     }
     
     return buffer.toString().trim();
