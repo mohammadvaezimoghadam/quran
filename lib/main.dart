@@ -7,6 +7,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:dio/dio.dart';
+import 'package:flutter_patcher/flutter_patcher.dart';
 import 'core/data/local/preferences/preferences_service_provider.dart';
 import 'core/services/audio/audio_player_providers.dart';
 import 'core/services/audio/quran_audio_handler.dart';
@@ -42,8 +44,74 @@ Future<void> _initAudioSession() async {
   ));
 }
 
+Future<void> _checkAndApplyPatch() async {
+  try {
+    const serverIp = '192.168.1.103';
+    const port = 8080;
+
+    final currentPatch = await FlutterPatcher.currentVersion;
+    final versionCode = await FlutterPatcher.appVersionCode;
+    final abi = await FlutterPatcher.deviceAbi;
+
+    debugPrint('🔍 [Patcher] Current Patch: $currentPatch, AppVersionCode: $versionCode, ABI: $abi');
+
+    final dio = Dio(BaseOptions(
+      connectTimeout: const Duration(seconds: 4),
+      receiveTimeout: const Duration(seconds: 15),
+    ));
+
+    final url = 'http://$serverIp:$port/check';
+    final response = await dio.get(
+      url,
+      queryParameters: {
+        'app_version_code': versionCode,
+        'abi': abi,
+      },
+    );
+
+    if (response.statusCode != 200 || response.data == null) {
+      debugPrint('⚠️ [Patcher] Server responded with code: ${response.statusCode}');
+      return;
+    }
+
+    final data = response.data;
+    if (data is! Map || data['has_update'] != true) {
+      debugPrint('ℹ️ [Patcher] No update available.');
+      return;
+    }
+
+    debugPrint('📦 [Patcher] Update found: version=${data['version']}, url=${data['patch_url']}');
+
+    final patch = PatchInfo(
+      version: data['version'].toString(),
+      patchUrl: data['patch_url'].toString(),
+      md5: (data['md5'] ?? '').toString(),
+      targetVersionCode: data['target_version_code'] as int? ?? 1,
+    );
+
+    final result = await FlutterPatcher.applyPatch(
+      patch,
+      onProgress: (p) {
+        final percent = ((p.fraction ?? 0) * 100).toStringAsFixed(0);
+        debugPrint('⏳ [Patcher Progress] ${p.phase.name}: $percent%');
+      },
+    );
+
+    if (result.ok) {
+      debugPrint('✅ [Patcher] Patch applied successfully! Restart the app to take effect.');
+    } else {
+      debugPrint('❌ [Patcher] Failed to apply patch: ${result.error} - ${result.message}');
+    }
+  } catch (e) {
+    debugPrint('❌ [Patcher Error] $e');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await FlutterPatcher.init();
+  _checkAndApplyPatch();
+
   await _loadCustomFonts();
   await _initAudioSession();
 

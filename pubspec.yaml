@@ -43,6 +43,9 @@ dependencies:
   dio_http_formatter: ^3.3.1
   retrofit: ^4.9.2
 
+  # Code Push & Hot Patching
+  flutter_patcher: ^0.1.4
+
   # Audio Player & Background Notification Service
   just_audio: ^0.10.6
   audio_service: 0.18.18
