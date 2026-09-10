@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1043223414367",
-    "project_id": "qurantafakor",
-    "storage_bucket": "qurantafakor.firebasestorage.app"
+    "project_number": "759885164197",
+    "project_id": "quran-tafakor",
+    "storage_bucket": "quran-tafakor.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1043223414367:android:9587a45c90375a2661fdea",
+        "mobilesdk_app_id": "1:759885164197:android:ba9b215ffaa0edd91da74c",
         "android_client_info": {
           "package_name": "com.qurantafakor.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAsUnIxKaUO5Z12sqaA6EmofRbbsc291Kw"
+          "current_key": "AIzaSyCknO1WbafZXTq-EwJKBYVcGqeTZVWYBpM"
         }
       ],
       "services": {

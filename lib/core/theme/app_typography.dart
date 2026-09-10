@@ -40,10 +40,10 @@ class AppTypography {
     color: AppColors.goldAccent,
   );
 
-  /// Splash Screen Main Title Style (Thuluth Calligraphy in Gold Accent)
+  /// Splash Screen Main Title Style (Main App Font in Gold Accent)
   static const TextStyle splashAppTitle = TextStyle(
-    fontFamily: thuluthFont,
-    fontSize: 54,
+    fontFamily: fontFamily,
+    fontSize: 38,
     fontWeight: FontWeight.bold,
     color: AppColors.goldAccent,
     height: 1.4,

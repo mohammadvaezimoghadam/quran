@@ -26,10 +26,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -53,10 +50,18 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAsUnIxKaUO5Z12sqaA6EmofRbbsc291Kw',
-    appId: '1:1043223414367:android:9587a45c90375a2661fdea',
-    messagingSenderId: '1043223414367',
-    projectId: 'qurantafakor',
-    storageBucket: 'qurantafakor.firebasestorage.app',
+    apiKey: 'AIzaSyCknO1WbafZXTq-EwJKBYVcGqeTZVWYBpM',
+    appId: '1:759885164197:android:ba9b215ffaa0edd91da74c',
+    messagingSenderId: '759885164197',
+    projectId: 'quran-tafakor',
+    storageBucket: 'quran-tafakor.firebasestorage.app',
+  );
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBoPrWGNnK6VR7pcHV0z-zDU_eVNeO8Jko',
+    appId: '1:759885164197:ios:ee539cedda0f4c091da74c',
+    messagingSenderId: '759885164197',
+    projectId: 'quran-tafakor',
+    storageBucket: 'quran-tafakor.firebasestorage.app',
+    iosBundleId: 'com.qurantafakor.app',
   );
 }

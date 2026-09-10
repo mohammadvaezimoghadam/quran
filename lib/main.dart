@@ -11,6 +11,9 @@ import 'core/data/local/preferences/preferences_service_provider.dart';
 import 'core/services/audio/audio_player_providers.dart';
 import 'core/services/audio/quran_audio_handler.dart';
 import 'core/services/audio_storage/audio_storage_service_impl.dart';
+import 'core/services/firebase/firebase_initializer.dart';
+import 'core/services/notification/firebase_push_notification_service_impl.dart';
+import 'core/services/notification/push_notification_providers.dart';
 import 'features/bookmarks/infrastructure/datasources/bookmark_local_datasource.dart';
 import 'features/translation_manager/infrastructure/datasources/translation_local_datasource.dart';
 import 'main_widget.dart';
@@ -44,6 +47,11 @@ void main() async {
   await _loadCustomFonts();
   await _initAudioSession();
 
+  // Initialize Firebase and Push Notification Service
+  await FirebaseInitializer.init();
+  final pushNotificationService = FirebasePushNotificationServiceImpl();
+  await pushNotificationService.initialize();
+
   final rawPlayer = AudioPlayer();
   final audioHandler = await AudioService.init(
     builder: () => QuranAudioHandler(rawPlayer),
@@ -69,6 +77,7 @@ void main() async {
         sharedPreferencesInstanceProvider.overrideWithValue(sharedPreferences),
         rawAudioPlayerProvider.overrideWithValue(rawPlayer),
         quranAudioHandlerProvider.overrideWithValue(audioHandler),
+        pushNotificationServiceProvider.overrideWithValue(pushNotificationService),
       ],
       child: const MainWidget(),
     ),

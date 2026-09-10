@@ -2,16 +2,19 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:ui' show Color;
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'i_push_notification_service.dart';
 import 'models/notification_payload.dart';
+import '../firebase/firebase_initializer.dart';
 
 /// Top-level background message handler required by FCM.
 /// Must be annotated with @pragma('vm:entry-point') so it's not stripped by tree shaking.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await FirebaseInitializer.init();
   debugPrint('📥 [FCM Background Message Received]');
   debugPrint('Title: ${message.notification?.title}');
   debugPrint('Body: ${message.notification?.body}');
@@ -51,6 +54,10 @@ final class FirebasePushNotificationServiceImpl implements IPushNotificationServ
     }
 
     try {
+      if (!FirebaseInitializer.isInitialized) {
+        await FirebaseInitializer.init();
+      }
+
       // 1. Request user permission
       final settings = await _firebaseMessaging.requestPermission(
         alert: true,
