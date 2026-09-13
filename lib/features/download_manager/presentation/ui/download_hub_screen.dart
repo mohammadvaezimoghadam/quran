@@ -21,6 +21,7 @@ class DownloadHubScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(downloadHubControllerProvider);
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: const IslamicKatibahAppBar(
@@ -45,7 +46,7 @@ class DownloadHubScreen extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              // 2. Section Header: Categories
+              // 2. Main Categories Grid
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
                 child: Text(
@@ -57,58 +58,75 @@ class DownloadHubScreen extends ConsumerWidget {
                 ),
               ),
 
-              // Category 1: Quran Audio
-              DownloadCategoryCard(
-                title: 'صوت قرآن',
-                subtitle: 'قاری فعال: ${state.activeReciterName}',
-                icon: CupertinoIcons.waveform,
-                badgeText: '${state.downloadedQuranSurahs.toPersianDigit()} از ${state.totalQuranSurahs.toPersianDigit()} سوره',
-                progress: state.totalQuranSurahs > 0
-                    ? state.downloadedQuranSurahs / state.totalQuranSurahs
-                    : 0.0,
-                onTap: () async {
-                  await context.pushNamed(
-                    audioDownloadManagerRoute,
-                    queryParameters: {'isTranslation': 'false'},
-                  );
-                  ref.read(downloadHubControllerProvider.notifier).loadSummary();
-                  ref.read(downloadedItemsControllerProvider.notifier).loadItems();
-                },
-              ),
+              // 2. Main Categories in ONE Single Row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category 1: Quran Audio
+                    Expanded(
+                      child: DownloadCategoryCard(
+                        title: 'صوت قرآن',
+                        subtitle: state.activeReciterName.replaceAll('استاد ', ''),
+                        icon: CupertinoIcons.waveform,
+                        badgeText: '${state.downloadedQuranSurahs.toPersianDigit()} / ${state.totalQuranSurahs.toPersianDigit()}',
+                        progress: state.totalQuranSurahs > 0
+                            ? state.downloadedQuranSurahs / state.totalQuranSurahs
+                            : 0.0,
+                        onTap: () async {
+                          await context.pushNamed(
+                            audioDownloadManagerRoute,
+                            queryParameters: {'isTranslation': 'false'},
+                          );
+                          ref.read(downloadHubControllerProvider.notifier).loadSummary();
+                          ref.read(downloadedItemsControllerProvider.notifier).loadItems();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
 
-              // Category 2: Audio Translation
-              DownloadCategoryCard(
-                title: 'ترجمه گویا',
-                subtitle: 'گوینده: ${state.activeTranslationReciterName}',
-                icon: CupertinoIcons.speaker_2_fill,
-                badgeText: '${state.downloadedTranslationSurahs.toPersianDigit()} از ${state.totalTranslationSurahs.toPersianDigit()} سوره',
-                progress: state.totalTranslationSurahs > 0
-                    ? state.downloadedTranslationSurahs / state.totalTranslationSurahs
-                    : 0.0,
-                onTap: () async {
-                  await context.pushNamed(
-                    audioDownloadManagerRoute,
-                    queryParameters: {'isTranslation': 'true'},
-                  );
-                  ref.read(downloadHubControllerProvider.notifier).loadSummary();
-                  ref.read(downloadedItemsControllerProvider.notifier).loadItems();
-                },
-              ),
+                    // Category 2: Audio Translation
+                    Expanded(
+                      child: DownloadCategoryCard(
+                        title: 'ترجمه گویا',
+                        subtitle: state.activeTranslationReciterName,
+                        icon: CupertinoIcons.speaker_2_fill,
+                        badgeText: '${state.downloadedTranslationSurahs.toPersianDigit()} / ${state.totalTranslationSurahs.toPersianDigit()}',
+                        progress: state.totalTranslationSurahs > 0
+                            ? state.downloadedTranslationSurahs / state.totalTranslationSurahs
+                            : 0.0,
+                        onTap: () async {
+                          await context.pushNamed(
+                            audioDownloadManagerRoute,
+                            queryParameters: {'isTranslation': 'true'},
+                          );
+                          ref.read(downloadHubControllerProvider.notifier).loadSummary();
+                          ref.read(downloadedItemsControllerProvider.notifier).loadItems();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
 
-              // Category 3: Text Translations
-              DownloadCategoryCard(
-                title: 'متن ترجمه‌ها',
-                subtitle: 'فارسی، انگلیسی و سایر زبان‌ها',
-                icon: CupertinoIcons.book_fill,
-                badgeText: '${state.downloadedTextTranslations.toPersianDigit()} از ${state.totalTextTranslations.toPersianDigit()} ترجمه',
-                progress: state.totalTextTranslations > 0
-                    ? state.downloadedTextTranslations / state.totalTextTranslations
-                    : 0.0,
-                onTap: () async {
-                  await TextTranslationsDownloadBottomSheet.show(context);
-                  ref.read(downloadHubControllerProvider.notifier).loadSummary();
-                  ref.read(downloadedItemsControllerProvider.notifier).loadItems();
-                },
+                    // Category 3: Text Translations
+                    Expanded(
+                      child: DownloadCategoryCard(
+                        title: 'متن ترجمه',
+                        subtitle: 'ترجمه‌ها',
+                        icon: CupertinoIcons.book_fill,
+                        badgeText: '${state.downloadedTextTranslations.toPersianDigit()} / ${state.totalTextTranslations.toPersianDigit()}',
+                        progress: state.totalTextTranslations > 0
+                            ? state.downloadedTextTranslations / state.totalTextTranslations
+                            : 0.0,
+                        onTap: () async {
+                          await TextTranslationsDownloadBottomSheet.show(context);
+                          ref.read(downloadHubControllerProvider.notifier).loadSummary();
+                          ref.read(downloadedItemsControllerProvider.notifier).loadItems();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 12),

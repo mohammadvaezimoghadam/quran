@@ -9,6 +9,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/word_by_word_provider.dart';
 
+import '../ui/ayah_dictionary_screen.dart';
+
 class WordByWordBottomSheet extends ConsumerWidget {
   final int surahId;
   final String surahName;
@@ -22,15 +24,11 @@ class WordByWordBottomSheet extends ConsumerWidget {
   });
 
   static Future<void> show(BuildContext context, {required int surahId, required String surahName, required int ayahNumber}) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => WordByWordBottomSheet(
-        surahId: surahId,
-        surahName: surahName,
-        ayahNumber: ayahNumber,
-      ),
+    return AyahDictionaryScreen.open(
+      context,
+      surahId: surahId,
+      surahName: surahName,
+      ayahNumber: ayahNumber,
     );
   }
 

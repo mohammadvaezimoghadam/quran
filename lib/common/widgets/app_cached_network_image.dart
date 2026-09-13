@@ -88,34 +88,45 @@ class AppCachedNetworkImage extends StatelessWidget {
       return buildErrorFallback();
     }
 
-    final imageWidget = CachedNetworkImage(
-      imageUrl: imageUrl!,
-      width: width,
-      height: height,
-      fit: fit,
-      placeholder: placeholder ??
-          (context, url) => Container(
-                width: width,
-                height: height,
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  shape: shape,
-                  borderRadius: shape == BoxShape.circle ? null : borderRadius,
-                ),
-                child: Center(
-                  child: SizedBox(
-                    width: (height != null) ? height! * 0.35 : 16.0,
-                    height: (height != null) ? height! * 0.35 : 16.0,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.5,
-                      color: fallbackColor,
+    final Widget imageWidget;
+    if (imageUrl!.startsWith('assets/')) {
+      imageWidget = Image.asset(
+        imageUrl!,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => buildErrorFallback(),
+      );
+    } else {
+      imageWidget = CachedNetworkImage(
+        imageUrl: imageUrl!,
+        width: width,
+        height: height,
+        fit: fit,
+        placeholder: placeholder ??
+            (context, url) => Container(
+                  width: width,
+                  height: height,
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    shape: shape,
+                    borderRadius: shape == BoxShape.circle ? null : borderRadius,
+                  ),
+                  child: Center(
+                    child: SizedBox(
+                      width: (height != null) ? height! * 0.35 : 16.0,
+                      height: (height != null) ? height! * 0.35 : 16.0,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: fallbackColor,
+                      ),
                     ),
                   ),
                 ),
-              ),
-      errorWidget: errorWidget ??
-          (context, url, error) => buildErrorFallback(),
-    );
+        errorWidget: errorWidget ??
+            (context, url, error) => buildErrorFallback(),
+      );
+    }
 
     if (shape == BoxShape.circle) {
       return ClipOval(child: imageWidget);

@@ -446,21 +446,7 @@ class _SurahGridItem extends ConsumerWidget {
                           const Text('انتخاب شده',
                               style: TextStyle(
                                   fontSize: 9, color: AppColors.goldAccent)),
-                        ] else if (isLocked) ...[
-                          const Icon(
-                            Icons.lock_rounded,
-                            color: AppColors.primary,
-                            size: 13,
-                          ),
-                          const SizedBox(width: 3),
-                          const Text(
-                            'ویژه',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
+
                         ] else ...[
                           Icon(
                             Icons.radio_button_unchecked,

@@ -22,7 +22,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'تحدیر',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/moataz_aghaei.jpg',
       isFullSurahReciter: true,
     ),
     ReciterEntity(
@@ -35,7 +35,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/hamed_shakernejad.jpg',
       isFullSurahReciter: true,
     ),
     ReciterEntity(
@@ -48,7 +48,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Elminshwey.jpg',
+      imageUrl: null,
       isFullSurahReciter: false,
     ),
     ReciterEntity(
@@ -61,7 +61,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/emam_jomeh.jpg',
       isFullSurahReciter: true,
     ),
     ReciterEntity(
@@ -74,7 +74,7 @@ class ReciterCatalog {
       bitrate: '48kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/abbas_pourzargari.jpg',
       isFullSurahReciter: false,
     ),
     ReciterEntity(
@@ -87,7 +87,7 @@ class ReciterCatalog {
       bitrate: '40kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/karim_mansoori.jpg',
       isFullSurahReciter: false,
     ),
     ReciterEntity(
@@ -166,7 +166,7 @@ class ReciterCatalog {
       bitrate: '32kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/ibrahim_al_akhdar_ahmad.jpg',
     ),
     ReciterEntity(
       id: 30,
@@ -178,7 +178,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Abdul_Basit_Abdul_Samad_at_Centenary_Celebration_Of_Darul_Uloom_Deoband_1980.jpg',
+      imageUrl: 'assets/images/reciters/abdelbasset_abdessamad.jpg',
     ),
     ReciterEntity(
       id: 31,
@@ -190,7 +190,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 2,
       styleName: 'مجود',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Abdul_Basit_Abdul_Samad_at_Centenary_Celebration_Of_Darul_Uloom_Deoband_1980.jpg',
+      imageUrl: 'assets/images/reciters/abdelbasset_abdessamad.jpg',
     ),
     ReciterEntity(
       id: 32,
@@ -202,7 +202,7 @@ class ReciterCatalog {
       bitrate: '192kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Abdul_Basit_Abdul_Samad_at_Centenary_Celebration_Of_Darul_Uloom_Deoband_1980.jpg',
+      imageUrl: 'assets/images/reciters/abdelbasset_abdessamad.jpg',
     ),
     ReciterEntity(
       id: 33,
@@ -214,7 +214,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Abdul_Basit_Abdul_Samad_at_Centenary_Celebration_Of_Darul_Uloom_Deoband_1980.jpg',
+      imageUrl: 'assets/images/reciters/abdelbasset_abdessamad.jpg',
     ),
     ReciterEntity(
       id: 34,
@@ -226,7 +226,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/25/Abdullah_Al_Juhany_%28Cropped%29.png',
+      imageUrl: 'assets/images/reciters/abdullah_al_juhany.png',
     ),
     ReciterEntity(
       id: 35,
@@ -238,7 +238,7 @@ class ReciterCatalog {
       bitrate: '192kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/abdullah_basfar.jpg',
     ),
     ReciterEntity(
       id: 36,
@@ -250,7 +250,7 @@ class ReciterCatalog {
       bitrate: '32kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/abdullah_basfar.jpg',
     ),
     ReciterEntity(
       id: 37,
@@ -262,7 +262,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/abdullah_basfar.jpg',
     ),
     ReciterEntity(
       id: 38,
@@ -274,7 +274,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/41/Abdullah_Al_Matroud.jpg',
+      imageUrl: 'assets/images/reciters/abdullah_matroud.jpg',
     ),
     ReciterEntity(
       id: 39,
@@ -286,7 +286,7 @@ class ReciterCatalog {
       bitrate: '192kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Abdul-Rahman_Al-Sudais_%28Cropped%2C_2011%29.jpg',
+      imageUrl: 'assets/images/reciters/abdurrahman_as_sudais.jpeg',
     ),
     ReciterEntity(
       id: 40,
@@ -298,7 +298,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Abdul-Rahman_Al-Sudais_%28Cropped%2C_2011%29.jpg',
+      imageUrl: 'assets/images/reciters/abdurrahman_as_sudais.jpeg',
     ),
     ReciterEntity(
       id: 42,
@@ -310,7 +310,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/abu_bakr_al_shatri.jpg',
     ),
     ReciterEntity(
       id: 43,
@@ -322,7 +322,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/abu_bakr_al_shatri.jpg',
     ),
     ReciterEntity(
       id: 44,
@@ -334,7 +334,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/DrAhmedNeinaa.jpg',
+      imageUrl: 'assets/images/reciters/ahmed_neana.jpg',
     ),
     ReciterEntity(
       id: 45,
@@ -346,7 +346,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Ahmad_bin_Ali_Al-Ajmi.png',
+      imageUrl: 'assets/images/reciters/ahmed_al_ajmi.png',
     ),
     ReciterEntity(
       id: 46,
@@ -358,7 +358,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Ahmad_bin_Ali_Al-Ajmi.png',
+      imageUrl: 'assets/images/reciters/ahmed_al_ajmi.png',
     ),
     ReciterEntity(
       id: 47,
@@ -370,7 +370,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/akram_al_alaqmi.jpg',
     ),
     ReciterEntity(
       id: 48,
@@ -382,7 +382,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/%D0%9C%D0%B8%D1%88%D0%B0%D1%80%D0%B8_%D0%A0%D0%B0%D1%88%D0%B8%D0%B4.jpg',
+      imageUrl: 'assets/images/reciters/mishari_alafasy.jpeg',
     ),
     ReciterEntity(
       id: 49,
@@ -394,7 +394,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/%D0%9C%D0%B8%D1%88%D0%B0%D1%80%D0%B8_%D0%A0%D0%B0%D1%88%D0%B8%D0%B4.jpg',
+      imageUrl: 'assets/images/reciters/mishari_alafasy.jpeg',
     ),
     ReciterEntity(
       id: 50,
@@ -406,7 +406,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/ali_hajjaj_souissi.jpg',
     ),
     ReciterEntity(
       id: 51,
@@ -418,7 +418,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/ali_jaber.png',
     ),
     ReciterEntity(
       id: 52,
@@ -430,7 +430,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Aymen_souaid.jpg',
+      imageUrl: 'assets/images/reciters/ayman_sowaid.jpg',
     ),
     ReciterEntity(
       id: 54,
@@ -442,7 +442,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/fares_abbad.jpg',
     ),
     ReciterEntity(
       id: 55,
@@ -454,7 +454,7 @@ class ReciterCatalog {
       bitrate: '40kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/43/Saad_al_Ghamdi.jpg',
+      imageUrl: 'assets/images/reciters/saad_al_ghamdi.png',
     ),
     ReciterEntity(
       id: 56,
@@ -466,7 +466,7 @@ class ReciterCatalog {
       bitrate: '192kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/hani_ar_rifai.jpeg',
     ),
     ReciterEntity(
       id: 57,
@@ -478,7 +478,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/hani_ar_rifai.jpeg',
     ),
     ReciterEntity(
       id: 58,
@@ -490,7 +490,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Huthaify.jpg',
+      imageUrl: 'assets/images/reciters/ali_al_hudhaify.jpg',
     ),
     ReciterEntity(
       id: 59,
@@ -502,7 +502,7 @@ class ReciterCatalog {
       bitrate: '32kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Huthaify.jpg',
+      imageUrl: 'assets/images/reciters/ali_al_hudhaify.jpg',
     ),
     ReciterEntity(
       id: 60,
@@ -514,7 +514,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Huthaify.jpg',
+      imageUrl: 'assets/images/reciters/ali_al_hudhaify.jpg',
     ),
     ReciterEntity(
       id: 61,
@@ -526,7 +526,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Hussary.jpg',
+      imageUrl: 'assets/images/reciters/mahmoud_khalil_al_husary.png',
     ),
     ReciterEntity(
       id: 62,
@@ -538,7 +538,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 2,
       styleName: 'مجود',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Hussary.jpg',
+      imageUrl: 'assets/images/reciters/mahmoud_khalil_al_husary.png',
     ),
     ReciterEntity(
       id: 63,
@@ -550,7 +550,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Hussary.jpg',
+      imageUrl: 'assets/images/reciters/mahmoud_khalil_al_husary.png',
     ),
     ReciterEntity(
       id: 64,
@@ -562,7 +562,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 3,
       styleName: 'آموزشی (معلم)',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Hussary.jpg',
+      imageUrl: 'assets/images/reciters/mahmoud_khalil_al_husary.png',
     ),
     ReciterEntity(
       id: 65,
@@ -574,7 +574,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 2,
       styleName: 'مجود',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Hussary.jpg',
+      imageUrl: 'assets/images/reciters/mahmoud_khalil_al_husary.png',
     ),
     ReciterEntity(
       id: 66,
@@ -586,7 +586,7 @@ class ReciterCatalog {
       bitrate: '32kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/ibrahim_al_akhdar_ahmad.jpg',
     ),
     // Note: Ibrahim_Akhdar is only hosted at 32kbps on EveryAyah (id: 66, id: 109). 64kbps returns 404.
     ReciterEntity(
@@ -599,7 +599,7 @@ class ReciterCatalog {
       bitrate: '40kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/karim_mansoori.jpg',
     ),
     ReciterEntity(
       id: 69,
@@ -611,7 +611,7 @@ class ReciterCatalog {
       bitrate: '192kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/khalid_al_qahtani.jpg',
     ),
     ReciterEntity(
       id: 70,
@@ -623,7 +623,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Maher_Al_Mueaqly.png',
+      imageUrl: 'assets/images/reciters/maher_al_muaiqly.png',
     ),
     ReciterEntity(
       id: 71,
@@ -635,7 +635,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Maher_Al_Mueaqly.png',
+      imageUrl: 'assets/images/reciters/maher_al_muaiqly.png',
     ),
     ReciterEntity(
       id: 72,
@@ -647,7 +647,7 @@ class ReciterCatalog {
       bitrate: '16kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Elminshwey.jpg',
+      imageUrl: 'assets/images/reciters/mohamed_siddiq_al_minshawi.jpeg',
     ),
     ReciterEntity(
       id: 73,
@@ -659,7 +659,7 @@ class ReciterCatalog {
       bitrate: '32kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Elminshwey.jpg',
+      imageUrl: 'assets/images/reciters/mohamed_siddiq_al_minshawi.jpeg',
     ),
     ReciterEntity(
       id: 74,
@@ -671,7 +671,7 @@ class ReciterCatalog {
       bitrate: '192kbps',
       styleId: 2,
       styleName: 'مجود',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Elminshwey.jpg',
+      imageUrl: 'assets/images/reciters/mohamed_siddiq_al_minshawi.jpeg',
     ),
     ReciterEntity(
       id: 75,
@@ -683,7 +683,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 2,
       styleName: 'مجود',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Elminshwey.jpg',
+      imageUrl: 'assets/images/reciters/mohamed_siddiq_al_minshawi.jpeg',
     ),
     ReciterEntity(
       id: 76,
@@ -695,7 +695,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Elminshwey.jpg',
+      imageUrl: 'assets/images/reciters/mohamed_siddiq_al_minshawi.jpeg',
     ),
     ReciterEntity(
       id: 77,
@@ -707,7 +707,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 3,
       styleName: 'آموزشی (معلم)',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Elminshwey.jpg',
+      imageUrl: 'assets/images/reciters/mohamed_siddiq_al_minshawi.jpeg',
     ),
     ReciterEntity(
       id: 78,
@@ -719,7 +719,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/mohamed_al_tablawi.jpg',
     ),
     ReciterEntity(
       id: 79,
@@ -731,7 +731,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/mohamed_al_tablawi.jpg',
     ),
     ReciterEntity(
       id: 80,
@@ -743,7 +743,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/muhammad_abdul_kareem.jpg',
     ),
     ReciterEntity(
       id: 81,
@@ -755,7 +755,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/muhammad_ayyub.jpg',
     ),
     ReciterEntity(
       id: 82,
@@ -767,7 +767,7 @@ class ReciterCatalog {
       bitrate: '32kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/muhammad_ayyub.jpg',
     ),
     ReciterEntity(
       id: 83,
@@ -779,7 +779,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/muhammad_ayyub.jpg',
     ),
     ReciterEntity(
       id: 84,
@@ -791,7 +791,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Qari_Muhammad_Jebril%2C_Ramadan_2019.png',
+      imageUrl: 'assets/images/reciters/muhammad_jibreel.jpg',
     ),
     ReciterEntity(
       id: 85,
@@ -803,7 +803,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Qari_Muhammad_Jebril%2C_Ramadan_2019.png',
+      imageUrl: 'assets/images/reciters/muhammad_jibreel.jpg',
     ),
     ReciterEntity(
       id: 86,
@@ -815,7 +815,7 @@ class ReciterCatalog {
       bitrate: '192kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/muhsin_al_qasim.jpg',
     ),
     ReciterEntity(
       id: 88,
@@ -827,7 +827,7 @@ class ReciterCatalog {
       bitrate: '48kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Mustafa_Ismail_%281%29.jpg',
+      imageUrl: 'assets/images/reciters/mustafa_ismail.jpg',
     ),
     ReciterEntity(
       id: 89,
@@ -839,7 +839,7 @@ class ReciterCatalog {
       bitrate: '48kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/nabil_ar_rifai.jpg',
     ),
     ReciterEntity(
       id: 90,
@@ -851,7 +851,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/%D8%B5%D9%88%D8%B1%D8%A9_%D8%B4%D8%AE%D8%B5%D9%8A%D8%A9_%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_%D9%86%D8%A7%D8%B5%D8%B1_%D8%A7%D9%84%D9%82%D8%B7%D8%A7%D9%85%D9%8A.jpg',
+      imageUrl: 'assets/images/reciters/nasser_al_qatami.jpg',
     ),
     ReciterEntity(
       id: 91,
@@ -863,7 +863,7 @@ class ReciterCatalog {
       bitrate: '48kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/%D8%B4%D9%87%D8%B1%DB%8C%D8%A7%D8%B1_%D9%BE%D8%B1%D9%87%DB%8C%D8%B2%DA%A9%D8%A7%D8%B1_04_%281%29.jpg',
+      imageUrl: 'assets/images/reciters/shahriar_parhizgar.jpg',
     ),
     ReciterEntity(
       id: 94,
@@ -875,7 +875,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/sahl_yasin.jpg',
     ),
     ReciterEntity(
       id: 95,
@@ -887,7 +887,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/salah_bukhatir.jpg',
     ),
     ReciterEntity(
       id: 96,
@@ -899,7 +899,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/df/Salah_Ibn_Mohammed_Al_Budair.jpg',
+      imageUrl: 'assets/images/reciters/salah_al_budair.jpg',
     ),
     ReciterEntity(
       id: 97,
@@ -911,7 +911,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5d/Saud_Shuraim_doing_the_Khutbah.png',
+      imageUrl: 'assets/images/reciters/saood_ash_shuraim.jpeg',
     ),
     ReciterEntity(
       id: 98,
@@ -923,7 +923,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5d/Saud_Shuraim_doing_the_Khutbah.png',
+      imageUrl: 'assets/images/reciters/saood_ash_shuraim.jpeg',
     ),
     ReciterEntity(
       id: 99,
@@ -935,7 +935,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5d/Saud_Shuraim_doing_the_Khutbah.png',
+      imageUrl: 'assets/images/reciters/saood_ash_shuraim.jpeg',
     ),
     ReciterEntity(
       id: 101,
@@ -947,7 +947,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/yaser_salamah.jpg',
     ),
     ReciterEntity(
       id: 102,
@@ -959,7 +959,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8b/Yasser_Al-Dosari_%28cropped%29.jpg',
+      imageUrl: 'assets/images/reciters/yasser_al_dosari.png',
     ),
     ReciterEntity(
       id: 103,
@@ -971,7 +971,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Ahmad_bin_Ali_Al-Ajmi.png',
+      imageUrl: 'assets/images/reciters/ahmed_al_ajmi.png',
     ),
     ReciterEntity(
       id: 104,
@@ -983,7 +983,7 @@ class ReciterCatalog {
       bitrate: '128kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/aziz_alili.jpg',
     ),
     ReciterEntity(
       id: 106,
@@ -995,7 +995,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/khalifa_al_tunaiji.jpeg',
     ),
     ReciterEntity(
       id: 107,
@@ -1007,7 +1007,7 @@ class ReciterCatalog {
       bitrate: '32kbps',
       styleId: 1,
       styleName: 'ترتیل',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/mahmoud_ali_al_banna.jpg',
     ),
     // --- Audio Translations (ترجمه‌های صوتی) ---
     ReciterEntity(
@@ -1020,7 +1020,7 @@ class ReciterCatalog {
       bitrate: '40kbps',
       styleId: 4,
       styleName: 'ترجمه صوتی',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/translation_fa_fooladvand_hedayatfar.jpg',
     ),
     ReciterEntity(
       id: 202,
@@ -1032,7 +1032,7 @@ class ReciterCatalog {
       bitrate: '16kbps',
       styleId: 4,
       styleName: 'ترجمه صوتی',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/translation_fa_makarem_kabiri.jpg',
     ),
     ReciterEntity(
       id: 203,
@@ -1056,7 +1056,7 @@ class ReciterCatalog {
       bitrate: '64kbps',
       styleId: 4,
       styleName: 'ترجمه صوتی',
-      imageUrl: null,
+      imageUrl: 'assets/images/reciters/translation_bs_besim_korkut.jpg',
     ),
     ReciterEntity(
       id: 205,

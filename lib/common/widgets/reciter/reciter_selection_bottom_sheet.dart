@@ -73,6 +73,35 @@ class _ReciterSelectionBottomSheetState
     extends ConsumerState<ReciterSelectionBottomSheet> {
   // Local state to keep track of selected variant per reciter group (baseName -> ReciterEntity)
   final Map<String, ReciterEntity> _selectedVariantsMap = {};
+  late final TextEditingController _searchController;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String _normalizeText(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll('ي', 'ی')
+        .replaceAll('ك', 'ک')
+        .replaceAll('ة', 'ه')
+        .replaceAll('آ', 'ا')
+        .replaceAll('إ', 'ا')
+        .replaceAll('أ', 'ا')
+        .replaceAll('ء', '')
+        .replaceAll(RegExp(r'[\u064B-\u065F]'), '') // remove Arabic diacritics
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
 
   String _cleanReciterName(String rawName) {
     var cleaned =
@@ -236,7 +265,10 @@ class _ReciterSelectionBottomSheetState
     final recitersAsync = widget.isTranslationMode
         ? ref.watch(translationRecitersListProvider)
         : ref.watch(recitersListProvider);
-    final sheetHeight = MediaQuery.sizeOf(context).height * 0.75;
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    final sheetHeight = keyboardHeight > 0
+        ? MediaQuery.sizeOf(context).height * 0.88
+        : MediaQuery.sizeOf(context).height * 0.78;
 
     return Container(
       height: sheetHeight,
@@ -255,169 +287,341 @@ class _ReciterSelectionBottomSheetState
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          children: [
-            12.vSpace,
-            // Drag Handle
-            Center(
-              child: Container(
-                width: 38.0,
-                height: 4.5,
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: Column(
+            children: [
+              12.vSpace,
+              // Drag Handle
+              Center(
+                child: Container(
+                  width: 38.0,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                  ),
                 ),
               ),
-            ),
-            14.vSpace,
+              14.vSpace,
 
-            // Header Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+              // Header Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        CupertinoIcons.mic_fill,
+                        color: colorScheme.primary,
+                        size: 20.0,
+                      ),
                     ),
-                    child: Icon(
-                      CupertinoIcons.mic_fill,
-                      color: colorScheme.primary,
-                      size: 20.0,
+                    12.hSpace,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.isTranslationMode
+                                ? 'انتخاب گوینده ترجمه'
+                                : AppConstants.selectReciterTitle,
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          2.vSpace,
+                          Text(
+                            widget.isTranslationMode
+                                ? 'گوینده ترجمه گویای مورد نظر خود را انتخاب کنید'
+                                : 'قاری مورد نظر خود را جهت پخش صوتی انتخاب کنید',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              color: colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(
+                        CupertinoIcons.xmark,
+                        color: colorScheme.onSurfaceVariant,
+                        size: 18.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              12.vSpace,
+
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  height: 42.0,
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: colorScheme.outline.withValues(alpha: 0.15),
+                      width: 1.0,
                     ),
                   ),
-                  12.hSpace,
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val;
+                      });
+                    },
+                    textInputAction: TextInputAction.search,
+                    textAlignVertical: TextAlignVertical.center,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13.0,
+                      color: colorScheme.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: widget.isTranslationMode
+                          ? 'جستجوی گوینده یا مترجم...'
+                          : 'جستجوی نام قاری...',
+                      hintStyle: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 12.0,
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.65),
+                      ),
+                      prefixIcon: Icon(
+                        CupertinoIcons.search,
+                        size: 17.0,
+                        color: colorScheme.primary.withValues(alpha: 0.8),
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                              child: Icon(
+                                CupertinoIcons.clear_circled_solid,
+                                size: 17.0,
+                                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                              ),
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 10.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              10.vSpace,
+
+              // Styles Filter Chips
+              stylesAsync.when(
+                data: (result) => result.when(
+                  (styles) => SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
                       children: [
-                        Text(
-                          widget.isTranslationMode
-                              ? 'انتخاب گوینده ترجمه'
-                              : AppConstants.selectReciterTitle,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
+                        FilterChip(
+                          label: const Text('همه سبک‌ها'),
+                          selected: selectedStyleId == null,
+                          selectedColor: AppColors.primary,
+                          checkmarkColor: Colors.white,
+                          labelStyle: TextStyle(
+                            color: selectedStyleId == null
+                                ? Colors.white
+                                : colorScheme.onSurface,
                           ),
+                          onSelected: (_) {
+                            ref
+                                .read(selectedReciterStyleIdProvider.notifier)
+                                .setStyleId(null);
+                          },
                         ),
-                        2.vSpace,
-                        Text(
-                          widget.isTranslationMode
-                              ? 'گوینده ترجمه گویای مورد نظر خود را انتخاب کنید'
-                              : 'قاری مورد نظر خود را جهت پخش صوتی انتخاب کنید',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11.5,
-                            color: colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.8),
-                          ),
-                        ),
+                        ...styles.map((style) {
+                          final isSelected = selectedStyleId == style.id;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: FilterChip(
+                              label: Text(style.name),
+                              selected: isSelected,
+                              selectedColor: AppColors.primary,
+                              checkmarkColor: Colors.white,
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : colorScheme.onSurface,
+                              ),
+                              onSelected: (_) {
+                                ref
+                                    .read(selectedReciterStyleIdProvider.notifier)
+                                    .setStyleId(style.id);
+                              },
+                            ),
+                          );
+                        }),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(
-                      CupertinoIcons.xmark,
-                      color: colorScheme.onSurfaceVariant,
-                      size: 18.0,
-                    ),
-                  ),
-                ],
+                  (error) => const SizedBox.shrink(),
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (err, stack) => const SizedBox.shrink(),
               ),
-            ),
-            12.vSpace,
 
-            // Styles Filter Chips
-            stylesAsync.when(
-              data: (result) => result.when(
-                (styles) => SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('همه سبک‌ها'),
-                        selected: selectedStyleId == null,
-                        selectedColor: AppColors.primary,
-                        checkmarkColor: Colors.white,
-                        labelStyle: TextStyle(
-                          color: selectedStyleId == null
-                              ? Colors.white
-                              : colorScheme.onSurface,
-                        ),
-                        onSelected: (_) {
-                          ref
-                              .read(selectedReciterStyleIdProvider.notifier)
-                              .setStyleId(null);
-                        },
-                      ),
-                      ...styles.map((style) {
-                        final isSelected = selectedStyleId == style.id;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: FilterChip(
-                            label: Text(style.name),
-                            selected: isSelected,
-                            selectedColor: AppColors.primary,
-                            checkmarkColor: Colors.white,
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : colorScheme.onSurface,
+              12.vSpace,
+
+              // Clean 3-Column Grid with High Contrast Inline Variant Selector
+              Expanded(
+                child: recitersAsync.when(
+                  data: (result) => result.when(
+                    (reciters) {
+                      if (reciters.isEmpty) {
+                        return const Center(
+                            child: Text(AppConstants.noReciterFound));
+                      }
+
+                      final groupedReciters = _groupReciters(reciters);
+                      final queryTrimmed = _searchQuery.trim();
+                      final filteredReciters = queryTrimmed.isEmpty
+                          ? groupedReciters
+                          : groupedReciters.where((group) {
+                              final q = _normalizeText(queryTrimmed);
+                              if (_normalizeText(group.baseName).contains(q)) {
+                                return true;
+                              }
+                              return group.variants.any((v) =>
+                                  _normalizeText(v.name).contains(q) ||
+                                  _normalizeText(v.englishName).contains(q) ||
+                                  _normalizeText(v.arabicName).contains(q));
+                            }).toList();
+
+                      if (filteredReciters.isEmpty) {
+                        return Center(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                              vertical: 16.0,
                             ),
-                            onSelected: (_) {
-                              ref
-                                  .read(selectedReciterStyleIdProvider.notifier)
-                                  .setStyleId(style.id);
-                            },
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(16.0),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.surfaceContainerHighest
+                                        .withValues(alpha: 0.4),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    CupertinoIcons.search,
+                                    size: 36.0,
+                                    color: colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                16.vSpace,
+                                Text(
+                                  widget.isTranslationMode
+                                      ? 'گوینده‌ای مطابق جستجو یافت نشد'
+                                      : 'قاری‌ای با نام «$_searchQuery» یافت نشد',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                                8.vSpace,
+                                Text(
+                                  'نام قاری را به صورت فارسی یا انگلیسی جستجو کنید',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 11.5,
+                                    color: colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.7),
+                                  ),
+                                ),
+                                16.vSpace,
+                                TextButton.icon(
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: colorScheme.primary
+                                        .withValues(alpha: 0.1),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0,
+                                      vertical: 8.0,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
+                                  ),
+                                  icon: Icon(
+                                    CupertinoIcons.clear,
+                                    size: 14.0,
+                                    color: colorScheme.primary,
+                                  ),
+                                  label: Text(
+                                    'پاک کردن جستجو',
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontFamily,
+                                      fontSize: 12.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
-                      }),
-                    ],
-                  ),
-                ),
-                (error) => const SizedBox.shrink(),
-              ),
-              loading: () => const SizedBox.shrink(),
-              error: (err, stack) => const SizedBox.shrink(),
-            ),
+                      }
 
-            12.vSpace,
+                      final currentSelectedId = audioState.selectedReciter?.id;
 
-            // Clean 3-Column Grid with High Contrast Inline Variant Selector
-            Expanded(
-              child: recitersAsync.when(
-                data: (result) => result.when(
-                  (reciters) {
-                    if (reciters.isEmpty) {
-                      return const Center(
-                          child: Text(AppConstants.noReciterFound));
-                    }
-
-                    final groupedReciters = _groupReciters(reciters);
-                    final currentSelectedId = audioState.selectedReciter?.id;
-
-                    return GridView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      physics: const BouncingScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 10.0,
-                        mainAxisSpacing: 16.0,
-                        childAspectRatio: 0.82,
-                      ),
-                      itemCount: groupedReciters.length,
-                      itemBuilder: (context, index) {
-                        final group = groupedReciters[index];
+                      return GridView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
+                        physics: const BouncingScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10.0,
+                          mainAxisSpacing: 16.0,
+                          childAspectRatio: 0.82,
+                        ),
+                        itemCount: filteredReciters.length,
+                        itemBuilder: (context, index) {
+                          final group = filteredReciters[index];
 
                         final isGroupSelected = group.variants.any(
                           (v) => v.id == currentSelectedId,
@@ -758,6 +962,7 @@ class _ReciterSelectionBottomSheetState
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

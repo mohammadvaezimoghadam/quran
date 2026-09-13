@@ -251,45 +251,16 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
                     ),
                     const SizedBox(height: 6),
 
-                    // Restore & security info without icons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: state.isLoading
-                              ? null
-                              : () async {
-                                  final restored = await controller.restorePurchases();
-                                  if (!context.mounted) return;
-                                  if (restored) {
-                                    _showSnackBar('خریدهای قبلی شما با موفقیت بازیابی شدند.');
-                                    Navigator.of(context).pop();
-                                  } else {
-                                    _showSnackBar('خرید فعالی در حساب بازار یافت نشد.', isError: true);
-                                  }
-                                },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          child: Text(
-                            'بازیابی خریدهای قبلی',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 12,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                    // Security info
+                    Center(
+                      child: Text(
+                        'پرداخت امن کافه بازار',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11.5,
+                          color: colorScheme.outline,
                         ),
-                        Text(
-                          'پرداخت امن کافه بازار',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11,
-                            color: colorScheme.outline,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),

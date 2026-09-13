@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../audio_manager/application/controllers/audio_download_controller.dart';
@@ -9,8 +11,8 @@ import '../../domain/entities/surah_entity.dart';
 
 /// Button states:
 /// 1. Downloaded (full)     → Play icon  → plays surah from ayah 1
-/// 2. Downloading (active)  → CircularProgress + Pause icon → tap cancels
-/// 3. Partially downloaded  → Resume icon → triggers onDownloadTap (opens unified SurahActionDialog)
+/// 2. Downloading (active)  → CircularProgress + percentage text → tap cancels
+/// 3. Partially downloaded  → Resume icon → triggers onDownloadTap (starts/resumes download)
 /// 4. Not downloaded at all → Download icon (or Lock icon if VIP required) → triggers onDownloadTap
 class SurahAudioDownloadButton extends ConsumerWidget {
   final SurahEntity surah;
@@ -118,10 +120,11 @@ class SurahAudioDownloadButton extends ConsumerWidget {
     dynamic selectedReciter,
   ) {
     final progress = task.progress;
+    final percent = (progress * 100).clamp(0, 100).toInt();
 
     return IconButton(
       tooltip:
-          'آیه ${task.currentAyah} از ${task.totalAyahs} - برای توقف لمس کنید',
+          'آیه ${task.currentAyah.toPersianDigit()} از ${task.totalAyahs.toPersianDigit()} ($percent٪) - برای توقف لمس کنید',
       onPressed: () {
         ref.read(audioDownloadControllerProvider.notifier).cancelDownload(
               selectedReciter.id,
@@ -129,8 +132,8 @@ class SurahAudioDownloadButton extends ConsumerWidget {
             );
       },
       icon: SizedBox(
-        width: 28,
-        height: 28,
+        width: 32,
+        height: 32,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -140,10 +143,14 @@ class SurahAudioDownloadButton extends ConsumerWidget {
               color: AppColors.goldAccent,
               backgroundColor: AppColors.goldAccent.withValues(alpha: 0.2),
             ),
-            const Icon(
-              Icons.pause_rounded,
-              size: 14,
-              color: AppColors.goldAccent,
+            Text(
+              percent > 0 ? '${percent.toPersianDigit()}٪' : '...',
+              style: const TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                color: AppColors.goldAccent,
+              ),
             ),
           ],
         ),

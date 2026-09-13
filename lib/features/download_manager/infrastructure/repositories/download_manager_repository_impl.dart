@@ -268,6 +268,7 @@ class DownloadManagerRepositoryImpl implements IDownloadManagerRepository {
                 : 'قاری: ${reciter?.name ?? 'قاری ناشناس'}',
             surahId: item.surahId,
             reciterId: item.reciterId,
+            imageUrl: reciter?.imageUrl,
             sizeBytes: sizeBytes,
             formattedSize: formattedSize,
             downloadedAt: lastModified,

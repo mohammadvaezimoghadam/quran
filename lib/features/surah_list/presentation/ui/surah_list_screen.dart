@@ -15,7 +15,10 @@ import '../../../../common/widgets/reciter/reciter_avatar_button.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/favorite_surahs_controller.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
+import '../../../../common/widgets/app_snackbar.dart';
 import '../widgets/surah_action_dialog.dart';
+import '../../../audio_manager/application/controllers/audio_download_controller.dart';
 import '../widgets/surah_error_view.dart';
 import '../widgets/surah_list_item.dart';
 import '../widgets/surah_sort_bottom_sheet.dart';
@@ -266,6 +269,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
     }
 
     if (!mounted) return;
+
     final fontScript = ref.read(
       quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
     );
@@ -275,7 +279,20 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
       context: context,
       surah: surah,
       surahFontFamily: surahFontFamily,
+      message: 'برای دانلود صوت سوره ${surah.nameFa} می‌توانید از «دانلود سریع» استفاده کنید یا وارد «مدیریت دانلود» شوید.',
       onReadSurah: () => _openReader(surah),
+      onQuickDownload: reciter != null
+          ? () {
+              ref.read(audioDownloadControllerProvider.notifier).startDownload(
+                reciter: reciter,
+                surahId: surah.number,
+              );
+              AppSnackBar.showSuccess(
+                context,
+                'دانلود صوت سوره ${surah.nameFa} شروع شد.',
+              );
+            }
+          : null,
       onDownloadAudio: () {
         final router = GoRouter.of(context);
         _dismissSearchAndNavigate(() {

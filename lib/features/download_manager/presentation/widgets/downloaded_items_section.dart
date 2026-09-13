@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/widgets/app_cached_network_image.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/data/local/preferences/preferences_keys.dart';
 import '../../../../core/data/local/preferences/preferences_service_provider.dart';
@@ -447,16 +448,42 @@ class _DownloadedItemRow extends StatelessWidget {
 
     return Row(
       children: [
-        // Type Badge Icon
+        // Type Badge Icon / Reciter Avatar
         Container(
-          width: 38,
-          height: 38,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: badgeColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : badgeColor.withValues(alpha: 0.20),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-          child: Center(
-            child: Icon(iconData, size: 18, color: badgeColor),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10.8),
+            child: (item.imageUrl != null && item.imageUrl!.isNotEmpty)
+                ? AppCachedNetworkImage(
+                    imageUrl: item.imageUrl,
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.cover,
+                    fallbackIcon: iconData,
+                    backgroundColor: badgeColor.withValues(alpha: 0.12),
+                  )
+                : Container(
+                    color: badgeColor.withValues(alpha: 0.12),
+                    alignment: Alignment.center,
+                    child: Icon(iconData, size: 20, color: badgeColor),
+                  ),
           ),
         ),
         const SizedBox(width: 12),

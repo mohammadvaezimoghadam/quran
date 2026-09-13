@@ -66,12 +66,49 @@ class SurahDictionaryScreen extends ConsumerWidget {
         centerTitle: true,
         backgroundColor: isDark ? const Color(0xFF192220) : Colors.white,
         elevation: 0.5,
-        leading: IconButton(
-          icon: Icon(
-            CupertinoIcons.arrow_right,
-            color: isDark ? Colors.white70 : const Color(0xFF2C2A29),
+        leading: Padding(
+          padding: const EdgeInsetsDirectional.only(start: 10.0),
+          child: Center(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                },
+                customBorder: const CircleBorder(),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : AppColors.primary.withValues(alpha: 0.08),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFFF4E0A5).withValues(alpha: 0.3)
+                          : AppColors.primary.withValues(alpha: 0.25),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Tooltip(
+                    message: 'بازگشت',
+                    child: Center(
+                      child: Icon(
+                        CupertinoIcons.chevron_forward,
+                        size: 19,
+                        color: isDark
+                            ? const Color(0xFFF4E0A5)
+                            : AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
-          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: groupedWordsAsync.when(

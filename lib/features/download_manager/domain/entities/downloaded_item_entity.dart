@@ -12,6 +12,7 @@ class DownloadedItemEntity {
   final int? surahId;
   final int? reciterId;
   final String? translationId;
+  final String? imageUrl;
   final int sizeBytes;
   final String formattedSize;
   final DateTime? downloadedAt;
@@ -24,6 +25,7 @@ class DownloadedItemEntity {
     this.surahId,
     this.reciterId,
     this.translationId,
+    this.imageUrl,
     required this.sizeBytes,
     required this.formattedSize,
     this.downloadedAt,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/widgets/app_cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../audio_manager/application/controllers/audio_download_controller.dart';
@@ -220,6 +221,37 @@ class _AudioQueueTaskItem extends ConsumerWidget {
       children: [
         Row(
           children: [
+            Container(
+              width: 42,
+              height: 42,
+              margin: const EdgeInsetsDirectional.only(end: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : badgeColor.withValues(alpha: 0.20),
+                  width: 1.0,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: (reciter?.imageUrl != null && reciter!.imageUrl!.isNotEmpty)
+                    ? AppCachedNetworkImage(
+                        imageUrl: reciter!.imageUrl,
+                        width: 42,
+                        height: 42,
+                        fit: BoxFit.cover,
+                        fallbackIcon: badgeIcon,
+                        backgroundColor: badgeColor.withValues(alpha: 0.12),
+                      )
+                    : Container(
+                        color: badgeColor.withValues(alpha: 0.12),
+                        alignment: Alignment.center,
+                        child: Icon(badgeIcon, size: 20, color: badgeColor),
+                      ),
+              ),
+            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,6 +435,28 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
       children: [
         Row(
           children: [
+            Container(
+              width: 42,
+              height: 42,
+              margin: const EdgeInsetsDirectional.only(end: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : badgeColor.withValues(alpha: 0.20),
+                  width: 1.0,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: Container(
+                  color: badgeColor.withValues(alpha: 0.12),
+                  alignment: Alignment.center,
+                  child: const Icon(CupertinoIcons.book_fill, size: 20, color: badgeColor),
+                ),
+              ),
+            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
