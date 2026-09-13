@@ -284,13 +284,14 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                         children: [
                                                           Flexible(
                                                             child: Text(
-                                                              '$activeReciterName • ${AppConstants.ayahLabel} ${currentAyahNumber ?? 1}',
+                                                              '$activeReciterName • ${AppConstants.ayahLabel} ${(currentAyahNumber ?? 1).toPersianDigit()}',
                                                               maxLines: 1,
                                                               overflow: TextOverflow.ellipsis,
                                                               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                                                     fontWeight: FontWeight.bold,
                                                                     color: colorScheme.primary,
                                                                     fontSize: 12.0,
+                                                                    fontFamily: AppTypography.fontFamily,
                                                                   ),
                                                             ),
                                                           ),

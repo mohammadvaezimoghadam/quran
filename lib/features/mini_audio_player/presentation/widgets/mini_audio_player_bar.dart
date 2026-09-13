@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -135,7 +136,7 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
-                                    'آیه $currentAyahNumber از $totalAyahsInSurah',
+                                    'آیه ${currentAyahNumber.toPersianDigit()} از ${totalAyahsInSurah.toPersianDigit()}',
                                     style: const TextStyle(
                                       fontFamily: AppTypography.fontFamily,
                                       fontSize: 10.5,
