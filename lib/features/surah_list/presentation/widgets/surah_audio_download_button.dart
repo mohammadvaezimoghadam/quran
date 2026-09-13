@@ -11,7 +11,7 @@ import '../../domain/entities/surah_entity.dart';
 /// 1. Downloaded (full)     → Play icon  → plays surah from ayah 1
 /// 2. Downloading (active)  → CircularProgress + Pause icon → tap cancels
 /// 3. Partially downloaded  → Resume icon → triggers onDownloadTap (opens unified SurahActionDialog)
-/// 4. Not downloaded at all → Download icon → triggers onDownloadTap (opens unified SurahActionDialog)
+/// 4. Not downloaded at all → Download icon (or Lock icon if VIP required) → triggers onDownloadTap
 class SurahAudioDownloadButton extends ConsumerWidget {
   final SurahEntity surah;
   final VoidCallback onDownloadTap;
@@ -97,7 +97,7 @@ class SurahAudioDownloadButton extends ConsumerWidget {
           );
         }
 
-        // ── STATE 4: Not downloaded → download cloud icon ──
+        // ── STATE 4: Not downloaded → Download Cloud icon ──
         return IconButton(
           icon: const Icon(
             Icons.cloud_download_outlined,

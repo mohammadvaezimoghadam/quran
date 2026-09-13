@@ -12,6 +12,8 @@ import '../../../features/quran_reader/application/controllers/quran_audio_contr
 import '../../../features/quran_reader/application/controllers/reciter_providers.dart';
 import '../../../features/quran_reader/domain/entities/reciter_entity.dart';
 import '../../../features/quran_reader/presentation/utils/reciter_download_helper.dart';
+import '../../../features/subscription/domain/policy/audio_vip_policy.dart';
+import '../../../features/subscription/application/vip_subscription_controller.dart';
 
 /// Model representing a unique Reciter person with all their recitation variants.
 class ReciterGroup {
@@ -132,18 +134,73 @@ class _ReciterSelectionBottomSheetState
     return cleaned.toUpperCase();
   }
 
+  int _getReciterPriority(ReciterGroup group) {
+    // 1. Ostad Parhizgar is top priority (0)
+    final isParhizgar = group.variants.any((v) =>
+        AudioVipPolicy.isDefaultReciter(v.identifier) ||
+        v.name.contains('پرهیزگار') ||
+        v.name.contains('پرهیزکار') ||
+        group.baseName.contains('پرهیزگار') ||
+        group.baseName.contains('پرهیزکار'));
+    if (isParhizgar) return 0;
+
+    // 2. Persian translations (if in translation mode)
+    final isPersianTranslation = group.variants.any((v) =>
+        v.identifier.startsWith('fa_') ||
+        v.name.contains('فارسی') ||
+        v.name.contains('فولادوند') ||
+        v.name.contains('مکارم'));
+    if (isPersianTranslation) return 1;
+
+    // 3. Other Iranian Reciters (Priority 2)
+    final isIranian = group.variants.any((v) {
+      final id = v.identifier.toLowerCase();
+      final name = v.name;
+      return id.contains('mansoori') ||
+          id.contains('shakernejad') ||
+          id.contains('pourzargari') ||
+          id.contains('emam_jomeh') ||
+          id.contains('aghaei') ||
+          id.contains('panahi') ||
+          id.contains('sabzali') ||
+          id.contains('saeedian') ||
+          id.contains('abbasi') ||
+          id.contains('misbahi') ||
+          name.contains('منصوری') ||
+          name.contains('شاکرنژاد') ||
+          name.contains('پورزرگری') ||
+          name.contains('امام جمعه') ||
+          name.contains('آقایی') ||
+          name.contains('پناهی') ||
+          name.contains('سبزعلی') ||
+          name.contains('سعیدیان') ||
+          name.contains('عباسی') ||
+          name.contains('مصباحی');
+    }) ||
+        group.baseName.contains('منصوری') ||
+        group.baseName.contains('شاکرنژاد') ||
+        group.baseName.contains('پورزرگری');
+    if (isIranian) return 2;
+
+    return 10;
+  }
+
   List<ReciterGroup> _groupReciters(List<ReciterEntity> rawReciters) {
     final Map<String, List<ReciterEntity>> groupedMap = {};
+    final Map<String, int> firstSeenOrder = {};
+    int index = 0;
 
     for (final r in rawReciters) {
-      final baseName = _cleanReciterName(r.name);
+      // Do not strip or merge different audio translations
+      final baseName = r.styleId == 4 ? r.name : _cleanReciterName(r.name);
       if (!groupedMap.containsKey(baseName)) {
         groupedMap[baseName] = [];
+        firstSeenOrder[baseName] = index++;
       }
       groupedMap[baseName]!.add(r);
     }
 
-    return groupedMap.entries.map((entry) {
+    final groups = groupedMap.entries.map((entry) {
       final variants = entry.value;
       final image = variants.firstWhere(
         (v) => v.imageUrl != null && v.imageUrl!.isNotEmpty,
@@ -156,6 +213,17 @@ class _ReciterSelectionBottomSheetState
         variants: variants,
       );
     }).toList();
+
+    groups.sort((a, b) {
+      final pA = _getReciterPriority(a);
+      final pB = _getReciterPriority(b);
+      if (pA != pB) return pA.compareTo(pB);
+      final orderA = firstSeenOrder[a.baseName] ?? 0;
+      final orderB = firstSeenOrder[b.baseName] ?? 0;
+      return orderA.compareTo(orderB);
+    });
+
+    return groups;
   }
 
   @override
@@ -360,6 +428,12 @@ class _ReciterSelectionBottomSheetState
                               (v) => v.id == currentSelectedId,
                               orElse: () => group.variants.first,
                             );
+                        final isVip = ref.watch(hasVipAccessProvider);
+                        final isLocked = !isVip &&
+                            (widget.isTranslationMode
+                                ? true
+                                : !AudioVipPolicy.isDefaultReciter(
+                                    activeVariant.identifier));
                         final styleLabel = _getTranslatedVariant(
                             activeVariant.name, activeVariant.styleName);
                         final qualityLabel = _formatQuality(activeVariant.bitrate);
@@ -394,38 +468,95 @@ class _ReciterSelectionBottomSheetState
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Reciter Avatar with active ring
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 250),
-                                  padding: const EdgeInsets.all(2.5),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: isGroupSelected
-                                          ? colorScheme.primary
-                                          : colorScheme.outline
-                                              .withValues(alpha: 0.15),
-                                      width: isGroupSelected ? 2.2 : 1.0,
+                                // Reciter Avatar with active ring and VIP badge
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 250),
+                                      padding: const EdgeInsets.all(2.5),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isGroupSelected
+                                              ? colorScheme.primary
+                                              : colorScheme.outline
+                                                  .withValues(alpha: 0.15),
+                                          width: isGroupSelected ? 2.2 : 1.0,
+                                        ),
+                                        boxShadow: isGroupSelected
+                                            ? [
+                                                BoxShadow(
+                                                  color: colorScheme.primary
+                                                      .withValues(alpha: 0.35),
+                                                  blurRadius: 12,
+                                                  spreadRadius: 2,
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: AppCachedNetworkImage.circle(
+                                        imageUrl: group.imageUrl,
+                                        size: 52.0,
+                                        fallbackIcon: CupertinoIcons.person_fill,
+                                        backgroundColor: isGroupSelected
+                                            ? colorScheme.primary
+                                            : colorScheme.surfaceContainerHigh,
+                                      ),
                                     ),
-                                    boxShadow: isGroupSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: colorScheme.primary
-                                                  .withValues(alpha: 0.35),
-                                              blurRadius: 12,
-                                              spreadRadius: 2,
+                                    if (isLocked)
+                                      Positioned(
+                                        top: -3,
+                                        right: -3,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(3.5),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [Color(0xFF0F766E), Color(0xFF005C55)],
                                             ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: AppCachedNetworkImage.circle(
-                                    imageUrl: group.imageUrl,
-                                    size: 52.0,
-                                    fallbackIcon: CupertinoIcons.person_fill,
-                                    backgroundColor: isGroupSelected
-                                        ? colorScheme.primary
-                                        : colorScheme.surfaceContainerHigh,
-                                  ),
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(alpha: 0.3),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(
+                                            Icons.lock_rounded,
+                                            color: Colors.white,
+                                            size: 13,
+                                          ),
+                                        ),
+                                      )
+                                    else if (!isVip &&
+                                        !widget.isTranslationMode &&
+                                        AudioVipPolicy.isDefaultReciter(
+                                            activeVariant.identifier))
+                                      Positioned(
+                                        bottom: -2,
+                                        left: 0,
+                                        right: 0,
+                                        child: Center(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: colorScheme.primary,
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: const Text(
+                                              'رایگان',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 8.5,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                                 8.vSpace,
 

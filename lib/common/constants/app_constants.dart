@@ -2,7 +2,7 @@ abstract class AppConstants {
   // Base URLs
   static const String alQuranCloudBaseUrl = 'https://api.alquran.cloud/v1';
   static const String ummahApiBaseUrl = 'https://ummahapi.com/api';
-  static const String everyAyahAudioBaseUrl = 'https://everyayah.com/data';
+  static const String everyAyahAudioBaseUrl = 'https://www.everyayah.com/data';
 
   // Assets Paths
   static const String ayahCardBgAsset = 'assets/images/ayah_card_bg.png';

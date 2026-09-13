@@ -193,11 +193,11 @@ class _AudioQueueTaskItem extends ConsumerWidget {
     final isPaused = task.status == DownloadTaskStatus.paused;
     final isFailed = task.status == DownloadTaskStatus.failed;
 
-    final statusText = isDownloading
+    final statusBadgeText = isDownloading
         ? 'در حال دانلود...'
         : isPaused
             ? 'متوقف شده'
-            : (task.errorMessage ?? 'خطا');
+            : 'خطا در دانلود';
 
     final statusColor = isDownloading
         ? Colors.green
@@ -267,7 +267,7 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Flexible(
+                      Expanded(
                         child: Text(
                           reciter != null ? reciter!.name : 'قاری کد ${task.reciterId}',
                           style: TextStyle(
@@ -280,7 +280,7 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        statusText,
+                        statusBadgeText,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -297,6 +297,19 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  if (isFailed && task.errorMessage != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      task.errorMessage!,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.error,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
               ),
             ),

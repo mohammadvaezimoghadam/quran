@@ -9,3 +9,4 @@ const String audioDownloadManagerRoute = "audio_download_manager";
 const String downloadHubRoute = "download_hub";
 const String smartDeviceRoute = "smart_device";
 const String surahDictionaryRoute = "surah_dictionary";
+const String vipSubscriptionRoute = "vip_subscription";

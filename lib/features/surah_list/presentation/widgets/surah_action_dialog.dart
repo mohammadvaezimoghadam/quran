@@ -104,6 +104,7 @@ class SurahActionDialog extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ),

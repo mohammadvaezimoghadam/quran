@@ -1,3 +1,16 @@
+import java.util.Properties
+
+val keystoreProperties = Properties().apply {
+    val keystorePropertiesFile = rootProject.file("key.properties")
+    val altKeystoreFile = rootProject.file("android/key.properties")
+    val fileToLoad = when {
+        keystorePropertiesFile.exists() -> keystorePropertiesFile
+        altKeystoreFile.exists() -> altKeystoreFile
+        else -> null
+    }
+    fileToLoad?.inputStream()?.use { load(it) }
+}
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -35,11 +48,33 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (keystoreProperties.isNotEmpty()) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                val rawPath = keystoreProperties["storeFile"]?.toString() ?: "ApplicationKey.jks"
+                val resolvedFile = sequenceOf(
+                    file(rawPath),
+                    rootProject.file(rawPath),
+                    rootProject.file("app/$rawPath"),
+                    File(rawPath)
+                ).firstOrNull { it.exists() } ?: file(rawPath)
+                storeFile = resolvedFile
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseSigning = signingConfigs.findByName("release")
+            if (releaseSigning != null && releaseSigning.storeFile?.exists() == true) {
+                signingConfig = releaseSigning
+            } else {
+                @Suppress("DEPRECATION")
+                signingConfig = signingConfigs.getByName("debug")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -44,6 +44,15 @@ class AppTheme {
         bodySmall: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 14),
         labelMedium: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12),
       ),
+      snackBarTheme: const SnackBarThemeData(
+        contentTextStyle: TextStyle(
+          color: Colors.white,
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 13.5,
+          fontWeight: FontWeight.w500,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -96,6 +105,15 @@ class AppTheme {
         labelStyle: TextStyle(color: darkOnSurface),
         prefixIconColor: darkOnSurfaceVariant,
         suffixIconColor: darkOnSurfaceVariant,
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        contentTextStyle: TextStyle(
+          color: Colors.white,
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 13.5,
+          fontWeight: FontWeight.w500,
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

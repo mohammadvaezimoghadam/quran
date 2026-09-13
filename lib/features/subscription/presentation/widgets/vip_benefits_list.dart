@@ -12,27 +12,17 @@ class VipBenefitsList extends StatelessWidget {
       (
         icon: Icons.record_voice_over_rounded,
         title: 'آرشیو قاریان برجسته جهان اسلام',
-        desc: 'دسترسی نامحدود به صوت استاد عبدالباسط، منشاوی، العفاسی و...',
+        desc: 'دسترسی نامحدود به صوت استاد عبدالباسط، منشاوی، خلیل الحصری، العفاسی و...',
       ),
       (
         icon: Icons.hearing_rounded,
         title: 'ترجمه صوتی گویای فارسی',
-        desc: 'شنیدن همگام ترجمه شیوا و باکیفیت پس از قرائت هر آیه',
+        desc: 'شنیدن همگام ترجمه شیوا و باکیفیت فارسی پس از قرائت هر آیه برای تمام سوره‌ها',
       ),
       (
-        icon: Icons.menu_book_rounded,
-        title: 'واژه‌شناسی و ترجمه لغت‌به‌لغت',
-        desc: 'درک عمیق معانی تک‌تک کلمات و ریشه‌های قرآنی آیات',
-      ),
-      (
-        icon: Icons.format_color_text_rounded,
-        title: 'رنگ‌آمیزی اعراب و فونت‌های اصیل',
-        desc: 'شخصی‌سازی رنگ حرکات متن و دسترسی به فونت‌های ثلث و نیریزی',
-      ),
-      (
-        icon: Icons.devices_rounded,
-        title: 'اتصال به سخت‌افزار هوشمند قرآنی',
-        desc: 'همگام‌سازی نمایشگر هوشمند رومیزی (NodeMCU) با تلاوت',
+        icon: Icons.cloud_download_rounded,
+        title: 'دانلود نامحدود و دسترسی آفلاین',
+        desc: 'دانلود یکجا و آفلاین تمامی سوره‌ها با صدای هر یک از قاریان منتخب بدون محدودیت',
       ),
     ];
 
@@ -42,7 +32,7 @@ class VipBenefitsList extends StatelessWidget {
         color: AppColors.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.goldAccent.withValues(alpha: 0.3),
+          color: AppColors.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -53,22 +43,22 @@ class VipBenefitsList extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.goldMetallic.withValues(alpha: 0.15),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.stars_rounded,
-                  color: AppColors.goldAccent,
+                  color: AppColors.primary,
                   size: 20,
                 ),
               ),
               const SizedBox(width: 8),
               const Text(
-                'امکانات ویژه اشتراک VIP',
+                'امکانات اشتراک ویژه',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontWeight: FontWeight.bold,
-                  fontSize: 15,
+                  fontSize: 14,
                   color: AppColors.primary,
                 ),
               ),
@@ -82,7 +72,7 @@ class VipBenefitsList extends StatelessWidget {
                   children: [
                     Container(
                       margin: const EdgeInsets.only(top: 2),
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -113,6 +103,7 @@ class VipBenefitsList extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 11,
+                              height: 1.4,
                               color: AppColors.onSurfaceVariant.withValues(alpha: 0.8),
                             ),
                           ),

@@ -5,7 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app_cached_network_image.dart';
 import '../../../core/services/audio/audio_player_state.dart';
 import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../features/quran_reader/domain/enums/current_track_type.dart';
+import '../../../features/subscription/application/vip_subscription_controller.dart';
+import '../../../features/subscription/domain/policy/audio_vip_policy.dart';
 import 'reciter_selection_bottom_sheet.dart';
 
 /// Reusable circular button displaying reciter avatar with a slow rotating ambient glow ring.
@@ -70,12 +73,29 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
       _animController.stop();
     }
 
+    // Check subscription & reciter access
+    final hasVip = ref.watch(hasVipAccessProvider);
+    final isParhizgar = displayReciter == null ||
+        AudioVipPolicy.isDefaultReciter(displayReciter.identifier);
+
     final avatarSize = widget.radius * 2;
 
+    final String tooltipMessage;
+    if (widget.isPlayButton) {
+      tooltipMessage = isPlaying ? 'توقف پخش' : 'پخش تلاوت';
+    } else {
+      final nameStr = reciterName.isEmpty ? 'استاد پرهیزگار' : reciterName;
+      if (hasVip) {
+        tooltipMessage = 'انتخاب قاری ($nameStr)';
+      } else if (isParhizgar) {
+        tooltipMessage = 'انتخاب قاری ($nameStr - رایگان)';
+      } else {
+        tooltipMessage = 'انتخاب قاری ($nameStr - نیازمند اشتراک)';
+      }
+    }
+
     return Tooltip(
-      message: widget.isPlayButton
-          ? (isPlaying ? 'توقف پخش' : 'پخش تلاوت')
-          : 'انتخاب قاری (${reciterName.isEmpty ? 'پیش‌فرض' : reciterName})',
+      message: tooltipMessage,
       child: GestureDetector(
         onTap: widget.onTap ?? () {
           ReciterSelectionBottomSheet.show(context);
@@ -212,6 +232,70 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                     ),
                   ),
                 ),
+
+              // 5. VIP / Free Status Badges (Only shown when user has NO VIP and not in play button mode)
+              if (!hasVip && !widget.isPlayButton) ...[
+                if (isParhizgar)
+                  // Free Reciter: Sleek emerald green 'رایگان' capsule at bottom center
+                  Positioned(
+                    bottom: -3,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1B5E20),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF81C784),
+                          width: 0.9,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1.5),
+                          ),
+                        ],
+                      ),
+                      child: const Text(
+                        'رایگان',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.15,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  // Locked Reciter: Exact golden circular lock badge matching reciter dialog
+                  Positioned(
+                    top: -3,
+                    right: -3,
+                    child: Container(
+                      padding: const EdgeInsets.all(3.5),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0F766E), Color(0xFF005C55)],
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.lock_rounded,
+                        color: Colors.white,
+                        size: 13,
+                      ),
+                    ),
+                  ),
+              ],
             ],
           ),
         ),

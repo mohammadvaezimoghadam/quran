@@ -211,18 +211,21 @@ class _MiniAudioProgressBar extends ConsumerWidget {
         ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0)
         : 0.0;
 
-    return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      tween: Tween<double>(begin: 0.0, end: progress),
-      builder: (context, value, child) {
-        return LinearProgressIndicator(
-          value: value,
-          minHeight: 2.5,
-          backgroundColor: Colors.white.withValues(alpha: 0.08),
-          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.goldAccent),
-        );
-      },
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        tween: Tween<double>(begin: 0.0, end: progress),
+        builder: (context, value, child) {
+          return LinearProgressIndicator(
+            value: value,
+            minHeight: 2.5,
+            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.goldAccent),
+          );
+        },
+      ),
     );
   }
 }

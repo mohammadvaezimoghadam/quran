@@ -36,7 +36,7 @@ class AudioTopEdgeProgressBar extends ConsumerWidget {
             behavior: HitTestBehavior.opaque,
             onTapDown: (details) {
               if (durationMs > 0 && totalWidth > 0) {
-                // RTL reading: 0% starts on the right, 100% ends on the left
+                // RTL Quranic reading: 0% starts on the right, 100% ends on the left
                 final ratio = ((totalWidth - details.localPosition.dx) / totalWidth).clamp(0.0, 1.0);
                 ref.read(audioPlayerServiceProvider).seek(
                       Duration(milliseconds: (ratio * durationMs).toInt()),
@@ -45,7 +45,7 @@ class AudioTopEdgeProgressBar extends ConsumerWidget {
             },
             onHorizontalDragUpdate: (details) {
               if (durationMs > 0 && totalWidth > 0) {
-                // RTL reading: 0% starts on the right, 100% ends on the left
+                // RTL Quranic reading: 0% starts on the right, 100% ends on the left
                 final ratio = ((totalWidth - details.localPosition.dx) / totalWidth).clamp(0.0, 1.0);
                 ref.read(audioPlayerServiceProvider).seek(
                       Duration(milliseconds: (ratio * durationMs).toInt()),

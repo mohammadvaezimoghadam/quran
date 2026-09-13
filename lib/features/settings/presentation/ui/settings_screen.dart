@@ -1,18 +1,25 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../common/extensions/string_extension.dart';
 import '../../../quran_reader/presentation/widgets/quick_settings_drawer.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isVip = ref.watch(hasVipAccessProvider);
+    final vipState = ref.watch(vipSubscriptionControllerProvider);
 
     final bgColor = isDark ? const Color(0xFF0F1615) : const Color(0xFFF7F5F0);
     final cardBgColor = isDark ? const Color(0xFF162220) : Colors.white;
@@ -21,6 +28,13 @@ class SettingsScreen extends StatelessWidget {
     final dividerColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : const Color(0xFFEAE7E3);
+
+    final vipSubtitle = isVip
+        ? (vipState.remainingDays > 0
+            ? 'اشتراک ویژه شما فعال است (${vipState.remainingDays} روز دیگر باقی‌مانده)'
+                .toPersianDigit()
+            : 'اشتراک ویژه فعال است (مشاهده جزییات)')
+        : 'دسترسی نامحدود به تمامی قاریان برجسته و ترجمه‌های گویا';
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -65,7 +79,20 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 Divider(height: 1, color: dividerColor),
 
-                // 3. About Quran Tafakor
+                // 3. VIP Subscription (یکی مانده به آخر، بالای درباره قرآن تفکر)
+                _buildSettingsTile(
+                  context: context,
+                  icon: CupertinoIcons.star_circle_fill,
+                  iconColor: AppColors.goldMetallic,
+                  title: 'اشتراک ویژه',
+                  subtitle: vipSubtitle,
+                  textColor: textColor,
+                  subtitleColor: subtitleColor,
+                  onTap: () => context.pushNamed(vipSubscriptionRoute),
+                ),
+                Divider(height: 1, color: dividerColor),
+
+                // 4. About Quran Tafakor
                 _buildSettingsTile(
                   context: context,
                   icon: CupertinoIcons.info_circle_fill,
@@ -128,12 +155,14 @@ class SettingsScreen extends StatelessWidget {
     required Color textColor,
     required Color subtitleColor,
     required VoidCallback onTap,
+    Color? iconColor,
+    Widget? trailing,
   }) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.goldMetallic, size: 26),
+      leading: Icon(icon, color: iconColor ?? AppColors.goldMetallic, size: 26),
       title: Text(title, style: AppTypography.sectionHeader.copyWith(color: textColor)),
       subtitle: Text(subtitle, style: AppTypography.captionText.copyWith(color: subtitleColor)),
-      trailing: Icon(CupertinoIcons.chevron_left, size: 16, color: subtitleColor),
+      trailing: trailing ?? Icon(CupertinoIcons.chevron_left, size: 16, color: subtitleColor),
       onTap: onTap,
     );
   }

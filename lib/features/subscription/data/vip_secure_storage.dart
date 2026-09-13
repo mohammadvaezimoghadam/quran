@@ -8,8 +8,7 @@ class VipSecureStorage {
   static const String _keyIsVip = 'quran_vip_active';
   static const String _keyVipExpiry = 'quran_vip_expiry_iso';
   static const String _keyActivePlanId = 'quran_vip_plan_id';
-  static const String _keyIsTrialUsed = 'quran_vip_trial_used';
-  static const String _keyTrialExpiry = 'quran_vip_trial_expiry_iso';
+  static const String _keyPurchaseToken = 'quran_vip_purchase_token';
 
   const VipSecureStorage({FlutterSecureStorage? storage})
       : _storage = storage ??
@@ -52,26 +51,15 @@ class VipSecureStorage {
     }
   }
 
-  Future<bool> getIsTrialUsed() async {
-    final value = await _storage.read(key: _keyIsTrialUsed);
-    return value == 'true';
+  Future<String?> getPurchaseToken() async {
+    return _storage.read(key: _keyPurchaseToken);
   }
 
-  Future<void> setIsTrialUsed(bool isUsed) async {
-    await _storage.write(key: _keyIsTrialUsed, value: isUsed ? 'true' : 'false');
-  }
-
-  Future<DateTime?> getTrialExpiryDate() async {
-    final value = await _storage.read(key: _keyTrialExpiry);
-    if (value == null || value.isEmpty) return null;
-    return DateTime.tryParse(value);
-  }
-
-  Future<void> setTrialExpiryDate(DateTime? date) async {
-    if (date == null) {
-      await _storage.delete(key: _keyTrialExpiry);
+  Future<void> setPurchaseToken(String? token) async {
+    if (token == null) {
+      await _storage.delete(key: _keyPurchaseToken);
     } else {
-      await _storage.write(key: _keyTrialExpiry, value: date.toIso8601String());
+      await _storage.write(key: _keyPurchaseToken, value: token);
     }
   }
 
@@ -80,7 +68,6 @@ class VipSecureStorage {
     await _storage.delete(key: _keyIsVip);
     await _storage.delete(key: _keyVipExpiry);
     await _storage.delete(key: _keyActivePlanId);
-    await _storage.delete(key: _keyIsTrialUsed);
-    await _storage.delete(key: _keyTrialExpiry);
+    await _storage.delete(key: _keyPurchaseToken);
   }
 }

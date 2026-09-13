@@ -92,7 +92,7 @@ class QuranHomeScreen extends ConsumerWidget {
                   const HomeQuickAccessGrid(),
                   AppDimens.stackLg.vSpace,
 
-                  // 3. Customizable 4-Slot Toolbox Row (جعبه ابزار شخصی‌سازی‌شده)
+                  // 2. Customizable 4-Slot Toolbox Row (جعبه ابزار شخصی‌سازی‌شده)
                   const QuickAccessRow(),
                   AppDimens.stackLg.vSpace,
 

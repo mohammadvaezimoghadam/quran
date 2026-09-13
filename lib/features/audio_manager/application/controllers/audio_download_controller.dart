@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,8 @@ import '../../../quran_reader/application/ayah_service.dart';
 import '../../../quran_reader/domain/entities/reciter_entity.dart';
 import '../../../../core/services/network/network_info_helper.dart';
 import '../../../download_manager/infrastructure/datasources/download_manager_local_datasource.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/audio_vip_policy.dart';
 import '../../domain/entities/audio_download_task.dart';
 import 'surah_downloaded_ayahs_provider.dart';
 
@@ -47,14 +50,38 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
     required int surahId,
   }) async {
     final key = _buildKey(reciter.id, surahId);
+    developer.log('startDownload requested: reciter=${reciter.name} (id=${reciter.id}, subfolder=${reciter.subfolder}), surah=$surahId', name: 'AudioDownload');
     
-    if (state[key]?.status == DownloadTaskStatus.downloading) return;
+    if (state[key]?.status == DownloadTaskStatus.downloading) {
+      developer.log('startDownload ignored: already downloading $key', name: 'AudioDownload');
+      return;
+    }
+
+    // Check VIP Access constraint
+    final isVip = ref.read(hasVipAccessProvider);
+    final canDownload = reciter.styleId == 4
+        ? AudioVipPolicy.canPlayAudioTranslation(isVip: isVip)
+        : AudioVipPolicy.canPlayReciter(
+            reciterIdentifier: reciter.identifier,
+            surahId: surahId,
+            isVip: isVip,
+          );
+
+    if (!canDownload) {
+      final errorMsg = reciter.styleId == 4
+          ? 'دانلود ترجمه صوتی نیازمند اشتراک ویژه است.'
+          : 'دانلود این سوره با صدای ${reciter.name} نیازمند اشتراک ویژه است.';
+      developer.log('startDownload blocked by AudioVipPolicy: reciter=${reciter.name}, surah=$surahId, isVip=$isVip', name: 'AudioDownload');
+      _markAsFailed(key, errorMsg);
+      return;
+    }
 
     // Check Wi-Fi Only constraint
     final localDataSource = ref.read(downloadManagerLocalDataSourceProvider);
     final isWifiOnly = localDataSource.getWifiOnlyPreference();
     if (isWifiOnly) {
       final isWifi = await NetworkInfoHelper.isWifiConnected();
+      developer.log('isWifiOnly=$isWifiOnly, isWifiConnected=$isWifi', name: 'AudioDownload');
       if (!isWifi) {
         _markAsFailed(key, 'دانلود انجام نشد: تنظیم «فقط با وای‌فای» فعال است.');
         return;

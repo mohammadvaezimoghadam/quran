@@ -46,7 +46,7 @@ class PageNavigationService {
         return Error(Failure(message: 'کد اسکن شده ($shortData) معتبر نیست.'));
       }
 
-      return _repository.getTargetByPageNumber(pageNumber);
+      return await _repository.getTargetByPageNumber(pageNumber);
     } catch (e) {
       return Error(Failure(message: e.toString()));
     }

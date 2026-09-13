@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'i_payment_service.dart';
+import 'models/payment_product.dart';
 import 'models/purchase_result.dart';
 
 /// Mock implementation of [IPaymentService] for local development,
@@ -19,16 +20,16 @@ final class MockPaymentServiceImpl implements IPaymentService {
   @override
   Future<bool> initialize() async {
     developer.log('Initializing MockPaymentService...', name: 'PaymentService');
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 250));
     _isConnected = true;
     developer.log('MockPaymentService connected successfully.', name: 'PaymentService');
     return true;
   }
 
   @override
-  Future<PurchaseResult> purchaseSubscription(String productId) async {
+  Future<PurchaseResult> subscribe(String productId) async {
     developer.log('Initiating mock subscription for: $productId', name: 'PaymentService');
-    await Future.delayed(const Duration(milliseconds: 700));
+    await Future.delayed(const Duration(milliseconds: 600));
 
     if (simulateError) {
       return PurchaseResult.error('خطای تستی در برقراری ارتباط با درگاه پرداخت.', productId: productId);
@@ -60,42 +61,20 @@ final class MockPaymentServiceImpl implements IPaymentService {
   }
 
   @override
-  Future<PurchaseResult> purchaseConsumable(String productId) async {
-    developer.log('Initiating mock consumable purchase for: $productId', name: 'PaymentService');
-    await Future.delayed(const Duration(milliseconds: 700));
-
-    if (simulateError) {
-      return PurchaseResult.error('خطای تستی در برقراری ارتباط با درگاه پرداخت.', productId: productId);
-    }
-
-    if (simulateUserCancel) {
-      return PurchaseResult.userCancelled(productId: productId);
-    }
-
-    final token = 'mock_cons_token_${DateTime.now().millisecondsSinceEpoch}';
-    final orderId = 'ORD_NZR_${DateTime.now().millisecondsSinceEpoch}';
-
-    developer.log(
-      'Mock consumable purchase successful: $productId, Token: $token, Order: $orderId',
-      name: 'PaymentService',
-    );
-
-    return PurchaseResult.success(
-      productId: productId,
-      purchaseToken: token,
-      orderId: orderId,
-    );
+  Future<List<PaymentProduct>> getSubscriptionProducts(List<String> skuIds) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return PaymentProduct.allSubscriptions;
   }
 
   @override
   Future<List<String>> getPurchasedProductIds() async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 150));
     return _simulatedPurchasedProductIds.toList();
   }
 
   @override
   Future<List<PurchaseResult>> restorePurchases() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 400));
     return _simulatedPurchasedProductIds.map((id) {
       return PurchaseResult.success(
         productId: id,

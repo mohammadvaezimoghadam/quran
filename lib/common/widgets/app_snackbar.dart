@@ -55,6 +55,22 @@ class AppSnackBar {
     _show(context, message, Colors.red.shade600, CupertinoIcons.exclamationmark_circle);
   }
 
+  static void showWarning(
+    BuildContext context,
+    String message, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 4),
+  }) {
+    _show(
+      context,
+      message,
+      Colors.orange.shade800,
+      CupertinoIcons.exclamationmark_triangle,
+      action: action,
+      duration: duration,
+    );
+  }
+
   static void showInfo(
     BuildContext context,
     String message, {

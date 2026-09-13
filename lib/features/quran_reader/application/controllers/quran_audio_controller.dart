@@ -14,6 +14,8 @@ import '../../infrastructure/repositories/reciter_repository.dart';
 import '../../../../core/data/local/preferences/preferences_service_provider.dart';
 import '../states/quran_audio_state.dart';
 import 'quran_reader_controller.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/audio_vip_policy.dart';
 
 final quranAudioControllerProvider =
     NotifierProvider<QuranAudioController, QuranAudioState>(
@@ -364,6 +366,36 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     } else {
       activeReciter = state.selectedTranslationReciter;
       activeReciter ??= await _getFallbackReciter(isTranslation: true);
+    }
+
+    // ── Enforce Audio VIP Policy defensively ──
+    final isVip = ref.read(hasVipAccessProvider);
+    if (trackType == CurrentTrackType.quran) {
+      final canPlay = AudioVipPolicy.canPlayReciter(
+        reciterIdentifier: activeReciter.identifier,
+        surahId: surahId,
+        isVip: isVip,
+      );
+      if (!canPlay) {
+        _isTransitioningTrack = false;
+        _loadingStartedAt = null;
+        state = state.copyWith(
+          status: AudioStatus.stopped,
+          errorMessage: 'برای شنیدن تلاوت این قاری در این سوره، اشتراک ویژه لازم است.',
+        );
+        return;
+      }
+    } else if (trackType == CurrentTrackType.translation) {
+      final canPlay = AudioVipPolicy.canPlayAudioTranslation(isVip: isVip);
+      if (!canPlay) {
+        _isTransitioningTrack = false;
+        _loadingStartedAt = null;
+        state = state.copyWith(
+          status: AudioStatus.stopped,
+          errorMessage: 'پخش ترجمه گویا نیازمند اشتراک ویژه است.',
+        );
+        return;
+      }
     }
 
     // Update the correct reciter slot based on track type

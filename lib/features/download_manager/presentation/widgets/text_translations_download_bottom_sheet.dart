@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/translation_vip_policy.dart';
+import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
 import '../../../translation_manager/application/controllers/translation_manager_controller.dart';
 import '../../../translation_manager/domain/entities/translation_entity.dart';
 
@@ -33,77 +36,88 @@ class _TextTranslationsDownloadBottomSheetState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final sheetBgColor = isDark ? const Color(0xFF141A19) : Colors.white;
 
     final translationState = ref.watch(translationManagerControllerProvider);
     final translations = translationState.value?.translations ?? [];
     final activeId = translationState.value?.activeTranslationId;
     final downloadProgress = translationState.value?.downloadProgress ?? {};
+    final hasVip = ref.watch(hasVipAccessProvider);
 
     // Filter by language
     final filteredTranslations = translations.where((t) {
-      if (_selectedLanguageFilter == 'fa') return t.languageCode == 'fa';
-      if (_selectedLanguageFilter == 'en') return t.languageCode == 'en';
+      if (_selectedLanguageFilter == 'all') return true;
       if (_selectedLanguageFilter == 'other') {
         return t.languageCode != 'fa' && t.languageCode != 'en';
       }
-      return true;
+      return t.languageCode == _selectedLanguageFilter;
     }).toList();
 
     final downloadedCount = translations.where((t) => t.isDownloaded).length;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
+    return ScaffoldMessenger(
       child: Container(
-        height: MediaQuery.sizeOf(context).height * 0.78,
+        height: MediaQuery.sizeOf(context).height * 0.82,
         decoration: BoxDecoration(
-          color: sheetBgColor,
+          color: isDark ? const Color(0xFF1B1E22) : const Color(0xFFF9F7F2),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
         ),
         child: Column(
           children: [
-            // Drag Handle
+            // Top Drag Handle
             Container(
-              width: 44,
+              width: 38,
               height: 4,
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.black12,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : Colors.black.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
 
-            // Header
+            // Header Title
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(
-                    CupertinoIcons.book_fill,
-                    color: Color(0xFF0277BD),
-                    size: 22,
+                  Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.book,
+                        size: 20,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'دانلود ترجمه‌های متنی',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'مدیریت متن ترجمه‌ها',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0277BD).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '$downloadedCount از ${translations.length} دانلود شده',
-                      style: const TextStyle(
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
                         fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0277BD),
+                        color: isDark ? Colors.white60 : Colors.black54,
                       ),
                     ),
                   ),
@@ -116,7 +130,7 @@ class _TextTranslationsDownloadBottomSheetState
             // Language Filter Chips
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
                   _buildFilterChip('all', 'همه زبان‌ها', translations.length),
@@ -129,7 +143,7 @@ class _TextTranslationsDownloadBottomSheetState
                   const SizedBox(width: 8),
                   _buildFilterChip(
                     'en',
-                    'انگلیسی',
+                    'English',
                     translations.where((t) => t.languageCode == 'en').length,
                   ),
                   const SizedBox(width: 8),
@@ -137,24 +151,30 @@ class _TextTranslationsDownloadBottomSheetState
                     'other',
                     'سایر زبان‌ها',
                     translations
-                        .where((t) => t.languageCode != 'fa' && t.languageCode != 'en')
+                        .where((t) =>
+                            t.languageCode != 'fa' && t.languageCode != 'en')
                         .length,
                   ),
                 ],
               ),
             ),
 
-            const Divider(height: 20),
+            const SizedBox(height: 8),
+            const Divider(height: 1),
 
             // Translations List
             Expanded(
               child: translationState.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : filteredTranslations.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'هیچ ترجمه‌ای در این دسته‌بندی یافت نشد',
-                            style: TextStyle(fontSize: 13, color: Colors.grey),
+                            'ترجمه‌ای یافت نشد',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 14,
+                              color: isDark ? Colors.white54 : Colors.black45,
+                            ),
                           ),
                         )
                       : ListView.separated(
@@ -178,7 +198,13 @@ class _TextTranslationsDownloadBottomSheetState
                               progress: progress,
                               isActive: isActive,
                               isDark: isDark,
+                              hasVip: hasVip,
                               onDownload: () {
+                                if (!TranslationVipPolicy.canAccessTranslation(
+                                    translationId: translation.id, hasVip: hasVip)) {
+                                  VipSubscriptionSheet.show(context);
+                                  return;
+                                }
                                 ref
                                     .read(translationManagerControllerProvider.notifier)
                                     .downloadTranslation(translation);
@@ -190,6 +216,11 @@ class _TextTranslationsDownloadBottomSheetState
                               },
                               onDelete: () => _confirmDelete(context, translation),
                               onSetActive: () {
+                                if (!TranslationVipPolicy.canAccessTranslation(
+                                    translationId: translation.id, hasVip: hasVip)) {
+                                  VipSubscriptionSheet.show(context);
+                                  return;
+                                }
                                 ref
                                     .read(translationManagerControllerProvider.notifier)
                                     .setActiveTranslation(translation.id);
@@ -296,6 +327,7 @@ class _TranslationListItem extends StatelessWidget {
   final double progress;
   final bool isActive;
   final bool isDark;
+  final bool hasVip;
   final VoidCallback onDownload;
   final VoidCallback onCancelDownload;
   final VoidCallback onDelete;
@@ -307,6 +339,7 @@ class _TranslationListItem extends StatelessWidget {
     required this.progress,
     required this.isActive,
     required this.isDark,
+    required this.hasVip,
     required this.onDownload,
     required this.onCancelDownload,
     required this.onDelete,
@@ -316,6 +349,8 @@ class _TranslationListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final percent = (progress * 100).toInt();
+    final isFree = TranslationVipPolicy.isTranslationFree(translation.id);
+    final isLocked = !hasVip && !isFree;
 
     return Column(
       children: [
@@ -363,6 +398,34 @@ class _TranslationListItem extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (isLocked) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.lock_rounded, size: 10, color: AppColors.primary),
+                              SizedBox(width: 3),
+                              Text(
+                                'اشتراک ویژه',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       if (isActive) ...[
                         const SizedBox(width: 6),
                         Container(
@@ -429,13 +492,20 @@ class _TranslationListItem extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!isActive)
-                    TextButton(
-                      onPressed: onSetActive,
-                      child: const Text(
-                        'انتخاب',
-                        style: TextStyle(fontSize: 12),
+                    if (isLocked)
+                      TextButton.icon(
+                        icon: const Icon(Icons.lock_rounded, size: 12, color: AppColors.primary),
+                        label: const Text('انتخاب', style: TextStyle(fontSize: 12, color: AppColors.primary)),
+                        onPressed: onSetActive,
+                      )
+                    else
+                      TextButton(
+                        onPressed: onSetActive,
+                        child: const Text(
+                          'انتخاب',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
-                    ),
                   if (!translation.isDefault)
                     IconButton(
                       tooltip: 'حذف از حافظه',
@@ -447,6 +517,32 @@ class _TranslationListItem extends StatelessWidget {
                       onPressed: onDelete,
                     ),
                 ],
+              ),
+            ] else if (isLocked) ...[
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.lock_rounded, size: 14, color: Colors.white),
+                label: const Text(
+                  'خرید اشتراک ویژه',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                onPressed: onDownload,
               ),
             ] else ...[
               ElevatedButton.icon(

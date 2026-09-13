@@ -8,7 +8,7 @@ import 'mock_payment_service_impl.dart';
 /// Defaults to true (Mock mode) until Bazaar Developer account and RSA key are configured.
 class MockPaymentModeNotifier extends Notifier<bool> {
   @override
-  bool build() => true;
+  bool build() => false;
 
   void setMockMode(bool isMock) {
     state = isMock;
@@ -18,9 +18,9 @@ class MockPaymentModeNotifier extends Notifier<bool> {
 final isMockPaymentProvider =
     NotifierProvider<MockPaymentModeNotifier, bool>(MockPaymentModeNotifier.new);
 
-/// Production Bazaar RSA Public Key placeholder
+/// Production Bazaar RSA Public Key
 final bazaarRsaPublicKeyProvider = Provider<String>((ref) {
-  return 'YOUR_BAZAAR_RSA_PUBLIC_KEY';
+  return 'MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwCwJUEWPVWmufcsZvRUS3rZWmocxuQzArnyZc1V7/pu1fNpOileSuWFZ+EacqLpkEQsLQzL3t4vjyumtjRjpzj1Tlabgre0wjkz7ciGdR/DUH9DmCsbQaarkt8YLoQFGsb3ROr9bK5RobsOioasKU8Xa01Z2K+4GtPRxO+eYMnC8cgzHNhL49m4kf6L6DNj6b3EOaHBcagOYKfAtdC/N6N0H+m8JMAMP606wZ4LTckCAwEAAQ==';
 });
 
 /// Central Riverpod Provider exposing the in-app payment service.

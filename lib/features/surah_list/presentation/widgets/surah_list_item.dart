@@ -13,11 +13,13 @@ import 'surah_audio_download_button.dart';
 class SurahListItem extends StatelessWidget {
   final SurahEntity surah;
   final VoidCallback onTap;
+  final VoidCallback onDownloadTap;
 
   const SurahListItem({
     super.key,
     required this.surah,
     required this.onTap,
+    required this.onDownloadTap,
   });
 
   @override
@@ -83,7 +85,7 @@ class SurahListItem extends StatelessWidget {
                 // 4. Download Audio Button
                 SurahAudioDownloadButton(
                   surah: surah,
-                  onDownloadTap: onTap,
+                  onDownloadTap: onDownloadTap,
                 ),
               ],
             ),

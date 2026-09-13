@@ -6,8 +6,12 @@ import '../../../../common/constants/app_constants.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/translation_vip_policy.dart';
+import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
 import '../../application/controllers/translation_manager_controller.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 
@@ -50,6 +54,12 @@ class _TranslationManagerBottomSheetState
 
   Future<void> _handleStartReading(
       BuildContext context, dynamic surah, dynamic translation) async {
+    final hasVip = ref.read(hasVipAccessProvider);
+    if (!TranslationVipPolicy.canAccessTranslation(translationId: translation.id, hasVip: hasVip)) {
+      VipSubscriptionSheet.show(context);
+      return;
+    }
+
     final controller = ref.read(translationManagerControllerProvider.notifier);
 
     // If it's not downloaded, ask for permission
@@ -127,6 +137,7 @@ class _TranslationManagerBottomSheetState
 
     final surahState = ref.watch(surahListControllerProvider);
     final translationState = ref.watch(translationManagerControllerProvider);
+    final hasVip = ref.watch(hasVipAccessProvider);
     
     final surahs = surahState.surahs;
     final translations = translationState.value?.translations ?? [];
@@ -245,11 +256,16 @@ class _TranslationManagerBottomSheetState
                                 initialItem: _selectedTranslatorIndex,
                               ),
                               onSelectedItemChanged: (index) {
-                                _selectedTranslatorIndex = index;
+                                setState(() {
+                                  _selectedTranslatorIndex = index;
+                                });
                               },
                               childCount: translations.length,
                               itemBuilder: (context, index) {
                                 final translation = translations[index];
+                                final isFree = TranslationVipPolicy.isTranslationFree(translation.id);
+                                final isLocked = !hasVip && !isFree;
+
                                 return Center(
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -263,7 +279,10 @@ class _TranslationManagerBottomSheetState
                                             children: [
                                               WidgetSpan(
                                                 alignment: PlaceholderAlignment.middle,
-                                                child: _TranslationStatusIcon(translation: translation),
+                                                child: _TranslationStatusIcon(
+                                                  translation: translation,
+                                                  isLocked: isLocked,
+                                                ),
                                               ),
                                               TextSpan(text: translation.name),
                                             ],
@@ -272,7 +291,13 @@ class _TranslationManagerBottomSheetState
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                           style: AppTypography.bottomSheetItemLabel
-                                              .copyWith(color: colorScheme.onSurface, fontSize: 11, height: 1.2),
+                                              .copyWith(
+                                                color: isLocked
+                                                    ? colorScheme.onSurface.withValues(alpha: 0.5)
+                                                    : colorScheme.onSurface,
+                                                fontSize: 11,
+                                                height: 1.2,
+                                              ),
                                         ),
                                       ),
                                       ],
@@ -292,38 +317,69 @@ class _TranslationManagerBottomSheetState
             16.vSpace,
 
             // --- Action Button ---
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+            Builder(
+              builder: (context) {
+                final selectedTranslation = (translations.isNotEmpty && _selectedTranslatorIndex < translations.length)
+                    ? translations[_selectedTranslatorIndex]
+                    : null;
+                final isSelectedLocked = selectedTranslation != null &&
+                    !hasVip &&
+                    !TranslationVipPolicy.isTranslationFree(selectedTranslation.id);
+
+                return SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    onPressed: () {
+                      if (isSelectedLocked) {
+                        VipSubscriptionSheet.show(context);
+                        return;
+                      }
+                      if (_isCurrentlyDownloading(translations)) return;
+                      if (surahs.isEmpty || translations.isEmpty) return;
+
+                      final selectedSurah = surahs[_selectedSurahIndex];
+                      _handleStartReading(context, selectedSurah, selectedTranslation!);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (isSelectedLocked) ...[
+                          const Icon(Icons.lock_rounded, size: 18, color: Colors.white),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'خرید اشتراک ویژه',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ] else ...[
+                          const Text(
+                            AppConstants.startReadingButtonLabel,
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                  elevation: 0,
-                ),
-                onPressed: _isCurrentlyDownloading(translations)
-                    ? null
-                    : () {
-                        if (surahs.isEmpty || translations.isEmpty) return;
-                        
-                        final selectedSurah = surahs[_selectedSurahIndex];
-                        final selectedTranslation = translations[_selectedTranslatorIndex];
-                        
-                        _handleStartReading(context, selectedSurah, selectedTranslation);
-                      },
-                child: const Text(
-                  AppConstants.startReadingButtonLabel,
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -339,13 +395,28 @@ class _TranslationManagerBottomSheetState
 
 class _TranslationStatusIcon extends ConsumerWidget {
   final dynamic translation;
+  final bool isLocked;
 
-  const _TranslationStatusIcon({required this.translation});
+  const _TranslationStatusIcon({
+    required this.translation,
+    this.isLocked = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final state = ref.watch(translationManagerControllerProvider).value;
+
+    if (isLocked) {
+      return const Padding(
+        padding: EdgeInsets.only(left: 6.0),
+        child: Icon(
+          Icons.lock_rounded,
+          size: 14,
+          color: AppColors.primary,
+        ),
+      );
+    }
     
     // Check if downloading
     final progress = state?.downloadProgress[translation.id];

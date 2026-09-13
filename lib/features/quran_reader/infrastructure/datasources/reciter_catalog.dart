@@ -588,18 +588,7 @@ class ReciterCatalog {
       styleName: 'ترتیل',
       imageUrl: null,
     ),
-    ReciterEntity(
-      id: 67,
-      identifier: 'ibrahim_akhdar_64kbps',
-      name: 'استاد ابراهیم الاخضر (64kbps)',
-      englishName: 'Ibrahim Akhdar',
-      arabicName: 'إبراهيم الأخضر',
-      subfolder: 'Ibrahim_Akhdar_64kbps',
-      bitrate: '64kbps',
-      styleId: 1,
-      styleName: 'ترتیل',
-      imageUrl: null,
-    ),
+    // Note: Ibrahim_Akhdar is only hosted at 32kbps on EveryAyah (id: 66, id: 109). 64kbps returns 404.
     ReciterEntity(
       id: 68,
       identifier: 'karim_mansoori_40kbps',
@@ -1024,7 +1013,7 @@ class ReciterCatalog {
     ReciterEntity(
       id: 201,
       identifier: 'fa_fooladvand_hedayatfar',
-      name: 'ترجمه فارسی (فولادوند - هدایت‌فر)',
+      name: 'ترجمه فولادوند (هدایت‌فر)',
       englishName: 'Fooladvand & Hedayatfar (Persian)',
       arabicName: 'ترجمة الفارسية (فولادوند - هدایت‌فر)',
       subfolder: 'translations/Fooladvand_Hedayatfar_40Kbps',
@@ -1036,7 +1025,7 @@ class ReciterCatalog {
     ReciterEntity(
       id: 202,
       identifier: 'fa_makarem_kabiri',
-      name: 'ترجمه فارسی (مکارم - کبیری)',
+      name: 'ترجمه مکارم شیرازی (کبیری)',
       englishName: 'Makarem & Kabiri (Persian)',
       arabicName: 'ترجمة الفارسية (مکارم - کبیری)',
       subfolder: 'translations/Makarem_Kabiri_16Kbps',

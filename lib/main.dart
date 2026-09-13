@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/material.dart';
@@ -44,16 +46,22 @@ Future<void> _initAudioSession() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _loadCustomFonts();
-  await _initAudioSession();
 
-  // Initialize Firebase and Push Notification Service
-  await FirebaseInitializer.init();
-  final pushNotificationService = FirebasePushNotificationServiceImpl();
-  await pushNotificationService.initialize();
+  // Initialize critical local services concurrently for fast startup
+  final initFutures = Future.wait([
+    _loadCustomFonts(),
+    _initAudioSession(),
+    Hive.initFlutter().then((_) => Future.wait([
+      Hive.openBox(TranslationLocalDataSource.boxName),
+      Hive.openBox(AudioStorageServiceImpl.boxName),
+      Hive.openBox(BookmarkLocalDataSource.boxName),
+    ])),
+    SharedPreferences.getInstance(),
+    FirebaseInitializer.init(),
+  ]);
 
   final rawPlayer = AudioPlayer();
-  final audioHandler = await AudioService.init(
+  final audioHandlerFuture = AudioService.init(
     builder: () => QuranAudioHandler(rawPlayer),
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'com.qurantafakor.app.audio',
@@ -64,12 +72,13 @@ void main() async {
     ),
   );
 
-  await Hive.initFlutter();
-  await Hive.openBox(TranslationLocalDataSource.boxName);
-  await Hive.openBox(AudioStorageServiceImpl.boxName);
-  await Hive.openBox(BookmarkLocalDataSource.boxName);
+  final results = await initFutures;
+  final sharedPreferences = results[3] as SharedPreferences;
+  final audioHandler = await audioHandlerFuture;
 
-  final sharedPreferences = await SharedPreferences.getInstance();
+  // Initialize Push Notification Service in background without blocking app launch
+  final pushNotificationService = FirebasePushNotificationServiceImpl();
+  unawaited(pushNotificationService.initialize());
 
   runApp(
     ProviderScope(

@@ -5,11 +5,9 @@ import '../../../../core/services/payment/models/payment_product.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/vip_subscription_controller.dart';
-import '../widgets/nazr_donation_card.dart';
 import '../widgets/subscription_plan_card.dart';
-import '../widgets/vip_benefits_list.dart';
 
-/// Bottom sheet presenting the VIP subscription paywall and cultural donation options.
+/// Bottom sheet presenting audio subscription options and checkout via Cafe Bazaar.
 class VipSubscriptionSheet extends ConsumerStatefulWidget {
   const VipSubscriptionSheet({super.key});
 
@@ -27,452 +25,277 @@ class VipSubscriptionSheet extends ConsumerStatefulWidget {
   ConsumerState<VipSubscriptionSheet> createState() => _VipSubscriptionSheetState();
 }
 
-class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  PaymentProduct _selectedProduct = PaymentProduct.vipYearly;
+class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
+  PaymentProduct _selectedProduct = PaymentProduct.vipMonthly;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
+      final state = ref.read(vipSubscriptionControllerProvider);
+      if (state.availableProducts.isEmpty || state.availableProducts.first.formattedPrice == null) {
+        ref.read(vipSubscriptionControllerProvider.notifier).fetchLiveProducts();
+      }
+    });
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           message,
-          style: const TextStyle(fontFamily: AppTypography.fontFamily),
+          style: const TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            color: Colors.white,
+            fontSize: 13.5,
+            fontWeight: FontWeight.w500,
+          ),
           textDirection: TextDirection.rtl,
         ),
-        backgroundColor: isError ? AppColors.error : AppColors.primary,
+        backgroundColor: isError
+            ? const Color(0xFFC62828)
+            : (isDark
+                ? const Color(0xFF0F766E)
+                : AppColors.primary),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     final state = ref.watch(vipSubscriptionControllerProvider);
     final controller = ref.read(vipSubscriptionControllerProvider.notifier);
+    final products = state.availableProducts;
+
+    // Ensure selected product is from current available products
+    final activeSelectedProduct = products.firstWhere(
+      (p) => p.id == _selectedProduct.id,
+      orElse: () => products.first,
+    );
+
+    final buttonBg = isDark ? const Color(0xFF0F766E) : AppColors.primary;
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: isDark ? colorScheme.surface : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          children: [
-            // Drag handle & Header
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.outlineVariant.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.goldMetallic.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.workspace_premium_rounded,
-                      color: AppColors.goldDarkBorder,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'اشتراک ویژه قرآن تفکر',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        Text(
-                          'همراهی معنوی و دسترسی به امکانات پیشرفته',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 12,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-
-            // Active Subscription / Trial Status Banner
-            if (state.hasVipAccess)
+      child: SafeArea(
+        top: false,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Minimal Drag handle
               Container(
-                width: double.infinity,
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(top: 10, bottom: 6),
+                width: 36,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: (state.isVip ? Colors.green : Colors.amber)
-                      .withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: (state.isVip ? Colors.green : Colors.amber)
-                        .withValues(alpha: 0.4),
-                  ),
+                  color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.6),
+                  borderRadius: BorderRadius.circular(2),
                 ),
+              ),
+
+              // Minimal Header Row without icons
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Row(
                   children: [
-                    Icon(
-                      state.isVip
-                          ? Icons.check_circle_rounded
-                          : Icons.hourglass_top_rounded,
-                      color: state.isVip ? Colors.green : Colors.amber[800],
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        state.isVip
-                            ? (state.vipExpiryDate == null
-                                ? 'اشتراک مادام‌العمر شما فعال است.'
-                                : 'اشتراک VIP فعال است (${state.remainingDays} روز باقی مانده)')
-                            : 'مهلت تست ۳ روزه فعال است (${state.remainingDays} روز باقی مانده)',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: state.isVip ? Colors.green[800] : Colors.amber[900],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Free 3-Day Trial Prompt if not used and not VIP
-            if (!state.hasVipAccess && !state.isTrialUsed)
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.goldMetallic.withValues(alpha: 0.18),
-                      AppColors.primary.withValues(alpha: 0.08),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.goldAccent.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.card_giftcard_rounded,
-                      color: AppColors.goldDarkBorder,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'هدیه اولین ورود: ۳ روز تست رایگان VIP',
+                            'اشتراک تلاوت و صوت قرآن',
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: AppColors.primary,
+                              fontSize: 16,
+                              color: colorScheme.onSurface,
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
-                            'تمام امکانات ویژه را ۳ روز بدون هزینه تجربه کنید',
+                            'دسترسی به تمام قاریان برجسته و ترجمه گویا',
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
-                              fontSize: 10.5,
-                              color: AppColors.onSurfaceVariant,
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: state.isLoading
-                          ? null
-                          : () async {
-                              final success = await controller.activateFreeTrial();
-                              if (success) {
-                                _showSnackBar('مهلت ۳ روزه تست رایگان VIP با موفقیت فعال شد! 🎉');
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.goldDarkBorder,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'فعال‌سازی',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                        ),
-                      ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded, size: 22),
+                      color: colorScheme.onSurfaceVariant,
+                      visualDensity: VisualDensity.compact,
                     ),
                   ],
                 ),
               ),
 
-            // Tab Bar: Plans vs Nazr
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainer,
-                borderRadius: BorderRadius.circular(12),
+              Divider(
+                height: 1,
+                thickness: 0.8,
+                color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.15 : 0.3),
               ),
-              child: TabBar(
-                controller: _tabController,
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicator: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                labelColor: Colors.white,
-                unselectedLabelColor: AppColors.onSurfaceVariant,
-                labelStyle: const TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-                tabs: const [
-                  Tab(text: '💎 پلن‌های اشتراک'),
-                  Tab(text: '💚 نذر و حمایت فرهنگی'),
-                ],
-              ),
-            ),
 
-            // Tab View Body
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // Tab 1: Subscriptions
-                  ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      const VipBenefitsList(),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'انتخاب دوره اشتراک:',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: AppColors.primary,
+              // Clean Subscription Plans List
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: products.map((product) {
+                      final isSelected = product.id == activeSelectedProduct.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: SubscriptionPlanCard(
+                          product: product,
+                          isSelected: isSelected,
+                          onTap: () {
+                            setState(() {
+                              _selectedProduct = product;
+                            });
+                          },
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      ...PaymentProduct.allSubscriptions.map(
-                        (product) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: SubscriptionPlanCard(
-                            product: product,
-                            isSelected: _selectedProduct.id == product.id,
-                            onTap: () {
-                              setState(() {
-                                _selectedProduct = product;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                      );
+                    }).toList(),
                   ),
+                ),
+              ),
 
-                  // Tab 2: Nazr / Donation
-                  ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.teal.withValues(alpha: 0.3),
+              // Bottom Sticky Purchase & Restore Bar
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                decoration: BoxDecoration(
+                  color: isDark ? colorScheme.surface : Colors.white,
+                  border: Border(
+                    top: BorderSide(
+                      color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.15 : 0.3),
+                      width: 0.8,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Clean primary purchase button without icons
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: state.isLoading
+                            ? null
+                            : () async {
+                                final result = await controller.purchaseSubscription(activeSelectedProduct);
+                                if (!context.mounted) return;
+                                if (result.isSuccess) {
+                                  _showSnackBar('اشتراک شما با موفقیت فعال شد!');
+                                  Navigator.of(context).pop();
+                                } else if (result.errorMessage != null) {
+                                  _showSnackBar(result.errorMessage!, isError: true);
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonBg,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.volunteer_activism_rounded,
-                              color: Colors.teal,
-                              size: 24,
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'مشارکت در طرح نذر فرهنگی قرآنی به تداوم توسعه، تولید محتوای صوتی باکیفیت و رایگان ماندن خدمات پایه کمک می‌کند. به پاس قدردانی، اشتراک VIP به عنوان هدیه برای شما فعال خواهد شد.',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 12,
-                                  height: 1.6,
-                                  color: AppColors.onSurface,
+                        child: state.isLoading
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'خرید اشتراک (${activeSelectedProduct.title})',
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
                       ),
-                      const SizedBox(height: 16),
-                      ...PaymentProduct.allNazrPackages.map(
-                        (product) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: NazrDonationCard(
-                            product: product,
-                            onDonate: state.isLoading
-                                ? () {}
-                                : () async {
-                                    final result = await controller.purchaseNazr(product);
-                                    if (result.isSuccess) {
-                                      _showSnackBar('از نذر و حمایت معنوی شما سپاسگزاریم! اشتراک هدیه VIP فعال شد. 🌟');
-                                    } else if (!result.isCancelled) {
-                                      _showSnackBar(result.errorMessage ?? 'خطا در پرداخت', isError: true);
-                                    }
-                                  },
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Restore & security info without icons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: state.isLoading
+                              ? null
+                              : () async {
+                                  final restored = await controller.restorePurchases();
+                                  if (!context.mounted) return;
+                                  if (restored) {
+                                    _showSnackBar('خریدهای قبلی شما با موفقیت بازیابی شدند.');
+                                    Navigator.of(context).pop();
+                                  } else {
+                                    _showSnackBar('خرید فعالی در حساب بازار یافت نشد.', isError: true);
+                                  }
+                                },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          child: Text(
+                            'بازیابی خریدهای قبلی',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Bottom Actions: Purchase Button & Restore
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: state.isLoading
-                          ? null
-                          : () async {
-                              final result =
-                                  await controller.purchaseSubscription(_selectedProduct);
-                              if (result.isSuccess) {
-                                _showSnackBar('اشتراک VIP با موفقیت فعال شد! 🎉');
-                              } else if (!result.isCancelled) {
-                                _showSnackBar(
-                                  result.errorMessage ?? 'خطا در فعال‌سازی اشتراک',
-                                  isError: true,
-                                );
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                        Text(
+                          'پرداخت امن کافه بازار',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            color: colorScheme.outline,
+                          ),
                         ),
-                        elevation: 0,
-                      ),
-                      child: state.isLoading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(
-                              'خرید و فعال‌سازی ${_selectedProduct.title}',
-                              style: const TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextButton(
-                    onPressed: state.isLoading
-                        ? null
-                        : () async {
-                            final restored = await controller.restorePurchases();
-                            if (restored) {
-                              _showSnackBar('خریدهای قبلی شما با موفقیت بازیابی شد.');
-                            } else {
-                              _showSnackBar('خریدی برای بازیابی یافت نشد.');
-                            }
-                          },
-                    child: const Text(
-                      'بازیابی خریدهای قبلی',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

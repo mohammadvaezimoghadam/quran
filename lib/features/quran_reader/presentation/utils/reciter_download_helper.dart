@@ -13,6 +13,7 @@ import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../domain/entities/reciter_entity.dart';
 import '../../domain/enums/audio_playback_mode.dart';
+import '../../../subscription/presentation/utils/audio_vip_helper.dart';
 
 abstract class ReciterDownloadHelper {
   /// Mode-aware download check.
@@ -39,6 +40,31 @@ abstract class ReciterDownloadHelper {
     // Determine which sources need to be checked
     final needsQuran = mode.includesQuran;
     final needsTranslation = mode.includesTranslation;
+
+    // ── 0. Check Audio VIP Access ──
+    if (needsQuran && quranReciter != null) {
+      final isVipAllowed = await AudioVipHelper.checkAndPromptVip(
+        context: context,
+        ref: ref,
+        surahId: activeSurahId,
+        targetReciter: quranReciter,
+        onSwitchedToDefaultReciter: () {
+          if (context.mounted) {
+            checkAndPromptForPlayback(context: context, ref: ref, surahId: activeSurahId);
+          }
+        },
+      );
+      if (!isVipAllowed) return false;
+    }
+
+    if (needsTranslation) {
+      if (!context.mounted) return false;
+      final isTranslationAllowed = AudioVipHelper.checkAudioTranslation(
+        context: context,
+        ref: ref,
+      );
+      if (!isTranslationAllowed) return false;
+    }
 
     // Check Quran reciter first (if needed)
     if (needsQuran && quranReciter != null) {
@@ -96,6 +122,23 @@ abstract class ReciterDownloadHelper {
         (readerSurahId != 0 ? readerSurahId : null) ??
         ref.read(quranAudioControllerProvider).currentSurahId ??
         1;
+
+    // ── Check Audio VIP Access ──
+    if (reciter.styleId != 4) {
+      final isVipAllowed = await AudioVipHelper.checkAndPromptVip(
+        context: context,
+        ref: ref,
+        surahId: activeSurahId,
+        targetReciter: reciter,
+      );
+      if (!isVipAllowed) return false;
+    } else {
+      final isTranslationAllowed = AudioVipHelper.checkAudioTranslation(
+        context: context,
+        ref: ref,
+      );
+      if (!isTranslationAllowed) return false;
+    }
 
     final isReady = await _isReciterSurahDownloaded(
       ref: ref,

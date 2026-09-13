@@ -15,6 +15,8 @@ import '../../../translation_manager/presentation/widgets/translation_settings_s
 import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../domain/enums/audio_playback_mode.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
 import 'ayah_number_marker.dart';
 import 'tashkeel_color_selector_tile.dart';
 
@@ -728,6 +730,16 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     final autoHighlight = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.autoHighlight),
     );
+    final hasVip = ref.watch(hasVipAccessProvider);
+
+    // Auto-fallback to onlyQuran if non-VIP was somehow in translation mode
+    if (!hasVip && playbackMode.includesTranslation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref
+            .read(quranAudioControllerProvider.notifier)
+            .setPlaybackMode(AudioPlaybackMode.onlyQuran);
+      });
+    }
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -747,6 +759,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
             child: Row(
             children: AudioPlaybackMode.values.map((mode) {
               final isSelected = playbackMode == mode;
+              final isLocked = !hasVip && mode.includesTranslation;
               
               String shortTitle;
               switch (mode) {
@@ -764,11 +777,17 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                   break;
               }
 
+              final disabledColor = textSecondary.withValues(alpha: 0.45);
+
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 1.5),
                   child: InkWell(
                     onTap: () {
+                      if (isLocked) {
+                        VipSubscriptionSheet.show(context);
+                        return;
+                      }
                       ref
                           .read(quranAudioControllerProvider.notifier)
                           .setPlaybackMode(mode);
@@ -776,7 +795,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                     borderRadius: BorderRadius.circular(10),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? accentColor.withValues(alpha: 0.12)
@@ -787,14 +806,34 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                             : Border.all(color: Colors.transparent, width: 1.2),
                       ),
                       child: Center(
-                        child: Text(
-                          shortTitle,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 10.5,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                            color: isSelected ? accentColor : textSecondary,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (isLocked) ...[
+                                Icon(
+                                  Icons.lock_rounded,
+                                  size: 13.5,
+                                  color: disabledColor,
+                                ),
+                                const SizedBox(width: 3.5),
+                              ],
+                              Text(
+                                shortTitle,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 11.0,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                  color: isSelected
+                                      ? accentColor
+                                      : (isLocked ? disabledColor : textSecondary),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

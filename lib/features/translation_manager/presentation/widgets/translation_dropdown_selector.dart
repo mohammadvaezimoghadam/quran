@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/translation_vip_policy.dart';
+import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
 import '../../application/controllers/translation_manager_controller.dart';
 import '../../domain/entities/translation_entity.dart';
 
@@ -42,6 +46,12 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
   }
 
   Future<void> _handleApply(BuildContext context, TranslationEntity translation) async {
+    final hasVip = ref.read(hasVipAccessProvider);
+    if (!TranslationVipPolicy.canAccessTranslation(translationId: translation.id, hasVip: hasVip)) {
+      VipSubscriptionSheet.show(context);
+      return;
+    }
+
     final controller = ref.read(translationManagerControllerProvider.notifier);
 
     if (!translation.isDownloaded) {
@@ -127,9 +137,20 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
       );
     }
 
-    final effectiveSelectedId = _selectedTranslationId ?? activeId ?? translations.first.id;
+    final hasVip = ref.watch(hasVipAccessProvider);
 
-    
+    // Fallback to free default if non-VIP and active translation requires VIP
+    if (!hasVip && activeId != null && !TranslationVipPolicy.isTranslationFree(activeId)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref
+            .read(translationManagerControllerProvider.notifier)
+            .setActiveTranslation(TranslationVipPolicy.freeTranslationId);
+      });
+    }
+
+    final effectiveSelectedId = (!hasVip && activeId != null && !TranslationVipPolicy.isTranslationFree(activeId))
+        ? TranslationVipPolicy.freeTranslationId
+        : (_selectedTranslationId ?? activeId ?? translations.first.id);
 
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -198,9 +219,17 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
                           final managerState = ref.watch(translationManagerControllerProvider).value;
                           final progress = managerState?.downloadProgress[translation.id];
                           final isDownloading = progress != null;
+                          final isFree = TranslationVipPolicy.isTranslationFree(translation.id);
+                          final isLocked = !hasVip && !isFree;
 
                           Widget iconWidget;
-                          if (translation.isDownloaded) {
+                          if (isLocked) {
+                            iconWidget = const Icon(
+                              Icons.lock_rounded,
+                              size: 13,
+                              color: AppColors.primary,
+                            );
+                          } else if (translation.isDownloaded) {
                             iconWidget = Icon(
                               CupertinoIcons.check_mark_circled_solid,
                               size: 12,
@@ -242,7 +271,9 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
                                     style: TextStyle(
                                       fontFamily: AppTypography.fontFamily,
                                       fontSize: 11,
-                                      color: widget.textPrimary,
+                                      color: isLocked
+                                          ? widget.textSecondary.withValues(alpha: 0.55)
+                                          : widget.textPrimary,
                                     ),
                                   ),
                                 ),
@@ -252,6 +283,11 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
                         }).toList(),
                         onChanged: (ref.watch(translationManagerControllerProvider).value?.downloadProgress.isNotEmpty == true) ? null : (newVal) {
                           if (newVal != null && newVal != effectiveSelectedId) {
+                            final isFree = TranslationVipPolicy.isTranslationFree(newVal);
+                            if (!hasVip && !isFree) {
+                              VipSubscriptionSheet.show(context);
+                              return;
+                            }
                             final newTranslation = translations.firstWhere((t) => t.id == newVal);
                             _handleApply(context, newTranslation);
                           }

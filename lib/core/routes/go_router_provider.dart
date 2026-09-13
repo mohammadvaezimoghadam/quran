@@ -10,6 +10,7 @@ import '../../features/search/presentation/ui/search_screen.dart';
 import '../../features/settings/presentation/ui/settings_screen.dart';
 import '../../features/smart_device/presentation/ui/smart_device_settings_screen.dart';
 import '../../features/splash/presentation/ui/splash_screen.dart';
+import '../../features/subscription/presentation/ui/vip_subscription_screen.dart';
 import '../../features/surah_list/presentation/ui/surah_list_screen.dart';
 import 'route_name.dart';
 
@@ -41,6 +42,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         name: settingsRoute,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/vip-subscription',
+        name: vipSubscriptionRoute,
+        builder: (context, state) => const VipSubscriptionScreen(),
       ),
       GoRoute(
         path: '/smart-device',

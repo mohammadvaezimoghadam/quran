@@ -22,6 +22,10 @@ import '../../application/states/download_manager_selected_surahs_provider.dart'
 import '../../application/controllers/audio_download_controller.dart';
 import '../../application/controllers/surah_downloaded_ayahs_provider.dart';
 import '../../domain/entities/audio_download_task.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/audio_vip_policy.dart';
+import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../subscription/presentation/utils/audio_vip_helper.dart';
 
 class DownloadManagerSurahList extends ConsumerStatefulWidget {
   final int? initialSurahId;
@@ -207,6 +211,18 @@ class _SurahGridItem extends ConsumerWidget {
             downloadedAyahsCount != null &&
             downloadedAyahsCount > 0;
 
+        final isVip = ref.watch(hasVipAccessProvider);
+        final isTranslation = selectedReciter?.styleId == 4;
+        final isLocked = selectedReciter != null &&
+            !isDownloaded &&
+            (isTranslation
+                ? !AudioVipPolicy.canPlayAudioTranslation(isVip: isVip)
+                : !AudioVipPolicy.canPlayReciter(
+                    reciterIdentifier: selectedReciter.identifier,
+                    surahId: surah.number,
+                    isVip: isVip,
+                  ));
+
         // Tooltip
         final tooltipMessage = isDownloading
             ? 'آیه ${downloadTask.currentAyah} از ${downloadTask.totalAyahs} در حال دانلود (کلیک=توقف)'
@@ -214,7 +230,9 @@ class _SurahGridItem extends ConsumerWidget {
                 ? 'کامل دانلود شده'
                 : hasPartialDownload
                     ? '$downloadedAyahsCount از ${surah.numberOfAyahs} آیه دانلود شده'
-                    : null;
+                    : isLocked
+                        ? 'دانلود نیازمند اشتراک ویژه است'
+                        : null;
 
         Widget itemCard = Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
@@ -248,38 +266,68 @@ class _SurahGridItem extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top Right: Ayah Count / Progress Badge
-              Align(
-                alignment: Alignment.topRight,
-                child: ayahProgressText != null
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isDownloading
-                              ? AppColors.goldAccent.withValues(alpha: 0.15)
-                              : Colors.orange.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          ayahProgressText,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: isDownloading
-                                ? AppColors.goldAccent
-                                : Colors.orange,
+              // Top Bar: (VIP badge if locked) & (Ayah Count / Progress Badge)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (isLocked)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.lock_rounded,
+                              size: 10, color: AppColors.primary),
+                          SizedBox(width: 2),
+                          Text(
+                            'ویژه',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
                           ),
-                        ),
-                      )
-                    : Text(
-                        '${surah.numberOfAyahs} آیه',
+                        ],
+                      ),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  if (ayahProgressText != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isDownloading
+                            ? AppColors.goldAccent.withValues(alpha: 0.15)
+                            : Colors.orange.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        ayahProgressText,
                         style: TextStyle(
                           fontSize: 9,
-                          color: colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.8),
+                          fontWeight: FontWeight.bold,
+                          color: isDownloading
+                              ? AppColors.goldAccent
+                              : Colors.orange,
                         ),
                       ),
+                    )
+                  else
+                    Text(
+                      '${surah.numberOfAyahs} آیه',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: colorScheme.onSurfaceVariant
+                            .withValues(alpha: 0.8),
+                      ),
+                    ),
+                ],
               ),
 
               // Main content (Centered vertically)
@@ -369,6 +417,21 @@ class _SurahGridItem extends ConsumerWidget {
                           const Text('انتخاب شده',
                               style: TextStyle(
                                   fontSize: 9, color: AppColors.goldAccent)),
+                        ] else if (isLocked) ...[
+                          const Icon(
+                            Icons.lock_rounded,
+                            color: AppColors.primary,
+                            size: 13,
+                          ),
+                          const SizedBox(width: 3),
+                          const Text(
+                            'ویژه',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ] else ...[
                           Icon(
                             Icons.radio_button_unchecked,
@@ -426,6 +489,19 @@ class _SurahGridItem extends ConsumerWidget {
                       }
                     }
                   : () {
+                      if (isLocked) {
+                        if (isTranslation) {
+                          VipSubscriptionSheet.show(context);
+                        } else {
+                          AudioVipHelper.checkAndPromptVip(
+                            context: context,
+                            ref: ref,
+                            surahId: surah.number,
+                            targetReciter: selectedReciter,
+                          );
+                        }
+                        return;
+                      }
                       ref
                           .read(downloadManagerSelectedSurahsProvider.notifier)
                           .toggleSurah(surah.number);
@@ -650,6 +726,28 @@ class _SurahGridItem extends ConsumerWidget {
                     trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                     onTap: () {
                       Navigator.pop(sheetCtx);
+                      final isVip = ref.read(hasVipAccessProvider);
+                      final isTranslation = reciter.styleId == 4;
+                      final isLocked = isTranslation
+                          ? !AudioVipPolicy.canPlayAudioTranslation(isVip: isVip)
+                          : !AudioVipPolicy.canPlayReciter(
+                              reciterIdentifier: reciter.identifier,
+                              surahId: surah.number,
+                              isVip: isVip,
+                            );
+                      if (isLocked) {
+                        if (isTranslation) {
+                          VipSubscriptionSheet.show(context);
+                        } else {
+                          AudioVipHelper.checkAndPromptVip(
+                            context: context,
+                            ref: ref,
+                            surahId: surah.number,
+                            targetReciter: reciter,
+                          );
+                        }
+                        return;
+                      }
                       ref
                           .read(audioDownloadControllerProvider.notifier)
                           .startDownload(

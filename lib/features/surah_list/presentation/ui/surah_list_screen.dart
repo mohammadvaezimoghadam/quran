@@ -20,6 +20,9 @@ import '../widgets/surah_error_view.dart';
 import '../widgets/surah_list_item.dart';
 import '../widgets/surah_sort_bottom_sheet.dart';
 import '../../domain/entities/surah_entity.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/audio_vip_policy.dart';
+import '../../../subscription/presentation/utils/audio_vip_helper.dart';
 
 /// Root screen – uses StatefulWidget so that the FocusNode survives rebuilds
 /// and we can explicitly control keyboard dismiss on navigation.
@@ -210,13 +213,14 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
         final surah = filteredSurahs[index];
         return SurahListItem(
           surah: surah,
-          onTap: () => _handleSurahTap(surah),
+          onTap: () => _openReader(surah),
+          onDownloadTap: () => _handleSurahDownloadTap(surah),
         );
       },
     );
   }
 
-  void _handleSurahTap(SurahEntity surah) async {
+  void _handleSurahDownloadTap(SurahEntity surah) async {
     final reciter = ref.read(quranAudioControllerProvider).selectedReciter;
     final storageService = ref.read(audioStorageServiceProvider);
 
@@ -231,31 +235,57 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
       isDownloaded = isMarked || firstAyahPath != null;
     }
 
-    if (!isDownloaded) {
-      if (!mounted) return;
-      final fontScript = ref.read(
-        quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-      );
-      final surahFontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
-      SurahActionDialog.show(
-        context: context,
-        surah: surah,
-        surahFontFamily: surahFontFamily,
-        onReadSurah: () => _openReader(surah),
-        onDownloadAudio: () {
-          final router = GoRouter.of(context);
-          _dismissSearchAndNavigate(() {
-            router.pushNamed(
-              audioDownloadManagerRoute,
-              queryParameters: {'surahId': surah.number.toString()},
-            );
-          });
-        },
-      );
-    } else {
+    if (isDownloaded) {
       _openReader(surah);
+      return;
     }
+
+    // Check VIP permission BEFORE showing download dialog
+    if (reciter != null) {
+      final isVip = ref.read(hasVipAccessProvider);
+      final canDownload = AudioVipPolicy.canPlayReciter(
+        reciterIdentifier: reciter.identifier,
+        surahId: surah.number,
+        isVip: isVip,
+      );
+
+      if (!canDownload) {
+        if (!mounted) return;
+        await AudioVipHelper.checkAndPromptVip(
+          context: context,
+          ref: ref,
+          surahId: surah.number,
+          targetReciter: reciter,
+          onSwitchedToDefaultReciter: () {
+            // User switched to Ostad Parhizgar! Re-trigger download flow
+            _handleSurahDownloadTap(surah);
+          },
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    final fontScript = ref.read(
+      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
+    );
+    final surahFontFamily = AppTypography.getFontFamilyByScript(fontScript);
+
+    SurahActionDialog.show(
+      context: context,
+      surah: surah,
+      surahFontFamily: surahFontFamily,
+      onReadSurah: () => _openReader(surah),
+      onDownloadAudio: () {
+        final router = GoRouter.of(context);
+        _dismissSearchAndNavigate(() {
+          router.pushNamed(
+            audioDownloadManagerRoute,
+            queryParameters: {'surahId': surah.number.toString()},
+          );
+        });
+      },
+    );
   }
 
   void _openReader(SurahEntity surah) {

@@ -4,6 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/services/network/network_info_helper.dart';
 import '../../../download_manager/infrastructure/datasources/download_manager_local_datasource.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/audio_vip_policy.dart';
+import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../subscription/presentation/utils/audio_vip_helper.dart';
 import '../../application/states/download_manager_state.dart';
 import '../../application/states/download_manager_selected_surahs_provider.dart';
 import '../../application/controllers/audio_download_controller.dart';
@@ -43,8 +47,45 @@ class DownloadManagerActionBar extends ConsumerWidget {
                       }
                     }
 
-                    final surahCount = selectedSurahs.length;
-                    for (final surahId in selectedSurahs) {
+                    final isVip = ref.read(hasVipAccessProvider);
+                    final isTranslation = selectedReciter.styleId == 4;
+
+                    final permittedSurahs = <int>[];
+                    final lockedSurahs = <int>[];
+
+                    for (final sId in selectedSurahs) {
+                      final allowed = isTranslation
+                          ? AudioVipPolicy.canPlayAudioTranslation(isVip: isVip)
+                          : AudioVipPolicy.canPlayReciter(
+                              reciterIdentifier: selectedReciter.identifier,
+                              surahId: sId,
+                              isVip: isVip,
+                            );
+                      if (allowed) {
+                        permittedSurahs.add(sId);
+                      } else {
+                        lockedSurahs.add(sId);
+                      }
+                    }
+
+                    if (lockedSurahs.isNotEmpty && permittedSurahs.isEmpty) {
+                      if (context.mounted) {
+                        if (isTranslation) {
+                          VipSubscriptionSheet.show(context);
+                        } else {
+                          AudioVipHelper.checkAndPromptVip(
+                            context: context,
+                            ref: ref,
+                            surahId: lockedSurahs.first,
+                            targetReciter: selectedReciter,
+                          );
+                        }
+                      }
+                      return;
+                    }
+
+                    final surahCount = permittedSurahs.length;
+                    for (final surahId in permittedSurahs) {
                       ref
                           .read(audioDownloadControllerProvider.notifier)
                           .startDownload(
@@ -57,10 +98,18 @@ class DownloadManagerActionBar extends ConsumerWidget {
                         .setSurahs({});
 
                     if (context.mounted) {
-                      AppSnackBar.showSuccess(
-                        context,
-                        'دانلود $surahCount سوره شروع شد.',
-                      );
+                      if (lockedSurahs.isNotEmpty) {
+                        AppSnackBar.showWarning(
+                          context,
+                          'دانلود $surahCount سوره رایگان شروع شد. دانلود سایر سوره‌ها با صدای ${selectedReciter.name} نیازمند اشتراک VIP است.',
+                        );
+                        VipSubscriptionSheet.show(context);
+                      } else {
+                        AppSnackBar.showSuccess(
+                          context,
+                          'دانلود $surahCount سوره شروع شد.',
+                        );
+                      }
                     }
                   }
                 : null,
