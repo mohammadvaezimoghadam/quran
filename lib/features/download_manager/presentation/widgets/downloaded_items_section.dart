@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/data/local/preferences/preferences_keys.dart';
 import '../../../../core/data/local/preferences/preferences_service_provider.dart';
@@ -262,8 +263,9 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
             ),
             const SizedBox(width: 4),
             Text(
-              '($count)',
+              '(${count.toPersianDigit()})',
               style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
                 fontSize: 10,
                 color: isSelected ? Colors.white70 : Colors.grey,
               ),

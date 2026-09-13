@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/services/network/network_info_helper.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../download_manager/infrastructure/datasources/download_manager_local_datasource.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/audio_vip_policy.dart';
@@ -101,13 +103,13 @@ class DownloadManagerActionBar extends ConsumerWidget {
                       if (lockedSurahs.isNotEmpty) {
                         AppSnackBar.showWarning(
                           context,
-                          'دانلود $surahCount سوره رایگان شروع شد. دانلود سایر سوره‌ها با صدای ${selectedReciter.name} نیازمند اشتراک VIP است.',
+                          'دانلود ${surahCount.toPersianDigit()} سوره رایگان شروع شد. دانلود سایر سوره‌ها با صدای ${selectedReciter.name} نیازمند اشتراک VIP است.',
                         );
                         VipSubscriptionSheet.show(context);
                       } else {
                         AppSnackBar.showSuccess(
                           context,
-                          'دانلود $surahCount سوره شروع شد.',
+                          'دانلود ${surahCount.toPersianDigit()} سوره شروع شد.',
                         );
                       }
                     }
@@ -126,8 +128,9 @@ class DownloadManagerActionBar extends ConsumerWidget {
             child: Text(
               selectedSurahs.isEmpty
                   ? 'لطفاً سوره‌های مورد نظر را انتخاب کنید'
-                  : 'دانلود ${selectedSurahs.length} سوره انتخاب شده',
+                  : 'دانلود ${selectedSurahs.length.toPersianDigit()} سوره انتخاب شده',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontFamily: AppTypography.fontFamily,
                     fontWeight: FontWeight.bold,
                     color: isEnabled 
                         ? Colors.white

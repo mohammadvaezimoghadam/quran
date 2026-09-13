@@ -201,9 +201,10 @@ class _SurahGridItem extends ConsumerWidget {
         String? ayahProgressText;
         if (isDownloading) {
           ayahProgressText =
-              '${downloadTask.completedAyahs}/${downloadTask.totalAyahs}';
+              '${downloadTask.completedAyahs.toPersianDigit()}/${downloadTask.totalAyahs.toPersianDigit()}';
         } else if (downloadedAyahsCount != null && downloadedAyahsCount > 0) {
-          ayahProgressText = '$downloadedAyahsCount/${surah.numberOfAyahs}';
+          ayahProgressText =
+              '${downloadedAyahsCount.toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()}';
         }
 
         final hasPartialDownload = !isDownloaded &&
@@ -225,11 +226,11 @@ class _SurahGridItem extends ConsumerWidget {
 
         // Tooltip
         final tooltipMessage = isDownloading
-            ? 'آیه ${downloadTask.currentAyah} از ${downloadTask.totalAyahs} در حال دانلود (کلیک=توقف)'
+            ? 'آیه ${downloadTask.currentAyah.toPersianDigit()} از ${downloadTask.totalAyahs.toPersianDigit()} در حال دانلود (کلیک=توقف)'
             : isDownloaded
                 ? 'کامل دانلود شده'
                 : hasPartialDownload
-                    ? '$downloadedAyahsCount از ${surah.numberOfAyahs} آیه دانلود شده'
+                    ? '${downloadedAyahsCount.toPersianDigit()} از ${surah.numberOfAyahs.toPersianDigit()} آیه دانلود شده'
                     : isLocked
                         ? 'دانلود نیازمند اشتراک ویژه است'
                         : null;
@@ -310,6 +311,7 @@ class _SurahGridItem extends ConsumerWidget {
                       child: Text(
                         ayahProgressText,
                         style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                           color: isDownloading
@@ -320,8 +322,9 @@ class _SurahGridItem extends ConsumerWidget {
                     )
                   else
                     Text(
-                      '${surah.numberOfAyahs} آیه',
+                      '${surah.numberOfAyahs.toPersianDigit()} آیه',
                       style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
                         fontSize: 9,
                         color: colorScheme.onSurfaceVariant
                             .withValues(alpha: 0.8),
@@ -346,8 +349,9 @@ class _SurahGridItem extends ConsumerWidget {
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              '${surah.number}.',
+                              '${surah.number.toPersianDigit()}.',
                               style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: isDownloaded
@@ -613,8 +617,9 @@ class _SurahGridItem extends ConsumerWidget {
                       child: Text(
                         isDownloaded
                             ? 'دانلود کامل'
-                            : '$downloadedAyahsCount/${surah.numberOfAyahs} آیه',
+                            : '${(downloadedAyahsCount ?? 0).toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()} آیه',
                         style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: isDownloaded ? Colors.green : Colors.orange,
@@ -717,8 +722,9 @@ class _SurahGridItem extends ConsumerWidget {
                       ),
                     ),
                     subtitle: Text(
-                      'دانلود آیه‌های باقیمانده (${surah.numberOfAyahs - (downloadedAyahsCount ?? 0)} آیه)',
+                      'دانلود آیه‌های باقیمانده (${(surah.numberOfAyahs - (downloadedAyahsCount ?? 0)).toPersianDigit()} آیه)',
                       style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
                         fontSize: 11.5,
                         color: isDark ? Colors.white54 : Colors.black45,
                       ),

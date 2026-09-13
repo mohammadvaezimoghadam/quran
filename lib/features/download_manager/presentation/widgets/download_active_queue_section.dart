@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../audio_manager/application/controllers/audio_download_controller.dart';
 import '../../../audio_manager/domain/entities/audio_download_task.dart';
 import '../../../quran_reader/application/controllers/reciter_providers.dart';
@@ -289,8 +291,9 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '(${task.completedAyahs}/${task.totalAyahs})',
+                        '(${task.completedAyahs.toPersianDigit()}/${task.totalAyahs.toPersianDigit()})',
                         style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
                           fontSize: 10.5,
                           color: isDark ? Colors.white54 : Colors.black45,
                         ),

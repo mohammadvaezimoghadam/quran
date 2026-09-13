@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -61,7 +62,7 @@ class DownloadHubScreen extends ConsumerWidget {
                 title: 'صوت قرآن',
                 subtitle: 'قاری فعال: ${state.activeReciterName}',
                 icon: CupertinoIcons.waveform,
-                badgeText: '${state.downloadedQuranSurahs} از ${state.totalQuranSurahs} سوره',
+                badgeText: '${state.downloadedQuranSurahs.toPersianDigit()} از ${state.totalQuranSurahs.toPersianDigit()} سوره',
                 progress: state.totalQuranSurahs > 0
                     ? state.downloadedQuranSurahs / state.totalQuranSurahs
                     : 0.0,
@@ -80,7 +81,7 @@ class DownloadHubScreen extends ConsumerWidget {
                 title: 'ترجمه گویا',
                 subtitle: 'گوینده: ${state.activeTranslationReciterName}',
                 icon: CupertinoIcons.speaker_2_fill,
-                badgeText: '${state.downloadedTranslationSurahs} از ${state.totalTranslationSurahs} سوره',
+                badgeText: '${state.downloadedTranslationSurahs.toPersianDigit()} از ${state.totalTranslationSurahs.toPersianDigit()} سوره',
                 progress: state.totalTranslationSurahs > 0
                     ? state.downloadedTranslationSurahs / state.totalTranslationSurahs
                     : 0.0,
@@ -99,7 +100,7 @@ class DownloadHubScreen extends ConsumerWidget {
                 title: 'متن ترجمه‌ها',
                 subtitle: 'فارسی، انگلیسی و سایر زبان‌ها',
                 icon: CupertinoIcons.book_fill,
-                badgeText: '${state.downloadedTextTranslations} از ${state.totalTextTranslations} ترجمه',
+                badgeText: '${state.downloadedTextTranslations.toPersianDigit()} از ${state.totalTextTranslations.toPersianDigit()} ترجمه',
                 progress: state.totalTextTranslations > 0
                     ? state.downloadedTextTranslations / state.totalTextTranslations
                     : 0.0,
