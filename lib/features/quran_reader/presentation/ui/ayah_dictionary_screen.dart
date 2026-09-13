@@ -101,9 +101,11 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
     final bool useCustomColor =
         harakatColor != null && harakatColor != baseArabicColor;
 
-    final surahDisplayName = widget.surahName.isNotEmpty
+    final rawSurahName = widget.surahName.isNotEmpty
         ? widget.surahName
         : widget.surahId.surahNameFa;
+    final cleanSurahName = rawSurahName.replaceAll('سوره', '').trim();
+    final surahDisplayName = 'سوره $cleanSurahName';
 
     return Scaffold(
       backgroundColor:

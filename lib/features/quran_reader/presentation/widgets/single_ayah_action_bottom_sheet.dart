@@ -54,11 +54,6 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final arabicFontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
     // Check if this specific Ayah is currently bookmarked
     final isBookmarked = ref.watch(
       bookmarksControllerProvider.select(
@@ -74,6 +69,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
         ? Colors.white.withValues(alpha: 0.08)
         : const Color(0xFFEBE7DF);
     final goldColor = isDark ? const Color(0xFFF4E0A5) : const Color(0xFFB5872A);
+    final cleanSurahName = surahName.replaceAll('سوره', '').trim();
 
     return Container(
       decoration: BoxDecoration(
@@ -131,10 +127,10 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'سوره $surahName',
+                          'سوره $cleanSurahName',
                           style: TextStyle(
-                            fontFamily: arabicFontFamily,
-                            fontSize: 15,
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: isDark
                                 ? AppColors.goldAccent
@@ -202,7 +198,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                           if (isAdded) {
                             AppSnackBar.showSuccess(
                               context,
-                              'آیه ${ayah.ayahNumber.toPersianDigit()} سوره $surahName نشانه‌گذاری شد.',
+                              'آیه ${ayah.ayahNumber.toPersianDigit()} سوره $cleanSurahName نشانه‌گذاری شد.',
                             );
                           } else {
                             AppSnackBar.showInfo(
@@ -232,7 +228,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                         WordByWordBottomSheet.show(
                           context,
                           surahId: ayah.surahId,
-                          surahName: surahName,
+                          surahName: cleanSurahName,
                           ayahNumber: ayah.ayahNumber,
                         );
                       },
@@ -259,7 +255,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                             .removeTranslationBrackets;
 
                         final formatted = ayah.toShareableText(
-                          surahName: surahName,
+                          surahName: cleanSurahName,
                           removeBrackets: removeBrackets,
                         );
 
@@ -267,7 +263,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                         if (context.mounted) {
                           AppSnackBar.showSuccess(
                             context,
-                            'آیه ${ayah.ayahNumber.toPersianDigit()} سوره $surahName کپی شد.',
+                            'آیه ${ayah.ayahNumber.toPersianDigit()} سوره $cleanSurahName کپی شد.',
                           );
                         }
                       },
@@ -294,13 +290,13 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                             .removeTranslationBrackets;
 
                         final formatted = ayah.toShareableText(
-                          surahName: surahName,
+                          surahName: cleanSurahName,
                           removeBrackets: removeBrackets,
                         );
 
                         await Share.share(
                           formatted,
-                          subject: 'آیه ${ayah.ayahNumber} سوره $surahName',
+                          subject: 'آیه ${ayah.ayahNumber} سوره $cleanSurahName',
                         );
                       },
                     ),
