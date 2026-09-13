@@ -179,10 +179,12 @@ class _SurahGridItem extends ConsumerWidget {
             : null;
         final isDownloading = downloadTask != null &&
             downloadTask.status == DownloadTaskStatus.downloading;
+        final isPaused = downloadTask != null &&
+            downloadTask.status == DownloadTaskStatus.paused;
 
-        // Downloaded ayah count (from filesystem, auto-invalidated)
+        // Downloaded ayah count (from filesystem or active task)
         int? downloadedAyahsCount;
-        if (selectedReciter != null && !isDownloaded && !isDownloading) {
+        if (selectedReciter != null && !isDownloaded && !isDownloading && !isPaused) {
           final countAsync = ref.watch(
             surahDownloadedAyahsCountProvider((
               reciterId: selectedReciter.id,
@@ -195,6 +197,8 @@ class _SurahGridItem extends ConsumerWidget {
             loading: () => null,
             error: (_, _) => null,
           );
+        } else if (isDownloading || isPaused) {
+          downloadedAyahsCount = downloadTask.completedAyahs;
         }
 
         // Determine ayah progress text
@@ -202,6 +206,9 @@ class _SurahGridItem extends ConsumerWidget {
         if (isDownloading) {
           ayahProgressText =
               '${downloadTask.completedAyahs.toPersianDigit()}/${downloadTask.totalAyahs.toPersianDigit()}';
+        } else if (isPaused) {
+          ayahProgressText =
+              '${downloadTask.completedAyahs.toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()}';
         } else if (downloadedAyahsCount != null && downloadedAyahsCount > 0) {
           ayahProgressText =
               '${downloadedAyahsCount.toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()}';
@@ -209,6 +216,7 @@ class _SurahGridItem extends ConsumerWidget {
 
         final hasPartialDownload = !isDownloaded &&
             !isDownloading &&
+            !isPaused &&
             downloadedAyahsCount != null &&
             downloadedAyahsCount > 0;
 
@@ -226,14 +234,16 @@ class _SurahGridItem extends ConsumerWidget {
 
         // Tooltip
         final tooltipMessage = isDownloading
-            ? 'آیه ${downloadTask.currentAyah.toPersianDigit()} از ${downloadTask.totalAyahs.toPersianDigit()} در حال دانلود (کلیک=توقف)'
-            : isDownloaded
-                ? 'کامل دانلود شده'
-                : hasPartialDownload
-                    ? '${downloadedAyahsCount.toPersianDigit()} از ${surah.numberOfAyahs.toPersianDigit()} آیه دانلود شده'
-                    : isLocked
-                        ? 'دانلود نیازمند اشتراک ویژه است'
-                        : null;
+            ? 'آیه ${downloadTask.currentAyah.toPersianDigit()} از ${downloadTask.totalAyahs.toPersianDigit()} در حال دانلود (لمس برای توقف)'
+            : isPaused
+                ? 'دانلود متوقف شده (آیه ${downloadTask.completedAyahs.toPersianDigit()} از ${surah.numberOfAyahs.toPersianDigit()}) - لمس برای ادامه'
+                : isDownloaded
+                    ? 'کامل دانلود شده'
+                    : hasPartialDownload
+                        ? '${downloadedAyahsCount.toPersianDigit()} از ${surah.numberOfAyahs.toPersianDigit()} آیه دانلود شده'
+                        : isLocked
+                            ? 'دانلود نیازمند اشتراک ویژه است'
+                            : null;
 
         Widget itemCard = Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
@@ -242,22 +252,25 @@ class _SurahGridItem extends ConsumerWidget {
                 ? colorScheme.primary.withValues(alpha: 0.1)
                 : isDownloading
                     ? AppColors.goldAccent.withValues(alpha: 0.2)
-                    : hasPartialDownload
-                        ? Colors.orange.withValues(alpha: 0.1)
-                        : isSelected
-                            ? AppColors.goldAccent.withValues(alpha: 0.15)
-                            : colorScheme.surface,
+                    : isPaused
+                        ? Colors.orange.withValues(alpha: 0.18)
+                        : hasPartialDownload
+                            ? Colors.orange.withValues(alpha: 0.1)
+                            : isSelected
+                                ? AppColors.goldAccent.withValues(alpha: 0.15)
+                                : colorScheme.surface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: isDownloaded
                   ? colorScheme.primary
                   : isDownloading || isSelected
                       ? AppColors.goldAccent
-                      : hasPartialDownload
+                      : isPaused || hasPartialDownload
                           ? Colors.orange
                           : colorScheme.outlineVariant,
               width: isDownloaded ||
                       isDownloading ||
+                      isPaused ||
                       isSelected ||
                       hasPartialDownload
                   ? 1.5
@@ -413,7 +426,19 @@ class _SurahGridItem extends ConsumerWidget {
                           const SizedBox(width: 4),
                           const Text('در حال دانلود',
                               style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
                                   fontSize: 9, color: AppColors.goldAccent)),
+                        ] else if (isPaused) ...[
+                          const Icon(
+                            CupertinoIcons.pause_circle_fill,
+                            color: Colors.orange,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          const Text('متوقف شده',
+                              style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 9, color: Colors.orange)),
                         ] else if (isSelected) ...[
                           const Icon(Icons.check_circle,
                               color: AppColors.goldAccent, size: 14),
@@ -466,7 +491,62 @@ class _SurahGridItem extends ConsumerWidget {
         }
 
         return GestureDetector(
-          onTap: (isDownloaded || hasPartialDownload)
+          onTap: isDownloading
+              ? () {
+                  if (selectedReciter != null) {
+                    ref
+                        .read(audioDownloadControllerProvider.notifier)
+                        .pauseDownload(
+                          selectedReciter.id,
+                          surah.number,
+                        );
+                  }
+                }
+              : isPaused
+                  ? () {
+                      if (selectedReciter != null) {
+                        ref
+                            .read(audioDownloadControllerProvider.notifier)
+                            .resumeDownload(
+                              reciter: selectedReciter,
+                              surahId: surah.number,
+                            );
+                      }
+                    }
+                  : (isDownloaded || hasPartialDownload)
+                      ? () {
+                          if (selectedReciter != null) {
+                            _showSurahOptionsBottomSheet(
+                              context: context,
+                              ref: ref,
+                              surah: surah,
+                              reciter: selectedReciter,
+                              isDownloaded: isDownloaded,
+                              hasPartialDownload: hasPartialDownload,
+                              downloadedAyahsCount: downloadedAyahsCount,
+                              fontFamily: fontFamily,
+                            );
+                          }
+                        }
+                      : () {
+                          if (isLocked) {
+                            if (isTranslation) {
+                              VipSubscriptionSheet.show(context);
+                            } else {
+                              AudioVipHelper.checkAndPromptVip(
+                                context: context,
+                                ref: ref,
+                                surahId: surah.number,
+                                targetReciter: selectedReciter,
+                              );
+                            }
+                            return;
+                          }
+                          ref
+                              .read(downloadManagerSelectedSurahsProvider.notifier)
+                              .toggleSurah(surah.number);
+                        },
+          onLongPress: (isDownloaded || hasPartialDownload || isDownloading || isPaused)
               ? () {
                   if (selectedReciter != null) {
                     _showSurahOptionsBottomSheet(
@@ -475,41 +555,13 @@ class _SurahGridItem extends ConsumerWidget {
                       surah: surah,
                       reciter: selectedReciter,
                       isDownloaded: isDownloaded,
-                      hasPartialDownload: hasPartialDownload,
-                      downloadedAyahsCount: downloadedAyahsCount,
+                      hasPartialDownload: hasPartialDownload || isPaused,
+                      downloadedAyahsCount: downloadedAyahsCount ?? downloadTask?.completedAyahs,
                       fontFamily: fontFamily,
                     );
                   }
                 }
-              : isDownloading
-                  ? () {
-                      if (selectedReciter != null) {
-                        ref
-                            .read(audioDownloadControllerProvider.notifier)
-                            .cancelDownload(
-                              selectedReciter.id,
-                              surah.number,
-                            );
-                      }
-                    }
-                  : () {
-                      if (isLocked) {
-                        if (isTranslation) {
-                          VipSubscriptionSheet.show(context);
-                        } else {
-                          AudioVipHelper.checkAndPromptVip(
-                            context: context,
-                            ref: ref,
-                            surahId: surah.number,
-                            targetReciter: selectedReciter,
-                          );
-                        }
-                        return;
-                      }
-                      ref
-                          .read(downloadManagerSelectedSurahsProvider.notifier)
-                          .toggleSurah(surah.number);
-                    },
+              : null,
           child: itemCard,
         );
       },

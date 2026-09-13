@@ -10,6 +10,7 @@ import '../../application/states/download_manager_selected_surahs_provider.dart'
 import '../widgets/download_manager_reciter_selector.dart';
 import '../widgets/download_manager_surah_list.dart';
 import '../widgets/download_manager_action_bar.dart';
+import '../widgets/audio_download_queue_bar.dart';
 
 class AudioDownloadManagerScreen extends ConsumerStatefulWidget {
   final int? initialSurahId;
@@ -85,6 +86,7 @@ class _AudioDownloadManagerScreenState
           DownloadManagerReciterSelector(
             isTranslationMode: widget.isTranslationMode,
           ),
+          const AudioDownloadQueueBar(),
           Expanded(
             child: DownloadManagerSurahList(
               initialSurahId: widget.initialSurahId,
