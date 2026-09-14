@@ -377,15 +377,17 @@ class _BookmarksManagerBottomSheetState
           8.vSpace,
           Text(
             isAyahTab
-                ? 'در صفحه قرائت قرآن با نگه‌داشتن انگشت روی هر آیه و انتخاب گزینه «نشانه‌گذاری»، می‌توانید آیات منتخب را در این تب ذخیره کنید.'
-                : 'هنگام قرائت قرآن با لمس آیکون نشانه در هدر بالای صفحه، می‌توانید محل مطالعه و صفحه را برای ادامه خواندن ذخیره نمایید.',
+                ? 'با نگه‌داشتن انگشت روی هر آیه، آن را نشانه‌گذاری کنید.'
+                : 'با لمس آیکون نشانک در صفحه قرائت، صفحه را ذخیره کنید.',
             style: TextStyle(
               fontFamily: AppTypography.fontFamily,
-              fontSize: 13,
+              fontSize: 12.5,
               color: isDark ? Colors.white60 : Colors.black54,
-              height: 1.4,
+              height: 1.3,
             ),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           24.vSpace,
           ElevatedButton(
