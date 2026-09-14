@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/surah_entity.dart';
-import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 
-/// Displays the Surah Title, English Name, Kaaba Icon (Makki/Madani), Juz & Hizb, and Ayah Count.
-class SurahInfoContent extends ConsumerWidget {
+/// Displays the Surah Title, Kaaba Icon (Makki/Madani), Juz & Hizb, and Ayah Count.
+class SurahInfoContent extends StatelessWidget {
   final SurahEntity surah;
   final bool isDark;
 
@@ -21,24 +20,21 @@ class SurahInfoContent extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final fontScript = ref.watch(
-      quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
-    );
-    final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
-
+  Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Arabic Surah Title
+        // Persian Surah Title
         Text(
-          surah.name,
-          style: AppTypography.surahTitle.copyWith(
-            fontFamily: fontFamily,
-            height: 1.4,
-            color: isDark ? AppColors.softGoldText : AppColors.primary,
+          'سوره ${surah.nameFa}',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 16.5,
+            fontWeight: FontWeight.bold,
+            height: 1.3,
+            color: isDark ? Colors.white : const Color(0xFF1A1D1E),
           ),
         ),
 

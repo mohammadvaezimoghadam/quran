@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/extensions/surah_name_extension.dart';
 import '../../domain/entities/surah_entity.dart';
 import '../../domain/enums/surah_sort_options.dart';
 
@@ -28,12 +29,14 @@ abstract class SurahListState with _$SurahListState {
       if (normalizedQuery.isNotEmpty) {
         result = result.where((surah) {
           final normalizedName = surah.name.normalizeForSearch();
+          final normalizedFaName = surah.nameFa.normalizeForSearch();
           final normalizedEnglishName = surah.englishName.normalizeForSearch();
           final normalizedTranslation =
               surah.englishNameTranslation.normalizeForSearch();
           final numberStr = surah.number.toString();
 
           return normalizedName.contains(normalizedQuery) ||
+              normalizedFaName.contains(normalizedQuery) ||
               normalizedEnglishName.contains(normalizedQuery) ||
               normalizedTranslation.contains(normalizedQuery) ||
               numberStr == normalizedQuery;
@@ -48,7 +51,7 @@ abstract class SurahListState with _$SurahListState {
           comparison = a.number.compareTo(b.number);
           break;
         case SurahSortBy.name:
-          comparison = a.name.compareTo(b.name);
+          comparison = a.nameFa.compareTo(b.nameFa);
           break;
         case SurahSortBy.revelationOrder:
           comparison = a.revelationOrder.compareTo(b.revelationOrder);
