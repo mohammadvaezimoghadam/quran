@@ -41,9 +41,6 @@ class SurahListContinueReadingBar extends ConsumerWidget {
     final titleColor = isDark
         ? const Color(0xFFE5EEE3)
         : const Color(0xFF1E2816);
-    final subtitleColor = isDark
-        ? const Color(0xFFA1B3A0)
-        : const Color(0xFF38472E);
     final buttonBg = isDark
         ? AppColors.primary
         : const Color(0xFF2C371D);
@@ -56,45 +53,27 @@ class SurahListContinueReadingBar extends ConsumerWidget {
         splashColor: Colors.black.withValues(alpha: 0.08),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(color: borderColor, width: 1.0),
             ),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Right Side: Surah Info + Ayah Number (Pure text, NO icons)
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'سوره $surahFaName - آیه شماره ${ayahNumber.toPersianDigit()}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
-                        color: titleColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      surahId == 1 && ayahNumber == 1
-                          ? 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
-                          : 'آخرین موقعیت قرائت شما در قرآن کریم',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        color: subtitleColor,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'سوره $surahFaName - آیه شماره ${ayahNumber.toPersianDigit()}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: titleColor,
+                  ),
                 ),
               ),
 
