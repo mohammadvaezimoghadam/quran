@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -41,6 +42,7 @@ class SurahListScreen extends ConsumerStatefulWidget {
 class _SurahListScreenState extends ConsumerState<SurahListScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
+  bool _isQuickActionsVisible = true;
 
   @override
   void initState() {
@@ -80,6 +82,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
           _searchController.clear();
           ref.read(surahListControllerProvider.notifier).searchSurahs('');
           ref.read(surahListControllerProvider.notifier).setOnlyFavorites(false);
+          _isQuickActionsVisible = true;
         }
       },
       child: Scaffold(
@@ -215,31 +218,66 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
 
     final showQuickActions = !isSearching && !isOnlyFavorites;
 
-    return Column(
-      children: [
-        if (showQuickActions)
-          SurahListQuickActions(
-            onBeforeNavigation: () => _dismissSearchAndNavigate(() {}),
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is UserScrollNotification) {
+          if (notification.direction == ScrollDirection.reverse) {
+            // Scrolling down -> smoothly collapse quick actions
+            if (_isQuickActionsVisible && notification.metrics.pixels > 15) {
+              setState(() => _isQuickActionsVisible = false);
+            }
+          } else if (notification.direction == ScrollDirection.forward) {
+            // Scrolling up -> smoothly expand quick actions
+            if (!_isQuickActionsVisible) {
+              setState(() => _isQuickActionsVisible = true);
+            }
+          }
+        }
+        if (notification.metrics.pixels <= 0) {
+          if (!_isQuickActionsVisible) {
+            setState(() => _isQuickActionsVisible = true);
+          }
+        }
+        return false;
+      },
+      child: Column(
+        children: [
+          ClipRect(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeInOutCubic,
+              alignment: Alignment.topCenter,
+              child: AnimatedOpacity(
+                opacity: (_isQuickActionsVisible && showQuickActions) ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                child: (_isQuickActionsVisible && showQuickActions)
+                    ? SurahListQuickActions(
+                        onBeforeNavigation: () => _dismissSearchAndNavigate(() {}),
+                      )
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
+            ),
           ),
-        Expanded(
-          child: filteredSurahs.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Text(
-                      isOnlyFavorites
-                          ? 'فهرست شخصی شما خالی است.\nبا زدن آیکون ستاره در کنار هر سوره می‌توانید آن را به این فهرست اضافه کنید.'
-                          : AppConstants.noSurahFound,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 14,
-                        color: Colors.grey,
-                        height: 1.6,
+          Expanded(
+            child: filteredSurahs.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Text(
+                        isOnlyFavorites
+                            ? 'فهرست شخصی شما خالی است.\nبا زدن آیکون ستاره در کنار هر سوره می‌توانید آن را به این فهرست اضافه کنید.'
+                            : AppConstants.noSurahFound,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 14,
+                          color: Colors.grey,
+                          height: 1.6,
+                        ),
                       ),
                     ),
-                  ),
-                )
+                  )
               : ListView.separated(
                   keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: EdgeInsets.only(
@@ -261,8 +299,9 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
                 ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 
   void _handleSurahDownloadTap(SurahEntity surah) async {
     final reciter = ref.read(quranAudioControllerProvider).selectedReciter;
