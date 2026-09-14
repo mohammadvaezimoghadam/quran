@@ -70,46 +70,34 @@ class SearchResultAyahCard extends ConsumerWidget {
                 // Header: Surah Name, Ayah Number, Page, Juz
                 Row(
                   children: [
-                    // Surah & Ayah Pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.goldAccent.withValues(alpha: 0.12)
-                            : const Color(0xFFF3EFE6),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'سوره ${item.surahNumber.surahNameFa}',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? AppColors.goldAccent
-                                  : AppColors.primary,
-                            ),
+                    // Surah & Ayah Info
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'سوره ${item.surahNumber.surahNameFa}',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? AppColors.goldAccent
+                                : AppColors.primary,
                           ),
-                          4.hSpace,
-                          Text(
-                            '• آیه ${item.ayahNumber?.toPersianDigit() ?? '۱'}',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.goldAccent
-                                  : AppColors.primary,
-                            ),
+                        ),
+                        4.hSpace,
+                        Text(
+                          '• آیه ${item.ayahNumber?.toPersianDigit() ?? '۱'}',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.goldAccent.withValues(alpha: 0.8)
+                                : AppColors.primary.withValues(alpha: 0.8),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     const Spacer(),
 
@@ -132,33 +120,23 @@ class SearchResultAyahCard extends ConsumerWidget {
                 ),
                 10.vSpace,
 
-                // Matched in translation tag if applicable
+                // Matched in translation indicator if applicable
                 if (item.matchedInTranslation) ...[
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.amber.withValues(alpha: 0.12)
-                              : const Color(0xFFFFF8E1),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.amber.withValues(alpha: 0.3)
-                                : const Color(0xFFFFE082),
-                          ),
-                        ),
-                        child: Text(
-                          'تطابق در ترجمه',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark ? Colors.amber[300] : const Color(0xFFB78103),
-                            fontWeight: FontWeight.w600,
-                          ),
+                      Icon(
+                        Icons.translate_rounded,
+                        size: 13,
+                        color: isDark ? Colors.amber[300] : const Color(0xFFB78103),
+                      ),
+                      4.hSpace,
+                      Text(
+                        'تطابق در ترجمه',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11,
+                          color: isDark ? Colors.amber[300] : const Color(0xFFB78103),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],

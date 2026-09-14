@@ -509,45 +509,25 @@ class _BookmarksManagerBottomSheetState
                             ),
                           ),
                           if (isLatest) ...[
-                            8.hSpace,
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: primaryColor.withValues(alpha: isDark ? 0.25 : 0.15),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'آخرین نشانک',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryColor,
-                                ),
+                            6.hSpace,
+                            Text(
+                              '• آخرین نشانک',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: primaryColor,
                               ),
                             ),
                           ] else if (item.isAyahBookmark) ...[
-                            8.hSpace,
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: goldColor.withValues(alpha: isDark ? 0.2 : 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'آیه نشان‌شده',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: goldColor,
-                                ),
+                            6.hSpace,
+                            Text(
+                              '• آیه نشان‌شده',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: goldColor.withValues(alpha: 0.8),
                               ),
                             ),
                           ],

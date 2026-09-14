@@ -92,41 +92,16 @@ class SearchResultSurahCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          SearchHighlightText(
-                            text: 'سوره ${item.surahNumber.surahNameFa}',
-                            query: query,
-                            baseStyle: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 16.5,
-                              fontWeight: FontWeight.bold,
-                              height: 1.3,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                          8.hSpace,
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.08)
-                                  : const Color(0xFFEDE9E3),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              item.revelationType == 'Meccan' ? 'مکی' : 'مدنی',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isDark ? Colors.white70 : Colors.black54,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
+                      SearchHighlightText(
+                        text: 'سوره ${item.surahNumber.surahNameFa}',
+                        query: query,
+                        baseStyle: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.bold,
+                          height: 1.3,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
                       4.vSpace,
                       Row(
@@ -137,6 +112,15 @@ class SearchResultSurahCard extends ConsumerWidget {
                             baseStyle: TextStyle(
                               fontSize: 12,
                               color: isDark ? Colors.white54 : Colors.black45,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '• ${item.revelationType == 'Meccan' ? 'مکی' : 'مدنی'}',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              color: isDark ? Colors.white38 : Colors.black38,
                             ),
                           ),
                           const Spacer(),

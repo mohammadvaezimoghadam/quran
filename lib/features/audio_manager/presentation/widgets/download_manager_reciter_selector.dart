@@ -51,6 +51,7 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
 
     final imageUrl = selectedReciter?.imageUrl;
     final hasImage = imageUrl != null && imageUrl.trim().isNotEmpty;
+    final styleName = selectedReciter?.styleName;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -165,27 +166,15 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
                                       color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
-                                  if (selectedReciter?.styleName != null &&
-                                      selectedReciter!.styleName!.isNotEmpty) ...[
-                                    const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 1.5),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(
-                                            alpha: isDark ? 0.25 : 0.1),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        selectedReciter.styleName!,
-                                        style: TextStyle(
-                                          fontFamily: AppTypography.fontFamily,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark
-                                              ? AppColors.inversePrimary
-                                              : AppColors.primary,
-                                        ),
+                                  if (styleName != null && styleName.isNotEmpty) ...[
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '• $styleName',
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontFamily,
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w500,
+                                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                                       ),
                                     ),
                                   ],

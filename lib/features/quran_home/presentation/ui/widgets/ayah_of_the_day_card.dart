@@ -227,23 +227,11 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              // Badge text inside frosted glass box
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimens.stackSm,
-                  vertical: AppDimens.stackXxSm,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.10),
-                    width: 0.5,
-                  ),
-                ),
-                child: Text(
-                  'سوره ${ayah.surahNumber.surahNameFa} • ${AppConstants.ayahLabel} ${ayah.ayahNumber.toPersianDigit()}',
-                  style: AppTypography.badgeLabelSm,
+              Text(
+                'سوره ${ayah.surahNumber.surahNameFa} • ${AppConstants.ayahLabel} ${ayah.ayahNumber.toPersianDigit()}',
+                style: AppTypography.badgeLabelSm.copyWith(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

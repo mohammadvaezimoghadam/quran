@@ -98,24 +98,14 @@ class SubscriptionPlanCard extends StatelessWidget {
                       ),
                     ),
                     if (product.discountBadge != null) ...[
-                      const SizedBox(height: 3),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: isDark ? 0.25 : 0.12),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          product.discountBadge!,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        product.discountBadge!,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
                         ),
                       ),
                     ],

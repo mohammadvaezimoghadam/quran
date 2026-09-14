@@ -307,27 +307,13 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                           ),
                                                           if (isMixedMode && isSessionActive) ...[
                                                             const SizedBox(width: 4),
-                                                            Container(
-                                                              padding: const EdgeInsets.symmetric(
-                                                                horizontal: 4,
-                                                                vertical: 1,
-                                                              ),
-                                                              decoration: BoxDecoration(
-                                                                color: colorScheme.primary.withValues(alpha: 0.12),
-                                                                borderRadius: BorderRadius.circular(4),
-                                                                border: Border.all(
-                                                                  color: colorScheme.primary.withValues(alpha: 0.3),
-                                                                  width: 0.5,
-                                                                ),
-                                                              ),
-                                                              child: Text(
-                                                                trackTypeLabel,
-                                                                style: TextStyle(
-                                                                  fontSize: 8.0,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  color: colorScheme.primary,
-                                                                  fontFamily: AppTypography.fontFamily,
-                                                                ),
+                                                            Text(
+                                                              '($trackTypeLabel)',
+                                                              style: TextStyle(
+                                                                fontSize: 9.5,
+                                                                fontWeight: FontWeight.w600,
+                                                                color: colorScheme.primary,
+                                                                fontFamily: AppTypography.fontFamily,
                                                               ),
                                                             ),
                                                           ],
