@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../quran_reader/application/controllers/reciter_providers.dart';
+import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../application/states/download_manager_state.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
@@ -27,10 +28,16 @@ class AudioDownloadManagerScreen extends ConsumerStatefulWidget {
 
 class _AudioDownloadManagerScreenState
     extends ConsumerState<AudioDownloadManagerScreen> {
+  final FocusNode _searchFocusNode = FocusNode();
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Ensure search query starts clean
+      ref.read(surahListControllerProvider.notifier).searchSurahs('');
+
       final audioState = ref.read(quranAudioControllerProvider);
       if (widget.isTranslationMode) {
         final currentTrans = audioState.selectedTranslationReciter;
@@ -62,6 +69,15 @@ class _AudioDownloadManagerScreenState
   }
 
   @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    _searchController.dispose();
+    // Reset search query so surah list screen remains unaffected
+    ref.read(surahListControllerProvider.notifier).searchSurahs('');
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -70,6 +86,12 @@ class _AudioDownloadManagerScreenState
             ? 'مدیریت دانلود ترجمه صوتی'
             : 'مدیریت دانلود صوت',
         fontFamily: AppTypography.fontFamily,
+        showSearchField: true,
+        searchFocusNode: _searchFocusNode,
+        searchController: _searchController,
+        onSearchChanged: (query) {
+          ref.read(surahListControllerProvider.notifier).searchSurahs(query);
+        },
       ),
       body: SafeArea(
         top: false,

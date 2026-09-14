@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
@@ -197,7 +198,7 @@ class _DownloadManagerSurahListState
       return Center(child: Text('خطا: ${surahState.errorMessage}'));
     }
 
-    final surahs = surahState.surahs;
+    final surahs = surahState.filteredSurahs;
     if (widget.initialSurahId != null) {
       _scrollToInitialSurah(widget.initialSurahId!, surahs.length);
     }
@@ -248,28 +249,48 @@ class _DownloadManagerSurahListState
           ),
         ),
 
-        // Surah ListView
-        Expanded(
-          child: ListView.separated(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            itemCount: surahs.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              thickness: 0.7,
-              color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.4),
+        // Surah ListView or Empty Search State
+        if (surahs.isEmpty)
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Text(
+                  AppConstants.noSurahFound,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 14,
+                    color: Colors.grey,
+                    height: 1.6,
+                  ),
+                ),
+              ),
             ),
-            itemBuilder: (context, index) {
-              final surah = surahs[index];
-              return _SurahListItem(
-                key: ValueKey('surah_${surah.number}'),
-                surah: surah,
-                fontFamily: fontFamily,
-                selectedReciter: selectedReciter,
-              );
-            },
+          )
+        else
+          Expanded(
+            child: ListView.separated(
+              controller: _scrollController,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              itemCount: surahs.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                thickness: 0.7,
+                color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.4),
+              ),
+              itemBuilder: (context, index) {
+                final surah = surahs[index];
+                return _SurahListItem(
+                  key: ValueKey('surah_${surah.number}'),
+                  surah: surah,
+                  fontFamily: fontFamily,
+                  selectedReciter: selectedReciter,
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }
