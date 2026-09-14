@@ -26,13 +26,12 @@ class SurahListQuickActions extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final actionTextColor = isDark ? Colors.white : const Color(0xFF1A1D1E);
+
     // Palette for "نشان شده‌ها" (Gold / Amber)
     final bookmarkBg = isDark
         ? AppColors.goldAccent.withValues(alpha: 0.12)
         : const Color(0xFFFFF8E7);
-    final bookmarkText = isDark
-        ? const Color(0xFFF7E2A9)
-        : const Color(0xFF8A661C);
     final bookmarkIcon = isDark
         ? const Color(0xFFF7E2A9)
         : AppColors.goldAccent;
@@ -41,9 +40,6 @@ class SurahListQuickActions extends ConsumerWidget {
     final jumpBg = isDark
         ? const Color(0xFF1E6FBF).withValues(alpha: 0.15)
         : const Color(0xFFEFF5FC);
-    final jumpText = isDark
-        ? const Color(0xFF90C2F7)
-        : const Color(0xFF1A5F9E);
     final jumpIcon = isDark
         ? const Color(0xFF90C2F7)
         : const Color(0xFF1E6FBF);
@@ -58,7 +54,7 @@ class SurahListQuickActions extends ConsumerWidget {
               title: 'نشان شده‌ها',
               icon: Icons.bookmark_rounded,
               bgColor: bookmarkBg,
-              textColor: bookmarkText,
+              textColor: actionTextColor,
               iconColor: bookmarkIcon,
               onTap: () {
                 onBeforeNavigation?.call();
@@ -74,7 +70,7 @@ class SurahListQuickActions extends ConsumerWidget {
               title: 'برو به',
               icon: CupertinoIcons.arrow_turn_up_left,
               bgColor: jumpBg,
-              textColor: jumpText,
+              textColor: actionTextColor,
               iconColor: jumpIcon,
               onTap: () async {
                 final target = await QuranQuickJumpBottomSheet.show(context);
