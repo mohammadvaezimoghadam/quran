@@ -107,29 +107,30 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
               ),
               child: Stack(
                 children: [
-                  // 1. Reciter photo background with gradient fade to transparent
+                  // 1. Reciter photo background on the RIGHT with zoom & gradient fade to transparent
                   if (hasImage)
                     Positioned(
-                      left: 0,
+                      right: 0,
                       top: 0,
                       bottom: 0,
-                      width: 175,
+                      width: 210,
                       child: ShaderMask(
                         shaderCallback: (bounds) {
                           return LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
+                            begin: Alignment.centerRight,
+                            end: Alignment.centerLeft,
                             colors: [
-                              Colors.black.withValues(alpha: isDark ? 0.45 : 0.65),
-                              Colors.black.withValues(alpha: isDark ? 0.20 : 0.30),
+                              Colors.black.withValues(alpha: isDark ? 0.40 : 0.55),
+                              Colors.black.withValues(alpha: isDark ? 0.18 : 0.25),
                               Colors.transparent,
                             ],
-                            stops: const [0.0, 0.60, 1.0],
+                            stops: const [0.0, 0.55, 1.0],
                           ).createShader(bounds);
                         },
                         blendMode: BlendMode.dstIn,
-                        child: Align(
-                          alignment: Alignment.topCenter,
+                        child: Transform.scale(
+                          scale: 1.45,
+                          alignment: Alignment.centerRight,
                           child: AppCachedNetworkImage(
                             imageUrl: imageUrl,
                             fit: BoxFit.cover,
