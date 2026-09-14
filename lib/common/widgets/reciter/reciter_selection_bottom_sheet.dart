@@ -313,33 +313,16 @@ class _ReciterSelectionBottomSheetState
                 child: Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.isTranslationMode
-                                ? 'انتخاب گوینده ترجمه'
-                                : AppConstants.selectReciterTitle,
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          2.vSpace,
-                          Text(
-                            widget.isTranslationMode
-                                ? 'گوینده ترجمه گویای مورد نظر خود را انتخاب کنید'
-                                : 'قاری مورد نظر خود را جهت پخش صوتی انتخاب کنید',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 11.5,
-                              color: colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        widget.isTranslationMode
+                            ? 'انتخاب گوینده ترجمه'
+                            : AppConstants.selectReciterTitle,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
                     ),
                     IconButton(
