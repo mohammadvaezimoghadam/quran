@@ -101,10 +101,10 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
               color: AppColors.softGoldText,
               size: 21,
             ),
-            tooltip: 'مدیریت دانلودها',
+            tooltip: 'مدیریت دانلود صوت',
             onPressed: () {
               _dismissSearchAndNavigate(() {
-                context.pushNamed(downloadHubRoute);
+                context.pushNamed(audioDownloadManagerRoute);
               });
             },
           ),
