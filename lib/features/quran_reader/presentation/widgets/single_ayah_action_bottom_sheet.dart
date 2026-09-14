@@ -154,6 +154,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                   ),
                   const Spacer(),
                   IconButton(
+                    tooltip: 'بستن',
                     icon: Icon(
                       CupertinoIcons.xmark_circle_fill,
                       color: isDark ? Colors.white38 : Colors.black26,

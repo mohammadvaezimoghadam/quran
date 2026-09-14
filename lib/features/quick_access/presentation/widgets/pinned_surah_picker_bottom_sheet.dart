@@ -174,7 +174,12 @@ class _PinnedSurahPickerBottomSheetState
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 20),
+                    tooltip: 'بستن',
+                    icon: Icon(
+                      CupertinoIcons.xmark_circle_fill,
+                      size: 24,
+                      color: isDark ? Colors.white38 : Colors.black26,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],

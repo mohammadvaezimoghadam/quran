@@ -182,52 +182,16 @@ class _BookmarksManagerBottomSheetState
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
                 children: [
-                  // Bookmarks Icon Container
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: isDark ? 0.2 : 0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: primaryColor.withValues(alpha: 0.3),
-                        width: 1.2,
+                  // Title
+                  const Expanded(
+                    child: Text(
+                      'نشانه‌های ذخیره‌شده',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
                       ),
-                    ),
-                    child: Icon(
-                      CupertinoIcons.bookmark_fill,
-                      color: primaryColor,
-                      size: 20,
-                    ),
-                  ),
-                  12.hSpace,
-
-                  // Title & Count
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'نشانه‌های ذخیره‌شده',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            height: 1.2,
-                          ),
-                        ),
-                        2.vSpace,
-                        Text(
-                          bookmarks.isEmpty
-                              ? 'هیچ نشانه‌ای ذخیره نشده'
-                              : '${bookmarks.length.toPersianDigit()} نشانه در دسترس',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 12,
-                            color: isDark ? Colors.white60 : Colors.black54,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
 
@@ -399,24 +363,6 @@ class _BookmarksManagerBottomSheetState
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: isDark ? 0.12 : 0.08),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: primaryColor.withValues(alpha: 0.2),
-                width: 1.5,
-              ),
-            ),
-            child: Icon(
-              isAyahTab ? CupertinoIcons.bookmark : CupertinoIcons.bookmark,
-              size: 36,
-              color: primaryColor.withValues(alpha: 0.8),
-            ),
-          ),
-          16.vSpace,
           Text(
             isAyahTab
                 ? 'هنوز هیچ آیه‌ای نشانه‌گذاری نشده است'
@@ -442,7 +388,7 @@ class _BookmarksManagerBottomSheetState
             textAlign: TextAlign.center,
           ),
           24.vSpace,
-          ElevatedButton.icon(
+          ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
@@ -455,8 +401,7 @@ class _BookmarksManagerBottomSheetState
               Navigator.of(context).pop();
               context.pushNamed(surahListRoute);
             },
-            icon: const Icon(CupertinoIcons.book, size: 18),
-            label: const Text(
+            child: const Text(
               'مشاهده فهرست سوره‌ها',
               style: TextStyle(
                 fontFamily: AppTypography.fontFamily,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/widgets/app_snackbar.dart';
-import '../../../../common/extensions/size_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
@@ -162,31 +161,25 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.menu_book_outlined, size: 18.0, color: widget.accentColor),
-                  8.0.hSpace,
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'مترجم قرآن',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: widget.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        'انتخاب مترجم رسمی',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 10,
-                          color: widget.textSecondary,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'مترجم قرآن',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: widget.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'انتخاب مترجم رسمی',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 10,
+                      color: widget.textSecondary,
+                    ),
                   ),
                 ],
               ),

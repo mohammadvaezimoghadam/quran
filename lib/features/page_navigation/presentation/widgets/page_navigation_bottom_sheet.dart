@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -353,7 +354,14 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.close),
+              tooltip: 'بستن',
+              icon: Icon(
+                CupertinoIcons.xmark_circle_fill,
+                size: 24,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white38
+                    : Colors.black26,
+              ),
               onPressed: () => setState(() => _showScanner = false),
             ),
           ],

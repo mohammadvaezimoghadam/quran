@@ -255,8 +255,12 @@ class _QuranQuickJumpBottomSheetState
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(CupertinoIcons.xmark_circle_fill, size: 22),
-                  color: isDark ? Colors.white54 : Colors.black38,
+                  tooltip: 'بستن',
+                  icon: Icon(
+                    CupertinoIcons.xmark_circle_fill,
+                    size: 24,
+                    color: isDark ? Colors.white38 : Colors.black26,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],

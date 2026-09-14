@@ -129,7 +129,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(width: 32),
+                  const SizedBox(width: 48),
                   Text(
                     'تنظیمات',
                     style: TextStyle(
@@ -139,22 +139,14 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       color: textPrimary,
                     ),
                   ),
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        CupertinoIcons.xmark,
-                        color: textSecondary,
-                        size: 16,
-                      ),
+                  IconButton(
+                    tooltip: 'بستن',
+                    icon: Icon(
+                      CupertinoIcons.xmark_circle_fill,
+                      size: 24,
+                      color: isDark ? Colors.white38 : Colors.black26,
                     ),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
@@ -342,7 +334,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       context: context,
                       title: 'اندازه متن عربی',
                       valueLabel: '${settings.arabicFontSize.toInt()} pt',
-                      icon: CupertinoIcons.textformat_size,
                       value: settings.arabicFontSize,
                       min: 18,
                       max: 42,
@@ -358,7 +349,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       context: context,
                       title: 'فاصله خطوط متن عربی',
                       valueLabel: settings.arabicLineHeight.toStringAsFixed(1),
-                      icon: CupertinoIcons.arrow_up_down,
                       value: settings.arabicLineHeight,
                       min: 1.6,
                       max: 3.2,
@@ -393,7 +383,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                     SettingsSwitchTile(
                       title: 'نمایش متن عربی',
                       subtitle: 'نمایش آیات به زبان عربی',
-                      icon: CupertinoIcons.text_quote,
                       value: settings.showArabicText,
                       accentColor: accentColor,
                       textPrimary: textPrimary,
@@ -404,7 +393,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                     SettingsSwitchTile(
                       title: 'نمایش شماره آیه‌ها',
                       subtitle: 'نمایش نشانگر شماره در پایان هر آیه',
-                      icon: CupertinoIcons.number,
                       value: settings.showAyahNumbers,
                       accentColor: accentColor,
                       textPrimary: textPrimary,
@@ -731,6 +719,9 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
       quranDisplaySettingsControllerProvider.select((s) => s.autoHighlight),
     );
     final hasVip = ref.watch(hasVipAccessProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final softGreenColor = (isDark ? const Color(0xFF1B6B58) : const Color(0xFF267D69))
+        .withValues(alpha: 0.70);
 
     // Auto-fallback to onlyQuran if non-VIP was somehow in translation mode
     if (!hasVip && playbackMode.includesTranslation) {
@@ -754,7 +745,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: cardBgColor,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
             children: AudioPlaybackMode.values.map((mode) {
@@ -792,18 +783,15 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                           .read(quranAudioControllerProvider.notifier)
                           .setPlaybackMode(mode);
                     },
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(20),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? accentColor.withValues(alpha: 0.12)
+                            ? softGreenColor
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                        border: isSelected
-                            ? Border.all(color: accentColor, width: 1.2)
-                            : Border.all(color: Colors.transparent, width: 1.2),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Center(
                         child: FittedBox(
@@ -815,8 +803,8 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                               if (isLocked) ...[
                                 Icon(
                                   Icons.lock_rounded,
-                                  size: 13.5,
-                                  color: disabledColor,
+                                  size: 13.0,
+                                  color: isSelected ? Colors.white : disabledColor,
                                 ),
                                 const SizedBox(width: 3.5),
                               ],
@@ -826,10 +814,10 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                                 maxLines: 1,
                                 style: TextStyle(
                                   fontFamily: AppTypography.fontFamily,
-                                  fontSize: 11.0,
+                                  fontSize: 12.0,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                                   color: isSelected
-                                      ? accentColor
+                                      ? Colors.white
                                       : (isLocked ? disabledColor : textSecondary),
                                 ),
                               ),
@@ -907,7 +895,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
             SettingsSwitchTile(
               title: 'پخش خودکار آیه بعدی',
               subtitle: 'ادامه تلاوت خودکار آیه‌ها پس از پایان هر آیه',
-              icon: CupertinoIcons.play_circle,
               value: isAutoPlayNext,
               accentColor: accentColor,
               textPrimary: textPrimary,
@@ -918,7 +905,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
             SettingsSwitchTile(
               title: 'حالت تک آیه‌ای (تکرار)',
               subtitle: 'پخش مجدد همان آیه و توقف پس از پایان آن',
-              icon: CupertinoIcons.repeat,
               value: isSingleAyahMode,
               accentColor: accentColor,
               textPrimary: textPrimary,
@@ -929,7 +915,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
             SettingsSwitchTile(
               title: 'هایلایت خودکار آیه در حال پخش',
               subtitle: 'هایلایت رنگی و اسکرول همگام آیه در حال تلاوت',
-              icon: CupertinoIcons.sparkles,
               value: autoHighlight,
               accentColor: accentColor,
               textPrimary: textPrimary,
@@ -1001,7 +986,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     required BuildContext context,
     required String title,
     required String valueLabel,
-    required IconData icon,
     required double value,
     required double min,
     required double max,
@@ -1018,20 +1002,14 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(icon, size: 18.0, color: accentColor),
-                  8.0.hSpace,
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
-                  ),
-                ],
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                ),
               ),
               Container(
                 padding:
@@ -1111,25 +1089,23 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     required Color textSecondary,
     required ColorScheme colorScheme,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final softGreenColor = (isDark ? const Color(0xFF1B6B58) : const Color(0xFF267D69))
+        .withValues(alpha: 0.70);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(CupertinoIcons.textformat, size: 18.0, color: accentColor),
-              8.0.hSpace,
-              Text(
-                'نوع خط عربی',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-              ),
-            ],
+          Text(
+            'نوع خط عربی',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: textPrimary,
+            ),
           ),
           8.0.vSpace,
           Row(
@@ -1138,36 +1114,34 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
               final isSelected = settings.fontScript == fontName;
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                  child: ChoiceChip(
-                    labelPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                    backgroundColor: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.4),
-                    selectedColor: accentColor.withValues(alpha: 0.25),
-                    side: BorderSide(
-                      color: isSelected
-                          ? accentColor
-                          : colorScheme.outline.withValues(alpha: 0.15),
-                    ),
-                    label: Center(
-                      child: Text(
-                        fontName,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11,
-                          color: isSelected ? accentColor : textSecondary,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
+                  padding: const EdgeInsets.symmetric(horizontal: 2.5),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        notifier.updateFontScript(fontName);
+                      },
+                      borderRadius: BorderRadius.circular(24.0),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        decoration: BoxDecoration(
+                          color: isSelected ? softGreenColor : Colors.transparent,
+                          borderRadius: BorderRadius.circular(24.0),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          fontName,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 12.5,
+                            color: isSelected ? Colors.white : textSecondary,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) {
-                        notifier.updateFontScript(fontName);
-                      }
-                    },
                   ),
                 ),
               );
@@ -1193,37 +1167,25 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                isDark
-                    ? CupertinoIcons.moon_fill
-                    : CupertinoIcons.sun_max_fill,
-                size: 18.0,
-                color: accentColor,
+              Text(
+                'حالت صفحه (تم)',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                ),
               ),
-              8.0.hSpace,
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'حالت صفحه (تم)',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
-                  ),
-                  Text(
-                    isDark ? 'تم تیره (حالت شب)' : 'تم روشن (حالت روز)',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 10,
-                      color: textSecondary,
-                    ),
-                  ),
-                ],
+              Text(
+                isDark ? 'تم تیره (حالت شب)' : 'تم روشن (حالت روز)',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 10,
+                  color: textSecondary,
+                ),
               ),
             ],
           ),

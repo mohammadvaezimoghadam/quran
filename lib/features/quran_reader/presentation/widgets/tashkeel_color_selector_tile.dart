@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'inline_tashkeel_color_picker.dart';
@@ -48,25 +47,15 @@ class _TashkeelColorSelectorTileState extends State<TashkeelColorSelectorTile> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Title & Icon
-              Row(
-                children: [
-                  Icon(
-                    CupertinoIcons.color_filter,
-                    size: 18.0,
-                    color: widget.accentColor,
-                  ),
-                  8.0.hSpace,
-                  Text(
-                    'رنگ‌بندی اعراب و علامات (تشکیل)',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: widget.textPrimary,
-                    ),
-                  ),
-                ],
+              // Title
+              Text(
+                'رنگ‌بندی اعراب و علامات (تشکیل)',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: widget.textPrimary,
+                ),
               ),
 
               // Circular Colored Button with Palette Icon

@@ -354,11 +354,14 @@ class _ReciterSelectionBottomSheetState
                       ),
                     ),
                     IconButton(
+                      tooltip: 'بستن',
                       onPressed: () => Navigator.of(context).pop(),
                       icon: Icon(
-                        CupertinoIcons.xmark,
-                        color: colorScheme.onSurfaceVariant,
-                        size: 18.0,
+                        CupertinoIcons.xmark_circle_fill,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white38
+                            : Colors.black26,
+                        size: 24.0,
                       ),
                     ),
                   ],

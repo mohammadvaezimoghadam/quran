@@ -62,19 +62,6 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
             // Sheet Title
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.goldAccent.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.square_grid_2x2,
-                    color: AppColors.goldAccent,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 10),
                 const Text(
                   'انتخاب ابزار برای این جایگاه',
                   style: TextStyle(
@@ -84,13 +71,16 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  tooltip: 'بستن',
+                  icon: Icon(
+                    CupertinoIcons.xmark_circle_fill,
+                    size: 24,
+                    color: isDark ? Colors.white38 : Colors.black26,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            const Divider(height: 1),
             const SizedBox(height: 12),
 
             if (availableTools.isEmpty)
@@ -108,7 +98,7 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: availableTools.length,
-                separatorBuilder: (context, index) => const Divider(height: 12),
+                separatorBuilder: (context, index) => const SizedBox(height: 6),
                 itemBuilder: (context, index) {
                   final tool = availableTools[index];
 
@@ -195,11 +185,6 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                          ),
-                          const Icon(
-                            CupertinoIcons.add_circled,
-                            color: AppColors.goldAccent,
-                            size: 22,
                           ),
                         ],
                       ),

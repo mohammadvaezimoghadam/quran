@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -72,13 +73,27 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
           ),
 
           // Header
-          const Text(
-            'مرتب‌سازی سوره‌ها',
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'مرتب‌سازی سوره‌ها',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                tooltip: 'بستن',
+                icon: Icon(
+                  CupertinoIcons.xmark_circle_fill,
+                  size: 24,
+                  color: isDark ? Colors.white38 : Colors.black26,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
 
           const SizedBox(height: 20),

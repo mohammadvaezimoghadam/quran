@@ -6,7 +6,7 @@ import '../../core/theme/app_typography.dart';
 class SettingsSwitchTile extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final IconData? icon;
   final bool value;
   final Color accentColor;
   final Color textPrimary;
@@ -17,7 +17,7 @@ class SettingsSwitchTile extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
-    required this.icon,
+    this.icon,
     required this.value,
     required this.accentColor,
     required this.textPrimary,
@@ -34,8 +34,10 @@ class SettingsSwitchTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 18.0, color: accentColor),
-              8.hSpace,
+              if (icon != null) ...[
+                Icon(icon, size: 18.0, color: accentColor),
+                8.hSpace,
+              ],
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

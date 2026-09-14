@@ -32,8 +32,10 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     this.onToggleCollapse,
   });
 
-  String _formatReciterName(String? rawName) {
-    if (rawName == null || rawName.isEmpty) return 'استاد پرهیزگار';
+  String _formatReciterName(String? rawName, {bool isTranslation = false}) {
+    if (rawName == null || rawName.isEmpty) {
+      return isTranslation ? 'مترجم گویا' : 'استاد پرهیزگار';
+    }
 
     var cleaned = rawName.replaceAll(RegExp(r'\s*[\(\[\{].*?[\)\]\}]'), '').trim();
     cleaned = cleaned.replaceAll(RegExp(r'\d+kbps', caseSensitive: false), '').trim();
@@ -91,12 +93,16 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     final audioController = ref.read(quranAudioControllerProvider.notifier);
 
     final isPlaying = audioStatus == AudioStatus.playing;
-    final isActive = audioStatus == AudioStatus.playing || audioStatus == AudioStatus.loading;
-    // Show the correct reciter name based on what's currently playing
-    final isTranslationTrack = currentTrackType == CurrentTrackType.translation;
-    final activeReciterName = isActive && isTranslationTrack
-        ? _formatReciterName(selectedTranslationReciter?.name)
-        : _formatReciterName(selectedReciter?.name);
+    final isSessionActive = audioStatus != AudioStatus.stopped && audioStatus != AudioStatus.initial;
+    
+    // Determine whether the current active (or configured) track is translation
+    final isTranslationTrack = isSessionActive
+        ? (currentTrackType == CurrentTrackType.translation)
+        : (playbackMode == AudioPlaybackMode.onlyTranslation || playbackMode == AudioPlaybackMode.translationThenQuran);
+
+    final activeReciterName = isTranslationTrack
+        ? _formatReciterName(selectedTranslationReciter?.name, isTranslation: true)
+        : _formatReciterName(selectedReciter?.name, isTranslation: false);
     
     // Determine if we should show track type badge (only in mixed modes)
     final isMixedMode = playbackMode == AudioPlaybackMode.quranThenTranslation || 
@@ -179,13 +185,14 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const _AnimatedAudioEqualizer(
+                          _AnimatedAudioEqualizer(
                             color: Colors.white,
                             height: 13.0,
+                            isAnimating: isPlaying,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'بازگشت به تلاوت • ${AppConstants.ayahLabel} ${currentAyahNumber.toPersianDigit()}',
+                            '${isTranslationTrack ? "بازگشت به ترجمه" : "بازگشت به تلاوت"} • ${AppConstants.ayahLabel} ${currentAyahNumber.toPersianDigit()}',
                             style: const TextStyle(
                               fontSize: 12.0,
                               fontWeight: FontWeight.bold,
@@ -277,7 +284,10 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                   // Reciter & Ayah Title (Clickable)
                                                   Expanded(
                                                     child: GestureDetector(
-                                                      onTap: () => ReciterSelectionBottomSheet.show(context),
+                                                      onTap: () => ReciterSelectionBottomSheet.show(
+                                                        context,
+                                                        isTranslationMode: isTranslationTrack,
+                                                      ),
                                                       behavior: HitTestBehavior.opaque,
                                                       child: Row(
                                                         mainAxisSize: MainAxisSize.min,
@@ -295,7 +305,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                                   ),
                                                             ),
                                                           ),
-                                                          if (isMixedMode && isActive) ...[
+                                                          if (isMixedMode && isSessionActive) ...[
                                                             const SizedBox(width: 4),
                                                             Container(
                                                               padding: const EdgeInsets.symmetric(
@@ -363,11 +373,11 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                         _buildControlButton(
                                                           icon: Icons.forward_5_rounded,
                                                           size: 22,
-                                                          color: isActive
+                                                          color: isSessionActive
                                                               ? colorScheme.primary
                                                               : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                                                           tooltip: '۵ ثانیه جلو',
-                                                          onPressed: isActive ? () => audioController.seekForward() : null,
+                                                          onPressed: isSessionActive ? () => audioController.seekForward() : null,
                                                         ),
 
                                                         // 2. Next Ayah
@@ -404,11 +414,11 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                         _buildControlButton(
                                                           icon: Icons.replay_5_rounded,
                                                           size: 22,
-                                                          color: isActive
+                                                          color: isSessionActive
                                                               ? colorScheme.primary
                                                               : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                                                           tooltip: '۵ ثانیه عقب',
-                                                          onPressed: isActive ? () => audioController.seekBackward() : null,
+                                                          onPressed: isSessionActive ? () => audioController.seekBackward() : null,
                                                         ),
                                                       ],
                                                     ),
@@ -551,10 +561,12 @@ class AudioPlayerBottomBar extends ConsumerWidget {
 class _AnimatedAudioEqualizer extends StatefulWidget {
   final Color color;
   final double height;
+  final bool isAnimating;
 
   const _AnimatedAudioEqualizer({
     required this.color,
     this.height = 13.0,
+    this.isAnimating = true,
   });
 
   @override
@@ -571,7 +583,20 @@ class _AnimatedAudioEqualizerState extends State<_AnimatedAudioEqualizer>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+    );
+    if (widget.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedAudioEqualizer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isAnimating && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.isAnimating && _controller.isAnimating) {
+      _controller.stop();
+    }
   }
 
   @override

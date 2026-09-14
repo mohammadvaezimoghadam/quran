@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../common/extensions/size_extension.dart';
@@ -46,7 +45,6 @@ class TranslationSettingsSection extends StatelessWidget {
         SettingsSwitchTile(
           title: 'نمایش ترجمه',
           subtitle: 'نمایش ترجمه فارسی زیر آیه‌ها',
-          icon: CupertinoIcons.captions_bubble,
           value: showTranslation,
           accentColor: accentColor,
           textPrimary: textPrimary,
@@ -73,7 +71,6 @@ class TranslationSettingsSection extends StatelessWidget {
                       context: context,
                       title: 'اندازه متن ترجمه',
                       valueLabel: '${translationFontSize.toInt()} pt',
-                      icon: CupertinoIcons.chat_bubble_text,
                       value: translationFontSize,
                       min: 12,
                       max: 26,
@@ -91,7 +88,6 @@ class TranslationSettingsSection extends StatelessWidget {
                       SettingsSwitchTile(
                         title: 'حذف توضیحات داخل پرانتز و قلاب',
                         subtitle: 'مخفی کردن عبارات اضافه و تفسیری مترجم از متن ترجمه',
-                        icon: CupertinoIcons.textbox,
                         value: removeTranslationBrackets,
                         accentColor: accentColor,
                         textPrimary: textPrimary,
@@ -123,20 +119,14 @@ class TranslationSettingsSection extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Icon(CupertinoIcons.textformat_alt, size: 18.0, color: accentColor),
-              8.0.hSpace,
-              Text(
-                'فونت متن ترجمه',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-              ),
-            ],
+          Text(
+            'فونت متن ترجمه',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: textPrimary,
+            ),
           ),
           Container(
             height: 34,
@@ -216,7 +206,6 @@ class TranslationSettingsSection extends StatelessWidget {
     required BuildContext context,
     required String title,
     required String valueLabel,
-    required IconData icon,
     required double value,
     required double min,
     required double max,
@@ -233,20 +222,14 @@ class TranslationSettingsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(icon, size: 18.0, color: accentColor),
-                  8.0.hSpace,
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
-                  ),
-                ],
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

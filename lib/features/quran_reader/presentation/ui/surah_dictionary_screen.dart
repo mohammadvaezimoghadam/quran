@@ -111,48 +111,50 @@ class SurahDictionaryScreen extends ConsumerWidget {
           ),
         ),
       ),
-      body: groupedWordsAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline_rounded,
-                  size: 48,
-                  color: Colors.redAccent,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'خطا در دریافت اطلاعات لغت‌نامه:\n$error',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => ref.refresh(surahDictionaryGroupedProvider(surahId)),
-                  child: const Text('تلاش مجدد'),
-                ),
-              ],
+      body: SafeArea(
+        top: false,
+        child: groupedWordsAsync.when(
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+          error: (error, stack) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 48,
+                    color: Colors.redAccent,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'خطا در دریافت اطلاعات لغت‌نامه:\n$error',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => ref.refresh(surahDictionaryGroupedProvider(surahId)),
+                    child: const Text('تلاش مجدد'),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        data: (ayahGroups) {
-          if (ayahGroups.isEmpty) {
-            return const Center(
-              child: Text(
-                'هیچ لغتی برای این سوره یافت نشد.',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            );
-          }
+          data: (ayahGroups) {
+            if (ayahGroups.isEmpty) {
+              return const Center(
+                child: Text(
+                  'هیچ لغتی برای این سوره یافت نشد.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              );
+            }
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            return ListView.builder(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
             itemCount: ayahGroups.length,
             itemBuilder: (context, index) {
               final group = ayahGroups[index];
@@ -254,6 +256,7 @@ class SurahDictionaryScreen extends ConsumerWidget {
           );
         },
       ),
+      ),
     );
   }
 }
@@ -335,7 +338,7 @@ class _WordRow extends StatelessWidget {
             flex: 6,
             child: Text(
               word.translation,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.left,
               textDirection: TextDirection.rtl,
               style: TextStyle(
                 fontFamily: AppTypography.fontFamily,

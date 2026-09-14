@@ -6,6 +6,7 @@ import '../app_cached_network_image.dart';
 import '../../../core/services/audio/audio_player_state.dart';
 import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../features/quran_reader/domain/enums/audio_playback_mode.dart';
 import '../../../features/quran_reader/domain/enums/current_track_type.dart';
 import '../../../features/subscription/application/vip_subscription_controller.dart';
 import '../../../features/subscription/domain/policy/audio_vip_policy.dart';
@@ -55,11 +56,17 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
     final audioState = ref.watch(quranAudioControllerProvider);
     final isPlaying = audioState.status == AudioStatus.playing;
     final isLoading = audioState.status == AudioStatus.loading;
-    final isActive = isPlaying || isLoading;
+    final isSessionActive = audioState.status != AudioStatus.stopped && audioState.status != AudioStatus.initial;
     final currentTrackType = audioState.currentTrackType;
+    final playbackMode = audioState.playbackMode;
 
-    // Show the correct reciter based on what's currently playing
-    final displayReciter = isActive && currentTrackType == CurrentTrackType.translation
+    // Determine whether current active (or configured) track is translation
+    final isTranslationTrack = isSessionActive
+        ? (currentTrackType == CurrentTrackType.translation)
+        : (playbackMode == AudioPlaybackMode.onlyTranslation || playbackMode == AudioPlaybackMode.translationThenQuran);
+
+    // Show the correct reciter based on what's currently playing or configured
+    final displayReciter = isTranslationTrack
         ? audioState.selectedTranslationReciter
         : audioState.selectedReciter;
     final reciterName = displayReciter?.name ?? '';
@@ -82,15 +89,23 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
 
     final String tooltipMessage;
     if (widget.isPlayButton) {
-      tooltipMessage = isPlaying ? 'توقف پخش' : 'پخش تلاوت';
+      if (isPlaying) {
+        tooltipMessage = 'توقف پخش';
+      } else if (isSessionActive) {
+        tooltipMessage = isTranslationTrack ? 'ادامه پخش ترجمه' : 'ادامه تلاوت';
+      } else {
+        tooltipMessage = isTranslationTrack ? 'پخش ترجمه' : 'پخش تلاوت';
+      }
     } else {
-      final nameStr = reciterName.isEmpty ? 'استاد پرهیزگار' : reciterName;
+      final defaultName = isTranslationTrack ? 'مترجم گویا' : 'استاد پرهیزگار';
+      final nameStr = reciterName.isEmpty ? defaultName : reciterName;
+      final roleTitle = isTranslationTrack ? 'گوینده ترجمه' : 'قاری';
       if (hasVip) {
-        tooltipMessage = 'انتخاب قاری ($nameStr)';
-      } else if (isParhizgar) {
+        tooltipMessage = 'انتخاب $roleTitle ($nameStr)';
+      } else if (isParhizgar && !isTranslationTrack) {
         tooltipMessage = 'انتخاب قاری ($nameStr - رایگان)';
       } else {
-        tooltipMessage = 'انتخاب قاری ($nameStr - نیازمند اشتراک)';
+        tooltipMessage = 'انتخاب $roleTitle ($nameStr - نیازمند اشتراک)';
       }
     }
 
@@ -98,7 +113,10 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
       message: tooltipMessage,
       child: GestureDetector(
         onTap: widget.onTap ?? () {
-          ReciterSelectionBottomSheet.show(context);
+          ReciterSelectionBottomSheet.show(
+            context,
+            isTranslationMode: isTranslationTrack,
+          );
         },
         child: SizedBox(
           width: avatarSize + 8,
@@ -221,9 +239,9 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                         ),
                       ],
                     ),
-                    child: const Text(
-                      'قاریان',
-                      style: TextStyle(
+                    child: Text(
+                      isTranslationTrack ? 'گویندگان' : 'قاریان',
+                      style: const TextStyle(
                         fontSize: 8.5,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -235,7 +253,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
 
               // 5. VIP / Free Status Badges (Only shown when user has NO VIP and not in play button mode)
               if (!hasVip && !widget.isPlayButton) ...[
-                if (isParhizgar)
+                if (isParhizgar && !isTranslationTrack)
                   // Free Reciter: Sleek emerald green 'رایگان' capsule at bottom center
                   Positioned(
                     bottom: -3,

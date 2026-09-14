@@ -211,168 +211,162 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: wordsAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-              error: (error, stack) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.error_outline_rounded,
-                        size: 48,
-                        color: Colors.redAccent,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'لغات این آیه هنوز در دیتابیس ثبت نشده است.\n$error',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 13,
-                          color: isDark ? Colors.white70 : Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => ref.refresh(
-                          ayahWordsProvider((
-                            surahId: widget.surahId,
-                            ayahNumber: _currentAyahNumber,
-                          )),
-                        ),
-                        child: const Text('تلاش مجدد'),
-                      ),
-                    ],
+      body: wordsAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 48,
+                  color: Colors.redAccent,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'لغات این آیه هنوز در دیتابیس ثبت نشده است.\n$error',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13,
+                    color: isDark ? Colors.white70 : Colors.black87,
                   ),
                 ),
-              ),
-              data: (words) {
-                if (words.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'هیچ لغتی برای این آیه یافت نشد.',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 14,
-                        color: isDark ? Colors.white54 : Colors.grey,
-                      ),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.refresh(
+                    ayahWordsProvider((
+                      surahId: widget.surahId,
+                      ayahNumber: _currentAyahNumber,
+                    )),
                   ),
-                  itemCount: words.length,
-                  itemBuilder: (context, index) {
-                    return _AyahWordCard(
-                      word: words[index],
-                      baseArabicStyle: baseArabicStyle,
-                      baseArabicColor: baseArabicColor,
-                      harakatColor: harakatColor,
-                      useCustomColor: useCustomColor,
-                      isDark: isDark,
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          // Bottom Ayah Navigation Bar (Previous / Next Ayah)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF192220) : Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 10,
-                  offset: const Offset(0, -3),
+                  child: const Text('تلاش مجدد'),
                 ),
               ],
             ),
-            child: SafeArea(
-              top: false,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Next Ayah Button (In RTL, Next is to the left / forward)
-                  TextButton.icon(
-                    onPressed: _currentAyahNumber < totalAyahs
-                        ? () {
-                            setState(() {
-                              _currentAyahNumber++;
-                            });
-                          }
-                        : null,
-                    icon: const Icon(CupertinoIcons.chevron_forward, size: 16),
-                    label: const Text(
-                      'آیه بعدی',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  // Center indicator
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.06)
-                          : Colors.black.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${_currentAyahNumber.toPersianDigit()} / ${totalAyahs.toPersianDigit()}',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white70 : Colors.black87,
-                      ),
-                    ),
-                  ),
-
-                  // Previous Ayah Button
-                  TextButton.icon(
-                    onPressed: _currentAyahNumber > 1
-                        ? () {
-                            setState(() {
-                              _currentAyahNumber--;
-                            });
-                          }
-                        : null,
-                    icon: const Icon(CupertinoIcons.chevron_back, size: 16),
-                    label: const Text(
-                      'آیه قبلی',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+          ),
+        ),
+        data: (words) {
+          if (words.isEmpty) {
+            return Center(
+              child: Text(
+                'هیچ لغتی برای این آیه یافت نشد.',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 14,
+                  color: isDark ? Colors.white54 : Colors.grey,
+                ),
               ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            itemCount: words.length,
+            itemBuilder: (context, index) {
+              return _AyahWordCard(
+                word: words[index],
+                baseArabicStyle: baseArabicStyle,
+                baseArabicColor: baseArabicColor,
+                harakatColor: harakatColor,
+                useCustomColor: useCustomColor,
+                isDark: isDark,
+              );
+            },
+          );
+        },
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF192220) : Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Next Ayah Button (In RTL, Next is to the left / forward)
+                TextButton.icon(
+                  onPressed: _currentAyahNumber < totalAyahs
+                      ? () {
+                          setState(() {
+                            _currentAyahNumber++;
+                          });
+                        }
+                      : null,
+                  icon: const Icon(CupertinoIcons.chevron_forward, size: 16),
+                  label: const Text(
+                    'آیه بعدی',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                // Center indicator
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : Colors.black.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_currentAyahNumber.toPersianDigit()} / ${totalAyahs.toPersianDigit()}',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ),
+
+                // Previous Ayah Button
+                TextButton.icon(
+                  onPressed: _currentAyahNumber > 1
+                      ? () {
+                          setState(() {
+                            _currentAyahNumber--;
+                          });
+                        }
+                      : null,
+                  icon: const Icon(CupertinoIcons.chevron_back, size: 16),
+                  label: const Text(
+                    'آیه قبلی',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

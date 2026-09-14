@@ -78,24 +78,11 @@ class HomeQuickAccessGrid extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
                   child: Row(
                     children: [
-                      // Quran Icon with Ambient Backdrop
-                      Container(
+                      // Quran Icon
+                      SvgPicture.asset(
+                        'assets/icons/ic_surah_list.svg',
                         width: 40,
                         height: 40,
-                        decoration: BoxDecoration(
-                          color: primaryEmerald.withValues(alpha: isDark ? 0.25 : 0.15),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: primaryEmerald.withValues(alpha: 0.35),
-                            width: 1,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: SvgPicture.asset(
-                          'assets/icons/ic_surah_list.svg',
-                          width: 22,
-                          height: 22,
-                        ),
                       ),
                       8.hSpace,
 
@@ -161,13 +148,12 @@ class HomeQuickAccessGrid extends StatelessWidget {
             title: 'ترجمه‌ها',
             iconWidget: SvgPicture.asset(
               'assets/icons/ic_translation.svg',
-              width: 22,
-              height: 22,
+              width: 36,
+              height: 36,
             ),
             isDark: isDark,
             bgColor: secondaryBg,
             borderColor: cardBorderColor,
-            primaryColor: primaryEmerald,
             onTap: () {
               HapticFeedback.lightImpact();
               TranslationManagerBottomSheet.show(context);
@@ -183,14 +169,13 @@ class HomeQuickAccessGrid extends StatelessWidget {
             context: context,
             title: 'تنظیمات',
             iconWidget: Icon(
-              CupertinoIcons.gear_alt_fill,
-              size: 20,
+              CupertinoIcons.gear_alt,
+              size: 32,
               color: goldAccent,
             ),
             isDark: isDark,
             bgColor: secondaryBg,
             borderColor: cardBorderColor,
-            primaryColor: goldAccent,
             onTap: () {
               HapticFeedback.lightImpact();
               context.pushNamed(settingsRoute);
@@ -208,7 +193,6 @@ class HomeQuickAccessGrid extends StatelessWidget {
     required bool isDark,
     required Color bgColor,
     required Color borderColor,
-    required Color primaryColor,
     required VoidCallback onTap,
   }) {
     return Container(
@@ -242,15 +226,12 @@ class HomeQuickAccessGrid extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
+                SizedBox(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: isDark ? 0.15 : 0.08),
-                    shape: BoxShape.circle,
+                  child: Center(
+                    child: iconWidget,
                   ),
-                  alignment: Alignment.center,
-                  child: iconWidget,
                 ),
                 4.vSpace,
                 FittedBox(

@@ -80,7 +80,6 @@ class _TextTranslationsDownloadBottomSheetState
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
@@ -101,6 +100,7 @@ class _TextTranslationsDownloadBottomSheetState
                       ),
                     ],
                   ),
+                  const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -120,6 +120,16 @@ class _TextTranslationsDownloadBottomSheetState
                         color: isDark ? Colors.white60 : Colors.black54,
                       ),
                     ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    tooltip: 'بستن',
+                    icon: Icon(
+                      CupertinoIcons.xmark_circle_fill,
+                      size: 24,
+                      color: isDark ? Colors.white38 : Colors.black26,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
