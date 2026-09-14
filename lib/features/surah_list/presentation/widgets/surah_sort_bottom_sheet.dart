@@ -238,22 +238,14 @@ class _OrderChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isSelected ? primaryColor : Colors.transparent,
-              width: 1.5,
-            ),
-            borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? activeTextColor : null,
-              ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? activeTextColor : null,
             ),
           ),
         ),
