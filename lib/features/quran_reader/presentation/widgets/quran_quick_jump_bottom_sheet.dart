@@ -291,9 +291,10 @@ class _QuranQuickJumpBottomSheetState
           ),
           16.vSpace,
 
-          // Active Tab Content Body
-          Flexible(
-            child: SingleChildScrollView(
+          // Active Tab Content Body (Fixed constant height prevents jumping between tabs)
+          SizedBox(
+            height: 318,
+            child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _buildActiveTabBody(surahs, isDark, selectedFontFamily),
             ),
@@ -434,10 +435,12 @@ class _QuranQuickJumpBottomSheetState
           s.number.toString() == query;
     }).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Search Field for Surahs
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Search Field for Surahs
         TextField(
           controller: _surahSearchController,
           style: TextStyle(
@@ -591,8 +594,9 @@ class _QuranQuickJumpBottomSheetState
           ),
         ],
       ],
-    );
-  }
+    ),
+  );
+}
 
   String? _getAyahValidationError() {
     if (_selectedSurah == null) return null;
@@ -661,7 +665,7 @@ class _QuranQuickJumpBottomSheetState
             ),
           ),
         ),
-        16.vSpace,
+        const Spacer(),
       ],
     );
   }
