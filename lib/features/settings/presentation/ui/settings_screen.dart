@@ -105,11 +105,6 @@ class SettingsScreen extends ConsumerWidget {
                       context: context,
                       applicationName: 'قرآن تفکر',
                       applicationVersion: '۱.۰.۰',
-                      applicationIcon: const Icon(
-                        CupertinoIcons.book,
-                        size: 40,
-                        color: AppColors.goldAccent,
-                      ),
                       children: const [
                         Text(
                           'اپلیکیشن جامع قرآن تفکر با رسم‌الخط‌های استاندارد، ترجمه‌های معتبر و امکانات پیشرفته مطالعه قرآن کریم.',

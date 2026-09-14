@@ -81,24 +81,14 @@ class _TextTranslationsDownloadBottomSheetState
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        CupertinoIcons.book,
-                        size: 20,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'دانلود ترجمه‌های متنی',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'دانلود ترجمه‌های متنی',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                   const Spacer(),
                   Container(

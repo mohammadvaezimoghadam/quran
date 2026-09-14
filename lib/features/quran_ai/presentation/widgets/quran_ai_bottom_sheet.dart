@@ -212,32 +212,11 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
             ),
             12.vSpace,
 
-            // 2. Luxury Header with AI Icon and Quran Coordinates
+            // 2. Luxury Header with Quran Coordinates
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18.0),
               child: Row(
                 children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.goldAccent.withValues(alpha: 0.15)
-                          : const Color(0xFFF2ECE0),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.goldAccent.withValues(alpha: 0.3)
-                            : const Color(0xFFDFD4C2),
-                      ),
-                    ),
-                    child: Icon(
-                      CupertinoIcons.sparkles,
-                      color: isDark ? AppColors.goldAccent : AppColors.primary,
-                      size: 20,
-                    ),
-                  ),
-                  12.hSpace,
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

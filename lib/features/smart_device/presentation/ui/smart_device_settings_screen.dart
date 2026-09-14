@@ -138,35 +138,16 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                title: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.lock_shield_fill,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'اتصال به ${device.ssid}',
-                        style: const TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                title: Text(
+                  'اتصال به ${device.ssid}',
+                  style: const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -345,19 +326,13 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
           child: AlertDialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Row(
-              children: [
-                Icon(CupertinoIcons.wifi_exclamationmark, color: Colors.orange, size: 24),
-                SizedBox(width: 8),
-                Text(
-                  'ارتباط با 192.168.4.1 برقرار نشد',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            title: const Text(
+              'ارتباط با 192.168.4.1 برقرار نشد',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             content: const Column(
               mainAxisSize: MainAxisSize.min,
@@ -1453,15 +1428,9 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                     textDirection: TextDirection.rtl,
                     child: AlertDialog(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      title: const Row(
-                        children: [
-                          Icon(CupertinoIcons.restart, color: Colors.orange, size: 22),
-                          SizedBox(width: 8),
-                          Text(
-                            'راه‌اندازی مجدد NodeMCU',
-                            style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      title: const Text(
+                        'راه‌اندازی مجدد NodeMCU',
+                        style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15, fontWeight: FontWeight.bold),
                       ),
                       content: const Text(
                         'آیا از ریست و راه‌اندازی مجدد نرم‌افزاری برد NodeMCU مطمئن هستید؟',

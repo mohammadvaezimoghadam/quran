@@ -238,12 +238,6 @@ class _QuranQuickJumpBottomSheetState
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                const Icon(
-                  CupertinoIcons.arrow_up_left_square,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-                8.hSpace,
                 Text(
                   'پرش سریع در قرآن',
                   style: TextStyle(
