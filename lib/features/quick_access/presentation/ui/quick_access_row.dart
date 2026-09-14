@@ -77,8 +77,6 @@ class QuickAccessRow extends ConsumerWidget {
         final surah = await PinnedSurahPickerBottomSheet.show(
           context,
           title: 'لغت‌نامه سوره',
-          subtitle: 'سوره مورد نظر را برای مشاهده لغات انتخاب کنید',
-          iconData: CupertinoIcons.textformat_abc_dottedunderline,
           autoSavePinned: false,
         );
         if (surah != null && context.mounted) {

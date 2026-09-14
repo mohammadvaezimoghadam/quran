@@ -135,29 +135,14 @@ class _PinnedSurahPickerBottomSheetState
               child: Row(
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title ?? 'انتخاب سوره منتخب',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.subtitle ??
-                              'برای دسترسی سریع و قرائت مستقیم از صفحه اصلی',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11.5,
-                            color: isDark ? Colors.white60 : Colors.black54,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      widget.title ?? 'انتخاب سوره منتخب',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -304,37 +289,22 @@ class _PinnedSurahPickerBottomSheetState
                                 ),
                               ),
                             ),
-                            title: Row(
-                              children: [
-                                Text(
-                                  'سوره ${surah.nameFa}',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 15.5,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.w600,
-                                    color: isSelected
-                                        ? (isDark
-                                            ? AppColors.goldAccent
-                                            : AppColors.primary)
-                                        : (isDark
-                                            ? Colors.white
-                                            : const Color(0xFF2C2A29)),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '(${surah.englishName})',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 11,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : Colors.black38,
-                                  ),
-                                ),
-                              ],
+                            title: Text(
+                              'سوره ${surah.nameFa}',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 15.5,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
+                                color: isSelected
+                                    ? (isDark
+                                        ? AppColors.goldAccent
+                                        : AppColors.primary)
+                                    : (isDark
+                                        ? Colors.white
+                                        : const Color(0xFF2C2A29)),
+                              ),
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 2.0),
