@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:quran/core/theme/app_colors.dart';
 
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/size_extension.dart';
@@ -258,6 +257,9 @@ class _ReciterSelectionBottomSheetState
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final softGreenColor = (isDark ? const Color(0xFF1B6B58) : const Color(0xFF267D69))
+        .withValues(alpha: 0.70);
     final audioState = ref.watch(quranAudioControllerProvider);
     final selectedStyleId = ref.watch(selectedReciterStyleIdProvider);
 
@@ -424,62 +426,62 @@ class _ReciterSelectionBottomSheetState
               ),
               10.vSpace,
 
-              // Styles Filter Chips
-              stylesAsync.when(
-                data: (result) => result.when(
-                  (styles) => SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      children: [
-                        FilterChip(
-                          label: const Text('همه سبک‌ها'),
-                          selected: selectedStyleId == null,
-                          selectedColor: AppColors.primary,
-                          checkmarkColor: Colors.white,
-                          labelStyle: TextStyle(
-                            color: selectedStyleId == null
-                                ? Colors.white
-                                : colorScheme.onSurface,
-                          ),
-                          onSelected: (_) {
-                            ref
-                                .read(selectedReciterStyleIdProvider.notifier)
-                                .setStyleId(null);
-                          },
+              // Styles Filter Tabs
+              if (!widget.isTranslationMode) ...[
+                stylesAsync.when(
+                  data: (result) => result.when(
+                    (styles) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(4.0),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.25)
+                              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(24.0),
                         ),
-                        ...styles.map((style) {
-                          final isSelected = selectedStyleId == style.id;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: FilterChip(
-                              label: Text(style.name),
-                              selected: isSelected,
-                              selectedColor: AppColors.primary,
-                              checkmarkColor: Colors.white,
-                              labelStyle: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : colorScheme.onSurface,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: [
+                              _buildStyleTabItem(
+                                label: 'همه سبک‌ها',
+                                isSelected: selectedStyleId == null,
+                                softGreenColor: softGreenColor,
+                                colorScheme: colorScheme,
+                                onTap: () {
+                                  ref
+                                      .read(selectedReciterStyleIdProvider.notifier)
+                                      .setStyleId(null);
+                                },
                               ),
-                              onSelected: (_) {
-                                ref
-                                    .read(selectedReciterStyleIdProvider.notifier)
-                                    .setStyleId(style.id);
-                              },
-                            ),
-                          );
-                        }),
-                      ],
+                              ...styles.map((style) {
+                                final isSelected = selectedStyleId == style.id;
+                                return _buildStyleTabItem(
+                                  label: style.name,
+                                  isSelected: isSelected,
+                                  softGreenColor: softGreenColor,
+                                  colorScheme: colorScheme,
+                                  onTap: () {
+                                    ref
+                                        .read(selectedReciterStyleIdProvider.notifier)
+                                        .setStyleId(style.id);
+                                  },
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
+                    (error) => const SizedBox.shrink(),
                   ),
-                  (error) => const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (err, stack) => const SizedBox.shrink(),
                 ),
-                loading: () => const SizedBox.shrink(),
-                error: (err, stack) => const SizedBox.shrink(),
-              ),
-
-              12.vSpace,
+                10.vSpace,
+              ],
 
               // Clean 3-Column Grid with High Contrast Inline Variant Selector
               Expanded(
@@ -955,4 +957,43 @@ class _ReciterSelectionBottomSheetState
     ),
   );
 }
+
+  Widget _buildStyleTabItem({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Color softGreenColor,
+    required ColorScheme colorScheme,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24.0),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 7.0),
+            decoration: BoxDecoration(
+              color: isSelected ? softGreenColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(24.0),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: isSelected ? 12.5 : 12.0,
+                color: isSelected
+                    ? Colors.white
+                    : colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
