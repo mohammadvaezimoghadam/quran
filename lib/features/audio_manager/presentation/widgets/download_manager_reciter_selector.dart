@@ -107,11 +107,14 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
               ),
               child: Stack(
                 children: [
-                  // 1. Reciter photo background on the RIGHT (transparent photo with fade to 0)
+                  // 1. Reciter photo background on the RIGHT (confined to text area, never reaching change button)
                   if (hasImage)
-                    Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.centerRight,
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 130,
+                      child: ClipRect(
                         child: Opacity(
                           opacity: isDark ? 0.30 : 0.38,
                           child: ShaderMask(
@@ -124,20 +127,16 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
                                   Colors.black,
                                   Colors.transparent,
                                 ],
-                                stops: [0.0, 0.35, 1.0],
+                                stops: [0.0, 0.25, 1.0],
                               ).createShader(bounds);
                             },
                             blendMode: BlendMode.dstIn,
-                            child: SizedBox(
-                              width: 210,
-                              height: double.infinity,
-                              child: Transform.scale(
-                                scale: 1.45,
-                                alignment: Alignment.centerRight,
-                                child: AppCachedNetworkImage(
-                                  imageUrl: imageUrl,
-                                  fit: BoxFit.cover,
-                                ),
+                            child: Transform.scale(
+                              scale: 1.35,
+                              alignment: Alignment.centerRight,
+                              child: AppCachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),
