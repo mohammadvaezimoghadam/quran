@@ -32,32 +32,17 @@ class SurahInfoContent extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top Row: Arabic Name & English Name
-        Row(
-          children: [
-            Text(
-              surah.name,
-              style: AppTypography.surahTitle.copyWith(
-                fontFamily: fontFamily,
-                height: 1.4,
-                color: isDark ? AppColors.softGoldText : AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                '(${surah.englishName})',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.surahSubtitle.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.55),
-                ),
-              ),
-            ),
-          ],
+        // Arabic Surah Title
+        Text(
+          surah.name,
+          style: AppTypography.surahTitle.copyWith(
+            fontFamily: fontFamily,
+            height: 1.4,
+            color: isDark ? AppColors.softGoldText : AppColors.primary,
+          ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
 
         // Subtitle: Kaaba Icon + Makki/Madani • Juz • Ayah Count
         Row(
