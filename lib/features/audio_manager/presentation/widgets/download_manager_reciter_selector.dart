@@ -204,42 +204,26 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
                           ),
                         ),
 
-                        // Change button / chevron
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: (isDark
-                                    ? const Color(0xFF101B1A)
-                                    : Colors.white)
-                                .withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: (isDark ? Colors.white : Colors.black)
-                                  .withValues(alpha: 0.08),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'تغییر',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 11,
+                        // Change button / chevron (no background, flipped icon direction)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'تغییر',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
                                 color: colorScheme.primary,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 12,
+                              color: colorScheme.primary,
+                            ),
+                          ],
                         ),
                       ],
                     ),
