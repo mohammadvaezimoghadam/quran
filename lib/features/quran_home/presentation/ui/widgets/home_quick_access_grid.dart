@@ -22,7 +22,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final primaryEmerald = isDark ? const Color(0xFF52C498) : AppColors.primary;
-    final goldAccent = isDark ? const Color(0xFFF3E0A3) : const Color(0xFF9E782F);
+    final iconColor = isDark ? AppColors.goldAccent : AppColors.primary;
 
     final cardBorderColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
@@ -83,6 +83,10 @@ class HomeQuickAccessGrid extends StatelessWidget {
                         'assets/icons/ic_surah_list.svg',
                         width: 40,
                         height: 40,
+                        colorFilter: ColorFilter.mode(
+                          iconColor,
+                          BlendMode.srcIn,
+                        ),
                       ),
                       8.hSpace,
 
@@ -150,6 +154,10 @@ class HomeQuickAccessGrid extends StatelessWidget {
               'assets/icons/ic_translation.svg',
               width: 36,
               height: 36,
+              colorFilter: ColorFilter.mode(
+                iconColor,
+                BlendMode.srcIn,
+              ),
             ),
             isDark: isDark,
             bgColor: secondaryBg,
@@ -171,7 +179,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
             iconWidget: Icon(
               CupertinoIcons.gear_alt,
               size: 32,
-              color: goldAccent,
+              color: iconColor,
             ),
             isDark: isDark,
             bgColor: secondaryBg,
