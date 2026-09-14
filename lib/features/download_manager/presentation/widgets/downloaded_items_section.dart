@@ -120,22 +120,13 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                       ),
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${items.length} فایل ذخیره',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
+                    Text(
+                      '${items.length.toPersianDigit()} فایل ذخیره',
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
@@ -495,31 +486,26 @@ class _DownloadedItemRow extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                    decoration: BoxDecoration(
-                      color: badgeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      badgeLabel,
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.bold,
-                        color: badgeColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       item.title,
                       style: const TextStyle(
+                        fontFamily: AppTypography.fontFamily,
                         fontSize: 13.5,
                         fontWeight: FontWeight.bold,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '• $badgeLabel',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: badgeColor,
                     ),
                   ),
                 ],

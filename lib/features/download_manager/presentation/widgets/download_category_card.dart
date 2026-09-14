@@ -141,25 +141,18 @@ class DownloadCategoryCard extends StatelessWidget {
 
                 const SizedBox(height: 4),
 
-                // 3. Progress Badge / Count Text
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                  decoration: BoxDecoration(
-                    color: ringColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                // 3. Progress / Count Text
+                Text(
+                  badgeText,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: ringColor,
                   ),
-                  child: Text(
-                    badgeText,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.bold,
-                      color: ringColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
 
                 if (subtitle.isNotEmpty) ...[

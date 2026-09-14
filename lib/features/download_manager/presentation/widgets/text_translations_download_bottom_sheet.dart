@@ -411,22 +411,13 @@ class _TranslationListItem extends StatelessWidget {
 
                       if (isActive) ...[
                         const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'ترجمه فعال',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
+                        const Text(
+                          '• ترجمه فعال',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green,
                           ),
                         ),
                       ],

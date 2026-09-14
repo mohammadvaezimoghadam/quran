@@ -85,19 +85,13 @@ class DownloadActiveQueueSection extends ConsumerWidget {
                 ),
                 const Spacer(),
                 if (totalCount > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$totalCount مورد',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
+                  Text(
+                    '${totalCount.toPersianDigit()} مورد',
+                    style: const TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
                     ),
                   ),
               ],
@@ -258,42 +252,26 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: badgeColor.withValues(alpha: 0.25),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(badgeIcon, size: 10, color: badgeColor),
-                            const SizedBox(width: 3),
-                            Text(
-                              badgeLabel,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: badgeColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
+                      Flexible(
                         child: Text(
                           'سوره $surahName',
                           style: const TextStyle(
+                            fontFamily: AppTypography.fontFamily,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '• $badgeLabel',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: badgeColor,
                         ),
                       ),
                     ],
@@ -463,42 +441,26 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: badgeColor.withValues(alpha: 0.25),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(CupertinoIcons.book_fill, size: 10, color: badgeColor),
-                            SizedBox(width: 3),
-                            Text(
-                              'متن ترجمه',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: badgeColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
+                      Flexible(
                         child: Text(
                           title,
                           style: const TextStyle(
+                            fontFamily: AppTypography.fontFamily,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        '• متن ترجمه',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: badgeColor,
                         ),
                       ),
                     ],

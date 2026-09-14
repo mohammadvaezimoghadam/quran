@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/constants/app_constants.dart';
@@ -473,13 +474,66 @@ class _SurahListItem extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 3),
-                      Text(
-                        '${surah.revelationTypeFa} . ${surah.numberOfAyahs.toPersianDigit()} آیه',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11.5,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
-                        ),
+                      Row(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/icons/ic_kaaba.svg',
+                            width: 12,
+                            height: 12,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.goldAccent,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            surah.revelationTypeFa,
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: Text(
+                              '•',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 11.5,
+                                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'جزء ${surah.startJuz.toPersianDigit()}',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: Text(
+                              '•',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 11.5,
+                                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${surah.numberOfAyahs.toPersianDigit()} ${AppConstants.ayahLabel}',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -888,25 +942,15 @@ class _SurahListItem extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDownloaded
-                              ? Colors.green.withValues(alpha: 0.12)
-                              : Colors.orange.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          isDownloaded
-                              ? 'دانلود کامل'
-                              : '${(downloadedAyahsCount ?? 0).toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()} آیه',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: isDownloaded ? Colors.green : Colors.orange,
-                          ),
+                      Text(
+                        isDownloaded
+                            ? 'دانلود کامل'
+                            : '${(downloadedAyahsCount ?? 0).toPersianDigit()} از ${surah.numberOfAyahs.toPersianDigit()} آیه',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isDownloaded ? Colors.green : Colors.orange,
                         ),
                       ),
                     ],
