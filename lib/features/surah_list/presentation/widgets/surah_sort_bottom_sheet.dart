@@ -74,14 +74,17 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
 
           // Header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'مرتب‌سازی سوره‌ها',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: 48),
+              const Expanded(
+                child: Text(
+                  'مرتب‌سازی سوره‌ها',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               IconButton(

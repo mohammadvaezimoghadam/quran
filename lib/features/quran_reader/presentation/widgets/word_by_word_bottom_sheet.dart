@@ -79,6 +79,7 @@ class WordByWordBottomSheet extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: AppDimens.stackLg),
                 child: Text(
                   'لغت‌نامه آیه ${ayahNumber.toPersianDigit()} سوره ${surahId.surahNameFa}',
+                  textAlign: TextAlign.center,
                   textDirection: TextDirection.rtl,
                   style: TextStyle(
                     fontSize: 16.5,

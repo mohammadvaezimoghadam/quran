@@ -127,16 +127,18 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
 
               // 2. Header Title & Close Button
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const SizedBox(width: 48),
-                  Text(
-                    'تنظیمات',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: textPrimary,
+                  Expanded(
+                    child: Text(
+                      'تنظیمات',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                      ),
                     ),
                   ),
                   IconButton(

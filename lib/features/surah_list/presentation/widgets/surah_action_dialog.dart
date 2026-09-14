@@ -70,6 +70,7 @@ class SurahActionDialog extends StatelessWidget {
             ),
           ],
         ),
+        textAlign: TextAlign.center,
       ),
       content: Text(
         message ?? 'صوت این سوره به‌طور کامل موجود نیست. می‌توانید سوره را بخوانید و تا آیه دانلودشده گوش دهید.',

@@ -178,6 +178,7 @@ class _TranslationManagerBottomSheetState
 
             Text(
               AppConstants.selectSurahAndTranslatorTitle,
+              textAlign: TextAlign.center,
               style: AppTypography.sectionHeader.copyWith(
                 color: colorScheme.onSurface,
               ),

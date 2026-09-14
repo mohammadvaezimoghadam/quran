@@ -120,12 +120,14 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Row(
                   children: [
+                    const SizedBox(width: 48),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             'اشتراک تلاوت و صوت قرآن',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontWeight: FontWeight.bold,
@@ -136,6 +138,7 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
                           const SizedBox(height: 2),
                           Text(
                             'دسترسی به تمام قاریان برجسته و ترجمه گویا',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 12,

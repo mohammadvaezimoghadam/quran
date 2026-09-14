@@ -182,20 +182,7 @@ class _BookmarksManagerBottomSheetState
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
                 children: [
-                  // Title
-                  const Expanded(
-                    child: Text(
-                      'نشانه‌های ذخیره‌شده',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                      ),
-                    ),
-                  ),
-
-                  // Clear All Button (Visible if has bookmarks)
+                  // Clear All Button or Spacer to balance Close Button
                   if (bookmarks.isNotEmpty)
                     IconButton(
                       tooltip: 'حذف همه',
@@ -205,7 +192,23 @@ class _BookmarksManagerBottomSheetState
                         color: Colors.redAccent,
                       ),
                       onPressed: _confirmClearAll,
+                    )
+                  else
+                    const SizedBox(width: 48),
+
+                  // Title
+                  const Expanded(
+                    child: Text(
+                      'نشانه‌های ذخیره‌شده',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
                     ),
+                  ),
 
                   // Close Button
                   IconButton(

@@ -134,9 +134,11 @@ class _PinnedSurahPickerBottomSheetState
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
                 children: [
+                  const SizedBox(width: 48),
                   Expanded(
                     child: Text(
                       widget.title ?? 'انتخاب سوره منتخب',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 16,

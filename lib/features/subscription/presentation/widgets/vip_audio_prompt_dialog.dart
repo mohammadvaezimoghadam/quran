@@ -47,6 +47,7 @@ class VipAudioPromptDialog extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         title: Text(
           'نیاز به اشتراک',
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: AppTypography.fontFamily,
             fontSize: 16,

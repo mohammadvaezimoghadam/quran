@@ -62,14 +62,17 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
             // Sheet Title
             Row(
               children: [
-                const Text(
-                  'انتخاب ابزار برای این جایگاه',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 48),
+                const Expanded(
+                  child: Text(
+                    'انتخاب ابزار برای این جایگاه',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const Spacer(),
                 IconButton(
                   tooltip: 'بستن',
                   icon: Icon(

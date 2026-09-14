@@ -238,16 +238,19 @@ class _QuranQuickJumpBottomSheetState
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Text(
-                  'پرش سریع در قرآن',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                const SizedBox(width: 48),
+                Expanded(
+                  child: Text(
+                    'پرش سریع در قرآن',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                 ),
-                const Spacer(),
                 IconButton(
                   tooltip: 'بستن',
                   icon: Icon(

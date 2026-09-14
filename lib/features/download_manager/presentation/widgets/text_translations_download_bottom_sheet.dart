@@ -81,37 +81,34 @@ class _TextTranslationsDownloadBottomSheetState
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
                 children: [
-                  Text(
-                    'دانلود ترجمه‌های متنی',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                  const SizedBox(width: 48),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'دانلود ترجمه‌های متنی',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '$downloadedCount از ${translations.length} دانلود شده',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '$downloadedCount از ${translations.length} دانلود شده',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        color: isDark ? Colors.white60 : Colors.black54,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
                   IconButton(
                     tooltip: 'بستن',
                     icon: Icon(

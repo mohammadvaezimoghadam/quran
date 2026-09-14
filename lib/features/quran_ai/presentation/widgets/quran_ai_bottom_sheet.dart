@@ -217,11 +217,13 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 18.0),
               child: Row(
                 children: [
+                  const SizedBox(width: 48),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               isWord ? 'تدبر هوشمند در واژه' : 'تدبر هوشمند در آیه',
@@ -261,6 +263,7 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
                           '«${widget.request.selectedText.trim()}»',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: arabicFontFamily,
                             fontSize: 15,

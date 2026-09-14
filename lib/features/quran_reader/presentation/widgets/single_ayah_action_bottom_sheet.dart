@@ -107,52 +107,56 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
               // 2. Ayah Info & Context Pill
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.goldAccent.withValues(alpha: 0.12)
-                          : const Color(0xFFF4EFE6),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.goldAccent.withValues(alpha: 0.25)
-                            : const Color(0xFFE5DDD0),
+                  const SizedBox(width: 48),
+                  Expanded(
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.goldAccent.withValues(alpha: 0.12)
+                              : const Color(0xFFF4EFE6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.goldAccent.withValues(alpha: 0.25)
+                                : const Color(0xFFE5DDD0),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'سوره $cleanSurahName',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? AppColors.goldAccent
+                                    : AppColors.primary,
+                              ),
+                            ),
+                            6.hSpace,
+                            Text(
+                              '• آیه ${ayah.ayahNumber.toPersianDigit()}',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? AppColors.goldAccent
+                                    : AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'سوره $cleanSurahName',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? AppColors.goldAccent
-                                : AppColors.primary,
-                          ),
-                        ),
-                        6.hSpace,
-                        Text(
-                          '• آیه ${ayah.ayahNumber.toPersianDigit()}',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? AppColors.goldAccent
-                                : AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                  const Spacer(),
                   IconButton(
                     tooltip: 'بستن',
                     icon: Icon(
