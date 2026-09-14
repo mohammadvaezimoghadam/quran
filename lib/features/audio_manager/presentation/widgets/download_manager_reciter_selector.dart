@@ -107,33 +107,39 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
               ),
               child: Stack(
                 children: [
-                  // 1. Reciter photo background on the RIGHT with zoom & gradient fade to transparent
+                  // 1. Reciter photo background on the RIGHT (transparent photo with fade to 0)
                   if (hasImage)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: 210,
-                      child: ShaderMask(
-                        shaderCallback: (bounds) {
-                          return LinearGradient(
-                            begin: Alignment.centerRight,
-                            end: Alignment.centerLeft,
-                            colors: [
-                              Colors.black.withValues(alpha: isDark ? 0.40 : 0.55),
-                              Colors.black.withValues(alpha: isDark ? 0.18 : 0.25),
-                              Colors.transparent,
-                            ],
-                            stops: const [0.0, 0.55, 1.0],
-                          ).createShader(bounds);
-                        },
-                        blendMode: BlendMode.dstIn,
-                        child: Transform.scale(
-                          scale: 1.45,
-                          alignment: Alignment.centerRight,
-                          child: AppCachedNetworkImage(
-                            imageUrl: imageUrl,
-                            fit: BoxFit.cover,
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Opacity(
+                          opacity: isDark ? 0.30 : 0.38,
+                          child: ShaderMask(
+                            shaderCallback: (bounds) {
+                              return const LinearGradient(
+                                begin: Alignment.centerRight,
+                                end: Alignment.centerLeft,
+                                colors: [
+                                  Colors.black,
+                                  Colors.black,
+                                  Colors.transparent,
+                                ],
+                                stops: [0.0, 0.35, 1.0],
+                              ).createShader(bounds);
+                            },
+                            blendMode: BlendMode.dstIn,
+                            child: SizedBox(
+                              width: 210,
+                              height: double.infinity,
+                              child: Transform.scale(
+                                scale: 1.45,
+                                alignment: Alignment.centerRight,
+                                child: AppCachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
