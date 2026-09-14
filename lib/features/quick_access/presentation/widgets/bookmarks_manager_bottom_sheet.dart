@@ -141,10 +141,11 @@ class _BookmarksManagerBottomSheetState
     final primaryColor = isDark ? const Color(0xFF52C498) : AppColors.primary;
     final goldColor = isDark ? const Color(0xFFF4E0A5) : const Color(0xFF947124);
 
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final sheetHeight = (screenHeight * 0.72).clamp(450.0, 680.0);
+
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-      ),
+      height: sheetHeight,
       decoration: BoxDecoration(
         color: sheetBg,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -159,7 +160,6 @@ class _BookmarksManagerBottomSheetState
       child: SafeArea(
         top: false,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             // 1. Drag Handle
             10.vSpace,
@@ -269,13 +269,17 @@ class _BookmarksManagerBottomSheetState
             ),
 
             // 4. Content: Empty State OR List of Bookmarks
-            Flexible(
+            Expanded(
               child: currentDisplayList.isEmpty
-                  ? _buildEmptyState(
-                      context,
-                      isDark,
-                      primaryColor,
-                      isAyahTab: _selectedTabIndex == 1,
+                  ? Center(
+                      child: SingleChildScrollView(
+                        child: _buildEmptyState(
+                          context,
+                          isDark,
+                          primaryColor,
+                          isAyahTab: _selectedTabIndex == 1,
+                        ),
+                      ),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.symmetric(

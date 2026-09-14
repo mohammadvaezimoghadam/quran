@@ -97,9 +97,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
       child: SafeArea(
         top: false,
         child: Container(
-          constraints: BoxConstraints(
-            maxHeight: maxResponsiveHeight,
-          ),
+          height: maxResponsiveHeight,
           decoration: BoxDecoration(
             color: sheetBgColor,
             borderRadius: const BorderRadius.vertical(
@@ -109,7 +107,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
           padding: const EdgeInsets.symmetric(
               horizontal: 16.0, vertical: 12.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 1. Top Drag Handle
