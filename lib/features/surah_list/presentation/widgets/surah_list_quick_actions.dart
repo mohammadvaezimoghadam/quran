@@ -30,9 +30,6 @@ class SurahListQuickActions extends ConsumerWidget {
     final bookmarkBg = isDark
         ? AppColors.goldAccent.withValues(alpha: 0.12)
         : const Color(0xFFFFF8E7);
-    final bookmarkBorder = isDark
-        ? AppColors.goldAccent.withValues(alpha: 0.28)
-        : const Color(0xFFF5E0B3);
     final bookmarkText = isDark
         ? const Color(0xFFF7E2A9)
         : const Color(0xFF8A661C);
@@ -44,9 +41,6 @@ class SurahListQuickActions extends ConsumerWidget {
     final jumpBg = isDark
         ? const Color(0xFF1E6FBF).withValues(alpha: 0.15)
         : const Color(0xFFEFF5FC);
-    final jumpBorder = isDark
-        ? const Color(0xFF1E6FBF).withValues(alpha: 0.32)
-        : const Color(0xFFD3E4F8);
     final jumpText = isDark
         ? const Color(0xFF90C2F7)
         : const Color(0xFF1A5F9E);
@@ -64,7 +58,6 @@ class SurahListQuickActions extends ConsumerWidget {
               title: 'نشان شده‌ها',
               icon: Icons.bookmark_rounded,
               bgColor: bookmarkBg,
-              borderColor: bookmarkBorder,
               textColor: bookmarkText,
               iconColor: bookmarkIcon,
               onTap: () {
@@ -81,7 +74,6 @@ class SurahListQuickActions extends ConsumerWidget {
               title: 'برو به',
               icon: CupertinoIcons.arrow_turn_up_left,
               bgColor: jumpBg,
-              borderColor: jumpBorder,
               textColor: jumpText,
               iconColor: jumpIcon,
               onTap: () async {
@@ -113,7 +105,6 @@ class _ActionCardItem extends StatelessWidget {
   final String title;
   final IconData icon;
   final Color bgColor;
-  final Color borderColor;
   final Color textColor;
   final Color iconColor;
   final VoidCallback onTap;
@@ -122,7 +113,6 @@ class _ActionCardItem extends StatelessWidget {
     required this.title,
     required this.icon,
     required this.bgColor,
-    required this.borderColor,
     required this.textColor,
     required this.iconColor,
     required this.onTap,
@@ -136,32 +126,30 @@ class _ActionCardItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        child: Container(
+        child: SizedBox(
           height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: borderColor, width: 1.1),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 20, color: iconColor),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 20, color: iconColor),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
