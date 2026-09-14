@@ -29,15 +29,13 @@ class _AudioDownloadManagerScreenState
     extends ConsumerState<AudioDownloadManagerScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
-  late final SurahListController _surahListController;
 
   @override
   void initState() {
     super.initState();
-    _surahListController = ref.read(surahListControllerProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Ensure search query starts clean
-      _surahListController.searchSurahs('');
+      ref.read(surahListControllerProvider.notifier).searchSurahs('');
 
       final audioState = ref.read(quranAudioControllerProvider);
       if (widget.isTranslationMode) {
@@ -73,40 +71,46 @@ class _AudioDownloadManagerScreenState
   void dispose() {
     _searchFocusNode.dispose();
     _searchController.dispose();
-    // Reset search query safely without calling ref after unmount
-    _surahListController.searchSurahs('');
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: IslamicKatibahAppBar(
-        surahName: widget.isTranslationMode
-            ? 'مدیریت دانلود ترجمه صوتی'
-            : 'مدیریت دانلود صوت',
-        fontFamily: AppTypography.fontFamily,
-        showSearchField: true,
-        searchFocusNode: _searchFocusNode,
-        searchController: _searchController,
-        onSearchChanged: (query) {
-          ref.read(surahListControllerProvider.notifier).searchSurahs(query);
-        },
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            DownloadManagerReciterSelector(
-              isTranslationMode: widget.isTranslationMode,
-            ),
-            Expanded(
-              child: DownloadManagerSurahList(
-                initialSurahId: widget.initialSurahId,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          ref.read(surahListControllerProvider.notifier).searchSurahs('');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: IslamicKatibahAppBar(
+          surahName: widget.isTranslationMode
+              ? 'مدیریت دانلود ترجمه صوتی'
+              : 'مدیریت دانلود صوت',
+          fontFamily: AppTypography.fontFamily,
+          showSearchField: true,
+          searchFocusNode: _searchFocusNode,
+          searchController: _searchController,
+          onSearchChanged: (query) {
+            ref.read(surahListControllerProvider.notifier).searchSurahs(query);
+          },
+        ),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              DownloadManagerReciterSelector(
+                isTranslationMode: widget.isTranslationMode,
               ),
-            ),
-          ],
+              Expanded(
+                child: DownloadManagerSurahList(
+                  initialSurahId: widget.initialSurahId,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
