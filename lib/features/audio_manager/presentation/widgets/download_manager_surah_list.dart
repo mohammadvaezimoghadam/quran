@@ -233,25 +233,14 @@ class _DownloadManagerSurahListState
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        CupertinoIcons.arrow_down_circle_fill,
-                        size: 16,
-                        color: isDark ? AppColors.goldAccent : const Color(0xFFB57A22),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'دانلود همه',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.goldAccent : const Color(0xFFB57A22),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'دانلود همه',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.goldAccent : const Color(0xFFB57A22),
+                    ),
                   ),
                 ),
               ),
