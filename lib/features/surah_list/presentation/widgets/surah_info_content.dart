@@ -8,9 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/surah_entity.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
-import 'surah_ayah_badge.dart';
 
-/// Displays the Surah Title, English Name, Kaaba Icon (Makki/Madani), Juz & Hizb, and Ayah Count Badge.
+/// Displays the Surah Title, English Name, Kaaba Icon (Makki/Madani), Juz & Hizb, and Ayah Count.
 class SurahInfoContent extends ConsumerWidget {
   final SurahEntity surah;
   final bool isDark;
@@ -60,7 +59,7 @@ class SurahInfoContent extends ConsumerWidget {
 
         const SizedBox(height: 8),
 
-        // Subtitle: Kaaba Icon + Makki/Madani • Juz & Hizb • Ayah Count Badge
+        // Subtitle: Kaaba Icon + Makki/Madani • Juz • Ayah Count
         Row(
           children: [
             // Kaaba Icon for Revelation Type
@@ -98,13 +97,22 @@ class SurahInfoContent extends ConsumerWidget {
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5.0),
+              child: Text(
+                '•',
+                style: AppTypography.surahMetadata.copyWith(
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                ),
+              ),
+            ),
 
-            const SizedBox(width: 12),
-
-            // Ayah Count Badge
-            SurahAyahBadge(
-              label: '${surah.numberOfAyahs.toPersianDigit()} ${AppConstants.ayahLabel}',
-              isDark: isDark,
+            // Ayah Count Info
+            Text(
+              '${surah.numberOfAyahs.toPersianDigit()} ${AppConstants.ayahLabel}',
+              style: AppTypography.surahMetadata.copyWith(
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
             ),
           ],
         ),
