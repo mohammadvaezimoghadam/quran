@@ -176,10 +176,14 @@ class HomeQuickAccessGrid extends StatelessWidget {
           child: _buildSecondaryCard(
             context: context,
             title: 'تنظیمات',
-            iconWidget: Icon(
-              CupertinoIcons.gear_alt,
-              size: 32,
-              color: iconColor,
+            iconWidget: SvgPicture.asset(
+              'assets/icons/ic_settings.svg',
+              width: 36,
+              height: 36,
+              colorFilter: ColorFilter.mode(
+                iconColor,
+                BlendMode.srcIn,
+              ),
             ),
             isDark: isDark,
             bgColor: secondaryBg,
