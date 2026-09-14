@@ -6,10 +6,8 @@ import '../../../quran_reader/application/controllers/reciter_providers.dart';
 import '../../application/states/download_manager_state.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
-import '../../application/states/download_manager_selected_surahs_provider.dart';
 import '../widgets/download_manager_reciter_selector.dart';
 import '../widgets/download_manager_surah_list.dart';
-import '../widgets/download_manager_action_bar.dart';
 import '../widgets/audio_download_queue_bar.dart';
 
 class AudioDownloadManagerScreen extends ConsumerStatefulWidget {
@@ -33,14 +31,6 @@ class _AudioDownloadManagerScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialSurahId != null) {
-        ref
-            .read(downloadManagerSelectedSurahsProvider.notifier)
-            .setSurahs({widget.initialSurahId!});
-      } else {
-        ref.read(downloadManagerSelectedSurahsProvider.notifier).setSurahs({});
-      }
-
       final audioState = ref.read(quranAudioControllerProvider);
       if (widget.isTranslationMode) {
         final currentTrans = audioState.selectedTranslationReciter;
@@ -81,19 +71,21 @@ class _AudioDownloadManagerScreenState
             : 'مدیریت دانلود صوت',
         fontFamily: AppTypography.fontFamily,
       ),
-      body: Column(
-        children: [
-          DownloadManagerReciterSelector(
-            isTranslationMode: widget.isTranslationMode,
-          ),
-          const AudioDownloadQueueBar(),
-          Expanded(
-            child: DownloadManagerSurahList(
-              initialSurahId: widget.initialSurahId,
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            DownloadManagerReciterSelector(
+              isTranslationMode: widget.isTranslationMode,
             ),
-          ),
-          const DownloadManagerActionBar(),
-        ],
+            const AudioDownloadQueueBar(),
+            Expanded(
+              child: DownloadManagerSurahList(
+                initialSurahId: widget.initialSurahId,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
