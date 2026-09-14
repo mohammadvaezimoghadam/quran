@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
+import '../../../../core/theme/app_dimens.dart';
 
 class SurahErrorView extends StatelessWidget {
   final String errorMessage;
@@ -17,18 +20,22 @@ class SurahErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(AppDimens.marginPage),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(CupertinoIcons.exclamationmark_circle, color: Colors.red, size: 48),
-            const SizedBox(height: 16),
+            Icon(
+              CupertinoIcons.exclamationmark_circle,
+              color: context.colorScheme.error,
+              size: 48,
+            ),
+            AppDimens.stackMd.vSpace,
             Text(
               errorMessage,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
+              style: context.textTheme.bodyMedium,
             ),
-            const SizedBox(height: 24),
+            AppDimens.stackLg.vSpace,
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(CupertinoIcons.refresh),

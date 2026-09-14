@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/extensions/context_extension.dart';
+import '../../../../../core/theme/app_dimens.dart';
 import '../../../../../core/theme/app_typography.dart';
 
 /// Bismillah header displayed at the top of the home screen.
@@ -8,8 +10,8 @@ class BismillahGreeting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimens.stackXs),
       child: Center(
         child: Text(
           'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
@@ -20,7 +22,7 @@ class BismillahGreeting extends StatelessWidget {
             fontSize: 26,
             fontWeight: FontWeight.normal,
             height: 1.6,
-            color: Color(0xFFC5A059),
+            color: context.colors.goldAccent,
           ),
         ),
       ),

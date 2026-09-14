@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/reciter_providers.dart';
 import '../../domain/entities/audio_download_task.dart';
@@ -24,9 +25,6 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     final tasksMap = ref.watch(audioDownloadControllerProvider);
     final activeTasks = tasksMap.values.where((task) {
       return task.status == DownloadTaskStatus.downloading ||
@@ -41,17 +39,21 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
     final hasDownloading = activeTasks.any((t) => t.status == DownloadTaskStatus.downloading);
     final allReciters = ref.watch(allRecitersListProvider).asData?.value.tryGetSuccess() ?? [];
 
-    final cardBgColor = isDark ? const Color(0xFF162220) : const Color(0xFFFBF9F5);
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : AppColors.primary.withValues(alpha: 0.15);
+    final colors = context.colors;
+    final isDark = context.isDark;
+
+    final cardBgColor = colors.cardBackground;
+    final borderColor = colors.cardBorder;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDimens.marginPage,
+        vertical: AppDimens.stackXs,
+      ),
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(color: borderColor, width: 1.2),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+        border: Border.all(color: borderColor, width: 1.0),
         boxShadow: isDark
             ? null
             : [
@@ -81,7 +83,7 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
                     hasDownloading
                         ? CupertinoIcons.arrow_down_circle_fill
                         : CupertinoIcons.pause_circle_fill,
-                    color: hasDownloading ? AppColors.goldAccent : Colors.orange,
+                    color: hasDownloading ? colors.goldAccent : Colors.orange,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -97,7 +99,7 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
                     decoration: BoxDecoration(
-                      color: (hasDownloading ? AppColors.goldAccent : Colors.orange)
+                      color: (hasDownloading ? colors.goldAccent : Colors.orange)
                           .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -107,7 +109,7 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: hasDownloading ? AppColors.goldAccent : Colors.orange,
+                        color: hasDownloading ? colors.goldAccent : Colors.orange,
                       ),
                     ),
                   ),
@@ -215,15 +217,17 @@ class _QueueTaskRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
     final isDownloading = task.status == DownloadTaskStatus.downloading;
     final isPaused = task.status == DownloadTaskStatus.paused;
     final isFailed = task.status == DownloadTaskStatus.failed;
 
     final statusColor = isDownloading
-        ? AppColors.goldAccent
+        ? colors.goldAccent
         : isPaused
             ? Colors.orange
-            : AppColors.error;
+            : colorScheme.error;
 
     final statusText = isDownloading
         ? 'در حال دانلود'
@@ -276,10 +280,10 @@ class _QueueTaskRow extends ConsumerWidget {
                       padding: const EdgeInsets.only(top: 2.0),
                       child: Text(
                         task.errorMessage!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 10,
-                          color: AppColors.error,
+                          color: colorScheme.error,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -338,26 +342,23 @@ class _QueueTaskRow extends ConsumerWidget {
                     .cancelDownload(task.reciterId, task.surahId);
               },
               borderRadius: BorderRadius.circular(16),
-              child: const Padding(
-                padding: EdgeInsets.all(4.0),
-                child: Icon(
-                  CupertinoIcons.xmark_circle,
-                  size: 20,
-                  color: AppColors.error,
-                ),
+              child: Icon(
+                CupertinoIcons.xmark_circle,
+                size: 20,
+                color: colorScheme.error,
               ),
             ),
           ],
         ),
         const SizedBox(height: 6),
         ClipRRect(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(AppDimens.radiusXs),
           child: LinearProgressIndicator(
             value: task.progress.clamp(0.0, 1.0),
             minHeight: 4,
             backgroundColor: isDark
                 ? Colors.white.withValues(alpha: 0.08)
-                : const Color(0xFFEAE7E3),
+                : colors.cardBorder,
             valueColor: AlwaysStoppedAnimation<Color>(statusColor),
           ),
         ),

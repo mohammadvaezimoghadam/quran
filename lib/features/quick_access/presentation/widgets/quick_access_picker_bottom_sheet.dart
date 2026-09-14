@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../application/controllers/quick_access_controller.dart';
 import '../../domain/entities/quick_access_tool_entity.dart';
 import 'pinned_surah_picker_bottom_sheet.dart';
@@ -26,18 +28,17 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = context.isDark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
 
     final controller = ref.read(quickAccessControllerProvider.notifier);
     final availableTools = controller.getAvailableToolsForPicker();
 
-    final sheetBgColor = isDark ? const Color(0xFF16201E) : Colors.white;
-
     return Container(
       decoration: BoxDecoration(
-        color: sheetBgColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+        color: colors.dialogSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimens.radiusLg)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
       child: SafeArea(
@@ -57,12 +58,12 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            16.vSpace,
 
             // Sheet Title
             Row(
               children: [
-                const SizedBox(width: 48),
+                48.hSpace,
                 const Expanded(
                   child: Text(
                     'انتخاب ابزار برای این جایگاه',
@@ -84,7 +85,7 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            12.vSpace,
 
             if (availableTools.isEmpty)
               const Padding(
@@ -101,7 +102,7 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: availableTools.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 6),
+                separatorBuilder: (context, index) => 6.vSpace,
                 itemBuilder: (context, index) {
                   final tool = availableTools[index];
 
@@ -117,7 +118,7 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                         await controller.assignToolToSlot(slotIndex, tool.type);
                       }
                     },
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         vertical: 10.0,
@@ -129,19 +130,19 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: AppColors.primary
+                              color: colorScheme.primary
                                   .withValues(alpha: isDark ? 0.25 : 0.12),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
                             ),
                             child: Icon(
                               tool.iconData,
                               color: isDark
-                                  ? AppColors.inversePrimary
-                                  : AppColors.primary,
+                                  ? colors.goldAccent
+                                  : colorScheme.primary,
                               size: 22,
                             ),
                           ),
-                          const SizedBox(width: 14),
+                          14.hSpace,
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,29 +157,29 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                                       ),
                                     ),
                                     if (!tool.isReady) ...[
-                                      const SizedBox(width: 8),
+                                      8.hSpace,
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 2,
+                                          horizontal: 6.0,
+                                          vertical: 2.0,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.orange.withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(6),
+                                          color: Colors.amber.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(AppDimens.radiusXs),
                                         ),
                                         child: const Text(
-                                          'به زودی',
+                                          'به‌زودی',
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.orange,
+                                            color: Colors.amber,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ],
                                 ),
-                                const SizedBox(height: 3),
+                                4.vSpace,
                                 Text(
                                   tool.description,
                                   style: TextStyle(
@@ -188,6 +189,11 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                                 ),
                               ],
                             ),
+                          ),
+                          Icon(
+                            CupertinoIcons.chevron_left,
+                            size: 16,
+                            color: isDark ? Colors.white30 : Colors.black26,
                           ),
                         ],
                       ),

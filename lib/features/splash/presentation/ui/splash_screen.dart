@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -121,12 +121,12 @@ class _SplashScreenState extends State<SplashScreen>
                               return LinearGradient(
                                 begin: Alignment(_shimmerAnimation.value - 1.0, 0),
                                 end: Alignment(_shimmerAnimation.value, 0),
-                                colors: const [
-                                  AppColors.goldAccent,
-                                  AppColors.softGoldText,
-                                  Color(0xFFFFF6D6), // Radiant High Gold Light
-                                  AppColors.softGoldText,
-                                  AppColors.goldAccent,
+                                colors: [
+                                  context.colors.goldAccent,
+                                  context.colors.goldAccent.withValues(alpha: 0.85),
+                                  const Color(0xFFFFF6D6), // Radiant High Gold Light
+                                  context.colors.goldAccent.withValues(alpha: 0.85),
+                                  context.colors.goldAccent,
                                 ],
                                 stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
                               ).createShader(bounds);
@@ -158,7 +158,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: CircularProgressIndicator(
                         strokeWidth: 2.0,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.goldAccent.withValues(alpha: 0.85),
+                          context.colors.goldAccent.withValues(alpha: 0.85),
                         ),
                       ),
                     ),

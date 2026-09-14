@@ -2,12 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/surah_list_controller.dart';
 import '../../domain/enums/surah_sort_options.dart';
 
+/// Clean Apple-Style Bottom Sheet for Sorting Surahs (by Number, Name, Ayah Count, Revelation Order)
 class SurahSortBottomSheet extends ConsumerStatefulWidget {
   const SurahSortBottomSheet({super.key});
 
@@ -39,21 +41,22 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = context.isDark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : colorScheme.surface,
+        color: colors.dialogSurface,
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppDimens.radiusMd),
+          top: Radius.circular(24),
         ),
       ),
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
         top: 12,
-        bottom: MediaQuery.paddingOf(context).bottom + 20,
+        bottom: context.screenPadding.bottom + 20,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -62,27 +65,27 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
           // Drag handle
           Center(
             child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
+              width: 38,
+              height: 4.5,
+              margin: const EdgeInsets.only(bottom: 14),
               decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+                color: isDark ? Colors.white24 : Colors.black12,
+                borderRadius: BorderRadius.circular(3),
               ),
             ),
           ),
 
-          // Header
+          // Header - Centered with balanced spacer
           Row(
             children: [
-              const SizedBox(width: 48),
+              48.hSpace,
               const Expanded(
                 child: Text(
                   'مرتب‌سازی سوره‌ها',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -99,89 +102,134 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
             ],
           ),
 
-          const SizedBox(height: 20),
+          16.vSpace,
 
-          // 1. Sort Order Selector (Ascending / Descending)
-          const Text(
-            'جهت مرتب‌سازی',
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 13,
-              color: Colors.grey,
-              fontWeight: FontWeight.w600,
+          // 1. Apple-Style Sliding Segmented Control for Sort Order
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : const Color(0xFFEBE8E2),
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-          const SizedBox(height: 8),
-
-          Row(
-            children: [
-              Expanded(
-                child: _OrderChip(
-                  label: 'صعودی',
-                  isSelected: _tempSortOrder == SortOrder.ascending,
-                  onTap: () {
-                    setState(() {
-                      _tempSortOrder = SortOrder.ascending;
-                    });
-                  },
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildSegmentButton(
+                    title: 'صعودی (الف تا ی / ۱ تا ۱۱۴)',
+                    isSelected: _tempSortOrder == SortOrder.ascending,
+                    isDark: isDark,
+                    colorScheme: colorScheme,
+                    onTap: () {
+                      setState(() => _tempSortOrder = SortOrder.ascending);
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _OrderChip(
-                  label: 'نزولی',
-                  isSelected: _tempSortOrder == SortOrder.descending,
-                  onTap: () {
-                    setState(() {
-                      _tempSortOrder = SortOrder.descending;
-                    });
-                  },
+                Expanded(
+                  child: _buildSegmentButton(
+                    title: 'نزولی (ی تا الف / ۱۱۴ تا ۱)',
+                    isSelected: _tempSortOrder == SortOrder.descending,
+                    isDark: isDark,
+                    colorScheme: colorScheme,
+                    onTap: () {
+                      setState(() => _tempSortOrder = SortOrder.descending);
+                    },
+                  ),
                 ),
+              ],
+            ),
+          ),
+
+          18.vSpace,
+
+          // 2. Apple Inset Grouped Card for Sort Criteria
+          Container(
+            decoration: BoxDecoration(
+              color: colors.cardBackground,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colors.cardBorder,
+                width: 0.8,
               ),
-            ],
-          ),
+            ),
+            child: Column(
+              children: SurahSortBy.values.asMap().entries.map((entry) {
+                final index = entry.key;
+                final option = entry.value;
+                final isSelected = _tempSortBy == option;
+                final isLast = index == SurahSortBy.values.length - 1;
 
-          const SizedBox(height: 20),
-
-          // 2. Sort Criteria List
-          const Text(
-            'بر اساس',
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 13,
-              color: Colors.grey,
-              fontWeight: FontWeight.w600,
+                return Column(
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          setState(() => _tempSortBy = option);
+                        },
+                        borderRadius: BorderRadius.vertical(
+                          top: index == 0 ? const Radius.circular(16) : Radius.zero,
+                          bottom: isLast ? const Radius.circular(16) : Radius.zero,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 13,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                option.label,
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 14.5,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  color: isSelected
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurface,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (isSelected)
+                                Icon(
+                                  CupertinoIcons.checkmark_alt,
+                                  size: 19,
+                                  color: colorScheme.primary,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (!isLast)
+                      Divider(
+                        height: 1,
+                        thickness: 0.8,
+                        indent: 16,
+                        endIndent: 16,
+                        color: colors.cardBorder,
+                      ),
+                  ],
+                );
+              }).toList(),
             ),
           ),
-          const SizedBox(height: 8),
 
-          ...SurahSortBy.values.map(
-            (option) => _SortOptionTile(
-              option: option,
-              isSelected: _tempSortBy == option,
-              onTap: () {
-                setState(() {
-                  _tempSortBy = option;
-                });
-              },
-            ),
-          ),
+          22.vSpace,
 
-          const SizedBox(height: 24),
-
-          // 3. Theme-matching Green Confirm Button
+          // 3. Confirm Button
           SizedBox(
             height: 48,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark
-                    ? AppColors.darkPrimaryContainer
-                    : colorScheme.primary,
+                backgroundColor: colorScheme.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
                 ),
-                elevation: 2,
+                elevation: 0,
               ),
               onPressed: () {
                 final notifier =
@@ -191,116 +239,63 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
                 Navigator.pop(context);
               },
               child: const Text(
-                'تایید',
+                'اعمال مرتب‌سازی',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          4.vSpace,
         ],
       ),
     );
   }
-}
 
-class _OrderChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _OrderChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark
-        ? AppColors.darkPrimaryContainer
-        : Theme.of(context).colorScheme.primary;
-    final activeTextColor = isDark
-        ? AppColors.softGoldText
-        : Theme.of(context).colorScheme.primary;
-
+  Widget _buildSegmentButton({
+    required String title,
+    required bool isSelected,
+    required bool isDark,
+    required ColorScheme colorScheme,
+    required VoidCallback onTap,
+  }) {
     return Material(
-      color: isSelected
-          ? primaryColor.withValues(alpha: isDark ? 0.3 : 0.12)
-          : (isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.grey.withValues(alpha: 0.08)),
-      borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 9),
           alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? const Color(0xFF223430) : Colors.white)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected && !isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
           child: Text(
-            label,
+            title,
             style: TextStyle(
               fontFamily: AppTypography.fontFamily,
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? activeTextColor : null,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SortOptionTile extends StatelessWidget {
-  final SurahSortBy option;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _SortOptionTile({
-    required this.option,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark
-        ? AppColors.darkPrimaryContainer
-        : Theme.of(context).colorScheme.primary;
-    final activeTextColor = isDark
-        ? AppColors.softGoldText
-        : Theme.of(context).colorScheme.primary;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Material(
-        color: isSelected
-            ? primaryColor.withValues(alpha: isDark ? 0.25 : 0.1)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                option.label,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? activeTextColor : null,
-                ),
-              ),
+              fontSize: 12.0,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected
+                  ? colorScheme.primary
+                  : (isDark ? Colors.white60 : Colors.black54),
             ),
           ),
         ),

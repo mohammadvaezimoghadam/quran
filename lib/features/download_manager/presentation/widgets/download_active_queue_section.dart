@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/widgets/app_cached_network_image.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../audio_manager/application/controllers/audio_download_controller.dart';
 import '../../../audio_manager/domain/entities/audio_download_task.dart';
@@ -70,9 +70,9 @@ class DownloadActiveQueueSection extends ConsumerWidget {
             // Header Row
             Row(
               children: [
-                const Icon(
+                Icon(
                   CupertinoIcons.arrow_down_circle_fill,
-                  color: AppColors.primary,
+                  color: context.colorScheme.primary,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -87,11 +87,11 @@ class DownloadActiveQueueSection extends ConsumerWidget {
                 if (totalCount > 0)
                   Text(
                     '${totalCount.toPersianDigit()} مورد',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: context.colorScheme.primary,
                     ),
                   ),
               ],
@@ -200,11 +200,11 @@ class _AudioQueueTaskItem extends ConsumerWidget {
         ? Colors.green
         : isPaused
             ? Colors.orange
-            : AppColors.error;
+            : context.colorScheme.error;
 
     final badgeColor = isAudioTranslation
         ? Colors.deepPurple
-        : AppColors.primary;
+        : context.colorScheme.primary;
     final badgeLabel = isAudioTranslation ? 'ترجمه گویا' : 'صوت قرآن';
     final badgeIcon = isAudioTranslation
         ? CupertinoIcons.speaker_2_fill
@@ -314,9 +314,9 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       task.errorMessage!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.error,
+                        color: context.colorScheme.error,
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -356,7 +356,7 @@ class _AudioQueueTaskItem extends ConsumerWidget {
               ),
             IconButton(
               tooltip: 'لغو دانلود',
-              icon: const Icon(CupertinoIcons.xmark_circle, size: 22, color: AppColors.error),
+              icon: Icon(CupertinoIcons.xmark_circle, size: 22, color: context.colorScheme.error),
               onPressed: () async {
                 await ref
                     .read(audioDownloadControllerProvider.notifier)
@@ -496,7 +496,7 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
             // Cancel Download button
             IconButton(
               tooltip: 'لغو دانلود',
-              icon: const Icon(CupertinoIcons.xmark_circle, size: 22, color: AppColors.error),
+              icon: Icon(CupertinoIcons.xmark_circle, size: 22, color: context.colorScheme.error),
               onPressed: () {
                 ref
                     .read(translationManagerControllerProvider.notifier)

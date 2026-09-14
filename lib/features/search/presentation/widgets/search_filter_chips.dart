@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/search_filter_type.dart';
 
 class SearchFilterChips extends StatelessWidget {
@@ -23,8 +25,9 @@ class SearchFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -67,7 +70,7 @@ class SearchFilterChips extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => onFilterSelected(filter),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusFull),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14.0,
@@ -76,17 +79,17 @@ class SearchFilterChips extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? (isDark
-                              ? AppColors.goldAccent.withValues(alpha: 0.18)
-                              : AppColors.primary)
+                              ? colors.goldAccent.withValues(alpha: 0.18)
+                              : colorScheme.primary)
                           : (isDark
                               ? Colors.white.withValues(alpha: 0.05)
                               : const Color(0xFFF3F0EB)),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusFull),
                       border: Border.all(
                         color: isSelected
                             ? (isDark
-                                ? AppColors.goldAccent
-                                : AppColors.primary)
+                                ? colors.goldAccent
+                                : colorScheme.primary)
                             : Colors.transparent,
                         width: 1,
                       ),
@@ -94,11 +97,12 @@ class SearchFilterChips extends StatelessWidget {
                     child: Text(
                       '${filter.label}$countSuffix',
                       style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
                         fontSize: 12.5,
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.w500,
                         color: isSelected
-                            ? (isDark ? AppColors.goldAccent : Colors.white)
+                            ? (isDark ? colors.goldAccent : Colors.white)
                             : (isDark
                                 ? Colors.white70
                                 : const Color(0xFF5A5852)),

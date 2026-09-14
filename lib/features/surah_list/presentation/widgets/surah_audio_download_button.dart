@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
@@ -10,10 +12,10 @@ import '../../../audio_manager/domain/entities/audio_download_task.dart';
 import '../../domain/entities/surah_entity.dart';
 
 /// Button states:
-/// 1. Downloaded (full)     → Play icon  → plays surah from ayah 1
+/// 1. Downloaded (full)     → Play icon (Cupertino) → plays surah from ayah 1
 /// 2. Downloading (active)  → CircularProgress + percentage text → tap cancels
-/// 3. Partially downloaded  → Resume icon → triggers onDownloadTap (starts/resumes download)
-/// 4. Not downloaded at all → Download icon (or Lock icon if VIP required) → triggers onDownloadTap
+/// 3. Partially downloaded  → Resume icon → triggers onDownloadTap
+/// 4. Not downloaded at all → Download Cloud icon (Cupertino) → triggers onDownloadTap
 class SurahAudioDownloadButton extends ConsumerWidget {
   final SurahEntity surah;
   final VoidCallback onDownloadTap;
@@ -30,6 +32,8 @@ class SurahAudioDownloadButton extends ConsumerWidget {
       quranAudioControllerProvider.select((s) => s.selectedReciter),
     );
     final storageService = ref.read(audioStorageServiceProvider);
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
 
     // Watch download task for this specific surah
     final taskKey = selectedReciter != null
@@ -68,10 +72,10 @@ class SurahAudioDownloadButton extends ConsumerWidget {
         // ── STATE 2: Fully downloaded → play icon ──
         if (isDownloaded) {
           return IconButton(
-            icon: const Icon(
-              Icons.play_arrow_rounded,
-              color: AppColors.primary,
-              size: 28,
+            icon: Icon(
+              CupertinoIcons.play_arrow_solid,
+              color: colorScheme.primary,
+              size: 24,
             ),
             tooltip: 'پخش صوت سوره',
             onPressed: () {
@@ -88,10 +92,10 @@ class SurahAudioDownloadButton extends ConsumerWidget {
         // ── STATE 3: Partially downloaded → resume icon ──
         if (isPartiallyCanceled) {
           return IconButton(
-            icon: const Icon(
-              Icons.downloading_rounded,
-              color: AppColors.goldAccent,
-              size: 24,
+            icon: Icon(
+              CupertinoIcons.arrow_down_circle_fill,
+              color: colors.goldAccent,
+              size: 22,
             ),
             tooltip:
                 '${downloadTask.completedAyahs} از ${downloadTask.totalAyahs} آیه دانلود شده - ادامه دانلود',
@@ -101,10 +105,10 @@ class SurahAudioDownloadButton extends ConsumerWidget {
 
         // ── STATE 4: Not downloaded → Download Cloud icon ──
         return IconButton(
-          icon: const Icon(
-            Icons.cloud_download_outlined,
-            color: AppColors.goldAccent,
-            size: 24,
+          icon: Icon(
+            CupertinoIcons.cloud_download,
+            color: colors.goldAccent,
+            size: 22,
           ),
           tooltip: 'دانلود صوت سوره',
           onPressed: onDownloadTap,
@@ -121,6 +125,7 @@ class SurahAudioDownloadButton extends ConsumerWidget {
   ) {
     final progress = task.progress;
     final percent = (progress * 100).clamp(0, 100).toInt();
+    final goldAccent = context.colors.goldAccent;
 
     return IconButton(
       tooltip:
@@ -140,16 +145,16 @@ class SurahAudioDownloadButton extends ConsumerWidget {
             CircularProgressIndicator(
               value: progress > 0 ? progress : null,
               strokeWidth: 2.5,
-              color: AppColors.goldAccent,
-              backgroundColor: AppColors.goldAccent.withValues(alpha: 0.2),
+              color: goldAccent,
+              backgroundColor: goldAccent.withValues(alpha: 0.2),
             ),
             Text(
               percent > 0 ? '${percent.toPersianDigit()}٪' : '...',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: AppTypography.fontFamily,
                 fontSize: 8,
                 fontWeight: FontWeight.bold,
-                color: AppColors.goldAccent,
+                color: goldAccent,
               ),
             ),
           ],

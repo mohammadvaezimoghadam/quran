@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../common/widgets/islamic_katibah_app_bar.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// Commercial Wi-Fi AP Device Model for IoT connection
@@ -34,6 +33,8 @@ class SmartDeviceSettingsScreen extends StatefulWidget {
 
 class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
     with SingleTickerProviderStateMixin {
+  Color get primaryColor => Theme.of(context).colorScheme.primary;
+
   // Flow State: 0 = Searching Wi-Fi Networks (SoftAP), 1 = Connected Control Dashboard
   int _appStep = 0;
 
@@ -140,11 +141,11 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                 ),
                 title: Text(
                   'اتصال به ${device.ssid}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    color: primaryColor,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -169,7 +170,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                       style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 14),
                       decoration: InputDecoration(
                         labelText: 'رمز عبور (تست: 1234)',
-                        prefixIcon: const Icon(CupertinoIcons.lock_fill, color: AppColors.primary, size: 18),
+                        prefixIcon: Icon(CupertinoIcons.lock_fill, color: primaryColor, size: 18),
                         suffixIcon: IconButton(
                           icon: Icon(
                             obscurePassword
@@ -189,7 +190,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                         fillColor: const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                          borderSide: BorderSide(color: primaryColor.withValues(alpha: 0.3)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -197,7 +198,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
+                          borderSide: BorderSide(color: primaryColor, width: 1.8),
                         ),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -230,7 +231,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       elevation: 1,
@@ -311,7 +312,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
               ),
             ],
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: primaryColor,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           duration: const Duration(seconds: 3),
@@ -368,7 +369,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
               ElevatedButton(
                 onPressed: () => Navigator.pop(ctx),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -433,7 +434,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
             ),
           ],
         ),
-        backgroundColor: AppColors.primary,
+        backgroundColor: primaryColor,
         duration: const Duration(milliseconds: 1400),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -500,22 +501,22 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
+              color: primaryColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(CupertinoIcons.radiowaves_left, size: 16, color: AppColors.primary),
-                SizedBox(width: 6),
+                Icon(CupertinoIcons.radiowaves_left, size: 16, color: primaryColor),
+                const SizedBox(width: 6),
                 Text(
                   'اتصال مستقیم وای‌فای (NodeMCU Access Point)',
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    color: primaryColor,
                   ),
                 ),
               ],
@@ -540,7 +541,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                         height: 130 * _pulseAnimation.value,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.primary.withValues(
+                          color: primaryColor.withValues(
                             alpha: (1.45 - _pulseAnimation.value).clamp(0.0, 0.3),
                           ),
                         ),
@@ -554,7 +555,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                     shape: BoxShape.circle,
                     color: Colors.white,
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.4),
+                      color: primaryColor.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                     boxShadow: const [
@@ -569,9 +570,9 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                 Container(
                   width: 56,
                   height: 56,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.primary,
+                    color: primaryColor,
                   ),
                   child: const Icon(
                     CupertinoIcons.wifi,
@@ -596,11 +597,11 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                     _isScanning
                         ? 'در حال اسکن دستگاه‌های قرآنی...'
                         : 'دستگاه‌های یافت‌شده (${_discoveredDevices.length})',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: primaryColor,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -618,8 +619,8 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                 onPressed: _isScanning ? null : _startWifiApScan,
                 icon: const Icon(CupertinoIcons.refresh, size: 18),
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  foregroundColor: AppColors.primary,
+                  backgroundColor: primaryColor.withValues(alpha: 0.1),
+                  foregroundColor: primaryColor,
                 ),
                 tooltip: 'اسکن مجدد',
               ),
@@ -641,18 +642,18 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                   BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2)),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 children: [
                   SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: AppColors.primary,
+                      color: primaryColor,
                     ),
                   ),
-                  SizedBox(height: 12),
-                  Text(
+                  const SizedBox(height: 12),
+                  const Text(
                     'در حال جستجوی سیگنال‌های NodeMCU SoftAP...',
                     style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
@@ -716,13 +717,13 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
                       color: isSelected
-                          ? AppColors.primary
-                          : AppColors.primary.withValues(alpha: 0.15),
+                          ? primaryColor
+                          : primaryColor.withValues(alpha: 0.15),
                       width: isSelected ? 1.8 : 1.0,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.05),
+                        color: primaryColor.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -734,12 +735,12 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: primaryColor.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           CupertinoIcons.wifi,
-                          color: AppColors.primary,
+                          color: primaryColor,
                           size: 20,
                         ),
                       ),
@@ -752,11 +753,11 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                           children: [
                             Text(
                               device.ssid,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: AppTypography.fontFamily,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
+                                color: primaryColor,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -791,12 +792,12 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
 
                       // Action Button
                       isSelected && _isConnectingToAp
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.2,
-                                color: AppColors.primary,
+                                color: primaryColor,
                               ),
                             )
                           : ElevatedButton(
@@ -804,7 +805,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                                   ? null
                                   : () => _showPasswordDialog(device),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
+                                backgroundColor: primaryColor,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
@@ -953,7 +954,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -965,18 +966,18 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(CupertinoIcons.book_fill,
-                  color: AppColors.primary, size: 20),
-              SizedBox(width: 8),
+                  color: primaryColor, size: 20),
+              const SizedBox(width: 8),
               Text(
                 'انتخاب صفحه قرآن (۱ تا ۶۰۴)',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: primaryColor,
                 ),
               ),
             ],
@@ -991,8 +992,8 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                 icon: const Icon(CupertinoIcons.minus, size: 18),
                 tooltip: 'صفحه قبلی',
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  foregroundColor: AppColors.primary,
+                  backgroundColor: primaryColor.withValues(alpha: 0.1),
+                  foregroundColor: primaryColor,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -1002,11 +1003,11 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                   controller: _pageInputController,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    color: primaryColor,
                   ),
                   decoration: InputDecoration(
                     hintText: '۱ تا ۶۰۴',
@@ -1020,11 +1021,11 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                     fillColor: const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                      borderSide: BorderSide(color: primaryColor.withValues(alpha: 0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
+                      borderSide: BorderSide(color: primaryColor, width: 1.8),
                     ),
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1050,8 +1051,8 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                 icon: const Icon(CupertinoIcons.add, size: 18),
                 tooltip: 'صفحه بعدی',
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  foregroundColor: AppColors.primary,
+                  backgroundColor: primaryColor.withValues(alpha: 0.1),
+                  foregroundColor: primaryColor,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -1090,17 +1091,17 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
           fontFamily: AppTypography.fontFamily,
           fontSize: 11,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Colors.white : AppColors.primary,
+          color: isSelected ? Colors.white : primaryColor,
         ),
       ),
       selected: isSelected,
-      selectedColor: AppColors.primary,
+      selectedColor: primaryColor,
       backgroundColor: const Color(0xFFF1F5F9),
       onSelected: (_) => _setPageNumber(page),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
         side: BorderSide(
-          color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.2),
+          color: isSelected ? primaryColor : primaryColor.withValues(alpha: 0.2),
         ),
       ),
       showCheckmark: false,
@@ -1114,7 +1115,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.2), width: 1.5),
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -1134,16 +1135,16 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: _isOledOn ? AppColors.primary : Colors.grey,
+                      color: _isOledOn ? primaryColor : Colors.grey,
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'نمایشگر 0.96" OLED سخت‌افزار',
                     style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
-                      color: AppColors.primary,
+                      color: primaryColor,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1241,7 +1242,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -1253,18 +1254,18 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(CupertinoIcons.slider_horizontal_3,
-                  color: AppColors.primary, size: 20),
-              SizedBox(width: 8),
+                  color: primaryColor, size: 20),
+              const SizedBox(width: 8),
               Text(
                 'تنظیمات سخت‌افزار',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: primaryColor,
                 ),
               ),
             ],
@@ -1276,7 +1277,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
             children: [
               Icon(
                 CupertinoIcons.power,
-                color: _isOledOn ? AppColors.primary : Colors.grey,
+                color: _isOledOn ? primaryColor : Colors.grey,
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -1312,7 +1313,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                   });
                   _sendApiCommand('power', 'state=${val ? 1 : 0}');
                 },
-                activeTrackColor: AppColors.primary,
+                activeTrackColor: primaryColor,
               ),
             ],
           ),
@@ -1321,7 +1322,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
           // Brightness Slider
           Row(
             children: [
-              const Icon(CupertinoIcons.sun_max, size: 18, color: AppColors.primary),
+              Icon(CupertinoIcons.sun_max, size: 18, color: primaryColor),
               const SizedBox(width: 8),
               const Text(
                 'میزان روشنایی OLED:',
@@ -1334,10 +1335,10 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
               const Spacer(),
               Text(
                 '${_oledBrightness.round()}%',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: primaryColor,
                 ),
               ),
             ],
@@ -1346,8 +1347,8 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
             value: _oledBrightness,
             min: 0,
             max: 100,
-            activeColor: AppColors.primary,
-            inactiveColor: AppColors.primary.withValues(alpha: 0.15),
+            activeColor: primaryColor,
+            inactiveColor: primaryColor.withValues(alpha: 0.15),
             onChanged: (val) {
               setState(() {
                 _oledBrightness = val;
@@ -1396,13 +1397,13 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith((states) {
                   if (states.contains(WidgetState.selected)) {
-                    return AppColors.primary.withValues(alpha: 0.15);
+                    return primaryColor.withValues(alpha: 0.15);
                   }
                   return Colors.transparent;
                 }),
                 foregroundColor: WidgetStateProperty.resolveWith((states) {
                   if (states.contains(WidgetState.selected)) {
-                    return AppColors.primary;
+                    return primaryColor;
                   }
                   return Colors.black87;
                 }),

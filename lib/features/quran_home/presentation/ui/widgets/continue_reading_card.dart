@@ -5,11 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 
+import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/int_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../common/extensions/surah_name_extension.dart';
 import '../../../../../core/routes/route_name.dart';
-import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_dimens.dart';
 import '../../../../../core/theme/app_typography.dart';
 
 import '../../../application/states/continue_reading_state.dart';
@@ -99,26 +100,21 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
-    // Theme-Aware Colors (High Contrast & Perfect Readability)
-    final cardBgColor = isDark ? const Color(0xFF192220) : Colors.white;
-    final cardBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFEAE7E3);
+    // Theme-Aware Colors (Apple Minimalist & Perfect Readability)
+    final cardBgColor = colors.cardBackground;
+    final cardBorderColor = colors.cardBorder;
 
-    final headerColor = isDark ? const Color(0xFF52C498) : AppColors.primary;
-    final titleColor = isDark
-        ? const Color(0xFFF4E0A5)
-        : const Color(0xFF947124);
-    final subtitleColor = isDark
-        ? const Color(0xFF9CA3AF)
-        : const Color(0xFF525252);
+    final headerColor = colors.goldAccent;
+    final titleColor = colorScheme.onSurface;
+    final subtitleColor = colorScheme.onSurfaceVariant;
 
-    final buttonBgColor = AppColors.primary;
-    final buttonTextColor = const Color(0xFFF4E0A5);
-    final gaugeColor = isDark ? const Color(0xFF52C498) : AppColors.primary;
+    final buttonBgColor = colorScheme.primary;
+    final buttonTextColor = colorScheme.onPrimary;
+    final gaugeColor = colors.goldAccent;
 
     return ValueListenableBuilder<int>(
       valueListenable: _selectedTabNotifier,
@@ -147,8 +143,8 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.05)
-                      : const Color(0xFFF3F0EC),
-                  borderRadius: BorderRadius.circular(20),
+                      : colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusLg),
                 ),
                 padding: const EdgeInsets.all(4),
                 child: Row(
@@ -236,7 +232,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                                             ? Colors.white.withValues(
                                                 alpha: 0.10,
                                               )
-                                            : const Color(0xFFEFEFEF),
+                                            : cardBorderColor,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
                                               gaugeColor,
@@ -385,9 +381,11 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? const Color(0xFF192220) : Colors.white)
+              ? (isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.white)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
           boxShadow: isSelected && !isDark
               ? [
                   BoxShadow(

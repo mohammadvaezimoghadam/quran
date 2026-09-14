@@ -4,12 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
 import '../../../bookmarks/domain/entities/bookmark_item.dart';
@@ -56,56 +57,98 @@ class _BookmarksManagerBottomSheetState
   }
 
   Future<void> _confirmClearAll() async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.colors;
+    final isDark = context.isDark;
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E2825) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'حذف همه نشانه‌ها',
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: colors.dialogSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: isDark ? 0.20 : 0.10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  CupertinoIcons.trash,
+                  size: 24,
+                  color: Colors.redAccent,
+                ),
+              ),
+              14.vSpace,
+              const Text(
+                'حذف همه نشانه‌ها',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.5,
+                ),
+              ),
+              8.vSpace,
+              Text(
+                'آیا مطمئن هستید که می‌خواهید تمام نشانه‌های ذخیره‌شده را حذف کنید؟ این عمل غیرقابل بازگشت است.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 13,
+                  height: 1.5,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              20.vSpace,
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(dialogCtx).pop(true),
+                  child: const Text(
+                    'حذف تمام نشانه‌ها',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                ),
+              ),
+              6.vSpace,
+              SizedBox(
+                width: double.infinity,
+                height: 40,
+                child: TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(false),
+                  child: Text(
+                    'انصراف',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        content: const Text(
-          'آیا مطمئن هستید که می‌خواهید تمام نشانه‌های ذخیره‌شده را حذف کنید؟',
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 13.5,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(false),
-            child: Text(
-              'انصراف',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                color: isDark ? Colors.white60 : Colors.black54,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () => Navigator.of(dialogCtx).pop(true),
-            child: const Text(
-              'حذف همه',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
       ),
     );
 
@@ -133,13 +176,12 @@ class _BookmarksManagerBottomSheetState
 
     final currentDisplayList = _selectedTabIndex == 0 ? readingBookmarks : ayahBookmarks;
 
-    final sheetBg = isDark ? const Color(0xFF151D1B) : const Color(0xFFF9F8F6);
-    final cardBg = isDark ? const Color(0xFF1E2825) : Colors.white;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFE8E5DF);
-    final primaryColor = isDark ? const Color(0xFF52C498) : AppColors.primary;
-    final goldColor = isDark ? const Color(0xFFF4E0A5) : const Color(0xFF947124);
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final sheetBg = colors.dialogSurface;
+    final cardBg = colors.cardBackground;
+    final borderColor = colors.cardBorder;
+    final primaryColor = colorScheme.primary;
 
     final screenHeight = MediaQuery.sizeOf(context).height;
     final sheetHeight = (screenHeight * 0.72).clamp(450.0, 680.0);
@@ -283,11 +325,19 @@ class _BookmarksManagerBottomSheetState
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 14.0,
+                        horizontal: 0,
+                        vertical: 8.0,
                       ),
                       itemCount: currentDisplayList.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      separatorBuilder: (context, index) => Divider(
+                        height: 1,
+                        thickness: 0.6,
+                        indent: 68,
+                        endIndent: 16,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.black.withValues(alpha: 0.06),
+                      ),
                       itemBuilder: (context, index) {
                         final item = currentDisplayList[index];
                         final isLatest = _selectedTabIndex == 0 && index == 0;
@@ -300,7 +350,6 @@ class _BookmarksManagerBottomSheetState
                           cardBg: cardBg,
                           borderColor: borderColor,
                           primaryColor: primaryColor,
-                          goldColor: goldColor,
                           arabicFontFamily: arabicFontFamily,
                         );
                       },
@@ -432,7 +481,6 @@ class _BookmarksManagerBottomSheetState
     required Color cardBg,
     required Color borderColor,
     required Color primaryColor,
-    required Color goldColor,
     required String arabicFontFamily,
   }) {
     final hasArabicSnippet = item.arabicText != null && item.arabicText!.isNotEmpty;
@@ -441,47 +489,20 @@ class _BookmarksManagerBottomSheetState
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _navigateToAyah(item),
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isLatest
-                  ? primaryColor.withValues(alpha: 0.4)
-                  : borderColor,
-              width: isLatest ? 1.4 : 1.0,
-            ),
-            boxShadow: isDark
-                ? null
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Index & Badge Container
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+                // 1. Index & Badge Container (Apple Squircle)
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: isLatest
                         ? primaryColor.withValues(alpha: isDark ? 0.25 : 0.12)
-                        : (isDark ? Colors.white10 : const Color(0xFFF3F0EB)),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isLatest
-                          ? primaryColor.withValues(alpha: 0.5)
-                          : Colors.transparent,
-                      width: 1,
-                    ),
+                        : (isDark ? Colors.white.withValues(alpha: 0.07) : const Color(0xFFF3F0EB)),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -511,7 +532,7 @@ class _BookmarksManagerBottomSheetState
                                 fontFamily: AppTypography.fontFamily,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: goldColor,
+                                color: isDark ? Colors.white : const Color(0xFF1C1B1B),
                                 height: 1.2,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -535,8 +556,8 @@ class _BookmarksManagerBottomSheetState
                               style: TextStyle(
                                 fontFamily: AppTypography.fontFamily,
                                 fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: goldColor.withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.white54 : Colors.black45,
                               ),
                             ),
                           ],
@@ -604,7 +625,6 @@ class _BookmarksManagerBottomSheetState
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

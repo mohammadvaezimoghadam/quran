@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../application/controllers/download_hub_controller.dart';
 import '../../application/states/download_hub_state.dart';
 
@@ -35,7 +36,7 @@ class DownloadStorageInfoCard extends ConsumerWidget {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: context.colorScheme.error,
             ),
             onPressed: () async {
               Navigator.pop(dialogCtx);
@@ -58,19 +59,21 @@ class DownloadStorageInfoCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
-    final cardBgColor = isDark ? const Color(0xFF192220) : Colors.white;
-    final cardBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFEAE7E3);
+    final cardBgColor = colors.cardBackground;
+    final cardBorderColor = colors.cardBorder;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppDimens.marginPage,
+        vertical: AppDimens.stackSm,
+      ),
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
         border: Border.all(color: cardBorderColor, width: 1),
         boxShadow: isDark
             ? null
@@ -93,12 +96,12 @@ class DownloadStorageInfoCard extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.goldAccent.withValues(alpha: 0.15),
+                    color: colors.goldAccent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     CupertinoIcons.square_stack_3d_up_fill,
-                    color: AppColors.goldAccent,
+                    color: colors.goldAccent,
                     size: 26,
                   ),
                 ),
@@ -127,7 +130,7 @@ class DownloadStorageInfoCard extends ConsumerWidget {
                 ),
                 IconButton(
                   tooltip: 'پاک‌سازی کل دانلودها',
-                  icon: const Icon(CupertinoIcons.trash, color: AppColors.error, size: 20),
+                  icon: Icon(CupertinoIcons.trash, color: colorScheme.error, size: 20),
                   onPressed: () => _showClearCacheDialog(context, ref),
                 ),
               ],
@@ -191,12 +194,12 @@ class DownloadStorageInfoCard extends ConsumerWidget {
                             );
                           },
                     borderRadius: BorderRadius.circular(6),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
                       child: Icon(
                         CupertinoIcons.doc_on_clipboard,
                         size: 16,
-                        color: AppColors.goldAccent,
+                        color: colors.goldAccent,
                       ),
                     ),
                   ),
@@ -255,7 +258,7 @@ class DownloadStorageInfoCard extends ConsumerWidget {
                       ),
                     ),
                     CupertinoSwitch(
-                      activeTrackColor: AppColors.primary,
+                      activeTrackColor: colorScheme.primary,
                       value: state.isWifiOnly,
                       onChanged: (val) async {
                         await ref

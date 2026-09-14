@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/widgets/app_cached_network_image.dart';
 import '../../../../common/widgets/reciter/reciter_selection_bottom_sheet.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../quran_reader/application/controllers/reciter_providers.dart';
@@ -40,14 +40,11 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
       });
     }
 
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final colorScheme = theme.colorScheme;
-
-    final cardBgColor = isDark ? const Color(0xFF162321) : const Color(0xFFFAF7F2);
-    final cardBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : AppColors.primary.withValues(alpha: 0.12);
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
+    final cardBgColor = colors.cardBackground;
+    final cardBorderColor = colors.cardBorder;
 
     final imageUrl = selectedReciter?.imageUrl;
     final hasImage = imageUrl != null && imageUrl.trim().isNotEmpty;

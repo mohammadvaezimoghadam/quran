@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/services/payment/models/payment_product.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 
 class NazrDonationCard extends StatelessWidget {
@@ -22,13 +24,16 @@ class NazrDonationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppDimens.stackSmMd),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.5),
+          color: colors.cardBorder,
         ),
       ),
       child: Row(
@@ -40,7 +45,7 @@ class NazrDonationCard extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.volunteer_activism_rounded,
+              CupertinoIcons.heart_fill,
               color: Colors.teal,
               size: 22,
             ),
@@ -52,11 +57,11 @@ class NazrDonationCard extends StatelessWidget {
               children: [
                 Text(
                   product.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: AppColors.onSurface,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -65,7 +70,7 @@ class NazrDonationCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 11,
-                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.8),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -79,7 +84,7 @@ class NazrDonationCard extends StatelessWidget {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
               ),
               elevation: 0,
             ),
@@ -88,7 +93,7 @@ class NazrDonationCard extends StatelessWidget {
               style: const TextStyle(
                 fontFamily: AppTypography.fontFamily,
                 fontWeight: FontWeight.bold,
-                fontSize: 11,
+                fontSize: 12,
               ),
             ),
           ),

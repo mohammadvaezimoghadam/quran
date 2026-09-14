@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 
 class SearchRecentHistoryView extends StatelessWidget {
   final List<String> recentSearches;
@@ -19,8 +20,9 @@ class SearchRecentHistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
     if (recentSearches.isEmpty) {
       return Center(
@@ -38,6 +40,7 @@ class SearchRecentHistoryView extends StatelessWidget {
               Text(
                 'جستجو در قرآن کریم',
                 style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white70 : Colors.black87,
@@ -48,6 +51,7 @@ class SearchRecentHistoryView extends StatelessWidget {
                 'می‌توانید نام سوره، شماره سوره، کلمات آیه به عربی یا ترجمه فارسی را جستجو کنید.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
                   fontSize: 12.5,
                   height: 1.6,
                   color: isDark ? Colors.white38 : Colors.black45,
@@ -69,12 +73,13 @@ class SearchRecentHistoryView extends StatelessWidget {
               Icon(
                 CupertinoIcons.clock,
                 size: 16,
-                color: isDark ? AppColors.goldAccent : AppColors.primary,
+                color: isDark ? colors.goldAccent : colorScheme.primary,
               ),
               8.hSpace,
               Text(
                 'جستجوهای اخیر',
                 style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white70 : Colors.black87,

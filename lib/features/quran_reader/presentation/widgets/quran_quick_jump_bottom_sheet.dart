@@ -7,9 +7,10 @@ import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../../../../core/services/quran_navigation/quran_navigation_service_provider.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
@@ -204,9 +205,9 @@ class _QuranQuickJumpBottomSheetState
         maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E262C) : Colors.white,
+        color: context.colors.dialogSurface,
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(16),
+          top: Radius.circular(24),
         ),
         boxShadow: [
           BoxShadow(
@@ -265,15 +266,15 @@ class _QuranQuickJumpBottomSheetState
           ),
           8.vSpace,
 
-          // Tab Bar Selector
+          // Tab Bar Selector (Apple Style Sliding Segment)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.black.withValues(alpha: 0.3)
-                    : Colors.grey.withValues(alpha: 0.12),
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : const Color(0xFFEBE8E2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -308,12 +309,12 @@ class _QuranQuickJumpBottomSheetState
               child: ElevatedButton.icon(
                 onPressed: _isCalculating ? null : _handleConfirm,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: context.colorScheme.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
                   ),
-                  elevation: 2,
+                  elevation: 0,
                 ),
                 icon: _isCalculating
                     ? const SizedBox(
@@ -327,7 +328,7 @@ class _QuranQuickJumpBottomSheetState
                     : const Icon(CupertinoIcons.paperplane_fill, size: 18),
                 label: Text(
                   _isCalculating ? 'در حال محاسبه...' : 'انتقال به آیه',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -343,44 +344,48 @@ class _QuranQuickJumpBottomSheetState
 
   Widget _buildTabButton(QuickJumpTab tab, String label) {
     final isSelected = _activeTab == tab;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = context.isDark;
+    final primaryColor = context.colorScheme.primary;
 
     return Expanded(
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _activeTab = tab;
-          });
-        },
-        borderRadius: BorderRadius.circular(10),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              _activeTab = tab;
+            });
+          },
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.white
-                  : (isDark ? Colors.white70 : Colors.black87),
+                  ? (isDark ? const Color(0xFF223430) : Colors.white)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: isSelected && !isDark
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 12.5,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected
+                    ? primaryColor
+                    : (isDark ? Colors.white60 : Colors.black54),
+              ),
             ),
           ),
         ),
@@ -476,16 +481,11 @@ class _QuranQuickJumpBottomSheetState
         Container(
           height: 150,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isDark ? Colors.white12 : Colors.grey.shade300,
-            ),
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF2F1ED),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Material(
-            color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(10),
-            clipBehavior: Clip.antiAlias,
-            child: filteredSurahs.isEmpty
+          clipBehavior: Clip.antiAlias,
+          child: filteredSurahs.isEmpty
               ? const Center(child: Text('سوره‌ای یافت نشد'))
               : ListView.builder(
                   itemCount: filteredSurahs.length,
@@ -496,7 +496,7 @@ class _QuranQuickJumpBottomSheetState
                     return ListTile(
                       dense: true,
                       selected: isSelected,
-                      selectedTileColor: AppColors.primary.withValues(alpha: 0.15),
+                      selectedTileColor: context.colorScheme.primary.withValues(alpha: 0.15),
                       title: Text(
                         '${surah.number.toPersianDigit()}. سوره ${surah.nameFa}',
                         style: TextStyle(
@@ -504,7 +504,7 @@ class _QuranQuickJumpBottomSheetState
                           fontSize: 15.5,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           color: isSelected
-                              ? AppColors.primary
+                              ? context.colorScheme.primary
                               : (isDark ? Colors.white : Colors.black87),
                         ),
                       ),
@@ -524,7 +524,6 @@ class _QuranQuickJumpBottomSheetState
                     );
                   },
                 ),
-          ),
         ),
         14.vSpace,
 
@@ -543,8 +542,8 @@ class _QuranQuickJumpBottomSheetState
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  color: context.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusXs),
                 ),
                 child: Text(
                   'تعداد کل آیه: ${_selectedSurah!.numberOfAyahs.toPersianDigit()}',
@@ -552,7 +551,7 @@ class _QuranQuickJumpBottomSheetState
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+                    color: context.colorScheme.primary,
                   ),
                 ),
               ),
@@ -637,7 +636,7 @@ class _QuranQuickJumpBottomSheetState
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
-            color: isDark ? Colors.white : AppColors.primary,
+            color: isDark ? Colors.white : context.colorScheme.primary,
           ),
           onChanged: (val) {
             setState(() {});
@@ -652,13 +651,19 @@ class _QuranQuickJumpBottomSheetState
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             filled: true,
             fillColor: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.grey.shade100,
+                ? Colors.white.withValues(alpha: 0.06)
+                : const Color(0xFFF2EFEB),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.primary.withValues(alpha: 0.5),
-              ),
+              borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+              borderSide: BorderSide.none,
             ),
           ),
         ),

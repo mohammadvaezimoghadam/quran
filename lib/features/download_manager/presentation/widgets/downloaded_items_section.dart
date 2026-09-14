@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/widgets/app_cached_network_image.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/data/local/preferences/preferences_keys.dart';
 import '../../../../core/data/local/preferences/preferences_service_provider.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
@@ -72,7 +72,7 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
             child: Center(
               child: Text(
                 'خطا در بارگیری دانلودها: $err',
-                style: const TextStyle(color: AppColors.error, fontSize: 13),
+                style: TextStyle(color: context.colorScheme.error, fontSize: 13),
               ),
             ),
           ),
@@ -106,9 +106,9 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                 // 1. Header
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       CupertinoIcons.tray_full_fill,
-                      color: AppColors.primary,
+                      color: context.colorScheme.primary,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -122,11 +122,11 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                     const Spacer(),
                     Text(
                       '${items.length.toPersianDigit()} فایل ذخیره',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                        color: context.colorScheme.primary,
                       ),
                     ),
                   ],
@@ -236,10 +236,10 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary
-              : (Theme.of(context).brightness == Brightness.dark
+              ? context.colorScheme.primary
+              : (context.isDark
                   ? Colors.white.withValues(alpha: 0.06)
-                  : const Color(0xFFF0ECE6)),
+                  : context.colors.cardBackground),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -374,7 +374,7 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
             child: const Text('انصراف'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('حذف فایل', style: TextStyle(color: Colors.white)),
           ),
@@ -421,7 +421,7 @@ class _DownloadedItemRow extends StatelessWidget {
 
     switch (item.type) {
       case DownloadedItemType.quranAudio:
-        badgeColor = AppColors.primary;
+        badgeColor = context.colorScheme.primary;
         badgeLabel = 'صوت قرآن';
         iconData = CupertinoIcons.waveform;
         break;
@@ -539,22 +539,21 @@ class _DownloadedItemRow extends StatelessWidget {
           ),
         ),
 
-        // Action Buttons: Open & Delete
         IconButton(
           tooltip: 'مشاهده / پخش',
-          icon: const Icon(
+          icon: Icon(
             CupertinoIcons.play_arrow_solid,
             size: 18,
-            color: AppColors.primary,
+            color: context.colorScheme.primary,
           ),
           onPressed: onOpen,
         ),
         IconButton(
           tooltip: 'حذف از حافظه',
-          icon: const Icon(
+          icon: Icon(
             CupertinoIcons.trash,
             size: 17,
-            color: Colors.redAccent,
+            color: context.colorScheme.error,
           ),
           onPressed: onDelete,
         ),

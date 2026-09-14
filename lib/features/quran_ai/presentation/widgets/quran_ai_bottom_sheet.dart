@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/widgets/quran_markdown_view.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/quran_ai_controller.dart';
@@ -153,8 +153,9 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
     final fontScript = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
@@ -163,12 +164,10 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
 
     final aiState = ref.watch(quranAiControllerProvider);
 
-    final sheetBg = isDark ? const Color(0xFF141C1A) : const Color(0xFFF9F8F6);
+    final sheetBg = colors.cardBackground;
     final cardBg = isDark ? const Color(0xFF1B2522) : Colors.white;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFE8E4DC);
-    final goldColor = isDark ? const Color(0xFFF4E0A5) : const Color(0xFFB38327);
+    final borderColor = colors.cardBorder;
+    final goldColor = colors.goldAccent;
 
     final isWord = widget.request.isWordAnalysis;
     final suggestions = _getSuggestions(isWord);
@@ -307,7 +306,7 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
                           avatar: Icon(
                             item.icon,
                             size: 13,
-                            color: isDark ? AppColors.goldAccent : AppColors.primary,
+                            color: isDark ? colors.goldAccent : colorScheme.primary,
                           ),
                           label: Text(
                             item.title,
@@ -362,7 +361,7 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                isDark ? AppColors.goldAccent : AppColors.primary,
+                                isDark ? colors.goldAccent : colorScheme.primary,
                               ),
                             ),
                           ),
@@ -408,7 +407,7 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
-                                    isDark ? AppColors.goldAccent : AppColors.primary,
+                                    isDark ? colors.goldAccent : colorScheme.primary,
                                 foregroundColor: isDark ? Colors.black : Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
@@ -469,8 +468,8 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                       isDark
-                                          ? AppColors.goldAccent
-                                          : AppColors.primary,
+                                          ? colors.goldAccent
+                                          : colorScheme.primary,
                                     ),
                                   ),
                                 ),
@@ -555,7 +554,7 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
                       CupertinoIcons.arrow_up_circle_fill,
                       color: aiState.isLoading
                           ? (isDark ? Colors.white24 : Colors.black12)
-                          : (isDark ? AppColors.goldAccent : AppColors.primary),
+                          : (isDark ? colors.goldAccent : colorScheme.primary),
                       size: 32,
                     ),
                   ),
@@ -578,6 +577,7 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
   }) {
     final isUser = message.isUser as bool;
     final text = message.text as String;
+    final primary = Theme.of(context).colorScheme.primary;
 
     if (isUser) {
       return Align(
@@ -589,13 +589,13 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
           decoration: BoxDecoration(
             color: isDark
-                ? AppColors.primary.withValues(alpha: 0.3)
-                : const Color(0xFFE8F5E9),
+                ? primary.withValues(alpha: 0.25)
+                : primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isDark
-                  ? AppColors.primary.withValues(alpha: 0.5)
-                  : const Color(0xFFC8E6C9),
+                  ? primary.withValues(alpha: 0.45)
+                  : primary.withValues(alpha: 0.2),
             ),
           ),
           child: Text(
@@ -749,12 +749,12 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: isDark
-                                ? AppColors.goldAccent.withValues(alpha: 0.12)
+                                ? goldColor.withValues(alpha: 0.12)
                                 : const Color(0xFFF7F2EA),
                             borderRadius: BorderRadius.circular(13),
                             border: Border.all(
                               color: isDark
-                                  ? AppColors.goldAccent.withValues(alpha: 0.25)
+                                  ? goldColor.withValues(alpha: 0.25)
                                   : const Color(0xFFE8DFD1),
                             ),
                           ),

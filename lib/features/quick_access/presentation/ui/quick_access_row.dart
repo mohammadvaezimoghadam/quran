@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../application/controllers/pinned_surah_controller.dart';
@@ -99,8 +101,8 @@ class QuickAccessRow extends ConsumerWidget {
     final state = ref.watch(quickAccessControllerProvider);
     final controller = ref.read(quickAccessControllerProvider.notifier);
 
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = context.isDark;
+    final colorScheme = context.colorScheme;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -126,30 +128,30 @@ class QuickAccessRow extends ConsumerWidget {
                 if (state.isEditMode)
                   InkWell(
                     onTap: () => controller.setEditMode(false),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
                     child: Container(
                       height: 26,
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
+                        color: colorScheme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.check_rounded,
+                            CupertinoIcons.checkmark_alt,
                             size: 14,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                           ),
-                          SizedBox(width: 4),
+                          4.hSpace,
                           Text(
                             'اتمام ویرایش',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                             ),
                           ),
                         ],

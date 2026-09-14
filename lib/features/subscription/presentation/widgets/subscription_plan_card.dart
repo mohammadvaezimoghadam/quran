@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/services/payment/models/payment_product.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 
 class SubscriptionPlanCard extends StatelessWidget {
@@ -24,30 +25,30 @@ class SubscriptionPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
-    final primaryColor = isDark ? const Color(0xFF52C498) : AppColors.primary;
+    final primaryColor = colorScheme.primary;
     final cardBg = isSelected
         ? primaryColor.withValues(alpha: isDark ? 0.12 : 0.08)
-        : (isDark ? const Color(0xFF222629) : const Color(0xFFF7F6F2));
+        : colors.cardBackground;
 
     final borderColor = isSelected
         ? primaryColor
-        : colorScheme.outlineVariant.withValues(alpha: isDark ? 0.25 : 0.4);
+        : colors.cardBorder;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
             border: Border.all(
               color: borderColor,
               width: isSelected ? 1.6 : 1.0,

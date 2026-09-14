@@ -1,17 +1,21 @@
+import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 
-/// Full-width edge-to-edge "Continue Reading" bottom banner for Surah List screen.
-/// Matches the reference screenshot layout: no rounded outer box, full width, no icons.
+/// Floating Translucent Frosted-Glass Pill "Continue Reading" bottom banner for Surah List screen.
+/// Styled with Apple iOS translucent floating card principles so underlying list items show through.
 class SurahListContinueReadingBar extends ConsumerWidget {
   final VoidCallback? onBeforeNavigation;
 
@@ -23,7 +27,8 @@ class SurahListContinueReadingBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final continueState = ref.watch(continueReadingControllerProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = context.isDark;
+    final colorScheme = context.colorScheme;
 
     // Resolve active reading location or default to Al-Fatihah 1
     final surahId = continueState?.surahId ?? 1;
@@ -31,72 +36,91 @@ class SurahListContinueReadingBar extends ConsumerWidget {
     final surahFaName = surahId.surahNameFa;
     final ayahNumber = continueState?.ayahNumber ?? 1;
 
-    // Authentic olive-green tones matching the reference screenshot
-    final bgColor = isDark
-        ? const Color(0xFF1D281F)
-        : const Color(0xFFC7D3B0);
-    final borderColor = isDark
-        ? const Color(0xFF2C3C2F)
-        : const Color(0xFFB0BD96);
-    final titleColor = isDark
-        ? const Color(0xFFE5EEE3)
-        : const Color(0xFF1E2816);
-    final buttonBg = isDark
-        ? AppColors.primary
-        : const Color(0xFF2C371D);
-    final buttonTextColor = Colors.white;
-
-    return Material(
-      color: bgColor,
-      child: InkWell(
-        onTap: () => _handleTap(context, ref, surahId, rawSurahName, ayahNumber),
-        splashColor: Colors.black.withValues(alpha: 0.08),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: borderColor, width: 1.0),
-            ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Right Side: Surah Info + Ayah Number (Pure text, NO icons)
-              Expanded(
-                child: Text(
-                  'سوره $surahFaName - آیه شماره ${ayahNumber.toPersianDigit()}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.bold,
-                    color: titleColor,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF0D2522).withValues(alpha: 0.72)
+                  : Colors.white.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.14)
+                    : Colors.white.withValues(alpha: 0.75),
+                width: 0.8,
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+              child: InkWell(
+                onTap: () => _handleTap(context, ref, surahId, rawSurahName, ayahNumber),
+                borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Right Side: Surah Info + Ayah Number
+                      Icon(
+                        CupertinoIcons.book,
+                        size: 17,
+                        color: colorScheme.primary,
+                      ),
+                      10.hSpace,
+                      Expanded(
+                        child: Text(
+                          'سوره $surahFaName • آیه ${ayahNumber.toPersianDigit()}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+
+                      10.hSpace,
+
+                      // Left Side: "ادامه مطالعه" Action Chip
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                        ),
+                        child: const Text(
+                          'ادامه مطالعه',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-
-              const SizedBox(width: 14),
-
-              // Left Side: "ادامه مطالعه" Action Button (Text only, NO icon)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: buttonBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'ادامه مطالعه',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: buttonTextColor,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -107,7 +131,7 @@ class SurahListContinueReadingBar extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     int surahId,
-    String surahName,
+    String rawSurahName,
     int ayahNumber,
   ) {
     onBeforeNavigation?.call();
@@ -116,7 +140,7 @@ class SurahListContinueReadingBar extends ConsumerWidget {
       quranReaderRoute,
       pathParameters: {'id': surahId.toString()},
       queryParameters: {
-        'name': surahName,
+        'name': rawSurahName,
         'ayah': ayahNumber.toString(),
       },
     );

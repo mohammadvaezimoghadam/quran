@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_colors.dart';
+import '../../../../../common/extensions/context_extension.dart';
+import '../../../../../common/extensions/size_extension.dart';
+import '../../../../../core/theme/app_dimens.dart';
 
 /// Modern Minimalist Quran Search Bar Widget
 /// Placed at the top of the Quran Home screen.
@@ -19,21 +21,17 @@ class HomeSearchBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final bgColor = isDark ? const Color(0xFF192220) : Colors.white;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFEAE7E3);
+    final isDark = context.isDark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
 
     return Container(
       height: 52,
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16.0),
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
         border: Border.all(
-          color: borderColor,
+          color: colors.cardBorder,
           width: 1,
         ),
         boxShadow: isDark
@@ -48,10 +46,10 @@ class HomeSearchBarWidget extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14.0),
             child: Row(
@@ -60,9 +58,9 @@ class HomeSearchBarWidget extends StatelessWidget {
                 Icon(
                   CupertinoIcons.search,
                   size: 20,
-                  color: isDark ? AppColors.goldAccent : AppColors.primary,
+                  color: isDark ? colors.goldAccent : colorScheme.primary,
                 ),
-                const SizedBox(width: 12),
+                12.hSpace,
 
                 // Search Input Field or Placeholder
                 Expanded(
@@ -74,14 +72,14 @@ class HomeSearchBarWidget extends StatelessWidget {
                     textInputAction: TextInputAction.search,
                     style: TextStyle(
                       fontSize: 13.5,
-                      color: isDark ? Colors.white : const Color(0xFF1C1B1B),
+                      color: colorScheme.onSurface,
                     ),
                     decoration: InputDecoration(
                       hintText: 'جستجو در متن قرآن، سوره یا آیه...',
                       hintStyle: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.normal,
-                        color: isDark ? Colors.white38 : const Color(0xFF9E998F),
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                       ),
                       border: InputBorder.none,
                       isDense: true,
@@ -89,8 +87,6 @@ class HomeSearchBarWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-
-
               ],
             ),
           ),

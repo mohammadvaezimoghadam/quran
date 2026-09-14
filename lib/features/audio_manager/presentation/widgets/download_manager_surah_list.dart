@@ -7,11 +7,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../../core/services/network/network_info_helper.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../download_manager/application/controllers/download_hub_controller.dart';
 import '../../../download_manager/application/controllers/downloaded_items_controller.dart';
@@ -241,7 +241,7 @@ class _DownloadManagerSurahListState
                       fontFamily: AppTypography.fontFamily,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.goldAccent : const Color(0xFFB57A22),
+                      color: context.colors.goldAccent,
                     ),
                   ),
                 ),
@@ -480,8 +480,8 @@ class _SurahListItem extends ConsumerWidget {
                             'assets/icons/ic_kaaba.svg',
                             width: 12,
                             height: 12,
-                            colorFilter: const ColorFilter.mode(
-                              AppColors.goldAccent,
+                            colorFilter: ColorFilter.mode(
+                              context.colors.goldAccent,
                               BlendMode.srcIn,
                             ),
                           ),
@@ -594,25 +594,25 @@ class _SurahListItem extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: AppColors.error.withValues(alpha: isDark ? 0.16 : 0.08),
+            color: colorScheme.error.withValues(alpha: isDark ? 0.16 : 0.08),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.delete_outline_rounded,
+                CupertinoIcons.trash,
                 size: 15,
-                color: AppColors.error,
+                color: colorScheme.error,
               ),
-              SizedBox(width: 5),
+              const SizedBox(width: 5),
               Text(
                 'حذف',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.error,
+                  color: colorScheme.error,
                 ),
               ),
             ],
@@ -624,7 +624,7 @@ class _SurahListItem extends ConsumerWidget {
     // 2. Downloading State: Progress % and X (cancel/stop) button inside same button (No border)
     if (isDownloading && downloadTask != null) {
       final percent = (downloadTask.progress * 100).clamp(0, 100).toInt();
-      final accentColor = isDark ? AppColors.goldAccent : const Color(0xFFB57A22);
+      final accentColor = context.colors.goldAccent;
 
       return InkWell(
         onTap: () {
@@ -728,11 +728,9 @@ class _SurahListItem extends ConsumerWidget {
 
     // 4. Idle / Not Downloaded State: Action pill with No Border
     final pillBgColor = isDark
-        ? AppColors.goldAccent.withValues(alpha: 0.12)
-        : const Color(0xFFFBF4E8);
-    final pillTextColor = isDark
-        ? AppColors.goldAccent
-        : const Color(0xFFB57A22);
+        ? context.colors.goldAccent.withValues(alpha: 0.12)
+        : context.colors.cardBackground;
+    final pillTextColor = context.colors.goldAccent;
 
     return InkWell(
       onTap: () => _startSurahDownload(context, ref, isLocked, isTranslation),
@@ -873,6 +871,7 @@ class _SurahListItem extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) {
+        final colorScheme = sheetCtx.colorScheme;
         return Material(
           color: isDark ? const Color(0xFF1E2624) : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -903,17 +902,17 @@ class _SurahListItem extends ConsumerWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
                         child: Text(
                           surah.number.toPersianDigit(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                            color: colorScheme.primary,
                           ),
                         ),
                       ),
@@ -966,12 +965,12 @@ class _SurahListItem extends ConsumerWidget {
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           CupertinoIcons.play_circle_fill,
-                          color: AppColors.primary,
+                          color: colorScheme.primary,
                           size: 24,
                         ),
                       ),
@@ -1100,31 +1099,31 @@ class _SurahListItem extends ConsumerWidget {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
+                        color: colorScheme.error.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         CupertinoIcons.trash_fill,
-                        color: AppColors.error,
+                        color: colorScheme.error,
                         size: 22,
                       ),
                     ),
-                    title: const Text(
+                    title: Text(
                       'حذف از حافظه دستگاه',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.error,
+                        color: colorScheme.error,
                       ),
                     ),
-                    subtitle: const Text(
+                    subtitle: Text(
                       'پاک‌سازی فایل‌های صوتی ذخیره شده این سوره',
                       style: TextStyle(
                         fontSize: 11.5,
-                        color: AppColors.error,
+                        color: colorScheme.error,
                       ),
                     ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.error),
+                    trailing: Icon(CupertinoIcons.chevron_back, size: 14, color: colorScheme.error),
                     onTap: () {
                       _showDeleteConfirmDialog(
                         context: context,
@@ -1154,8 +1153,10 @@ class _SurahListItem extends ConsumerWidget {
   }) {
     showDialog(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text(
+      builder: (dialogCtx) {
+        final colorScheme = dialogCtx.colorScheme;
+        return AlertDialog(
+          title: Text(
           'حذف صوت سوره ${surah.nameFa}',
           style: const TextStyle(
             fontFamily: AppTypography.fontFamily,
@@ -1181,7 +1182,7 @@ class _SurahListItem extends ConsumerWidget {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: colorScheme.error,
             ),
             onPressed: () async {
               Navigator.pop(dialogCtx);
@@ -1212,7 +1213,8 @@ class _SurahListItem extends ConsumerWidget {
             ),
           ),
         ],
-      ),
+      );
+    },
     );
   }
 }

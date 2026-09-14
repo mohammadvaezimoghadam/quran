@@ -2,9 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/quick_access_tool_entity.dart';
 
@@ -117,26 +119,27 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = context.isDark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
 
     final isEmpty = widget.tool == null;
 
     final cardBgColor = isDark
-        ? (isEmpty ? Colors.white.withValues(alpha: 0.025) : const Color(0xFF192220))
-        : (isEmpty ? const Color(0xFFFBF9F5) : Colors.white);
+        ? (isEmpty ? Colors.white.withValues(alpha: 0.025) : colors.cardBackground)
+        : (isEmpty ? colors.cardBackgroundSubtle : colors.cardBackground);
 
     final cardBorderColor = isDark
         ? (isEmpty
             ? Colors.white.withValues(alpha: 0.06)
             : (widget.isEditMode
-                ? AppColors.goldAccent.withValues(alpha: 0.35)
-                : Colors.white.withValues(alpha: 0.08)))
+                ? colors.goldAccent.withValues(alpha: 0.35)
+                : colors.cardBorder))
         : (isEmpty
             ? const Color(0xFFEAE7DF)
             : (widget.isEditMode
-                ? AppColors.goldAccent.withValues(alpha: 0.45)
-                : const Color(0xFFEBE7E1)));
+                ? colors.goldAccent.withValues(alpha: 0.45)
+                : colors.cardBorder));
 
     return RotationTransition(
       turns: _shakeAnimation,
@@ -149,7 +152,7 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
             height: 84,
             decoration: BoxDecoration(
               color: cardBgColor,
-              borderRadius: BorderRadius.circular(16.0),
+              borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
               border: Border.all(
                 color: cardBorderColor,
                 width: 1.0,
@@ -166,11 +169,11 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
             ),
             child: Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(16.0),
+              borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
               child: InkWell(
                 onTap: widget.isEditMode ? null : widget.onTap,
                 onLongPress: widget.onLongPress,
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Center(
@@ -207,8 +210,8 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                             ),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? AppColors.goldAccent.withValues(alpha: 0.14)
-                                  : AppColors.primary.withValues(alpha: 0.08),
+                                  ? colors.goldAccent.withValues(alpha: 0.14)
+                                  : colorScheme.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(6.0),
                             ),
                             child: Text(
@@ -217,12 +220,12 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w600,
                                 color: isDark
-                                    ? AppColors.goldAccent
-                                    : AppColors.primary,
+                                    ? colors.goldAccent
+                                    : colorScheme.primary,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          4.vSpace,
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4.0),
                             child: FittedBox(
@@ -248,7 +251,7 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                             ),
                           ),
                           if (widget.tool!.ayahCount != null) ...[
-                            const SizedBox(height: 2),
+                            2.vSpace,
                             Text(
                               '${widget.tool!.ayahCount.toString().toPersianDigit()} آیه',
                               textAlign: TextAlign.center,
@@ -262,11 +265,11 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                           Icon(
                             widget.tool!.iconData ?? CupertinoIcons.star_fill,
                             color: isDark
-                                ? AppColors.goldAccent
-                                : AppColors.primary,
+                                ? colors.goldAccent
+                                : colorScheme.primary,
                             size: widget.subtitle != null ? 22 : 26,
                           ),
-                          SizedBox(height: widget.subtitle != null ? 3 : 8),
+                          (widget.subtitle != null ? 3.0 : 8.0).vSpace,
                           if (widget.subtitle != null) ...[
                             Text(
                               widget.tool!.title,
@@ -281,7 +284,7 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                                     : const Color(0xFF6E685F),
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            2.vSpace,
                             Text(
                               widget.subtitle!,
                               textAlign: TextAlign.center,
@@ -291,8 +294,8 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: isDark
-                                    ? AppColors.goldAccent
-                                    : AppColors.primary,
+                                    ? colors.goldAccent
+                                    : colorScheme.primary,
                               ),
                             ),
                           ] else ...[

@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../core/routes/route_name.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/presentation/widgets/quick_settings_drawer.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
@@ -16,13 +17,13 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final isDark = context.isDark;
     final isVip = ref.watch(hasVipAccessProvider);
     final vipState = ref.watch(vipSubscriptionControllerProvider);
 
     final bgColor = isDark ? const Color(0xFF0F1615) : const Color(0xFFF7F5F0);
-    final cardBgColor = isDark ? const Color(0xFF162220) : Colors.white;
+    final cardBgColor = colors.cardBackground;
     final textColor = isDark ? Colors.white : const Color(0xFF1C1B1B);
     final subtitleColor = isDark ? Colors.white70 : const Color(0xFF666666);
     final dividerColor = isDark
@@ -83,7 +84,7 @@ class SettingsScreen extends ConsumerWidget {
                 _buildSettingsTile(
                   context: context,
                   icon: CupertinoIcons.star_circle_fill,
-                  iconColor: AppColors.goldMetallic,
+                  iconColor: colors.goldAccent,
                   title: 'اشتراک ویژه',
                   subtitle: vipSubtitle,
                   textColor: textColor,
@@ -124,18 +125,16 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildCard({required BuildContext context, required Widget child}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF162220) : Colors.white;
-    final cardBorder = isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEAE7E3);
+    final colors = context.colors;
 
     return Material(
-      color: cardBg,
-      borderRadius: BorderRadius.circular(16),
+      color: colors.cardBackground,
+      borderRadius: BorderRadius.circular(AppDimens.radiusMd),
       clipBehavior: Clip.antiAlias,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cardBorder),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+          border: Border.all(color: colors.cardBorder),
         ),
         child: child,
       ),
@@ -154,7 +153,7 @@ class SettingsScreen extends ConsumerWidget {
     Widget? trailing,
   }) {
     return ListTile(
-      leading: Icon(icon, color: iconColor ?? AppColors.goldMetallic, size: 26),
+      leading: Icon(icon, color: iconColor ?? context.colors.goldAccent, size: 26),
       title: Text(title, style: AppTypography.sectionHeader.copyWith(color: textColor)),
       subtitle: Text(subtitle, style: AppTypography.captionText.copyWith(color: subtitleColor)),
       trailing: trailing ?? Icon(CupertinoIcons.chevron_left, size: 16, color: subtitleColor),

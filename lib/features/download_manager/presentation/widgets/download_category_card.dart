@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 
 class DownloadCategoryCard extends StatelessWidget {
@@ -23,22 +24,22 @@ class DownloadCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
-    final cardBgColor = isDark ? const Color(0xFF192220) : Colors.white;
-    final cardBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFEAE7E3);
+    final cardBgColor = colors.cardBackground;
+    final cardBorderColor = colors.cardBorder;
 
     final isCompleted = progress >= 1.0;
     final ringColor = isCompleted
         ? Colors.green
-        : (isDark ? AppColors.goldAccent : AppColors.primary);
+        : (isDark ? colors.goldAccent : colorScheme.primary);
 
     return Container(
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         border: Border.all(color: cardBorderColor, width: 1),
         boxShadow: isDark
             ? null
@@ -88,7 +89,7 @@ class DownloadCategoryCard extends StatelessWidget {
                         height: 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.primary.withValues(
+                          color: colorScheme.primary.withValues(
                             alpha: isDark ? 0.25 : 0.1,
                           ),
                         ),
@@ -97,8 +98,8 @@ class DownloadCategoryCard extends StatelessWidget {
                             icon,
                             size: 20,
                             color: isDark
-                                ? AppColors.inversePrimary
-                                : AppColors.primary,
+                                ? colorScheme.primaryContainer
+                                : colorScheme.primary,
                           ),
                         ),
                       ),

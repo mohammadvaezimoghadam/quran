@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
@@ -100,7 +101,7 @@ class _PinnedSurahPickerBottomSheetState
           persianNumberStr.contains(normalizedQuery);
     }).toList();
 
-    final sheetBgColor = isDark ? const Color(0xFF16201E) : Colors.white;
+    final sheetBgColor = context.colors.dialogSurface;
 
     return Container(
       constraints: BoxConstraints(
@@ -108,7 +109,7 @@ class _PinnedSurahPickerBottomSheetState
       ),
       decoration: BoxDecoration(
         color: sheetBgColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimens.radiusLg)),
       ),
       child: SafeArea(
         top: false,
@@ -251,17 +252,20 @@ class _PinnedSurahPickerBottomSheetState
                             ? (currentPinnedId == surah.number)
                             : false;
 
+                        final colors = context.colors;
+                        final colorScheme = context.colorScheme;
+
                         return Material(
                           color: isSelected
                               ? (isDark
-                                  ? AppColors.goldAccent.withValues(alpha: 0.12)
-                                  : AppColors.primary.withValues(alpha: 0.08))
+                                  ? colors.goldAccent.withValues(alpha: 0.12)
+                                  : colorScheme.primary.withValues(alpha: 0.08))
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                           child: ListTile(
                             dense: true,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                             ),
                             leading: Container(
                               width: 38,
@@ -270,12 +274,12 @@ class _PinnedSurahPickerBottomSheetState
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? (isDark
-                                        ? AppColors.goldAccent
-                                        : AppColors.primary)
+                                        ? colors.goldAccent
+                                        : colorScheme.primary)
                                     : (isDark
                                         ? Colors.white.withValues(alpha: 0.08)
                                         : const Color(0xFFEEEBE3)),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                               ),
                               child: Text(
                                 surah.number.toString().toPersianDigit(),
@@ -301,8 +305,8 @@ class _PinnedSurahPickerBottomSheetState
                                     : FontWeight.w600,
                                 color: isSelected
                                     ? (isDark
-                                        ? AppColors.goldAccent
-                                        : AppColors.primary)
+                                        ? colors.goldAccent
+                                        : colorScheme.primary)
                                     : (isDark
                                         ? Colors.white
                                         : const Color(0xFF2C2A29)),
@@ -322,10 +326,10 @@ class _PinnedSurahPickerBottomSheetState
                             ),
                             trailing: isSelected
                                 ? Icon(
-                                    Icons.check_circle_rounded,
+                                    CupertinoIcons.checkmark_circle_fill,
                                     color: isDark
-                                        ? AppColors.goldAccent
-                                        : AppColors.primary,
+                                        ? colors.goldAccent
+                                        : colorScheme.primary,
                                     size: 22,
                                   )
                                 : const Icon(

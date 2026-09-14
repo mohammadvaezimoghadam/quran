@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
-import '../../../../core/theme/app_colors.dart';
 
 /// Renders a text with highlighted search query matches.
 /// Works with both plain text and Arabic/Persian diacritic-normalized texts.
@@ -37,10 +37,11 @@ class SearchHighlightText extends StatelessWidget {
       );
     }
 
+    final goldAccent = context.colors.goldAccent;
     final effectiveHighlightStyle = highlightStyle ??
         baseStyle.copyWith(
-          color: AppColors.goldAccent,
-          backgroundColor: AppColors.goldAccent.withValues(alpha: 0.15),
+          color: goldAccent,
+          backgroundColor: goldAccent.withValues(alpha: 0.15),
           fontWeight: FontWeight.bold,
         );
 

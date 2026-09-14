@@ -5,10 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../common/extensions/ayah_extension.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
@@ -63,12 +64,12 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
       ),
     );
 
-    final sheetBg = isDark ? const Color(0xFF161E1B) : const Color(0xFFFAF9F6);
-    final cardBg = isDark ? const Color(0xFF1E2825) : Colors.white;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFEBE7DF);
-    final goldColor = isDark ? const Color(0xFFF4E0A5) : const Color(0xFFB5872A);
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final sheetBg = colors.dialogSurface;
+    final cardBg = colors.cardBackground;
+    final borderColor = colors.cardBorder;
+    final goldColor = colors.goldAccent;
     final cleanSurahName = surahName.replaceAll('سوره', '').trim();
 
     return Container(
@@ -104,10 +105,10 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
               ),
               14.vSpace,
 
-              // 2. Ayah Info & Context Pill
+              // 2. Centered Surah & Ayah Pill Header
               Row(
                 children: [
-                  const SizedBox(width: 48),
+                  48.hSpace,
                   Expanded(
                     child: Center(
                       child: Container(
@@ -117,12 +118,12 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? AppColors.goldAccent.withValues(alpha: 0.12)
+                              ? colors.goldAccent.withValues(alpha: 0.12)
                               : const Color(0xFFF4EFE6),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                           border: Border.all(
                             color: isDark
-                                ? AppColors.goldAccent.withValues(alpha: 0.25)
+                                ? colors.goldAccent.withValues(alpha: 0.25)
                                 : const Color(0xFFE5DDD0),
                           ),
                         ),
@@ -136,8 +137,8 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: isDark
-                                    ? AppColors.goldAccent
-                                    : AppColors.primary,
+                                    ? colors.goldAccent
+                                    : colorScheme.primary,
                               ),
                             ),
                             6.hSpace,
@@ -148,8 +149,8 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
                                 color: isDark
-                                    ? AppColors.goldAccent
-                                    : AppColors.primary,
+                                    ? colors.goldAccent
+                                    : colorScheme.primary,
                               ),
                             ),
                           ],

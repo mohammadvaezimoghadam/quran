@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 
 class VipBenefitsList extends StatelessWidget {
@@ -8,31 +9,34 @@ class VipBenefitsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+
     final benefits = [
       (
-        icon: Icons.record_voice_over_rounded,
+        icon: CupertinoIcons.mic_fill,
         title: 'آرشیو قاریان برجسته جهان اسلام',
         desc: 'دسترسی نامحدود به صوت استاد عبدالباسط، منشاوی، خلیل الحصری، العفاسی و...',
       ),
       (
-        icon: Icons.hearing_rounded,
-        title: 'ترجمه صوتی گویای فارسی',
+        icon: CupertinoIcons.textformat,
+        title: 'ترجمه‌های گویای صوتی',
         desc: 'شنیدن همگام ترجمه شیوا و باکیفیت فارسی پس از قرائت هر آیه برای تمام سوره‌ها',
       ),
       (
-        icon: Icons.cloud_download_rounded,
+        icon: CupertinoIcons.cloud_download_fill,
         title: 'دانلود نامحدود و دسترسی آفلاین',
         desc: 'دانلود یکجا و آفلاین تمامی سوره‌ها با صدای هر یک از قاریان منتخب بدون محدودیت',
       ),
     ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimens.stackMd),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
+          color: colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -43,23 +47,23 @@ class VipBenefitsList extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: colorScheme.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.stars_rounded,
-                  color: AppColors.primary,
+                child: Icon(
+                  CupertinoIcons.sparkles,
+                  color: colorScheme.primary,
                   size: 20,
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'امکانات اشتراک ویژه',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                 ),
               ),
             ],
@@ -72,15 +76,15 @@ class VipBenefitsList extends StatelessWidget {
                   children: [
                     Container(
                       margin: const EdgeInsets.only(top: 2),
-                      padding: const EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                       ),
                       child: Icon(
                         b.icon,
                         size: 18,
-                        color: AppColors.primary,
+                        color: colorScheme.primary,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -90,11 +94,11 @@ class VipBenefitsList extends StatelessWidget {
                         children: [
                           Text(
                             b.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
-                              color: AppColors.onSurface,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -104,7 +108,7 @@ class VipBenefitsList extends StatelessWidget {
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 11,
                               height: 1.4,
-                              color: AppColors.onSurfaceVariant.withValues(alpha: 0.8),
+                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                             ),
                           ),
                         ],

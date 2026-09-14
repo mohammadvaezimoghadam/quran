@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -17,10 +17,12 @@ class SurahAyahBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: isDark ? 0.35 : 0.08),
+        color: colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.08),
         borderRadius: BorderRadius.circular(AppDimens.radiusSm),
       ),
       child: Text(
@@ -29,7 +31,7 @@ class SurahAyahBadge extends StatelessWidget {
           fontSize: 10.5,
           fontWeight: FontWeight.w600,
           fontFamily: AppTypography.fontFamily,
-          color: isDark ? AppColors.inversePrimary : AppColors.primary,
+          color: isDark ? colorScheme.primaryContainer : colorScheme.primary,
         ),
       ),
     );

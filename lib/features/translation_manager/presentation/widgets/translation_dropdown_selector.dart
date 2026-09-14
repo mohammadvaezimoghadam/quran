@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/translation_vip_policy.dart';
@@ -217,10 +217,10 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
 
                           Widget iconWidget;
                           if (isLocked) {
-                            iconWidget = const Icon(
-                              Icons.lock_rounded,
+                            iconWidget = Icon(
+                              CupertinoIcons.lock_fill,
                               size: 13,
-                              color: AppColors.primary,
+                              color: context.colorScheme.primary,
                             );
                           } else if (translation.isDownloaded) {
                             iconWidget = Icon(

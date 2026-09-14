@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
@@ -90,7 +92,7 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
     final harakatColor = ArabicTextHelper.parseHexColor(harakatColorHex);
 
     final baseArabicColor =
-        isDark ? AppColors.goldAccent : const Color(0xFF1E262C);
+        isDark ? context.colors.goldAccent : context.colorScheme.onSurface;
     final baseArabicStyle = TextStyle(
       fontFamily: fontFamily,
       fontSize: 22,
@@ -108,11 +110,9 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
     final surahDisplayName = 'سوره $cleanSurahName';
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF141C1A) : const Color(0xFFF9F7F2),
+      backgroundColor: context.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor:
-            isDark ? const Color(0xFF192220) : Colors.white,
+        backgroundColor: context.colors.cardBackground,
         elevation: 0.5,
         centerTitle: true,
         leading: Padding(
@@ -134,11 +134,11 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                     shape: BoxShape.circle,
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.12)
-                        : AppColors.primary.withValues(alpha: 0.08),
+                        : context.colorScheme.primary.withValues(alpha: 0.08),
                     border: Border.all(
                       color: isDark
-                          ? const Color(0xFFF4E0A5).withValues(alpha: 0.3)
-                          : AppColors.primary.withValues(alpha: 0.25),
+                          ? context.colors.softGoldText.withValues(alpha: 0.3)
+                          : context.colorScheme.primary.withValues(alpha: 0.25),
                       width: 1.0,
                     ),
                   ),
@@ -149,8 +149,8 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                         CupertinoIcons.chevron_forward,
                         size: 19,
                         color: isDark
-                            ? const Color(0xFFF4E0A5)
-                            : AppColors.primary,
+                            ? context.colors.softGoldText
+                            : context.colorScheme.primary,
                       ),
                     ),
                   ),
@@ -182,7 +182,7 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                   ),
                 );
               },
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDimens.radiusSm),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Column(
@@ -192,16 +192,16 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                     Icon(
                       CupertinoIcons.book,
                       size: 20,
-                      color: isDark ? AppColors.goldAccent : AppColors.primary,
+                      color: isDark ? context.colors.goldAccent : context.colorScheme.primary,
                     ),
-                    const SizedBox(height: 2),
+                    2.vSpace,
                     Text(
                       'لغت‌نامه سوره',
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.goldAccent : AppColors.primary,
+                        color: isDark ? context.colors.goldAccent : context.colorScheme.primary,
                       ),
                     ),
                   ],
@@ -212,8 +212,8 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
         ],
       ),
       body: wordsAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+        loading: () => Center(
+          child: CircularProgressIndicator(color: context.colorScheme.primary),
         ),
         error: (error, stack) => Center(
           child: Padding(
@@ -432,8 +432,8 @@ class _AyahWordCard extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: isDark
-                      ? AppColors.goldAccent.withValues(alpha: 0.15)
-                      : AppColors.primary.withValues(alpha: 0.08),
+                      ? context.colors.goldAccent.withValues(alpha: 0.15)
+                      : context.colorScheme.primary.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -444,8 +444,8 @@ class _AyahWordCard extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: isDark
-                        ? AppColors.goldAccent
-                        : AppColors.primary,
+                        ? context.colors.goldAccent
+                        : context.colorScheme.primary,
                   ),
                 ),
               ),

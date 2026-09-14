@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/int_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../common/extensions/surah_name_extension.dart';
 import '../../../../../core/routes/route_name.dart';
+import '../../../../../core/theme/app_dimens.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../application/controllers/daily_ayah_controller.dart';
@@ -38,8 +40,8 @@ class DailyAyahBannerWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final isDark = context.isDark;
 
     final ayahAsync = ref.watch(dailyAyahControllerProvider);
 
@@ -48,12 +50,12 @@ class DailyAyahBannerWidget extends ConsumerWidget {
     );
     final arabicFontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
-    const goldColor = Color(0xFFF7E2A9);
+    final goldColor = colors.goldAccent;
 
     return Container(
       height: 165,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22.0),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.40 : 0.12),
@@ -63,17 +65,17 @@ class DailyAyahBannerWidget extends ConsumerWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22.0),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
         child: ayahAsync.when(
           loading: () => Container(
-            color: isDark ? const Color(0xFF16231E) : const Color(0xFF20352C),
+            color: colors.cardBackground,
             child: const Center(
               child: CupertinoActivityIndicator(color: Colors.white),
             ),
           ),
           error: (err, stack) => Container(
-            color: isDark ? const Color(0xFF16231E) : const Color(0xFF20352C),
-            padding: const EdgeInsets.all(16),
+            color: colors.cardBackground,
+            padding: const EdgeInsets.all(AppDimens.stackMd),
             child: const Center(
               child: Text(
                 'خطا در بارگذاری آیه روز',
@@ -140,13 +142,13 @@ class DailyAyahBannerWidget extends ConsumerWidget {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       CupertinoIcons.sparkles,
                                       size: 13,
                                       color: goldColor,
                                     ),
                                     5.hSpace,
-                                    const Text(
+                                    Text(
                                       'هر روز یک آیه',
                                       style: TextStyle(
                                         fontFamily: AppTypography.fontFamily,

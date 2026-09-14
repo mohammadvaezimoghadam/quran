@@ -11,10 +11,11 @@ import 'package:zxing2/qrcode.dart' hide BarcodeFormat;
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/page_navigation_controller.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
@@ -176,21 +177,29 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
         ? keyboardInset + 16.0
         : (navBarPadding > 0 ? navBarPadding + 16.0 : 24.0);
 
+    final colors = context.colors;
+    final isDark = context.isDark;
+
     return SafeArea(
       top: false,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
+          left: 20,
+          right: 20,
+          top: 20,
           bottom: bottomSpacing,
         ),
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 20, spreadRadius: 5),
+          color: colors.cardBackground,
+          borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+          border: Border.all(color: colors.cardBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: AnimatedSize(
@@ -202,19 +211,40 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
   }
 
   Widget _buildInputView(BuildContext context, bool isLoading) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          AppConstants.pageNavigationTitle,
-          style: AppTypography.sectionHeader.copyWith(
-            fontSize: 18,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          textAlign: TextAlign.center,
+        Row(
+          children: [
+            const SizedBox(width: 40),
+            Expanded(
+              child: Text(
+                AppConstants.pageNavigationTitle,
+                style: AppTypography.sectionHeader.copyWith(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            IconButton(
+              tooltip: 'بستن',
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: Icon(
+                CupertinoIcons.xmark_circle_fill,
+                size: 22,
+                color: isDark ? Colors.white30 : Colors.black26,
+              ),
+            ),
+          ],
         ),
-        20.vSpace,
+        16.vSpace,
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -223,27 +253,38 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                 controller: _pageController,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
                 decoration: InputDecoration(
                   hintText: 'شماره صفحه (۱ تا ۶۰۴)',
-                  hintStyle: AppTypography.searchHint.copyWith(color: AppColors.outline),
+                  hintStyle: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
                   filled: true,
-                  fillColor: Theme.of(context).brightness == Brightness.dark 
+                  fillColor: isDark 
                       ? Colors.white.withValues(alpha: 0.05) 
-                      : Theme.of(context).colorScheme.surfaceContainerHighest,
+                      : const Color(0xFFF7F5F0),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.6),
+                      color: colors.cardBorder,
                       width: 1,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
                   ),
                 ),
               ),
@@ -263,10 +304,11 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: colorScheme.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 22),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+                elevation: 0,
               ),
               child: isLoading
                   ? const SizedBox(
@@ -276,26 +318,34 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                     )
                   : const Text(
                       'تایید',
-                      style: AppTypography.bottomSheetActionLabel,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
             ),
           ],
         ),
-        24.vSpace,
+        20.vSpace,
         Row(
           children: [
-            const Expanded(child: Divider(color: AppColors.outline)),
+            Expanded(child: Divider(color: colors.cardBorder)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 'یا',
-                style: AppTypography.searchHint.copyWith(color: AppColors.outline),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
               ),
             ),
-            const Expanded(child: Divider(color: AppColors.outline)),
+            Expanded(child: Divider(color: colors.cardBorder)),
           ],
         ),
-        24.vSpace,
+        20.vSpace,
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -304,15 +354,20 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                 onPressed: () {
                    setState(() => _showScanner = true);
                 },
-                icon: const Icon(Icons.qr_code_scanner, color: AppColors.primary),
+                icon: Icon(CupertinoIcons.qrcode_viewfinder, color: colorScheme.primary, size: 20),
                 label: Text(
-                  'اسکن دوربین', 
-                  style: AppTypography.buttonLabel.copyWith(color: AppColors.primary, fontSize: 13),
+                  'اسکن با دوربین', 
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    color: colorScheme.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+                  side: BorderSide(color: colors.cardBorder),
                 ),
               ),
             ),
@@ -320,15 +375,20 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _pickImage,
-                icon: const Icon(Icons.photo_library, color: AppColors.primary),
+                icon: Icon(CupertinoIcons.photo, color: colorScheme.primary, size: 20),
                 label: Text(
-                  'انتخاب گالری', 
-                  style: AppTypography.buttonLabel.copyWith(color: AppColors.primary, fontSize: 13),
+                  'انتخاب تصویر', 
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    color: colorScheme.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+                  side: BorderSide(color: colors.cardBorder),
                 ),
               ),
             ),
@@ -419,12 +479,12 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: context.colorScheme.primary,
                               foregroundColor: Colors.white,
-                              elevation: 2,
+                              elevation: 0,
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                               ),
                             ),
                           ),
@@ -451,9 +511,9 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
           ),
         ),
         if (_isProcessingScanner)
-           const Padding(
-             padding: EdgeInsets.only(top: 16.0),
-             child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+           Padding(
+             padding: const EdgeInsets.only(top: 16.0),
+             child: Center(child: CircularProgressIndicator(color: context.colorScheme.primary)),
            )
         else 
            Padding(

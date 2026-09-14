@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/services/payment/models/payment_product.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/vip_subscription_controller.dart';
 import '../widgets/subscription_plan_card.dart';
@@ -43,8 +44,6 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -59,13 +58,11 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
           textDirection: TextDirection.rtl,
         ),
         backgroundColor: isError
-            ? const Color(0xFFC62828)
-            : (isDark
-                ? const Color(0xFF0F766E)
-                : AppColors.primary),
+            ? context.colorScheme.error
+            : context.colorScheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppDimens.radiusSm),
         ),
       ),
     );
@@ -87,7 +84,7 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
       orElse: () => products.first,
     );
 
-    final buttonBg = isDark ? const Color(0xFF0F766E) : AppColors.primary;
+    final buttonBg = colorScheme.primary;
 
     return Container(
       constraints: BoxConstraints(

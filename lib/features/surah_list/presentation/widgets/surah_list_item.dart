@@ -1,15 +1,16 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../domain/entities/surah_entity.dart';
 import '../../application/controllers/favorite_surahs_controller.dart';
 import 'surah_info_content.dart';
 import 'surah_number_medallion.dart';
 import 'surah_audio_download_button.dart';
 
-/// Clean Surah Card composed of modular sub-widgets.
+/// Clean Apple-Style Borderless Surah Row with native table cell interaction.
 class SurahListItem extends StatelessWidget {
   final SurahEntity surah;
   final VoidCallback onTap;
@@ -24,71 +25,74 @@ class SurahListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final colorScheme = Theme.of(context).colorScheme;
+    final colors = context.colors;
+    final isDark = context.isDark;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 2.0),
-      child: Material(
-        color: isDark ? AppColors.darkSurface : colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
-          splashColor: AppColors.goldAccent.withValues(alpha: 0.12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14.0,
-              vertical: 12.0,
-            ),
-            child: Row(
-              children: [
-                // 1. Surah Number Star Medallion
-                SurahNumberMedallion(
-                  surahNumber: surah.number,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.black.withValues(alpha: 0.03),
+        highlightColor: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 11.0,
+          ),
+          child: Row(
+            children: [
+              // 1. Apple-Style Squircle Number Medallion
+              SurahNumberMedallion(
+                surahNumber: surah.number,
+                isDark: isDark,
+              ),
+
+              14.hSpace,
+
+              // 2. Surah Text Info Content
+              Expanded(
+                child: SurahInfoContent(
+                  surah: surah,
                   isDark: isDark,
                 ),
+              ),
 
-                const SizedBox(width: 14.0),
+              // 3. Favorite Star Button (Apple SF Symbols style)
+              Consumer(
+                builder: (context, ref, child) {
+                  final isFavorite = ref.watch(
+                    favoriteSurahsProvider.select(
+                      (set) => set.contains(surah.number),
+                    ),
+                  );
+                  return IconButton(
+                    visualDensity: VisualDensity.compact,
+                    splashRadius: 18,
+                    icon: Icon(
+                      isFavorite ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                      color: isFavorite
+                          ? colors.goldAccent
+                          : (isDark ? Colors.white24 : Colors.black26),
+                      size: 19,
+                    ),
+                    tooltip: isFavorite ? 'حذف از فهرست شخصی' : 'افزودن به فهرست شخصی',
+                    onPressed: () {
+                      ref.read(favoriteSurahsProvider.notifier).toggleFavorite(surah.number);
+                    },
+                  );
+                },
+              ),
 
-                // 2. Surah Text Info & Badges Content
-                Expanded(
-                  child: SurahInfoContent(
-                    surah: surah,
-                    isDark: isDark,
-                  ),
-                ),
-
-                // 3. Favorite Star Button
-                Consumer(
-                  builder: (context, ref, child) {
-                    final isFavorite = ref.watch(
-                      favoriteSurahsProvider.select(
-                        (set) => set.contains(surah.number),
-                      ),
-                    );
-                    return IconButton(
-                      visualDensity: VisualDensity.compact,
-                      icon: Icon(
-                        isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                        color: isFavorite ? AppColors.goldAccent : Colors.grey.withValues(alpha: 0.5),
-                        size: 22,
-                      ),
-                      tooltip: isFavorite ? 'حذف از فهرست شخصی' : 'افزودن به فهرست شخصی',
-                      onPressed: () {
-                        ref.read(favoriteSurahsProvider.notifier).toggleFavorite(surah.number);
-                      },
-                    );
-                  },
-                ),
-
-                // 4. Download Audio Button
-                SurahAudioDownloadButton(
-                  surah: surah,
-                  onDownloadTap: onDownloadTap,
-                ),
-              ],
-            ),
+              // 4. Download Audio Button
+              SurahAudioDownloadButton(
+                surah: surah,
+                onDownloadTap: onDownloadTap,
+              ),
+            ],
           ),
         ),
       ),

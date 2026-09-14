@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/recent_searches_controller.dart';
 import '../../application/controllers/search_controller.dart';
 import '../../application/states/search_state.dart';
@@ -67,11 +69,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -100,14 +103,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     child: Container(
                       height: 48,
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF1E2825)
-                            : const Color(0xFFF2EFEB),
-                        borderRadius: BorderRadius.circular(14),
+                        color: colors.cardBackground,
+                        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                         border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : const Color(0xFFE2DDD5),
+                          color: colors.cardBorder,
                           width: 1,
                         ),
                       ),
@@ -118,8 +117,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             CupertinoIcons.search,
                             size: 19,
                             color: isDark
-                                ? AppColors.goldAccent
-                                : AppColors.primary,
+                                ? colors.goldAccent
+                                : colorScheme.primary,
                           ),
                           10.hSpace,
                           Expanded(
@@ -139,28 +138,32 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                     .onQueryChanged(val);
                               },
                               style: TextStyle(
-                                fontSize: 14,
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 14.5,
                                 color: isDark ? Colors.white : Colors.black87,
                               ),
                               decoration: InputDecoration(
-                                hintText: 'جستجو در نام سوره، آیه، ترجمه...',
+                                hintText:
+                                    'جستجو در سوره‌ها، آیات، ترجمه...',
                                 hintStyle: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
                                   fontSize: 13,
                                   color: isDark
                                       ? Colors.white38
-                                      : const Color(0xFF989288),
+                                      : Colors.black38,
                                 ),
                                 border: InputBorder.none,
                                 isDense: true,
-                                contentPadding: EdgeInsets.zero,
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 12.0),
                               ),
                             ),
                           ),
 
-                          // Isolated Action Indicator (Loading or Clear button)
+                          // Trailing: Clear button or Loading indicator
                           Consumer(
                             builder: (context, ref, _) {
-                              final isLoading = ref.watch(
+                              final isSearching = ref.watch(
                                 searchControllerProvider
                                     .select((s) => s.isLoading),
                               );
@@ -169,7 +172,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                     .select((s) => s.query.isNotEmpty),
                               );
 
-                              if (isLoading) {
+                              if (isSearching) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10.0,
@@ -182,8 +185,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                       valueColor:
                                           AlwaysStoppedAnimation<Color>(
                                         isDark
-                                            ? AppColors.goldAccent
-                                            : AppColors.primary,
+                                            ? colors.goldAccent
+                                            : colorScheme.primary,
                                       ),
                                     ),
                                   ),
@@ -296,7 +299,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     return Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isDark ? AppColors.goldAccent : AppColors.primary,
+                          isDark ? colors.goldAccent : colorScheme.primary,
                         ),
                       ),
                     );
@@ -412,6 +415,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildSectionHeader(String title, bool isDark) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
     return Padding(
       padding: const EdgeInsets.only(
         left: 20.0,
@@ -422,9 +427,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       child: Text(
         title,
         style: TextStyle(
+          fontFamily: AppTypography.fontFamily,
           fontSize: 12.5,
           fontWeight: FontWeight.bold,
-          color: isDark ? AppColors.goldAccent : AppColors.primary,
+          color: isDark ? colors.goldAccent : colorScheme.primary,
         ),
       ),
     );

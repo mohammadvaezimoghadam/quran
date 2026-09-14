@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../translation_manager/presentation/widgets/ayah_translation_text.dart';
@@ -245,11 +245,11 @@ class AyahListItem extends ConsumerWidget {
                                   child: isPageStart
                                       ? Text(
                                           'صفحه ${ayah.page?.toPersianDigit() ?? ''}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontFamily: AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: AppColors.goldAccent,
+                                            color: context.colors.goldAccent,
                                           ),
                                           textDirection: TextDirection.rtl,
                                         )
@@ -264,11 +264,11 @@ class AyahListItem extends ConsumerWidget {
                                   child: (isJuzStart && ayah.juz != null)
                                       ? Text(
                                           'جزء ${ayah.juz!.toPersianDigit()}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontFamily: AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: AppColors.goldAccent,
+                                            color: context.colors.goldAccent,
                                           ),
                                           textDirection: TextDirection.rtl,
                                         )
@@ -283,11 +283,11 @@ class AyahListItem extends ConsumerWidget {
                                   child: (isHizbStart && ayah.hizb != null)
                                       ? Text(
                                           'حزب ${ayah.hizb!.toPersianDigit()}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontFamily: AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: AppColors.goldAccent,
+                                            color: context.colors.goldAccent,
                                           ),
                                           textDirection: TextDirection.rtl,
                                         )
@@ -300,7 +300,7 @@ class AyahListItem extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12.0),
                           child: QuranOrnamentalDivider(
-                            color: AppColors.goldAccent.withValues(alpha: 0.6),
+                            color: context.colors.goldAccent.withValues(alpha: 0.6),
                             height: 16,
                           ),
                         ),

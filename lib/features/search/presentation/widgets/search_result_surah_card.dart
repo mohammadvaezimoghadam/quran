@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/search_result_item.dart';
 import 'search_highlight_text.dart';
@@ -23,18 +24,17 @@ class SearchResultSurahCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2825) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : const Color(0xFFEBE8E3),
+          color: colors.cardBorder,
           width: 1,
         ),
         boxShadow: isDark
@@ -49,10 +49,10 @@ class SearchResultSurahCard extends ConsumerWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
             child: Row(
@@ -63,12 +63,12 @@ class SearchResultSurahCard extends ConsumerWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: isDark
-                        ? AppColors.goldAccent.withValues(alpha: 0.12)
+                        ? colors.goldAccent.withValues(alpha: 0.12)
                         : const Color(0xFFF3EFE6),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                     border: Border.all(
                       color: isDark
-                          ? AppColors.goldAccent.withValues(alpha: 0.25)
+                          ? colors.goldAccent.withValues(alpha: 0.25)
                           : const Color(0xFFDFD7C7),
                       width: 1,
                     ),
@@ -80,7 +80,7 @@ class SearchResultSurahCard extends ConsumerWidget {
                       fontFamily: AppTypography.fontFamily,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.goldAccent : AppColors.primary,
+                      color: isDark ? colors.goldAccent : colorScheme.primary,
                     ),
                   ),
                 ),

@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../domain/entities/search_result_item.dart';
@@ -24,8 +25,9 @@ class SearchResultAyahCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
     final fontScript = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
@@ -38,12 +40,10 @@ class SearchResultAyahCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1B2320) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : const Color(0xFFEBE8E3),
+          color: colors.cardBorder,
           width: 1,
         ),
         boxShadow: isDark
@@ -58,10 +58,10 @@ class SearchResultAyahCard extends ConsumerWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: Column(
@@ -81,8 +81,8 @@ class SearchResultAyahCard extends ConsumerWidget {
                             fontSize: 13.5,
                             fontWeight: FontWeight.bold,
                             color: isDark
-                                ? AppColors.goldAccent
-                                : AppColors.primary,
+                                ? colors.goldAccent
+                                : colorScheme.primary,
                           ),
                         ),
                         4.hSpace,
@@ -93,8 +93,8 @@ class SearchResultAyahCard extends ConsumerWidget {
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: isDark
-                                ? AppColors.goldAccent.withValues(alpha: 0.8)
-                                : AppColors.primary.withValues(alpha: 0.8),
+                                ? colors.goldAccent.withValues(alpha: 0.8)
+                                : colorScheme.primary.withValues(alpha: 0.8),
                           ),
                         ),
                       ],

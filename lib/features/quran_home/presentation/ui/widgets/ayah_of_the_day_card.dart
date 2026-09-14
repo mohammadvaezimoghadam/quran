@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../common/constants/app_constants.dart';
+import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/int_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../common/extensions/surah_name_extension.dart';
 import '../../../../../common/widgets/app_loading_indicator.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_dimens.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../application/controllers/home_controller.dart';
@@ -30,6 +30,8 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
   Widget build(BuildContext context) {
     final state = ref.watch(ayahOfTheDayControllerProvider);
     final controller = ref.read(ayahOfTheDayControllerProvider.notifier);
+    final colorScheme = context.colorScheme;
+    final colors = context.colors;
 
     // 1. Loading State
     if (state.isLoading) {
@@ -59,16 +61,16 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               CupertinoIcons.wifi_slash,
-              color: AppColors.error,
+              color: colorScheme.error,
               size: AppDimens.iconMd,
             ),
             6.vSpace,
             Text(
               state.errorMessage!,
               textAlign: TextAlign.center,
-              style: AppTypography.statusMessage.copyWith(color: AppColors.error),
+              style: AppTypography.statusMessage.copyWith(color: colorScheme.error),
             ),
             8.vSpace,
             SizedBox(
@@ -78,8 +80,8 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
                   controller.fetchAyahOfTheDay();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.error,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.error,
+                  foregroundColor: colorScheme.onError,
                   padding: const EdgeInsets.symmetric(horizontal: AppDimens.gutterGrid),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppDimens.radiusSm),
@@ -173,7 +175,7 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
                   maxLines: _isExpanded ? null : 1,
                   overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                   style: AppTypography.translationTextSm.copyWith(
-                    color: AppColors.surface.withValues(alpha: 0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -210,9 +212,9 @@ class _AyahOfTheDayCardState extends ConsumerState<AyahOfTheDayCard> {
                       turns: _isExpanded ? 0.5 : 0.0,
                       duration: animationDuration,
                       curve: animationCurve,
-                      child: const Icon(
+                      child: Icon(
                         CupertinoIcons.chevron_down,
-                        color: AppColors.secondaryContainer,
+                        color: colors.goldAccent,
                         size: AppDimens.iconXs,
                       ),
                     ),
@@ -260,12 +262,11 @@ class _CardWrapper extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
-    // Gradient colors: use dark theme's primaryContainer in dark mode
     final gradientColors = isError
         ? [colorScheme.errorContainer, colorScheme.errorContainer]
         : (isDark
-            ? [colorScheme.primaryContainer, const Color(0xFF0D2B22)]
-            : [AppColors.primary, AppColors.primaryContainer]);
+            ? [colorScheme.primaryContainer, colorScheme.surfaceContainerHigh]
+            : [colorScheme.primary, colorScheme.primaryContainer]);
 
     return Container(
       width: double.infinity,
@@ -281,7 +282,7 @@ class _CardWrapper extends StatelessWidget {
             ? null // در حالت تاریک شدو نداریم - عمق با رنگ سطح نشان داده میشه
             : [
                 BoxShadow(
-                  color: (isError ? colorScheme.error : AppColors.primary)
+                  color: (isError ? colorScheme.error : colorScheme.primary)
                       .withValues(alpha: 0.14),
                   blurRadius: 24.0,
                   spreadRadius: -8.0,

@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/translation_vip_policy.dart';
@@ -302,7 +302,7 @@ class _TextTranslationsDownloadBottomSheetState
             child: const Text('انصراف'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colorScheme.error),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('حذف', style: TextStyle(color: Colors.white)),
           ),
@@ -439,10 +439,10 @@ class _TranslationListItem extends StatelessWidget {
                   ),
                   IconButton(
                     tooltip: 'لغو دانلود',
-                    icon: const Icon(
+                    icon: Icon(
                       CupertinoIcons.xmark_circle,
                       size: 22,
-                      color: AppColors.error,
+                      color: context.colorScheme.error,
                     ),
                     onPressed: onCancelDownload,
                   ),
@@ -455,8 +455,8 @@ class _TranslationListItem extends StatelessWidget {
                   if (!isActive)
                     if (isLocked)
                       TextButton.icon(
-                        icon: const Icon(Icons.lock_rounded, size: 12, color: AppColors.primary),
-                        label: const Text('انتخاب', style: TextStyle(fontSize: 12, color: AppColors.primary)),
+                        icon: Icon(CupertinoIcons.lock_fill, size: 12, color: context.colorScheme.primary),
+                        label: Text('انتخاب', style: TextStyle(fontSize: 12, color: context.colorScheme.primary)),
                         onPressed: onSetActive,
                       )
                     else
@@ -482,7 +482,7 @@ class _TranslationListItem extends StatelessWidget {
             ] else if (isLocked) ...[
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: context.colorScheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,

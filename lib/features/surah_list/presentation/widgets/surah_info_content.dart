@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/surah_entity.dart';
 
-/// Displays the Surah Title, Kaaba Icon (Makki/Madani), Juz & Hizb, and Ayah Count.
+/// Displays the Surah Title and a clean, single-line minimal metadata row.
 class SurahInfoContent extends StatelessWidget {
   final SurahEntity surah;
   final bool isDark;
@@ -21,52 +23,59 @@ class SurahInfoContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme = context.colorScheme;
+    final subtextColor = colorScheme.onSurfaceVariant.withValues(alpha: 0.70);
+    final dotColor = colorScheme.onSurfaceVariant.withValues(alpha: 0.35);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Persian Surah Title
+        // 1. High-Contrast Persian Surah Title
         Text(
           'سوره ${surah.nameFa}',
           style: TextStyle(
             fontFamily: AppTypography.fontFamily,
-            fontSize: 16.5,
+            fontSize: 15.5,
             fontWeight: FontWeight.bold,
-            height: 1.3,
-            color: isDark ? Colors.white : const Color(0xFF1A1D1E),
+            height: 1.25,
+            color: colorScheme.onSurface,
           ),
         ),
 
-        const SizedBox(height: 6),
+        AppDimens.stackXs.vSpace,
 
-        // Subtitle: Kaaba Icon + Makki/Madani • Juz • Ayah Count
+        // 2. Monochrome Single-Line Subtitle: Kaaba Icon + Makki/Madani • Juz • Ayah Count
         Row(
           children: [
-            // Kaaba Icon for Revelation Type
+            // Subtle monochrome Kaaba Icon
             SvgPicture.asset(
               'assets/icons/ic_kaaba.svg',
-              width: 14,
-              height: 14,
-              colorFilter: const ColorFilter.mode(
-                AppColors.goldAccent,
+              width: 12,
+              height: 12,
+              colorFilter: ColorFilter.mode(
+                subtextColor,
                 BlendMode.srcIn,
               ),
             ),
-            const SizedBox(width: 4),
+            5.hSpace,
             Text(
               surah.revelationTypeFa,
-              style: AppTypography.surahMetadata.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                color: subtextColor,
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5.0),
               child: Text(
                 '•',
-                style: AppTypography.surahMetadata.copyWith(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11.0,
+                  color: dotColor,
                 ),
               ),
             ),
@@ -74,16 +83,21 @@ class SurahInfoContent extends StatelessWidget {
             // Juz Info
             Text(
               'جزء ${surah.startJuz.toPersianDigit()}',
-              style: AppTypography.surahMetadata.copyWith(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                color: subtextColor,
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5.0),
               child: Text(
                 '•',
-                style: AppTypography.surahMetadata.copyWith(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11.0,
+                  color: dotColor,
                 ),
               ),
             ),
@@ -91,8 +105,11 @@ class SurahInfoContent extends StatelessWidget {
             // Ayah Count Info
             Text(
               '${surah.numberOfAyahs.toPersianDigit()} ${AppConstants.ayahLabel}',
-              style: AppTypography.surahMetadata.copyWith(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                color: subtextColor,
               ),
             ),
           ],
@@ -101,4 +118,3 @@ class SurahInfoContent extends StatelessWidget {
     );
   }
 }
-

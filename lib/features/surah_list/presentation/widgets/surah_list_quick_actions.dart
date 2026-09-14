@@ -1,18 +1,19 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/constants/surah_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../quran_reader/presentation/widgets/quran_quick_jump_bottom_sheet.dart';
 import '../../../quick_access/presentation/widgets/bookmarks_manager_bottom_sheet.dart';
 
-/// Clean, high-contrast quick action cards for "Bookmarks" (نشان شده‌ها)
-/// and "Quick Jump" (برو به) positioned directly beneath the search bar.
+/// Clean Apple-Style Action Pills for "Bookmarks" (نشان شده‌ها)
+/// and "Quick Jump" (برو به) with icon-free minimalist typography.
 class SurahListQuickActions extends ConsumerWidget {
   final VoidCallback? onBeforeNavigation;
 
@@ -23,55 +24,44 @@ class SurahListQuickActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = context.isDark;
+    final colorScheme = context.colorScheme;
 
-    final actionTextColor = isDark ? Colors.white : const Color(0xFF1A1D1E);
+    // Apple-style sleek neutral pill surface
+    final cardBg = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFF2EFEB);
 
-    // Palette for "نشان شده‌ها" (Gold / Amber)
-    final bookmarkBg = isDark
-        ? AppColors.goldAccent.withValues(alpha: 0.12)
-        : const Color(0xFFFFF8E7);
-    final bookmarkIcon = isDark
-        ? const Color(0xFFF7E2A9)
-        : AppColors.goldAccent;
-
-    // Palette for "برو به" (Sapphire / Slate Blue)
-    final jumpBg = isDark
-        ? const Color(0xFF1E6FBF).withValues(alpha: 0.15)
-        : const Color(0xFFEFF5FC);
-    final jumpIcon = isDark
-        ? const Color(0xFF90C2F7)
-        : const Color(0xFF1E6FBF);
+    final cardBorder = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.04);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
       child: Row(
         children: [
-          // 1. Right Card: نشان شده‌ها (Bookmarks)
+          // 1. Right Button: نشان شده‌ها (Bookmarks)
           Expanded(
-            child: _ActionCardItem(
+            child: _ActionPillItem(
               title: 'نشان شده‌ها',
-              icon: Icons.bookmark_rounded,
-              bgColor: bookmarkBg,
-              textColor: actionTextColor,
-              iconColor: bookmarkIcon,
+              bgColor: cardBg,
+              borderColor: cardBorder,
+              textColor: colorScheme.onSurface,
               onTap: () {
                 onBeforeNavigation?.call();
                 BookmarksManagerBottomSheet.show(context);
               },
             ),
           ),
-          const SizedBox(width: 10),
+          10.hSpace,
 
-          // 2. Left Card: برو به (Jump To)
+          // 2. Left Button: برو به (Jump To)
           Expanded(
-            child: _ActionCardItem(
+            child: _ActionPillItem(
               title: 'برو به',
-              icon: CupertinoIcons.arrow_turn_up_left,
-              bgColor: jumpBg,
-              textColor: actionTextColor,
-              iconColor: jumpIcon,
+              bgColor: cardBg,
+              borderColor: cardBorder,
+              textColor: colorScheme.onSurface,
               onTap: () async {
                 final target = await QuranQuickJumpBottomSheet.show(context);
                 if (target != null && context.mounted) {
@@ -97,54 +87,51 @@ class SurahListQuickActions extends ConsumerWidget {
   }
 }
 
-class _ActionCardItem extends StatelessWidget {
+class _ActionPillItem extends StatelessWidget {
   final String title;
-  final IconData icon;
   final Color bgColor;
+  final Color borderColor;
   final Color textColor;
-  final Color iconColor;
   final VoidCallback onTap;
 
-  const _ActionCardItem({
+  const _ActionPillItem({
     required this.title,
-    required this.icon,
     required this.bgColor,
+    required this.borderColor,
     required this.textColor,
-    required this.iconColor,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: bgColor,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: SizedBox(
-          height: 48,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 20, color: iconColor),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
-                ),
-              ],
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+        border: Border.all(
+          color: borderColor,
+          width: 0.8,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+          splashColor: textColor.withValues(alpha: 0.06),
+          highlightColor: textColor.withValues(alpha: 0.03),
+          child: Center(
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13.0,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+              ),
             ),
           ),
         ),

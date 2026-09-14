@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
@@ -75,7 +75,7 @@ class MiniAudioPlayerBar extends ConsumerWidget {
               ),
             ],
             border: Border.all(
-              color: AppColors.goldAccent.withValues(alpha: 0.28),
+              color: context.colors.goldAccent.withValues(alpha: 0.28),
               width: 1,
             ),
           ),
@@ -120,7 +120,7 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                                       fontFamily: userFontFamily,
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFFF4E0A5), // Elegant Gold
+                                      color: context.colors.goldAccent,
                                     ),
                                   ),
                                 ),
@@ -131,7 +131,7 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primaryContainer
+                                    color: context.colorScheme.primaryContainer
                                         .withValues(alpha: 0.35),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -223,7 +223,7 @@ class _MiniAudioProgressBar extends ConsumerWidget {
             value: value,
             minHeight: 2.5,
             backgroundColor: Colors.white.withValues(alpha: 0.08),
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.goldAccent),
+            valueColor: AlwaysStoppedAnimation<Color>(context.colors.goldAccent),
           );
         },
       ),
@@ -244,6 +244,7 @@ class _MiniPlayPauseButton extends ConsumerWidget {
     final isPlaying = status == AudioStatus.playing;
     final isLoading = status == AudioStatus.loading;
 
+    final colors = context.colors;
     return GestureDetector(
       onTap: () {
         final controller = ref.read(quranAudioControllerProvider.notifier);
@@ -258,12 +259,12 @@ class _MiniPlayPauseButton extends ConsumerWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: isPlaying ? AppColors.goldAccent : const Color(0xFF2A2E39),
+          color: isPlaying ? colors.goldAccent : colors.cardBackground,
           shape: BoxShape.circle,
           boxShadow: isPlaying
               ? [
                   BoxShadow(
-                    color: AppColors.goldAccent.withValues(alpha: 0.4),
+                    color: colors.goldAccent.withValues(alpha: 0.4),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),

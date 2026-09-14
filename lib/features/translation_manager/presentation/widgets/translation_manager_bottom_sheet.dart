@@ -6,7 +6,6 @@ import '../../../../common/constants/app_constants.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
@@ -409,12 +408,12 @@ class _TranslationStatusIcon extends ConsumerWidget {
     final state = ref.watch(translationManagerControllerProvider).value;
 
     if (isLocked) {
-      return const Padding(
-        padding: EdgeInsets.only(left: 6.0),
+      return Padding(
+        padding: const EdgeInsets.only(left: 6.0),
         child: Icon(
-          Icons.lock_rounded,
+          CupertinoIcons.lock_fill,
           size: 14,
-          color: AppColors.primary,
+          color: colorScheme.primary,
         ),
       );
     }

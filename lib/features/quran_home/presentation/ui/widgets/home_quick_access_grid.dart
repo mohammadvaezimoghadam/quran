@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/routes/route_name.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
@@ -18,16 +18,15 @@ class HomeQuickAccessGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = context.isDark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
 
-    final primaryEmerald = isDark ? const Color(0xFF52C498) : AppColors.primary;
-    final iconColor = isDark ? AppColors.goldAccent : AppColors.primary;
+    final primaryEmerald = colorScheme.primary;
+    final iconColor = isDark ? colors.goldAccent : colorScheme.primary;
 
-    final cardBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFE8E5DF);
-    final secondaryBg = isDark ? const Color(0xFF192220) : Colors.white;
+    final cardBorderColor = colors.cardBorder;
+    final secondaryBg = colors.cardBackground;
 
     return Row(
       children: [
