@@ -55,25 +55,7 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Guide / Purpose Text
-          Text(
-            isTranslationMode
-                ? 'برای استفاده آفلاین و بدون اینترنت ترجمه صوتی، سوره و گوینده مورد نظر خود را انتخاب و دانلود کنید.'
-                : 'برای استفاده آفلاین و بدون اینترنت صوت قرآن، سوره و قاری مورد نظر خود را انتخاب و دانلود کنید.',
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 12.5,
-              height: 1.5,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Reciter Selector Hero Card with photo background & gradient
-          InkWell(
+      child: InkWell(
             onTap: () {
               ReciterSelectionBottomSheet.show(
                 context,
@@ -227,8 +209,6 @@ class DownloadManagerReciterSelector extends ConsumerWidget {
               ),
             ),
           ),
-        ],
-      ),
     );
   }
 }
