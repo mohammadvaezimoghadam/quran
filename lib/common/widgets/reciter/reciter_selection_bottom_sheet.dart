@@ -713,36 +713,10 @@ class _ReciterSelectionBottomSheetState
                                             size: 13,
                                           ),
                                         ),
-                                      )
-                                    else if (!isVip &&
-                                        !widget.isTranslationMode &&
-                                        AudioVipPolicy.isDefaultReciter(
-                                            activeVariant.identifier))
-                                      Positioned(
-                                        bottom: -2,
-                                        left: 0,
-                                        right: 0,
-                                        child: Center(
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                            decoration: BoxDecoration(
-                                              color: colorScheme.primary,
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                            child: const Text(
-                                              'رایگان',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 8.5,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
                                       ),
-                                  ],
-                                ),
-                                8.vSpace,
+                                   ],
+                                 ),
+                                 8.vSpace,
 
                                 // Reciter Base Name
                                 Text(

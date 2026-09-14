@@ -238,9 +238,7 @@ class _HorizontalReciterSelectorState
                         ? true
                         : !AudioVipPolicy.isDefaultReciter(
                             activeVariant.identifier));
-                final isFreeDefault = !isVip &&
-                    !widget.isTranslationMode &&
-                    AudioVipPolicy.isDefaultReciter(activeVariant.identifier);
+                
 
                 return SizedBox(
                   width: 86.0,
@@ -332,35 +330,10 @@ class _HorizontalReciterSelectorState
                                     size: 12,
                                   ),
                                 ),
-                              )
-                            else if (isFreeDefault)
-                              Positioned(
-                                bottom: -2,
-                                left: 0,
-                                right: 0,
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Text(
-                                      'رایگان',
-                                      style: TextStyle(
-                                        fontFamily: AppTypography.fontFamily,
-                                        color: Colors.white,
-                                        fontSize: 8.5,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
                               ),
-                          ],
-                        ),
-                        6.vSpace,
+                           ],
+                         ),
+                         6.vSpace,
 
                         // Reciter Name
                         Text(

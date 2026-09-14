@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app_cached_network_image.dart';
 import '../../../core/services/audio/audio_player_state.dart';
 import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
-import '../../../core/theme/app_typography.dart';
 import '../../../features/quran_reader/domain/enums/audio_playback_mode.dart';
 import '../../../features/quran_reader/domain/enums/current_track_type.dart';
 import '../../../features/subscription/application/vip_subscription_controller.dart';
@@ -100,10 +99,8 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
       final defaultName = isTranslationTrack ? 'مترجم گویا' : 'استاد پرهیزگار';
       final nameStr = reciterName.isEmpty ? defaultName : reciterName;
       final roleTitle = isTranslationTrack ? 'گوینده ترجمه' : 'قاری';
-      if (hasVip) {
+      if (hasVip || (isParhizgar && !isTranslationTrack)) {
         tooltipMessage = 'انتخاب $roleTitle ($nameStr)';
-      } else if (isParhizgar && !isTranslationTrack) {
-        tooltipMessage = 'انتخاب قاری ($nameStr - رایگان)';
       } else {
         tooltipMessage = 'انتخاب $roleTitle ($nameStr - نیازمند اشتراک)';
       }
@@ -251,44 +248,9 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                   ),
                 ),
 
-              // 5. VIP / Free Status Badges (Only shown when user has NO VIP and not in play button mode)
-              if (!hasVip && !widget.isPlayButton) ...[
-                if (isParhizgar && !isTranslationTrack)
-                  // Free Reciter: Sleek emerald green 'رایگان' capsule at bottom center
-                  Positioned(
-                    bottom: -3,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1B5E20),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: const Color(0xFF81C784),
-                          width: 0.9,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.35),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1.5),
-                          ),
-                        ],
-                      ),
-                      child: const Text(
-                        'رایگان',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          height: 1.15,
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  // Locked Reciter: Exact golden circular lock badge matching reciter dialog
-                  Positioned(
+              // 5. VIP Status Badges (Only shown when user has NO VIP, not in play button mode, and not free default)
+              if (!hasVip && !widget.isPlayButton && !isParhizgar && !isTranslationTrack) ...[
+                Positioned(
                     top: -3,
                     right: -3,
                     child: Container(
