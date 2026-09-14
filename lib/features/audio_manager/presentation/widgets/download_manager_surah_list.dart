@@ -374,7 +374,16 @@ class _SurahListItem extends ConsumerWidget {
 
         return InkWell(
           onTap: () {
-            if (isDownloaded || hasPartialDownload) {
+            if (isDownloaded) {
+              if (selectedReciter != null) {
+                _playSurah(
+                  context: context,
+                  ref: ref,
+                  surah: surah,
+                  reciter: selectedReciter!,
+                );
+              }
+            } else if (hasPartialDownload) {
               if (selectedReciter != null) {
                 _showSurahOptionsBottomSheet(
                   context: context,
@@ -513,147 +522,157 @@ class _SurahListItem extends ConsumerWidget {
     required bool isLocked,
     required bool isTranslation,
   }) {
-    // 1. Downloading State
-    if (isDownloading && downloadTask != null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: (isDark ? AppColors.goldAccent : const Color(0xFFB57A22))
-              .withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(
-                value: downloadTask.progress > 0 ? downloadTask.progress : null,
-                strokeWidth: 2,
-                color: isDark ? AppColors.goldAccent : const Color(0xFFB57A22),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '${downloadTask.completedAyahs.toPersianDigit()}/${downloadTask.totalAyahs.toPersianDigit()}',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 11.5,
-                fontWeight: FontWeight.bold,
-                color: isDark ? AppColors.goldAccent : const Color(0xFFB57A22),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 2. Paused State
-    if (isPaused && downloadTask != null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              CupertinoIcons.pause_circle_fill,
-              color: Colors.orange,
-              size: 14,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'متوقف (${downloadTask.completedAyahs.toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()})',
-              style: const TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 3. Partial Download State
-    if (hasPartialDownload) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              CupertinoIcons.cloud_download,
-              color: Colors.orange,
-              size: 14,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'تکمیل (${downloadedAyahsCount?.toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()})',
-              style: const TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 4. Downloaded State
+    // 1. Downloaded State: Transforms into "حذف" button with outlined trash can (No border)
     if (isDownloaded) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  color: Colors.green,
-                  size: 15,
-                ),
-                SizedBox(width: 4),
-                Text(
-                  'دانلود شده',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
+      return InkWell(
+        onTap: () {
+          if (selectedReciter != null) {
+            _showDeleteConfirmDialog(
+              context: context,
+              sheetContext: null,
+              ref: ref,
+              surah: surah,
+              reciter: selectedReciter!,
+            );
+          }
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: isDark ? 0.16 : 0.08),
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 4),
-          Icon(
-            Icons.more_vert,
-            size: 18,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.delete_outline_rounded,
+                size: 15,
+                color: AppColors.error,
+              ),
+              SizedBox(width: 5),
+              Text(
+                'حذف',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.error,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       );
     }
 
-    // 5. Idle / Not Downloaded State (Standard Action Pill)
+    // 2. Downloading State: Progress % and X (cancel/stop) button inside same button (No border)
+    if (isDownloading && downloadTask != null) {
+      final percent = (downloadTask.progress * 100).clamp(0, 100).toInt();
+      final accentColor = isDark ? AppColors.goldAccent : const Color(0xFFB57A22);
+
+      return InkWell(
+        onTap: () {
+          if (selectedReciter != null) {
+            ref
+                .read(audioDownloadControllerProvider.notifier)
+                .pauseDownload(selectedReciter!.id, surah.number);
+          }
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: isDark ? 0.16 : 0.10),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 13,
+                height: 13,
+                child: CircularProgressIndicator(
+                  value: downloadTask.progress > 0 ? downloadTask.progress : null,
+                  strokeWidth: 2,
+                  color: accentColor,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${percent.toPersianDigit()}٪',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: accentColor,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.close_rounded,
+                size: 15,
+                color: accentColor.withValues(alpha: 0.85),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 3. Paused or Partial Download State: Shows downloaded ayahs count and resumes on tap (No border)
+    if (isPaused || hasPartialDownload) {
+      final completed = downloadTask?.completedAyahs ?? downloadedAyahsCount ?? 0;
+      final orangeColor = isDark ? Colors.orangeAccent : const Color(0xFFD97706);
+
+      return InkWell(
+        onTap: () {
+          if (selectedReciter != null) {
+            if (isPaused) {
+              ref
+                  .read(audioDownloadControllerProvider.notifier)
+                  .resumeDownload(
+                    reciter: selectedReciter!,
+                    surahId: surah.number,
+                  );
+            } else {
+              _startSurahDownload(context, ref, isLocked, isTranslation);
+            }
+          }
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: isDark ? 0.16 : 0.10),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                CupertinoIcons.arrow_down,
+                size: 13,
+                color: orangeColor,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                'ادامه (${completed.toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()})',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                  color: orangeColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 4. Idle / Not Downloaded State: Action pill with No Border
     final pillBgColor = isDark
         ? AppColors.goldAccent.withValues(alpha: 0.12)
         : const Color(0xFFFBF4E8);
@@ -669,17 +688,13 @@ class _SurahListItem extends ConsumerWidget {
         decoration: BoxDecoration(
           color: pillBgColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: pillTextColor.withValues(alpha: 0.3),
-            width: 1,
-          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               isLocked ? Icons.lock_rounded : CupertinoIcons.arrow_down,
-              size: 14,
+              size: 13.5,
               color: pillTextColor,
             ),
             const SizedBox(width: 6),
@@ -696,6 +711,42 @@ class _SurahListItem extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _playSurah({
+    required BuildContext context,
+    required WidgetRef ref,
+    required SurahEntity surah,
+    required ReciterEntity reciter,
+  }) async {
+    final isAudioTranslation = reciter.styleId == 4;
+    if (isAudioTranslation) {
+      await ref
+          .read(quranAudioControllerProvider.notifier)
+          .selectTranslationReciter(reciter);
+      ref
+          .read(quranAudioControllerProvider.notifier)
+          .setPlaybackMode(AudioPlaybackMode.onlyTranslation);
+    } else {
+      await ref
+          .read(quranAudioControllerProvider.notifier)
+          .selectReciter(reciter);
+      ref
+          .read(quranAudioControllerProvider.notifier)
+          .setPlaybackMode(AudioPlaybackMode.onlyQuran);
+    }
+
+    if (context.mounted) {
+      context.pushNamed(
+        quranReaderRoute,
+        pathParameters: {'id': surah.number.toString()},
+      );
+      ref.read(quranAudioControllerProvider.notifier).playAyah(
+            surahId: surah.number,
+            ayahNumber: 1,
+            totalAyahsInSurah: surah.numberOfAyahs,
+          );
+    }
   }
 
   Future<void> _startSurahDownload(
@@ -1052,7 +1103,7 @@ class _SurahListItem extends ConsumerWidget {
 
   void _showDeleteConfirmDialog({
     required BuildContext context,
-    required BuildContext sheetContext,
+    BuildContext? sheetContext,
     required WidgetRef ref,
     required SurahEntity surah,
     required ReciterEntity reciter,
@@ -1090,7 +1141,9 @@ class _SurahListItem extends ConsumerWidget {
             ),
             onPressed: () async {
               Navigator.pop(dialogCtx);
-              Navigator.pop(sheetContext);
+              if (sheetContext != null && sheetContext.mounted) {
+                Navigator.pop(sheetContext);
+              }
 
               final storage = ref.read(audioStorageServiceProvider);
               await storage.deleteSurahAudio(
