@@ -29,13 +29,15 @@ class _AudioDownloadManagerScreenState
     extends ConsumerState<AudioDownloadManagerScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
+  late final SurahListController _surahListController;
 
   @override
   void initState() {
     super.initState();
+    _surahListController = ref.read(surahListControllerProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Ensure search query starts clean
-      ref.read(surahListControllerProvider.notifier).searchSurahs('');
+      _surahListController.searchSurahs('');
 
       final audioState = ref.read(quranAudioControllerProvider);
       if (widget.isTranslationMode) {
@@ -71,8 +73,8 @@ class _AudioDownloadManagerScreenState
   void dispose() {
     _searchFocusNode.dispose();
     _searchController.dispose();
-    // Reset search query so surah list screen remains unaffected
-    ref.read(surahListControllerProvider.notifier).searchSurahs('');
+    // Reset search query safely without calling ref after unmount
+    _surahListController.searchSurahs('');
     super.dispose();
   }
 
