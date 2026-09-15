@@ -8,6 +8,7 @@ import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../common/widgets/surah_picker_dialog.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
@@ -76,10 +77,9 @@ class QuickAccessRow extends ConsumerWidget {
         break;
 
       case QuickAccessToolType.dictionary:
-        final surah = await PinnedSurahPickerBottomSheet.show(
+        final surah = await SurahPickerDialog.show(
           context,
           title: 'لغت‌نامه سوره',
-          autoSavePinned: false,
         );
         if (surah != null && context.mounted) {
           context.pushNamed(
