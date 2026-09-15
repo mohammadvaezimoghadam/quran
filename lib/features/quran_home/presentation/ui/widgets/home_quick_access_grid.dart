@@ -75,42 +75,18 @@ class HomeQuickAccessGrid extends StatelessWidget {
                       ),
                       10.hSpace,
 
-                      // Surah List Typography
+                      // Surah List Typography (Clean, Minimal, No Sub-label)
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                'فهرست سوره‌ها',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                  height: 1.2,
-                                ),
-                                maxLines: 1,
-                              ),
-                            ),
-                            3.vSpace,
-                            Text(
-                              '۱۱۴ سوره قرآن کریم',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 11.0,
-                                fontWeight: FontWeight.w600,
-                                color: primaryMint,
-                                height: 1.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                        child: Text(
+                          'فهرست سوره‌ها',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
 
@@ -135,14 +111,10 @@ class HomeQuickAccessGrid extends StatelessWidget {
           child: _buildSecondaryCard(
             context: context,
             title: 'ترجمه‌ها',
-            iconWidget: SvgPicture.asset(
-              'assets/icons/ic_translation.svg',
-              width: 32,
-              height: 32,
-              colorFilter: ColorFilter.mode(
-                primaryMint,
-                BlendMode.srcIn,
-              ),
+            iconWidget: Icon(
+              CupertinoIcons.text_bubble_fill,
+              size: 26,
+              color: primaryMint,
             ),
             isDark: isDark,
             bgColor: cardBg,
@@ -161,14 +133,10 @@ class HomeQuickAccessGrid extends StatelessWidget {
           child: _buildSecondaryCard(
             context: context,
             title: 'تنظیمات',
-            iconWidget: SvgPicture.asset(
-              'assets/icons/ic_settings.svg',
-              width: 32,
-              height: 32,
-              colorFilter: ColorFilter.mode(
-                primaryMint,
-                BlendMode.srcIn,
-              ),
+            iconWidget: Icon(
+              CupertinoIcons.gear_alt_fill,
+              size: 26,
+              color: primaryMint,
             ),
             isDark: isDark,
             bgColor: cardBg,
