@@ -30,6 +30,7 @@ class DownloadedItemsSection extends ConsumerStatefulWidget {
 
 class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection> {
   String _selectedFilter = 'all'; // 'all', 'quran', 'trans_audio', 'trans_text'
+  bool _isExpanded = true;
 
   @override
   Widget build(BuildContext context) {
@@ -42,14 +43,14 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
     final asyncItems = ref.watch(downloadedItemsControllerProvider);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(14.0),
         border: Border.all(color: cardBorderColor, width: 0.8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
         child: asyncItems.when(
           loading: () => const Center(
             child: Padding(
@@ -93,116 +94,152 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Header
-                Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.tray_full,
-                      color: context.colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'فایل‌های دانلود شده',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${items.length.toPersianDigit()} فایل ذخیره',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: context.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-
-                // 2. Filter Tabs
-                if (items.isNotEmpty) ...[
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
+                // 1. Header: Clean title, count badge, and collapse toggle
+                InkWell(
+                  onTap: items.isNotEmpty
+                      ? () {
+                          HapticFeedback.lightImpact();
+                          setState(() {
+                            _isExpanded = !_isExpanded;
+                          });
+                        }
+                      : null,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
                     child: Row(
                       children: [
-                        _buildFilterChip('all', 'همه', items.length),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('quran', 'صوت قرآن', quranAudioItems.length),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('trans_audio', 'ترجمه گویا', audioTransItems.length),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('trans_text', 'متن ترجمه', textTransItems.length),
+                        Text(
+                          'فایل‌های دانلود شده',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: context.colorScheme.onSurface,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: context.colorScheme.primary.withValues(
+                              alpha: isDark ? 0.16 : 0.08,
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${items.length.toPersianDigit()} فایل ذخیره',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: context.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        if (items.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: context.colorScheme.outlineVariant.withValues(
+                                alpha: isDark ? 0.20 : 0.12,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _isExpanded ? 'بستن' : 'نمایش',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: context.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                ],
+                ),
 
-                // 3. Content: Empty or List
-                if (items.isEmpty)
+                // Collapsible Content
+                if (items.isEmpty) ...[
+                  const SizedBox(height: 10),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24.0),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            CupertinoIcons.tray,
-                            size: 44,
-                            color: isDark ? Colors.white38 : Colors.black26,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            'هنوز فایلی در حافظه دستگاه دانلود نشده است.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark ? Colors.white60 : Colors.black54,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'با استفاده از گزینه‌های بالا می‌توانید صوت و ترجمه‌ها را برای استفاده آفلاین دانلود کنید.',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? Colors.white38 : Colors.black38,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else if (filteredItems.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    padding: const EdgeInsets.symmetric(vertical: 14.0),
                     child: Center(
                       child: Text(
-                        'موردی در این دسته‌بندی وجود ندارد.',
+                        'هنوز فایلی در حافظه دستگاه دانلود نشده است.',
                         style: TextStyle(
-                          fontSize: 13,
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 12.5,
                           color: isDark ? Colors.white54 : Colors.black45,
                         ),
                       ),
                     ),
-                  )
-                else
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredItems.length,
-                    separatorBuilder: (context, index) => const Divider(height: 18),
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      return _DownloadedItemRow(
-                        item: item,
-                        isDark: isDark,
-                        onOpen: () => _openItem(item),
-                        onDelete: () => _confirmDelete(item),
-                      );
-                    },
+                  ),
+                ] else
+                  AnimatedCrossFade(
+                    firstChild: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        // 2. Filter Tabs
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildFilterChip('all', 'همه', items.length),
+                              const SizedBox(width: 8),
+                              _buildFilterChip('quran', 'صوت قرآن', quranAudioItems.length),
+                              const SizedBox(width: 8),
+                              _buildFilterChip('trans_audio', 'ترجمه گویا', audioTransItems.length),
+                              const SizedBox(width: 8),
+                              _buildFilterChip('trans_text', 'متن ترجمه', textTransItems.length),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // 3. Content: Empty or List
+                        if (filteredItems.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 14.0),
+                            child: Center(
+                              child: Text(
+                                'موردی در این دسته‌بندی وجود ندارد.',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 12.5,
+                                  color: isDark ? Colors.white54 : Colors.black45,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: filteredItems.length,
+                            separatorBuilder: (context, index) => const Divider(height: 18),
+                            itemBuilder: (context, index) {
+                              final item = filteredItems[index];
+                              return _DownloadedItemRow(
+                                item: item,
+                                isDark: isDark,
+                                onOpen: () => _openItem(item),
+                                onDelete: () => _confirmDelete(item),
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+                    secondChild: const SizedBox.shrink(),
+                    crossFadeState: _isExpanded
+                        ? CrossFadeState.showFirst
+                        : CrossFadeState.showSecond,
+                    duration: const Duration(milliseconds: 220),
                   ),
               ],
             );
@@ -454,33 +491,16 @@ class _DownloadedItemRow extends StatelessWidget {
 
     return Row(
       children: [
-        // Type Badge Icon / Reciter Avatar
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.12)
-                  : badgeColor.withValues(alpha: 0.20),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10.8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: 36,
+            height: 36,
             child: (item.imageUrl != null && item.imageUrl!.isNotEmpty)
                 ? AppCachedNetworkImage(
                     imageUrl: item.imageUrl,
-                    width: 44,
-                    height: 44,
+                    width: 36,
+                    height: 36,
                     fit: BoxFit.cover,
                     fallbackIcon: iconData,
                     backgroundColor: badgeColor.withValues(alpha: 0.12),
@@ -488,11 +508,11 @@ class _DownloadedItemRow extends StatelessWidget {
                 : Container(
                     color: badgeColor.withValues(alpha: 0.12),
                     alignment: Alignment.center,
-                    child: Icon(iconData, size: 20, color: badgeColor),
+                    child: Icon(iconData, size: 18, color: badgeColor),
                   ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
 
         // Title and Subtitle
         Expanded(
@@ -506,7 +526,7 @@ class _DownloadedItemRow extends StatelessWidget {
                       item.title,
                       style: const TextStyle(
                         fontFamily: AppTypography.fontFamily,
-                        fontSize: 13.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                       maxLines: 1,
@@ -518,21 +538,22 @@ class _DownloadedItemRow extends StatelessWidget {
                     '• $badgeLabel',
                     style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w600,
                       color: badgeColor,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               Row(
                 children: [
                   Flexible(
                     child: Text(
                       item.subtitle,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 10.5,
                         color: isDark ? Colors.white60 : Colors.black54,
                       ),
                       maxLines: 1,
@@ -543,7 +564,8 @@ class _DownloadedItemRow extends StatelessWidget {
                   Text(
                     '• ${item.formattedSize}',
                     style: TextStyle(
-                      fontSize: 10.5,
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white38 : Colors.black38,
                     ),
@@ -554,23 +576,62 @@ class _DownloadedItemRow extends StatelessWidget {
           ),
         ),
 
-        IconButton(
-          tooltip: 'مشاهده / پخش',
-          icon: Icon(
-            CupertinoIcons.play_circle,
-            size: 19,
-            color: context.colorScheme.primary,
-          ),
-          onPressed: onOpen,
-        ),
-        IconButton(
-          tooltip: 'حذف از حافظه',
-          icon: Icon(
-            CupertinoIcons.trash,
-            size: 17,
-            color: context.colorScheme.error,
-          ),
-          onPressed: onDelete,
+        // Action Text Pills (Clean, compact, no icons)
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onOpen();
+              },
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: context.colorScheme.primary.withValues(
+                    alpha: isDark ? 0.16 : 0.08,
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'پخش',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: context.colorScheme.primary,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onDelete();
+              },
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: context.colorScheme.error.withValues(
+                    alpha: isDark ? 0.16 : 0.08,
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'حذف',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: context.colorScheme.error,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

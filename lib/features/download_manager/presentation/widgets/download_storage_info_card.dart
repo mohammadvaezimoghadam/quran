@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
-import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/download_hub_controller.dart';
 import '../../application/states/download_hub_state.dart';
 
@@ -69,219 +69,194 @@ class DownloadStorageInfoCard extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(
-        horizontal: AppDimens.marginPage,
-        vertical: AppDimens.stackSm,
+        horizontal: 16.0,
+        vertical: 6.0,
       ),
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: cardBorderColor, width: 0.8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Row: Storage Icon + Stats
+            // Header Row: Storage Stats + Clean "حذف همه" Text Pill
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(11),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(
-                      alpha: isDark ? 0.16 : 0.10,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(
-                        alpha: isDark ? 0.35 : 0.20,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'فضای ذخیره‌سازی محلی',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
-                      width: 0.8,
                     ),
-                  ),
-                  child: Icon(
-                    CupertinoIcons.square_stack_3d_up,
-                    color: colorScheme.primary,
-                    size: 24,
+                    const SizedBox(height: 2),
+                    Text(
+                      'حجم فایل‌های ذخیره شده: ${state.formattedStorageSize}',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 12,
+                        color: isDark ? Colors.white60 : Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+                InkWell(
+                  onTap: () => _showClearCacheDialog(context, ref),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: colorScheme.error.withValues(
+                        alpha: isDark ? 0.16 : 0.08,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'حذف همه',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.error,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 14),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+            Divider(
+              height: 1,
+              thickness: 0.6,
+              color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.18 : 0.35),
+            ),
+            const SizedBox(height: 8),
+
+            // Storage Path Row with Clean "کپی" Text Pill
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    state.storagePath.isEmpty
+                        ? 'مسیر: در حال خواندن...'
+                        : 'مسیر: ${state.storagePath}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: TextDirection.ltr,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11,
+                      color: isDark ? Colors.white54 : Colors.black45,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: state.storagePath.isEmpty
+                      ? null
+                      : () {
+                          HapticFeedback.lightImpact();
+                          Clipboard.setData(
+                            ClipboardData(text: state.storagePath),
+                          );
+                          AppSnackBar.showSuccess(
+                            context,
+                            'مسیر ذخیره‌سازی کپی شد.',
+                          );
+                        },
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(
+                        alpha: isDark ? 0.14 : 0.08,
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'کپی',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+            Divider(
+              height: 1,
+              thickness: 0.6,
+              color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.18 : 0.35),
+            ),
+            const SizedBox(height: 6),
+
+            // Wi-Fi Only Switch Tile
+            Row(
+              children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'فضای ذخیره‌سازی محلی',
+                      Text(
+                        'دانلود فقط با اتصال وای‌فای',
                         style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 1),
                       Text(
-                        'حجم فایل‌های ذخیره شده: ${state.formattedStorageSize}',
+                        'عدم مصرف اینترنت سیم‌کارت',
                         style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 10.5,
+                          color: isDark ? Colors.white54 : Colors.black45,
                         ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  tooltip: 'پاک‌سازی کل دانلودها',
-                  icon: Icon(CupertinoIcons.trash, color: colorScheme.error, size: 20),
-                  onPressed: () => _showClearCacheDialog(context, ref),
+                CupertinoSwitch(
+                  activeTrackColor: colorScheme.primary,
+                  value: state.isWifiOnly,
+                  onChanged: (val) async {
+                    await ref
+                        .read(downloadHubControllerProvider.notifier)
+                        .toggleWifiOnly(val);
+                    if (context.mounted) {
+                      if (val) {
+                        AppSnackBar.showSuccess(
+                          context,
+                          'دانلود فقط با اتصال وای‌فای فعال شد.',
+                        );
+                      } else {
+                        AppSnackBar.showInfo(
+                          context,
+                          'دانلود با اینترنت سیم‌کارت مجاز شد.',
+                        );
+                      }
+                    }
+                  },
                 ),
               ],
-            ),
-
-            const SizedBox(height: 16),
-            const Divider(height: 1),
-            const SizedBox(height: 12),
-
-            // Storage Path Display with Copy Action
-            Text(
-              'مسیر ذخیره در دستگاه:',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white60 : Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.25)
-                    : const Color(0xFFF7F5F2),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isDark ? Colors.white10 : const Color(0xFFE4DFD7),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Text(
-                        state.storagePath.isEmpty
-                            ? 'در حال خواندن مسیر...'
-                            : state.storagePath,
-                        textDirection: TextDirection.ltr,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontFamily: 'monospace',
-                          color: isDark ? Colors.white70 : Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: state.storagePath.isEmpty
-                        ? null
-                        : () {
-                            Clipboard.setData(
-                              ClipboardData(text: state.storagePath),
-                            );
-                            AppSnackBar.showSuccess(
-                              context,
-                              'مسیر ذخیره‌سازی کپی شد.',
-                            );
-                          },
-                    borderRadius: BorderRadius.circular(6),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Icon(
-                        CupertinoIcons.doc_on_clipboard,
-                        size: 16,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            // Wi-Fi Only Switch Tile
-            InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () async {
-                final newVal = !state.isWifiOnly;
-                await ref
-                    .read(downloadHubControllerProvider.notifier)
-                    .toggleWifiOnly(newVal);
-                if (context.mounted) {
-                  if (newVal) {
-                    AppSnackBar.showSuccess(
-                      context,
-                      'دانلود فقط با اتصال وای‌فای (Wi-Fi) فعال شد.',
-                    );
-                  } else {
-                    AppSnackBar.showInfo(
-                      context,
-                      'دانلود با اینترنت سیم‌کارت (دیتا) مجاز شد.',
-                    );
-                  }
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'دانلود فقط با اتصال وای‌فای (Wi-Fi)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'جلوگیری از مصرف بسته اینترنت سیم‌کارت',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? Colors.white54 : Colors.black45,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    CupertinoSwitch(
-                      activeTrackColor: colorScheme.primary,
-                      value: state.isWifiOnly,
-                      onChanged: (val) async {
-                        await ref
-                            .read(downloadHubControllerProvider.notifier)
-                            .toggleWifiOnly(val);
-                        if (context.mounted) {
-                          if (val) {
-                            AppSnackBar.showSuccess(
-                              context,
-                              'دانلود فقط با اتصال وای‌فای (Wi-Fi) فعال شد.',
-                            );
-                          } else {
-                            AppSnackBar.showInfo(
-                              context,
-                              'دانلود با اینترنت سیم‌کارت (دیتا) مجاز شد.',
-                            );
-                          }
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),

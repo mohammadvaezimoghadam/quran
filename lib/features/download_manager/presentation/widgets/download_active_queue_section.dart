@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
@@ -14,11 +15,20 @@ import '../../../quran_reader/domain/entities/reciter_entity.dart';
 import '../../../translation_manager/application/controllers/translation_manager_controller.dart';
 import '../../../translation_manager/domain/entities/translation_entity.dart';
 
-class DownloadActiveQueueSection extends ConsumerWidget {
+class DownloadActiveQueueSection extends ConsumerStatefulWidget {
   const DownloadActiveQueueSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DownloadActiveQueueSection> createState() =>
+      _DownloadActiveQueueSectionState();
+}
+
+class _DownloadActiveQueueSectionState
+    extends ConsumerState<DownloadActiveQueueSection> {
+  bool _isExpanded = true;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -46,112 +56,153 @@ class DownloadActiveQueueSection extends ConsumerWidget {
     final cardBorderColor = colors.cardBorder;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(14.0),
         border: Border.all(color: cardBorderColor, width: 0.8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Row
-            Row(
-              children: [
-                Icon(
-                  CupertinoIcons.arrow_down_circle,
-                  color: context.colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'صف دانلودهای جاری',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                if (totalCount > 0)
-                  Text(
-                    '${totalCount.toPersianDigit()} مورد',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.colorScheme.primary,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Empty State
-            if (totalCount == 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        CupertinoIcons.checkmark_seal,
-                        size: 38,
-                        color: context.colorScheme.primary.withValues(alpha: 0.7),
+            // Header Row: Clean text title, count badge, and collapse toggle
+            InkWell(
+              onTap: totalCount > 0
+                  ? () {
+                      HapticFeedback.lightImpact();
+                      setState(() {
+                        _isExpanded = !_isExpanded;
+                      });
+                    }
+                  : null,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Row(
+                  children: [
+                    Text(
+                      'صف دانلودهای جاری',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: context.colorScheme.onSurface,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'در حال حاضر هیچ دانلودی در صف نیست.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                    const Spacer(),
+                    if (totalCount > 0) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.primary.withValues(
+                            alpha: isDark ? 0.16 : 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${totalCount.toPersianDigit()} مورد',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: context.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.outlineVariant.withValues(
+                            alpha: isDark ? 0.20 : 0.12,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _isExpanded ? 'بستن' : 'نمایش',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],
+                  ],
+                ),
+              ),
+            ),
+
+            // Empty State: Simple, clean text without giant icon
+            if (totalCount == 0) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                child: Center(
+                  child: Text(
+                    'در حال حاضر هیچ دانلودی در صف نیست.',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 12.5,
+                      color: isDark ? Colors.white54 : Colors.black45,
+                    ),
                   ),
                 ),
-              )
-            else ...[
-              // List of all downloading items
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: totalCount,
-                separatorBuilder: (context, index) => const Divider(height: 20),
-                itemBuilder: (context, index) {
-                  // Display audio tasks first, then text translation tasks
-                  if (index < audioQueueTasks.length) {
-                    final task = audioQueueTasks[index];
-                    final surahName = SurahConstants.getSurahName(task.surahId);
-                    final reciter = allReciters
-                        .where((r) => r.id == task.reciterId)
-                        .firstOrNull;
-
-                    return _AudioQueueTaskItem(
-                      task: task,
-                      surahName: surahName,
-                      reciter: reciter,
-                      isDark: isDark,
-                    );
-                  } else {
-                    final translationIndex = index - audioQueueTasks.length;
-                    final translationId = downloadingTranslationIds[translationIndex];
-                    final progress = activeTranslationProgress[translationId] ?? 0.0;
-                    final translation = allTranslations
-                        .where((t) => t.id == translationId)
-                        .firstOrNull;
-
-                    return _TextTranslationQueueTaskItem(
-                      translationId: translationId,
-                      translation: translation,
-                      progress: progress,
-                      isDark: isDark,
-                    );
-                  }
-                },
               ),
-            ],
+            ] else
+              AnimatedCrossFade(
+                firstChild: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: totalCount,
+                      separatorBuilder: (context, index) => const Divider(height: 18),
+                      itemBuilder: (context, index) {
+                        // Display audio tasks first, then text translation tasks
+                        if (index < audioQueueTasks.length) {
+                          final task = audioQueueTasks[index];
+                          final surahName = SurahConstants.getSurahName(task.surahId);
+                          final reciter = allReciters
+                              .where((r) => r.id == task.reciterId)
+                              .firstOrNull;
+
+                          return _AudioQueueTaskItem(
+                            task: task,
+                            surahName: surahName,
+                            reciter: reciter,
+                            isDark: isDark,
+                          );
+                        } else {
+                          final translationIndex = index - audioQueueTasks.length;
+                          final translationId = downloadingTranslationIds[translationIndex];
+                          final progress = activeTranslationProgress[translationId] ?? 0.0;
+                          final translation = allTranslations
+                              .where((t) => t.id == translationId)
+                              .firstOrNull;
+
+                          return _TextTranslationQueueTaskItem(
+                            translationId: translationId,
+                            translation: translation,
+                            progress: progress,
+                            isDark: isDark,
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                secondChild: const SizedBox.shrink(),
+                crossFadeState: _isExpanded
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                duration: const Duration(milliseconds: 220),
+              ),
           ],
         ),
       ),
@@ -316,51 +367,105 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                 ],
               ),
             ),
-            // Action Buttons (Pause / Resume & Cancel)
-            if (isDownloading)
-              IconButton(
-                tooltip: 'توقف موقت',
-                icon: const Icon(CupertinoIcons.pause_circle, size: 22, color: Colors.orange),
-                onPressed: () {
-                  ref
-                      .read(audioDownloadControllerProvider.notifier)
-                      .pauseDownload(task.reciterId, task.surahId);
-                },
-              )
-            else if (isPaused || isFailed)
-              IconButton(
-                tooltip: 'ادامه دانلود',
-                icon: const Icon(CupertinoIcons.play_circle, size: 22, color: Colors.green),
-                onPressed: () async {
-                  final allReciters = await ref.read(allRecitersListProvider.future);
-                  final r = allReciters
-                      .tryGetSuccess()
-                      ?.where((item) => item.id == task.reciterId)
-                      .firstOrNull;
-                  if (r != null) {
-                    ref
+            // Action Text Pills (Pause / Resume & Cancel)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isDownloading)
+                  InkWell(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      ref
+                          .read(audioDownloadControllerProvider.notifier)
+                          .pauseDownload(task.reciterId, task.surahId);
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: isDark ? 0.16 : 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'توقف',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.orangeAccent : const Color(0xFFD97706),
+                        ),
+                      ),
+                    ),
+                  )
+                else if (isPaused || isFailed)
+                  InkWell(
+                    onTap: () async {
+                      HapticFeedback.lightImpact();
+                      final allReciters = await ref.read(allRecitersListProvider.future);
+                      final r = allReciters
+                          .tryGetSuccess()
+                          ?.where((item) => item.id == task.reciterId)
+                          .firstOrNull;
+                      if (r != null) {
+                        ref
+                            .read(audioDownloadControllerProvider.notifier)
+                            .resumeDownload(reciter: r, surahId: task.surahId);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: isDark ? 0.16 : 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'ادامه',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.greenAccent : Colors.green.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: () async {
+                    HapticFeedback.lightImpact();
+                    await ref
                         .read(audioDownloadControllerProvider.notifier)
-                        .resumeDownload(reciter: r, surahId: task.surahId);
-                  }
-                },
-              ),
-            IconButton(
-              tooltip: 'لغو دانلود',
-              icon: Icon(CupertinoIcons.xmark_circle, size: 22, color: context.colorScheme.error),
-              onPressed: () async {
-                await ref
-                    .read(audioDownloadControllerProvider.notifier)
-                    .cancelDownload(task.reciterId, task.surahId);
-              },
+                        .cancelDownload(task.reciterId, task.surahId);
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: context.colorScheme.error.withValues(alpha: isDark ? 0.16 : 0.08),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'لغو',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: context.colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(2),
           child: LinearProgressIndicator(
             value: task.progress.clamp(0.0, 1.0),
-            minHeight: 5,
+            minHeight: 3,
             backgroundColor: isDark
                 ? Colors.white.withValues(alpha: 0.08)
                 : const Color(0xFFF0ECE6),
@@ -485,23 +590,39 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
               ),
             ),
             // Cancel Download button
-            IconButton(
-              tooltip: 'لغو دانلود',
-              icon: Icon(CupertinoIcons.xmark_circle, size: 22, color: context.colorScheme.error),
-              onPressed: () {
+            InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
                 ref
                     .read(translationManagerControllerProvider.notifier)
                     .cancelDownload(translationId);
               },
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: context.colorScheme.error.withValues(alpha: isDark ? 0.16 : 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'لغو',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: context.colorScheme.error,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(2),
           child: LinearProgressIndicator(
             value: progress.clamp(0.0, 1.0),
-            minHeight: 5,
+            minHeight: 3,
             backgroundColor: isDark
                 ? Colors.white.withValues(alpha: 0.08)
                 : const Color(0xFFF0ECE6),

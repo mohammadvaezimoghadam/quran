@@ -23,7 +23,6 @@ class DownloadHubScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
-    final isDark = context.isDark;
     final state = ref.watch(downloadHubControllerProvider);
 
     return Scaffold(
@@ -92,32 +91,32 @@ class DownloadHubScreen extends ConsumerWidget {
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          padding: const EdgeInsets.symmetric(vertical: 6.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Storage Info Card
               DownloadStorageInfoCard(state: state),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
 
-              // 2. Main Categories Grid Title
+              // 2. Main Categories Title
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
                 child: Text(
-                  'دسته‌بندی فایل‌های آفلاین',
+                  'دسته‌بندی فایل‌های دانلودی',
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white70 : const Color(0xFF5A5852),
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ),
 
               // 2. Main Categories in ONE Single Row
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -126,7 +125,6 @@ class DownloadHubScreen extends ConsumerWidget {
                       child: DownloadCategoryCard(
                         title: 'صوت قرآن',
                         subtitle: state.activeReciterName.replaceAll('استاد ', ''),
-                        icon: CupertinoIcons.waveform,
                         badgeText: '${state.downloadedQuranSurahs.toPersianDigit()} / ${state.totalQuranSurahs.toPersianDigit()}',
                         progress: state.totalQuranSurahs > 0
                             ? state.downloadedQuranSurahs / state.totalQuranSurahs
@@ -148,7 +146,6 @@ class DownloadHubScreen extends ConsumerWidget {
                       child: DownloadCategoryCard(
                         title: 'ترجمه گویا',
                         subtitle: state.activeTranslationReciterName,
-                        icon: CupertinoIcons.speaker_2,
                         badgeText: '${state.downloadedTranslationSurahs.toPersianDigit()} / ${state.totalTranslationSurahs.toPersianDigit()}',
                         progress: state.totalTranslationSurahs > 0
                             ? state.downloadedTranslationSurahs / state.totalTranslationSurahs
@@ -170,7 +167,6 @@ class DownloadHubScreen extends ConsumerWidget {
                       child: DownloadCategoryCard(
                         title: 'متن ترجمه',
                         subtitle: 'ترجمه‌ها',
-                        icon: CupertinoIcons.book,
                         badgeText: '${state.downloadedTextTranslations.toPersianDigit()} / ${state.totalTextTranslations.toPersianDigit()}',
                         progress: state.totalTextTranslations > 0
                             ? state.downloadedTextTranslations / state.totalTextTranslations
@@ -186,17 +182,17 @@ class DownloadHubScreen extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 6),
 
               // 3. Live Active Queue Section
               const DownloadActiveQueueSection(),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 6),
 
               // 4. Downloaded Offline Items Section
               const DownloadedItemsSection(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
             ],
           ),
         ),
