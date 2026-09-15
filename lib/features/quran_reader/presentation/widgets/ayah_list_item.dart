@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -106,11 +105,9 @@ class AyahListItem extends ConsumerWidget {
             : const Color(0xFFEBE7CE));
 
     final Color effectiveBgColor = isAudioActive
-        ? (isDark
-            ? colorScheme.primary.withValues(alpha: 0.3)
-            : const Color(0xFFFFECB3))
+        ? colorScheme.primary.withValues(alpha: isDark ? 0.22 : 0.12)
         : (isSelectedForAction
-            ? colorScheme.primary.withValues(alpha: 0.18)
+            ? colorScheme.primary.withValues(alpha: 0.16)
             : defaultBgColor);
 
     final hasHeader = isPageStart ||
@@ -238,7 +235,7 @@ class AyahListItem extends ConsumerWidget {
                           ),
                           child: Row(
                             children: [
-                              // Page Number (Right in RTL)
+                               // Page Number (Right in RTL)
                               Expanded(
                                 child: Align(
                                   alignment: Alignment.centerRight,
@@ -249,7 +246,7 @@ class AyahListItem extends ConsumerWidget {
                                             fontFamily: AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: context.colors.goldAccent,
+                                            color: colorScheme.primary,
                                           ),
                                           textDirection: TextDirection.rtl,
                                         )
@@ -268,7 +265,7 @@ class AyahListItem extends ConsumerWidget {
                                             fontFamily: AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: context.colors.goldAccent,
+                                            color: colorScheme.primary,
                                           ),
                                           textDirection: TextDirection.rtl,
                                         )
@@ -287,7 +284,7 @@ class AyahListItem extends ConsumerWidget {
                                             fontFamily: AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: context.colors.goldAccent,
+                                            color: colorScheme.primary,
                                           ),
                                           textDirection: TextDirection.rtl,
                                         )
@@ -300,7 +297,7 @@ class AyahListItem extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12.0),
                           child: QuranOrnamentalDivider(
-                            color: context.colors.goldAccent.withValues(alpha: 0.6),
+                            color: colorScheme.primary.withValues(alpha: 0.35),
                             height: 16,
                           ),
                         ),
@@ -365,10 +362,10 @@ class AyahListItem extends ConsumerWidget {
                       ),
                       child: Icon(
                         isSelectedForAction
-                            ? CupertinoIcons.checkmark_circle_fill
+                            ? CupertinoIcons.checkmark_circle
                             : CupertinoIcons.circle,
                         color: isSelectedForAction
-                            ? const Color(0xFF2E7D32)
+                            ? colorScheme.primary
                             : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                         size: 24,
                       ),

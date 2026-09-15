@@ -75,7 +75,7 @@ class MiniAudioPlayerBar extends ConsumerWidget {
               ),
             ],
             border: Border.all(
-              color: context.colors.goldAccent.withValues(alpha: 0.28),
+              color: context.colorScheme.primary.withValues(alpha: 0.28),
               width: 1,
             ),
           ),
@@ -120,7 +120,7 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                                       fontFamily: userFontFamily,
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.bold,
-                                      color: context.colors.goldAccent,
+                                      color: context.colorScheme.primary,
                                     ),
                                   ),
                                 ),
@@ -223,7 +223,7 @@ class _MiniAudioProgressBar extends ConsumerWidget {
             value: value,
             minHeight: 2.5,
             backgroundColor: Colors.white.withValues(alpha: 0.08),
-            valueColor: AlwaysStoppedAnimation<Color>(context.colors.goldAccent),
+            valueColor: AlwaysStoppedAnimation<Color>(context.colorScheme.primary),
           );
         },
       ),
@@ -259,12 +259,12 @@ class _MiniPlayPauseButton extends ConsumerWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: isPlaying ? colors.goldAccent : colors.cardBackground,
+          color: isPlaying ? context.colorScheme.primary : colors.cardBackground,
           shape: BoxShape.circle,
           boxShadow: isPlaying
               ? [
                   BoxShadow(
-                    color: colors.goldAccent.withValues(alpha: 0.4),
+                    color: context.colorScheme.primary.withValues(alpha: 0.4),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
@@ -283,8 +283,8 @@ class _MiniPlayPauseButton extends ConsumerWidget {
                 )
               : Icon(
                   isPlaying
-                      ? CupertinoIcons.pause_fill
-                      : CupertinoIcons.play_fill,
+                      ? CupertinoIcons.pause
+                      : CupertinoIcons.play,
                   size: 15,
                   color: isPlaying ? Colors.black : Colors.white,
                 ),

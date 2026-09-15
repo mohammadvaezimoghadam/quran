@@ -4,8 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dart:ui';
+
 import '../../../../common/widgets/app_snackbar.dart';
-import '../../../../common/widgets/islamic_katibah_app_bar.dart';
+import '../../../../common/widgets/surah_picker_dialog.dart';
+import '../widgets/quran_reader_app_bar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
@@ -374,13 +377,24 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                 ),
                               );
 
-                              return IslamicKatibahAppBar(
+                              return QuranReaderAppBar(
                                 surahName: currentSurahName,
                                 surahNumber: currentSurahId,
-                                fontFamily: AppTypography.fontFamily,
                                 isSelectionMode: isSelectionMode,
                                 selectedCount: selectedCount,
                                 isBookmarked: isAyahBookmarked,
+                                onSurahTap: () async {
+                                  final surahs = ref.read(surahListControllerProvider).surahs;
+                                  final currentSurah = surahs.where((s) => s.number == currentSurahId).firstOrNull;
+                                  final selected = await SurahPickerDialog.show(
+                                    context,
+                                    activeSurah: currentSurah,
+                                    surahs: surahs,
+                                  );
+                                  if (selected != null && _pageController.hasClients) {
+                                    _pageController.jumpToPage(selected.number - 1);
+                                  }
+                                },
                                 onClearSelection: () {
                                   ref.read(selectedAyahActionProvider.notifier).clearSelection();
                                 },
@@ -609,42 +623,47 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Exit Full-Screen Button
-                    Material(
-                      color: Colors.black.withValues(alpha: 0.65),
+                    // Exit Full-Screen Button (Apple Frosted Glass Blur Pill)
+                    ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      elevation: 6,
-                      child: InkWell(
-                        onTap: _exitFullScreen,
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.25),
-                              width: 1,
-                            ),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                        child: Material(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(20),
+                          child: InkWell(
+                            onTap: _exitFullScreen,
                             borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                CupertinoIcons.fullscreen_exit,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'خروج از تمام‌صفحه',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  width: 0.8,
                                 ),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                            ],
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.fullscreen_exit,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'خروج از تمام‌صفحه',
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontFamily,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -653,41 +672,46 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                     // Hide Controls Button (Shown when controls are expanded)
                     if (_isControlsVisible) ...[
                       const SizedBox(width: 8),
-                      Material(
-                        color: Colors.black.withValues(alpha: 0.65),
+                      ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        elevation: 6,
-                        child: InkWell(
-                          onTap: _toggleControls,
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                width: 1,
-                              ),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                          child: Material(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(20),
+                            child: InkWell(
+                              onTap: _toggleControls,
                               borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  CupertinoIcons.eye_slash,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'پنهان‌سازی',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    width: 0.8,
                                   ),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                              ],
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      CupertinoIcons.eye_slash,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'پنهان‌سازی',
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontFamily,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),

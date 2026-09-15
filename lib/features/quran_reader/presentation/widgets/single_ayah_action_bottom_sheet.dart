@@ -69,7 +69,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
     final sheetBg = colors.dialogSurface;
     final cardBg = colors.cardBackground;
     final borderColor = colors.cardBorder;
-    final goldColor = colors.goldAccent;
+    final primaryColor = colorScheme.primary;
     final cleanSurahName = surahName.replaceAll('سوره', '').trim();
 
     return Container(
@@ -118,13 +118,13 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? colors.goldAccent.withValues(alpha: 0.12)
-                              : const Color(0xFFF4EFE6),
+                              ? primaryColor.withValues(alpha: 0.12)
+                              : primaryColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                           border: Border.all(
                             color: isDark
-                                ? colors.goldAccent.withValues(alpha: 0.25)
-                                : const Color(0xFFE5DDD0),
+                                ? primaryColor.withValues(alpha: 0.25)
+                                : primaryColor.withValues(alpha: 0.20),
                           ),
                         ),
                         child: Row(
@@ -136,9 +136,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                                 fontFamily: AppTypography.fontFamily,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? colors.goldAccent
-                                    : colorScheme.primary,
+                                color: primaryColor,
                               ),
                             ),
                             6.hSpace,
@@ -148,9 +146,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                                 fontFamily: AppTypography.fontFamily,
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? colors.goldAccent
-                                    : colorScheme.primary,
+                                color: primaryColor,
                               ),
                             ),
                           ],
@@ -161,7 +157,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                   IconButton(
                     tooltip: 'بستن',
                     icon: Icon(
-                      CupertinoIcons.xmark_circle_fill,
+                      CupertinoIcons.xmark_circle,
                       color: isDark ? Colors.white38 : Colors.black26,
                       size: 24,
                     ),
@@ -184,7 +180,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       icon: isBookmarked
                           ? CupertinoIcons.bookmark_fill
                           : CupertinoIcons.bookmark,
-                      iconColor: isBookmarked ? goldColor : (isDark ? Colors.white70 : Colors.black87),
+                      iconColor: isBookmarked ? primaryColor : (isDark ? Colors.white70 : Colors.black87),
                       label: isBookmarked ? 'نشان‌شده' : 'نشانه‌گذاری',
                       onTap: () async {
                         HapticFeedback.lightImpact();

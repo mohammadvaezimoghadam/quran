@@ -182,7 +182,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                     AppCachedNetworkImage.circle(
                       imageUrl: imageUrl,
                       size: avatarSize,
-                      fallbackIcon: CupertinoIcons.person_fill,
+                      fallbackIcon: CupertinoIcons.person,
                       backgroundColor: isPlaying
                           ? colorScheme.primary
                           : colorScheme.surfaceContainerHigh,
@@ -209,7 +209,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                         )
                       else
                         Icon(
-                          isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
+                          isPlaying ? CupertinoIcons.pause : CupertinoIcons.play,
                           color: Colors.white,
                           size: avatarSize * 0.45,
                         ),

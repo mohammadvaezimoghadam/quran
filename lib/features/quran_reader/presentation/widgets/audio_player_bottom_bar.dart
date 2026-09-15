@@ -332,7 +332,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
 
                                                   // Settings Button (Top Left)
                                                   _buildControlButton(
-                                                    icon: CupertinoIcons.gear_alt_fill,
+                                                    icon: CupertinoIcons.gear,
                                                     size: 23,
                                                     width: 40,
                                                     height: 32,
@@ -368,7 +368,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
 
                                                         // 2. Next Ayah
                                                         _buildControlButton(
-                                                          icon: CupertinoIcons.forward_fill,
+                                                          icon: CupertinoIcons.forward,
                                                           size: 20,
                                                           color: (currentAyahNumber != null &&
                                                                   totalAyahsInSurah != null &&
@@ -385,7 +385,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
 
                                                         // 3. Previous Ayah
                                                         _buildControlButton(
-                                                          icon: CupertinoIcons.backward_fill,
+                                                          icon: CupertinoIcons.backward,
                                                           size: 20,
                                                           color: (currentAyahNumber != null && currentAyahNumber > 1)
                                                               ? colorScheme.onSurface

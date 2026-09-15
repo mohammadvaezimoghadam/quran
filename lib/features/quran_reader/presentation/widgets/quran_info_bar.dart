@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -65,16 +66,24 @@ class QuranInfoBar extends ConsumerWidget {
     final hizbStr = currentAyah.hizb?.toPersianDigit() ?? '؟';
     final pageStr = currentAyah.page?.toPersianDigit() ?? '؟';
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark
+        ? const Color(0xFF16191C).withValues(alpha: 0.94)
+        : const Color(0xFFEBE7CE).withValues(alpha: 0.94);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.06);
+
     return Container(
       width: double.infinity,
       height: 38.0,
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.85),
+        color: bgColor,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
-            width: 1,
+            color: borderColor,
+            width: 0.8,
           ),
         ),
       ),
@@ -82,13 +91,13 @@ class QuranInfoBar extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildStaticChip(context, '$totalAyahsStr آیه'),
-          _buildDotDivider(context),
+          _buildDotDivider(context, isDark),
           _buildChip(context, 'آیه $ayahStr', QuickJumpTab.surah),
-          _buildDotDivider(context),
+          _buildDotDivider(context, isDark),
           _buildChip(context, 'جزء $juzStr', QuickJumpTab.juz),
-          _buildDotDivider(context),
+          _buildDotDivider(context, isDark),
           _buildChip(context, 'حزب $hizbStr', QuickJumpTab.hizb),
-          _buildDotDivider(context),
+          _buildDotDivider(context, isDark),
           _buildChip(context, 'صفحه $pageStr', QuickJumpTab.page),
         ],
       ),
@@ -104,9 +113,9 @@ class QuranInfoBar extends ConsumerWidget {
         text,
         style: TextStyle(
           fontFamily: AppTypography.fontFamily,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+          fontSize: 12.5,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.primary,
         ),
       ),
     );
@@ -115,53 +124,57 @@ class QuranInfoBar extends ConsumerWidget {
   Widget _buildChip(BuildContext context, String text, QuickJumpTab tab) {
     final theme = Theme.of(context);
 
-    return InkWell(
-      onTap: () async {
-        final target = await QuranQuickJumpBottomSheet.show(
-          context,
-          initialTab: tab,
-        );
-        if (target != null) {
-          onTargetSelected?.call(target);
-        }
-      },
-      borderRadius: BorderRadius.circular(4),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              text,
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          final target = await QuranQuickJumpBottomSheet.show(
+            context,
+            initialTab: tab,
+          );
+          if (target != null) {
+            onTargetSelected?.call(target);
+          }
+        },
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                text,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-            const SizedBox(width: 2),
-            Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 14,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-          ],
+              const SizedBox(width: 3),
+              Icon(
+                CupertinoIcons.chevron_down,
+                size: 10.5,
+                color: theme.colorScheme.primary.withValues(alpha: 0.75),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDotDivider(BuildContext context) {
+  Widget _buildDotDivider(BuildContext context, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Text(
         '•',
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-          fontSize: 12,
+          color: isDark ? Colors.white24 : Colors.black26,
+          fontSize: 11,
         ),
       ),
     );
   }
 }
+

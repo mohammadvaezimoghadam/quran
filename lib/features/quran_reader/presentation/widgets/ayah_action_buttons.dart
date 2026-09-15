@@ -148,8 +148,8 @@ class _AyahActionButtonsState extends State<AyahActionButtons>
                 child: _buildActionButton(
                   context: context,
                   icon: widget.isPlaying
-                      ? CupertinoIcons.pause_fill
-                      : CupertinoIcons.play_fill,
+                      ? CupertinoIcons.pause
+                      : CupertinoIcons.play,
                   onTap: widget.onPlayTap,
                   colorScheme: colorScheme,
                   tooltip: 'پخش آیه',
