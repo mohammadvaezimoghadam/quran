@@ -136,9 +136,7 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                             ),
                             child: Icon(
                               tool.iconData,
-                              color: isDark
-                                  ? colors.goldAccent
-                                  : colorScheme.primary,
+                              color: colorScheme.primary,
                               size: 22,
                             ),
                           ),
