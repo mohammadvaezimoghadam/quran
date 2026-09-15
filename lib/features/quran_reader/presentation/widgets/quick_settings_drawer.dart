@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
@@ -17,7 +19,7 @@ import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../domain/enums/audio_playback_mode.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
-import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 import 'ayah_number_marker.dart';
 import 'tashkeel_color_selector_tile.dart';
 
@@ -25,7 +27,7 @@ import 'tashkeel_color_selector_tile.dart';
 class QuickSettingsDrawer extends ConsumerStatefulWidget {
   const QuickSettingsDrawer({super.key});
 
-  /// Helper method to display settings in iOS-style Grouped Bottom Sheet.
+  /// Helper method to display settings as a full-screen page.
   static Future<void> show(BuildContext context) async {
     final container = ProviderScope.containerOf(context, listen: false);
     final notifier =
@@ -34,14 +36,10 @@ class QuickSettingsDrawer extends ConsumerStatefulWidget {
     // Record baseline state before user makes changes in settings
     notifier.recordInitialState();
 
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.25),
-      elevation: 0,
-      builder: (context) => const QuickSettingsDrawer(),
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const QuickSettingsDrawer(),
+      ),
     );
 
     // Save ONLY if changes were made upon closing
@@ -66,14 +64,8 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final mediaQuery = MediaQuery.of(context);
-    final screenHeight = mediaQuery.size.height;
-    final topPadding = mediaQuery.padding.top;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Responsive height calculation: up to 86% of screen or bounded by top status bar
-    final maxResponsiveHeight = (screenHeight - topPadding - 24.0)
-        .clamp(350.0, screenHeight * 0.86);
+    final colors = context.colors;
 
     // Notifiers for dispatching actions (does not trigger rebuilds)
     final displayNotifier =
@@ -86,124 +78,134 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
         ? (isDark ? ThemeMode.dark : ThemeMode.light)
         : currentThemeMode;
 
-    final sheetBgColor =
-        isDark ? const Color(0xFF14181B) : const Color(0xFFF1EFEA);
-    final cardBgColor = isDark ? const Color(0xFF21262B) : Colors.white;
+    final screenBgColor = isDark ? colorScheme.surface : const Color(0xFFF7F5F0);
+    final cardBgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
     final textPrimary = colorScheme.onSurface;
     final textSecondary = colorScheme.onSurfaceVariant;
     final accentColor = colorScheme.primary;
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: SafeArea(
-        top: false,
-        child: Container(
-          height: maxResponsiveHeight,
-          decoration: BoxDecoration(
-            color: sheetBgColor,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24.0),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(
-              horizontal: 16.0, vertical: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. Top Drag Handle
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 12.0),
-                  decoration: BoxDecoration(
-                    color: textSecondary.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(2),
+      child: PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) {
+            displayNotifier.saveSettingsIfChanged();
+          }
+        },
+        child: Scaffold(
+          backgroundColor: screenBgColor,
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(kToolbarHeight),
+            child: Container(
+              decoration: BoxDecoration(
+                color: cardBgColor,
+                border: Border(
+                  bottom: BorderSide(
+                    color: colors.cardBorder,
+                    width: 0.8,
                   ),
                 ),
               ),
-
-              // 2. Header Title & Close Button
-              Row(
-                children: [
-                  const SizedBox(width: 48),
-                  Expanded(
-                    child: Text(
-                      'تنظیمات',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: textPrimary,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        tooltip: 'بازگشت',
+                        icon: Icon(
+                          CupertinoIcons.chevron_forward,
+                          size: 22,
+                          color: textPrimary,
+                        ),
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.of(context).maybePop();
+                        },
                       ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'بستن',
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle_fill,
-                      size: 24,
-                      color: isDark ? Colors.white38 : Colors.black26,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-
-              14.0.vSpace,
-
-              // 3. Tab Switcher (Hayat/Tafakor Style: متن قرآن / ترجمه / صوت و تلاوت)
-              AppSegmentedTabBar(
-                items: const [
-                  AppSegmentedTabItem(title: 'متن قرآن'),
-                  AppSegmentedTabItem(title: 'ترجمه'),
-                  AppSegmentedTabItem(title: 'صوت و تلاوت'),
-                ],
-                selectedIndex: _selectedTabIndex,
-                onTabSelected: (index) => setState(() => _selectedTabIndex = index),
-              ),
-
-              14.0.vSpace,
-
-              // 4. Tab Content (Optimized: Isolated Subtree Watches to avoid unneeded rebuilds)
-              Expanded(
-                child: _selectedTabIndex == 0
-                    ? _buildQuranTab(
-                        context: context,
-                        ref: ref,
-                        displayNotifier: displayNotifier,
-                        activeThemeMode: activeThemeMode,
-                        cardBgColor: cardBgColor,
-                        accentColor: accentColor,
-                        textPrimary: textPrimary,
-                        textSecondary: textSecondary,
-                        colorScheme: colorScheme,
-                      )
-                    : _selectedTabIndex == 1
-                        ? _buildTranslationTab(
-                            context: context,
-                            ref: ref,
-                            displayNotifier: displayNotifier,
-                            cardBgColor: cardBgColor,
-                            accentColor: accentColor,
-                            textPrimary: textPrimary,
-                            textSecondary: textSecondary,
-                            colorScheme: colorScheme,
-                          )
-                        : _buildAudioTab(
-                            context: context,
-                            ref: ref,
-                            displayNotifier: displayNotifier,
-                            audioController: audioController,
-                            cardBgColor: cardBgColor,
-                            accentColor: accentColor,
-                            textPrimary: textPrimary,
-                            textSecondary: textSecondary,
-                            colorScheme: colorScheme,
+                      Expanded(
+                        child: Text(
+                          'تنظیمات مطالعه و پخش',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.bold,
+                            color: textPrimary,
                           ),
+                        ),
+                      ),
+                      const AppThemeToggleButton(),
+                    ],
+                  ),
+                ),
               ),
-            ],
+            ),
+          ),
+          body: SafeArea(
+            top: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                12.0.vSpace,
+
+                // Tab Switcher (Hayat/Tafakor Style: متن قرآن / ترجمه / صوت و تلاوت)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: AppSegmentedTabBar(
+                    items: const [
+                      AppSegmentedTabItem(title: 'متن قرآن'),
+                      AppSegmentedTabItem(title: 'ترجمه'),
+                      AppSegmentedTabItem(title: 'صوت و تلاوت'),
+                    ],
+                    selectedIndex: _selectedTabIndex,
+                    onTabSelected: (index) => setState(() => _selectedTabIndex = index),
+                  ),
+                ),
+
+                12.0.vSpace,
+
+                // Tab Content (Optimized: Isolated Subtree Watches to avoid unneeded rebuilds)
+                Expanded(
+                  child: _selectedTabIndex == 0
+                      ? _buildQuranTab(
+                          context: context,
+                          ref: ref,
+                          displayNotifier: displayNotifier,
+                          activeThemeMode: activeThemeMode,
+                          cardBgColor: cardBgColor,
+                          accentColor: accentColor,
+                          textPrimary: textPrimary,
+                          textSecondary: textSecondary,
+                          colorScheme: colorScheme,
+                        )
+                      : _selectedTabIndex == 1
+                          ? _buildTranslationTab(
+                              context: context,
+                              ref: ref,
+                              displayNotifier: displayNotifier,
+                              cardBgColor: cardBgColor,
+                              accentColor: accentColor,
+                              textPrimary: textPrimary,
+                              textSecondary: textSecondary,
+                              colorScheme: colorScheme,
+                            )
+                          : _buildAudioTab(
+                              context: context,
+                              ref: ref,
+                              displayNotifier: displayNotifier,
+                              audioController: audioController,
+                              cardBgColor: cardBgColor,
+                              accentColor: accentColor,
+                              textPrimary: textPrimary,
+                              textSecondary: textSecondary,
+                              colorScheme: colorScheme,
+                            ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -708,7 +710,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                   child: InkWell(
                     onTap: () {
                       if (isLocked) {
-                        VipSubscriptionSheet.show(context);
+                        VipRequiredDialog.show(context: context);
                         return;
                       }
                       ref
