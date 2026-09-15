@@ -25,10 +25,18 @@ import 'tashkeel_color_selector_tile.dart';
 
 /// Ultra-modern iOS-style Tabbed Settings Bottom Sheet (Display & Audio).
 class QuickSettingsDrawer extends ConsumerStatefulWidget {
-  const QuickSettingsDrawer({super.key});
+  final int initialTabIndex;
+
+  const QuickSettingsDrawer({
+    super.key,
+    this.initialTabIndex = 0,
+  });
 
   /// Helper method to display settings as a full-screen page.
-  static Future<void> show(BuildContext context) async {
+  static Future<void> show(
+    BuildContext context, {
+    int initialTabIndex = 0,
+  }) async {
     final container = ProviderScope.containerOf(context, listen: false);
     final notifier =
         container.read(quranDisplaySettingsControllerProvider.notifier);
@@ -38,7 +46,9 @@ class QuickSettingsDrawer extends ConsumerStatefulWidget {
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const QuickSettingsDrawer(),
+        builder: (context) => QuickSettingsDrawer(
+          initialTabIndex: initialTabIndex,
+        ),
       ),
     );
 
@@ -52,7 +62,13 @@ class QuickSettingsDrawer extends ConsumerStatefulWidget {
 }
 
 class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
-  int _selectedTabIndex = 0; // 0: Quran Text, 1: Translation, 2: Audio & Recitation
+  late int _selectedTabIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTabIndex = widget.initialTabIndex.clamp(0, 2);
+  }
 
   static const List<String> _fontNames = [
     'عثمان طه',
@@ -169,40 +185,43 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
 
                 // Tab Content (Optimized: Isolated Subtree Watches to avoid unneeded rebuilds)
                 Expanded(
-                  child: _selectedTabIndex == 0
-                      ? _buildQuranTab(
-                          context: context,
-                          ref: ref,
-                          displayNotifier: displayNotifier,
-                          activeThemeMode: activeThemeMode,
-                          cardBgColor: cardBgColor,
-                          accentColor: accentColor,
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
-                          colorScheme: colorScheme,
-                        )
-                      : _selectedTabIndex == 1
-                          ? _buildTranslationTab(
-                              context: context,
-                              ref: ref,
-                              displayNotifier: displayNotifier,
-                              cardBgColor: cardBgColor,
-                              accentColor: accentColor,
-                              textPrimary: textPrimary,
-                              textSecondary: textSecondary,
-                              colorScheme: colorScheme,
-                            )
-                          : _buildAudioTab(
-                              context: context,
-                              ref: ref,
-                              displayNotifier: displayNotifier,
-                              audioController: audioController,
-                              cardBgColor: cardBgColor,
-                              accentColor: accentColor,
-                              textPrimary: textPrimary,
-                              textSecondary: textSecondary,
-                              colorScheme: colorScheme,
-                            ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: _selectedTabIndex == 0
+                        ? _buildQuranTab(
+                            context: context,
+                            ref: ref,
+                            displayNotifier: displayNotifier,
+                            activeThemeMode: activeThemeMode,
+                            cardBgColor: cardBgColor,
+                            accentColor: accentColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            colorScheme: colorScheme,
+                          )
+                        : _selectedTabIndex == 1
+                            ? _buildTranslationTab(
+                                context: context,
+                                ref: ref,
+                                displayNotifier: displayNotifier,
+                                cardBgColor: cardBgColor,
+                                accentColor: accentColor,
+                                textPrimary: textPrimary,
+                                textSecondary: textSecondary,
+                                colorScheme: colorScheme,
+                              )
+                            : _buildAudioTab(
+                                context: context,
+                                ref: ref,
+                                displayNotifier: displayNotifier,
+                                audioController: audioController,
+                                cardBgColor: cardBgColor,
+                                accentColor: accentColor,
+                                textPrimary: textPrimary,
+                                textSecondary: textSecondary,
+                                colorScheme: colorScheme,
+                              ),
+                  ),
                 ),
               ],
             ),
@@ -373,7 +392,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                   ),
                 ),
 
-                8.0.vSpace,
+                24.0.vSpace,
               ],
             ),
           ),
@@ -475,7 +494,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                   ),
                 ),
 
-                8.0.vSpace,
+                24.0.vSpace,
               ],
             ),
           ),
@@ -858,7 +877,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
           ],
         ),
 
-        16.0.vSpace,
+        24.0.vSpace,
         ],
       ),
     );
