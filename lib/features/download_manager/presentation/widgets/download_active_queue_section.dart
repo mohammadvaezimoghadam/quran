@@ -25,7 +25,7 @@ class DownloadActiveQueueSection extends ConsumerStatefulWidget {
 
 class _DownloadActiveQueueSectionState
     extends ConsumerState<DownloadActiveQueueSection> {
-  bool _isExpanded = true;
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -67,76 +67,42 @@ class _DownloadActiveQueueSectionState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Row: Clean text title, count badge, and collapse toggle
-            InkWell(
-              onTap: totalCount > 0
-                  ? () {
-                      HapticFeedback.lightImpact();
-                      setState(() {
-                        _isExpanded = !_isExpanded;
-                      });
-                    }
-                  : null,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2.0),
-                child: Row(
-                  children: [
-                    Text(
-                      'صف دانلودهای جاری',
+            // Header Row: Clean text title & count badge
+            Row(
+              children: [
+                Text(
+                  'صف دانلودهای جاری',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: context.colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                if (totalCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: context.colorScheme.primary.withValues(
+                        alpha: isDark ? 0.16 : 0.08,
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${totalCount.toPersianDigit()} مورد',
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
-                        fontSize: 14,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: context.colorScheme.onSurface,
+                        color: context.colorScheme.primary,
                       ),
                     ),
-                    const Spacer(),
-                    if (totalCount > 0) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: context.colorScheme.primary.withValues(
-                            alpha: isDark ? 0.16 : 0.08,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '${totalCount.toPersianDigit()} مورد',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: context.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: context.colorScheme.outlineVariant.withValues(
-                            alpha: isDark ? 0.20 : 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          _isExpanded ? 'بستن' : 'نمایش',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            color: context.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+                  ),
+              ],
             ),
 
-            // Empty State: Simple, clean text without giant icon
+            // Empty State
             if (totalCount == 0) ...[
               const SizedBox(height: 8),
               Padding(
@@ -152,57 +118,84 @@ class _DownloadActiveQueueSectionState
                   ),
                 ),
               ),
-            ] else
-              AnimatedCrossFade(
-                firstChild: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: totalCount,
-                      separatorBuilder: (context, index) => const Divider(height: 18),
-                      itemBuilder: (context, index) {
-                        // Display audio tasks first, then text translation tasks
-                        if (index < audioQueueTasks.length) {
-                          final task = audioQueueTasks[index];
-                          final surahName = SurahConstants.getSurahName(task.surahId);
-                          final reciter = allReciters
-                              .where((r) => r.id == task.reciterId)
-                              .firstOrNull;
+            ] else ...[
+              const SizedBox(height: 8),
+              // List of downloading items (Initial 3 or All)
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _isExpanded
+                    ? totalCount
+                    : (totalCount > 3 ? 3 : totalCount),
+                separatorBuilder: (context, index) => const Divider(height: 18),
+                itemBuilder: (context, index) {
+                  // Display audio tasks first, then text translation tasks
+                  if (index < audioQueueTasks.length) {
+                    final task = audioQueueTasks[index];
+                    final surahName = SurahConstants.getSurahName(task.surahId);
+                    final reciter = allReciters
+                        .where((r) => r.id == task.reciterId)
+                        .firstOrNull;
 
-                          return _AudioQueueTaskItem(
-                            task: task,
-                            surahName: surahName,
-                            reciter: reciter,
-                            isDark: isDark,
-                          );
-                        } else {
-                          final translationIndex = index - audioQueueTasks.length;
-                          final translationId = downloadingTranslationIds[translationIndex];
-                          final progress = activeTranslationProgress[translationId] ?? 0.0;
-                          final translation = allTranslations
-                              .where((t) => t.id == translationId)
-                              .firstOrNull;
+                    return _AudioQueueTaskItem(
+                      task: task,
+                      surahName: surahName,
+                      reciter: reciter,
+                      isDark: isDark,
+                    );
+                  } else {
+                    final translationIndex = index - audioQueueTasks.length;
+                    final translationId = downloadingTranslationIds[translationIndex];
+                    final progress = activeTranslationProgress[translationId] ?? 0.0;
+                    final translation = allTranslations
+                        .where((t) => t.id == translationId)
+                        .firstOrNull;
 
-                          return _TextTranslationQueueTaskItem(
-                            translationId: translationId,
-                            translation: translation,
-                            progress: progress,
-                            isDark: isDark,
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                secondChild: const SizedBox.shrink(),
-                crossFadeState: _isExpanded
-                    ? CrossFadeState.showFirst
-                    : CrossFadeState.showSecond,
-                duration: const Duration(milliseconds: 220),
+                    return _TextTranslationQueueTaskItem(
+                      translationId: translationId,
+                      translation: translation,
+                      progress: progress,
+                      isDark: isDark,
+                    );
+                  }
+                },
               ),
+              // Show more / Collapse button at the bottom
+              if (totalCount > 3) ...[
+                const SizedBox(height: 10),
+                Center(
+                  child: InkWell(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      setState(() {
+                        _isExpanded = !_isExpanded;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.primary.withValues(
+                          alpha: isDark ? 0.16 : 0.08,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _isExpanded
+                            ? 'بستن لیست'
+                            : 'نمایش بیشتر (${(totalCount - 3).toPersianDigit()} مورد دیگر)',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: context.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ],
         ),
       ),

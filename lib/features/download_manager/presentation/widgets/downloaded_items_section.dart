@@ -30,7 +30,7 @@ class DownloadedItemsSection extends ConsumerStatefulWidget {
 
 class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection> {
   String _selectedFilter = 'all'; // 'all', 'quran', 'trans_audio', 'trans_text'
-  bool _isExpanded = true;
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -94,76 +94,60 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Header: Clean title, count badge, and collapse toggle
-                InkWell(
-                  onTap: items.isNotEmpty
-                      ? () {
-                          HapticFeedback.lightImpact();
-                          setState(() {
-                            _isExpanded = !_isExpanded;
-                          });
-                        }
-                      : null,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                // 1. Header: Clean title & total count badge
+                Row(
+                  children: [
+                    Text(
+                      'فایل‌های دانلود شده',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: context.colorScheme.onSurface,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.primary.withValues(
+                          alpha: isDark ? 0.16 : 0.08,
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${items.length.toPersianDigit()} فایل ذخیره',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: context.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // 2. Filter Tabs (always visible when items exist)
+                if (items.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        Text(
-                          'فایل‌های دانلود شده',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: context.colorScheme.onSurface,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: context.colorScheme.primary.withValues(
-                              alpha: isDark ? 0.16 : 0.08,
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            '${items.length.toPersianDigit()} فایل ذخیره',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: context.colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        if (items.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: context.colorScheme.outlineVariant.withValues(
-                                alpha: isDark ? 0.20 : 0.12,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              _isExpanded ? 'بستن' : 'نمایش',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                                color: context.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
+                        _buildFilterChip('all', 'همه', items.length),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('quran', 'صوت قرآن', quranAudioItems.length),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('trans_audio', 'ترجمه گویا', audioTransItems.length),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('trans_text', 'متن ترجمه', textTransItems.length),
                       ],
                     ),
                   ),
-                ),
+                ],
 
-                // Collapsible Content
+                // 3. Content: Empty or List
                 if (items.isEmpty) ...[
                   const SizedBox(height: 10),
                   Padding(
@@ -179,68 +163,76 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                       ),
                     ),
                   ),
-                ] else
-                  AnimatedCrossFade(
-                    firstChild: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 10),
-                        // 2. Filter Tabs
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildFilterChip('all', 'همه', items.length),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('quran', 'صوت قرآن', quranAudioItems.length),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('trans_audio', 'ترجمه گویا', audioTransItems.length),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('trans_text', 'متن ترجمه', textTransItems.length),
-                            ],
+                ] else if (filteredItems.isEmpty) ...[
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14.0),
+                    child: Center(
+                      child: Text(
+                        'موردی در این دسته‌بندی وجود ندارد.',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 12.5,
+                          color: isDark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  const SizedBox(height: 10),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _isExpanded
+                        ? filteredItems.length
+                        : (filteredItems.length > 3 ? 3 : filteredItems.length),
+                    separatorBuilder: (context, index) => const Divider(height: 18),
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
+                      return _DownloadedItemRow(
+                        item: item,
+                        isDark: isDark,
+                        onOpen: () => _openItem(item),
+                        onDelete: () => _confirmDelete(item),
+                      );
+                    },
+                  ),
+                  // Show more / Collapse button at the bottom of the list
+                  if (filteredItems.length > 3) ...[
+                    const SizedBox(height: 10),
+                    Center(
+                      child: InkWell(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() {
+                            _isExpanded = !_isExpanded;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: context.colorScheme.primary.withValues(
+                              alpha: isDark ? 0.16 : 0.08,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _isExpanded
+                                ? 'بستن لیست'
+                                : 'نمایش بیشتر (${(filteredItems.length - 3).toPersianDigit()} مورد دیگر)',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: context.colorScheme.primary,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 10),
-
-                        // 3. Content: Empty or List
-                        if (filteredItems.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 14.0),
-                            child: Center(
-                              child: Text(
-                                'موردی در این دسته‌بندی وجود ندارد.',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 12.5,
-                                  color: isDark ? Colors.white54 : Colors.black45,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredItems.length,
-                            separatorBuilder: (context, index) => const Divider(height: 18),
-                            itemBuilder: (context, index) {
-                              final item = filteredItems[index];
-                              return _DownloadedItemRow(
-                                item: item,
-                                isDark: isDark,
-                                onOpen: () => _openItem(item),
-                                onDelete: () => _confirmDelete(item),
-                              );
-                            },
-                          ),
-                      ],
+                      ),
                     ),
-                    secondChild: const SizedBox.shrink(),
-                    crossFadeState: _isExpanded
-                        ? CrossFadeState.showFirst
-                        : CrossFadeState.showSecond,
-                    duration: const Duration(milliseconds: 220),
-                  ),
+                  ],
+                ],
               ],
             );
           },
