@@ -1,142 +1,258 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/presentation/widgets/quick_settings_drawer.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
+/// Clean Apple-Style Settings Screen with iOS Grouped Design & Tafakor Mint Green Palette
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final colorScheme = context.colorScheme;
     final isDark = context.isDark;
     final isVip = ref.watch(hasVipAccessProvider);
     final vipState = ref.watch(vipSubscriptionControllerProvider);
 
-    final bgColor = isDark ? const Color(0xFF0F1615) : const Color(0xFFF7F5F0);
-    final cardBgColor = colors.cardBackground;
-    final textColor = isDark ? Colors.white : const Color(0xFF1C1B1B);
-    final subtitleColor = isDark ? Colors.white70 : const Color(0xFF666666);
-    final dividerColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFEAE7E3);
-
     final vipSubtitle = isVip
         ? (vipState.remainingDays > 0
-            ? 'اشتراک ویژه شما فعال است (${vipState.remainingDays} روز دیگر باقی‌مانده)'
+            ? 'اشتراک ویژه شما فعال است (${vipState.remainingDays} روز باقی‌مانده)'
                 .toPersianDigit()
             : 'اشتراک ویژه فعال است (مشاهده جزییات)')
         : 'دسترسی نامحدود به تمامی قاریان برجسته و ترجمه‌های گویا';
 
     return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        title: Text(
-          'تنظیمات',
-          style: AppTypography.appBarTitle.copyWith(color: textColor),
+      backgroundColor: colorScheme.surface,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(54.0),
+        child: Container(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 2,
+            left: 8.0,
+            right: 8.0,
+            bottom: 4.0,
+          ),
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            border: Border(
+              bottom: BorderSide(
+                color: colors.cardBorder,
+                width: 0.8,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: 'بازگشت',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  CupertinoIcons.chevron_forward,
+                  size: 22,
+                  color: colorScheme.onSurface,
+                ),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    context.goNamed(quranHomeRoute);
+                  }
+                },
+              ),
+              Expanded(
+                child: Text(
+                  'تنظیمات',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 48), // Balance for back button
+            ],
+          ),
         ),
-        backgroundColor: cardBgColor,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: textColor),
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         children: [
-          _buildCard(
+          // Section 1: Reading Experience & Content
+          _buildSectionHeader('مطالعه و محتوا', isDark),
+          6.vSpace,
+          _buildGroupCard(
             context: context,
-            child: Column(
-              children: [
-                // 1. Text & Quran Reader Display Settings
-                _buildSettingsTile(
-                  context: context,
-                  icon: CupertinoIcons.textformat_size,
-                  title: 'تنظیمات متن و قرائت',
-                  subtitle: 'اندازه قلم، نوع خط، فاصله خطوط و رنگ اعراب',
-                  textColor: textColor,
-                  subtitleColor: subtitleColor,
-                  onTap: () => QuickSettingsDrawer.show(context),
-                ),
-                Divider(height: 1, color: dividerColor),
+            children: [
+              _buildSettingsTile(
+                context: context,
+                icon: CupertinoIcons.textformat_size,
+                title: 'تنظیمات متن و قرائت',
+                subtitle: 'اندازه قلم، نوع خط، فاصله خطوط و رنگ اعراب',
+                onTap: () => QuickSettingsDrawer.show(context),
+              ),
+              Divider(
+                height: 1,
+                thickness: 0.6,
+                indent: 58,
+                color: colors.cardBorder,
+              ),
+              _buildSettingsTile(
+                context: context,
+                icon: CupertinoIcons.book,
+                title: 'مدیریت ترجمه‌ها',
+                subtitle: 'انتخاب مترجم و تنظیمات نمایش ترجمه',
+                onTap: () => TranslationManagerBottomSheet.show(context),
+              ),
+            ],
+          ),
+          18.vSpace,
 
-                // 2. Translation Management
-                _buildSettingsTile(
-                  context: context,
-                  icon: CupertinoIcons.book_fill,
-                  title: 'مدیریت ترجمه‌ها',
-                  subtitle: 'انتخاب مترجم و تنظیمات نمایش ترجمه',
-                  textColor: textColor,
-                  subtitleColor: subtitleColor,
-                  onTap: () => TranslationManagerBottomSheet.show(context),
-                ),
-                Divider(height: 1, color: dividerColor),
-
-                // 3. VIP Subscription (یکی مانده به آخر، بالای درباره قرآن تفکر)
-                _buildSettingsTile(
-                  context: context,
-                  icon: CupertinoIcons.star_circle_fill,
-                  iconColor: colors.goldAccent,
-                  title: 'اشتراک ویژه',
-                  subtitle: vipSubtitle,
-                  textColor: textColor,
-                  subtitleColor: subtitleColor,
-                  onTap: () => context.pushNamed(vipSubscriptionRoute),
-                ),
-                Divider(height: 1, color: dividerColor),
-
-                // 4. About Quran Tafakor
-                _buildSettingsTile(
-                  context: context,
-                  icon: CupertinoIcons.info_circle_fill,
-                  title: 'درباره قرآن تفکر',
-                  subtitle: 'نسخه ۱.۰.۰',
-                  textColor: textColor,
-                  subtitleColor: subtitleColor,
-                  onTap: () {
-                    showAboutDialog(
-                      context: context,
-                      applicationName: 'قرآن تفکر',
-                      applicationVersion: '۱.۰.۰',
-                      children: const [
-                        Text(
-                          'اپلیکیشن جامع قرآن تفکر با رسم‌الخط‌های استاندارد، ترجمه‌های معتبر و امکانات پیشرفته مطالعه قرآن کریم.',
-                          textAlign: TextAlign.justify,
-                          textDirection: TextDirection.rtl,
+          // Section 2: Premium & VIP Account
+          _buildSectionHeader('اشتراک ویژه', isDark),
+          6.vSpace,
+          _buildGroupCard(
+            context: context,
+            children: [
+              _buildSettingsTile(
+                context: context,
+                icon: CupertinoIcons.star_circle,
+                title: 'اشتراک ویژه تفکر',
+                subtitle: vipSubtitle,
+                trailing: isVip
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
                         ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(
+                            alpha: isDark ? 0.18 : 0.10,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(
+                              alpha: isDark ? 0.35 : 0.25,
+                            ),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          'فعال',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      )
+                    : null,
+                onTap: () => context.pushNamed(vipSubscriptionRoute),
+              ),
+            ],
+          ),
+          18.vSpace,
+
+          // Section 3: App Information
+          _buildSectionHeader('اطلاعات برنامه', isDark),
+          6.vSpace,
+          _buildGroupCard(
+            context: context,
+            children: [
+              _buildSettingsTile(
+                context: context,
+                icon: CupertinoIcons.info_circle,
+                title: 'درباره قرآن تفکر',
+                subtitle: 'نسخه ۱.۰.۰',
+                onTap: () {
+                  showAboutDialog(
+                    context: context,
+                    applicationName: 'قرآن تفکر',
+                    applicationVersion: '۱.۰.۰',
+                    applicationIcon: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        CupertinoIcons.book,
+                        color: colorScheme.primary,
+                        size: 26,
+                      ),
+                    ),
+                    children: const [
+                      Text(
+                        'اپلیکیشن جامع قرآن تفکر با رسم‌الخط‌های استاندارد، ترجمه‌های معتبر و امکانات پیشرفته مطالعه قرآن کریم.',
+                        textAlign: TextAlign.justify,
+                        textDirection: TextDirection.rtl,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCard({required BuildContext context, required Widget child}) {
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 12.5,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white54 : const Color(0xFF7A756D),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupCard({
+    required BuildContext context,
+    required List<Widget> children,
+  }) {
     final colors = context.colors;
 
-    return Material(
-      color: colors.cardBackground,
-      borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-          border: Border.all(color: colors.cardBorder),
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colors.cardBorder,
+          width: 0.8,
         ),
-        child: child,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: children,
       ),
     );
   }
@@ -146,18 +262,86 @@ class SettingsScreen extends ConsumerWidget {
     required IconData icon,
     required String title,
     required String subtitle,
-    required Color textColor,
-    required Color subtitleColor,
     required VoidCallback onTap,
-    Color? iconColor,
     Widget? trailing,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: iconColor ?? context.colors.goldAccent, size: 26),
-      title: Text(title, style: AppTypography.sectionHeader.copyWith(color: textColor)),
-      subtitle: Text(subtitle, style: AppTypography.captionText.copyWith(color: subtitleColor)),
-      trailing: trailing ?? Icon(CupertinoIcons.chevron_left, size: 16, color: subtitleColor),
-      onTap: onTap,
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              // Signature Apple Outline Icon Badge
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(
+                    alpha: isDark ? 0.14 : 0.08,
+                  ),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  icon,
+                  color: colorScheme.primary,
+                  size: 19,
+                ),
+              ),
+              12.hSpace,
+
+              // Title and Subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    2.vSpace,
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11.5,
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              8.hSpace,
+
+              // Trailing Indicator (Chevron or Custom Status)
+              if (trailing != null) ...[
+                trailing,
+                6.hSpace,
+              ],
+              Icon(
+                CupertinoIcons.chevron_left,
+                size: 13,
+                color: isDark ? Colors.white38 : Colors.black38,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
