@@ -909,7 +909,11 @@ class _QuranQuickJumpBottomSheetState
     required int maxVal,
     required ValueChanged<int> onSubmitted,
   }) {
-    final textController = TextEditingController(text: currentVal.toString());
+    final textController = TextEditingController(text: currentVal.toPersianDigit());
+    textController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: textController.text.length,
+    );
 
     showDialog(
       context: context,
@@ -931,13 +935,22 @@ class _QuranQuickJumpBottomSheetState
             keyboardType: TextInputType.number,
             autofocus: true,
             textAlign: TextAlign.center,
+            inputFormatters: [
+              TextInputFormatter.withFunction((oldValue, newValue) {
+                final converted = newValue.text.toPersianDigit();
+                return newValue.copyWith(
+                  text: converted,
+                  selection: newValue.selection,
+                );
+              }),
+            ],
             style: const TextStyle(
               fontFamily: AppTypography.fontFamily,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
             decoration: InputDecoration(
-              hintText: '$minVal تا $maxVal',
+              hintText: '${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()}',
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
               filled: true,
               fillColor: isDark

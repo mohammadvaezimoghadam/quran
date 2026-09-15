@@ -10,9 +10,12 @@ import 'package:image/image.dart' as img;
 import 'package:zxing2/qrcode.dart' hide BarcodeFormat;
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:flutter/services.dart';
+
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -253,6 +256,15 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                 controller: _pageController,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
+                inputFormatters: [
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    final converted = newValue.text.toPersianDigit();
+                    return newValue.copyWith(
+                      text: converted,
+                      selection: newValue.selection,
+                    );
+                  }),
+                ],
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 15,
@@ -292,7 +304,7 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
             12.hSpace,
             ElevatedButton(
               onPressed: isLoading ? null : () {
-                final text = _pageController.text.trim();
+                final text = _pageController.text.trim().toEnglishDigit();
                 final pageNum = int.tryParse(text);
                 if (pageNum != null) {
                   ref.read(pageNavigationControllerProvider.notifier).processPageNumber(pageNum);
