@@ -69,10 +69,10 @@ class QuranInfoBar extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark
         ? const Color(0xFF16191C).withValues(alpha: 0.94)
-        : const Color(0xFFEBE7CE).withValues(alpha: 0.94);
+        : Colors.white;
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+        : const Color(0xFFE5E5EA);
 
     return Container(
       width: double.infinity,

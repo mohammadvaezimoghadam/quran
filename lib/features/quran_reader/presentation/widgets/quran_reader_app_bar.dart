@@ -70,11 +70,11 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
               shape: BoxShape.circle,
               color: isDark
                   ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.black.withValues(alpha: 0.04),
+                  : const Color(0xFFF2F2F7),
               border: Border.all(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.10)
-                    : Colors.black.withValues(alpha: 0.08),
+                    : const Color(0xFFE5E5EA),
                 width: 0.8,
               ),
             ),
@@ -105,12 +105,12 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         right: 8.0,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF16191C) : const Color(0xFFEBE7CE),
+        color: isDark ? const Color(0xFF16191C) : Colors.white,
         border: Border(
           bottom: BorderSide(
             color: isDark
                 ? Colors.white.withValues(alpha: 0.07)
-                : Colors.black.withValues(alpha: 0.06),
+                : const Color(0xFFE5E5EA),
             width: 0.8,
           ),
         ),
@@ -161,7 +161,7 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
                   decoration: BoxDecoration(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.06)
-                        : Colors.black.withValues(alpha: 0.04),
+                        : const Color(0xFFF2F2F7),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: colorScheme.primary.withValues(alpha: 0.28),
@@ -264,11 +264,11 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
                 shape: BoxShape.circle,
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.black.withValues(alpha: 0.04),
+                    : const Color(0xFFF2F2F7),
                 border: Border.all(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.10)
-                      : Colors.black.withValues(alpha: 0.08),
+                      : const Color(0xFFE5E5EA),
                   width: 0.8,
                 ),
               ),
