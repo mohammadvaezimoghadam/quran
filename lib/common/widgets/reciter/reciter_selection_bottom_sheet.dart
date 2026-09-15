@@ -13,7 +13,7 @@ import '../../../features/quran_reader/domain/entities/reciter_entity.dart';
 import '../../../features/quran_reader/presentation/utils/reciter_download_helper.dart';
 import '../../../features/subscription/domain/policy/audio_vip_policy.dart';
 import '../../../features/subscription/application/vip_subscription_controller.dart';
-import '../../../features/subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../features/subscription/presentation/widgets/vip_required_dialog.dart';
 
 /// Model representing a unique Reciter person with all their recitation variants.
 class ReciterGroup {
@@ -624,7 +624,11 @@ class _ReciterSelectionBottomSheetState
                           child: InkWell(
                             onTap: () async {
                               if (isLocked) {
-                                VipSubscriptionSheet.show(context);
+                                VipRequiredDialog.show(
+                                  context: context,
+                                  reciterName: activeVariant.name,
+                                  isTranslation: widget.isTranslationMode,
+                                );
                                 return;
                               }
                               if (widget.isDownloadMode) {
@@ -767,7 +771,11 @@ class _ReciterSelectionBottomSheetState
                                                 : !AudioVipPolicy.isDefaultReciter(
                                                     variant.identifier));
                                         if (variantIsLocked) {
-                                          VipSubscriptionSheet.show(context);
+                                          VipRequiredDialog.show(
+                                            context: context,
+                                            reciterName: variant.name,
+                                            isTranslation: widget.isTranslationMode,
+                                          );
                                           return;
                                         }
                                         setState(() {

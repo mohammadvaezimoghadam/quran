@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../ui/vip_subscription_sheet.dart';
 
 /// Clean, minimal VIP prompt dialog when user requests a VIP reciter on a non-demo Surah.
 class VipAudioPromptDialog extends StatelessWidget {
@@ -80,7 +82,7 @@ class VipAudioPromptDialog extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              VipSubscriptionSheet.show(context);
+              context.pushNamed(vipSubscriptionRoute);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: colorScheme.primary,
