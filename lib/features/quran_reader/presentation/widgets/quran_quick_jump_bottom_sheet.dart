@@ -201,12 +201,6 @@ class _QuranQuickJumpBottomSheetState
                           ),
                           child: Row(
                             children: [
-                              Icon(
-                                CupertinoIcons.book,
-                                size: 20,
-                                color: colorScheme.primary,
-                              ),
-                              12.hSpace,
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,12 +281,6 @@ class _QuranQuickJumpBottomSheetState
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            CupertinoIcons.text_quote,
-                            size: 20,
-                            color: colorScheme.primary,
-                          ),
-                          12.hSpace,
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
