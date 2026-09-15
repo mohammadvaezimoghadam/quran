@@ -58,21 +58,12 @@ class _QuranQuickJumpBottomSheetState
     extends ConsumerState<QuranQuickJumpBottomSheet> {
   bool _isInitialized = false;
   bool _isCalculating = false;
-  bool _isSurahDropdownOpen = false;
-  final TextEditingController _surahSearchController = TextEditingController();
-  String _surahSearchQuery = '';
 
   // Interconnected Live State
   SurahEntity? _selectedSurah;
   int _currentAyahNumber = 1;
   int _currentPageNumber = 1;
   int _currentJuzNumber = 1;
-
-  @override
-  void dispose() {
-    _surahSearchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -181,16 +172,11 @@ class _QuranQuickJumpBottomSheetState
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() {
-                            _isSurahDropdownOpen = !_isSurahDropdownOpen;
-                            if (!_isSurahDropdownOpen) {
-                              _surahSearchController.clear();
-                              _surahSearchQuery = '';
-                            }
-                          });
-                        },
+                        onTap: () => _openSurahPickerDialog(
+                          context,
+                          surahs,
+                          activeSurah,
+                        ),
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(18),
                         ),
@@ -232,36 +218,15 @@ class _QuranQuickJumpBottomSheetState
                                   ],
                                 ),
                               ),
-                              AnimatedRotation(
-                                turns: _isSurahDropdownOpen ? 0.5 : 0.0,
-                                duration: const Duration(milliseconds: 200),
-                                child: Icon(
-                                  CupertinoIcons.chevron_down,
-                                  size: 16,
-                                  color: isDark ? Colors.white38 : Colors.black38,
-                                ),
+                              Icon(
+                                CupertinoIcons.chevron_left,
+                                size: 16,
+                                color: isDark ? Colors.white38 : Colors.black38,
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
-
-                    // Inline Surah Dropdown
-                    AnimatedCrossFade(
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: _buildInlineSurahDropdown(
-                        context: context,
-                        surahs: surahs,
-                        activeSurah: activeSurah,
-                        isDark: isDark,
-                        cardBorder: cardBorder,
-                        colorScheme: colorScheme,
-                      ),
-                      crossFadeState: _isSurahDropdownOpen
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      duration: const Duration(milliseconds: 240),
                     ),
 
                     // Hairline Divider
@@ -1026,179 +991,23 @@ class _QuranQuickJumpBottomSheetState
 
   // --- Modals & Pickers ---
 
-  Widget _buildInlineSurahDropdown({
-    required BuildContext context,
-    required List<SurahEntity> surahs,
-    required SurahEntity? activeSurah,
-    required bool isDark,
-    required Color cardBorder,
-    required ColorScheme colorScheme,
-  }) {
-    final normalized = _surahSearchQuery.normalizeForSearch();
-    final filtered = surahs.where((s) {
-      if (normalized.isEmpty) return true;
-      return s.name.normalizeForSearch().contains(normalized) ||
-          s.nameFa.normalizeForSearch().contains(normalized) ||
-          s.englishName.normalizeForSearch().contains(normalized) ||
-          s.number.toString() == normalized;
-    }).toList();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.black.withValues(alpha: 0.22)
-            : Colors.black.withValues(alpha: 0.025),
-        border: Border(
-          top: BorderSide(color: cardBorder, width: 0.6),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Search Field
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
-            child: CupertinoSearchTextField(
-              controller: _surahSearchController,
-              placeholder: 'جستجوی نام یا شماره سوره...',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 13,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-              placeholderStyle: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 12.5,
-                color: isDark ? Colors.white38 : Colors.black38,
-              ),
-              onChanged: (val) {
-                setState(() {
-                  _surahSearchQuery = val;
-                });
-              },
-            ),
-          ),
-
-          // Scrollable Surah list
-          SizedBox(
-            height: 220,
-            child: filtered.isEmpty
-                ? Center(
-                    child: Text(
-                      'سوره‌ای یافت نشد',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12.5,
-                        color: isDark ? Colors.white38 : Colors.black38,
-                      ),
-                    ),
-                  )
-                : RawScrollbar(
-                    thumbColor: colorScheme.primary.withValues(alpha: 0.4),
-                    radius: const Radius.circular(4),
-                    thickness: 3,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      itemCount: filtered.length,
-                      separatorBuilder: (context, index) => Divider(
-                        height: 1,
-                        thickness: 0.5,
-                        indent: 40,
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.04)
-                            : Colors.black.withValues(alpha: 0.04),
-                      ),
-                      itemBuilder: (context, index) {
-                        final s = filtered[index];
-                        final isSelected = activeSurah?.number == s.number;
-
-                        return Material(
-                          color: isSelected
-                              ? colorScheme.primary.withValues(alpha: isDark ? 0.16 : 0.08)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          child: InkWell(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              _onSurahSelected(s);
-                              setState(() {
-                                _isSurahDropdownOpen = false;
-                                _surahSearchController.clear();
-                                _surahSearchQuery = '';
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 28,
-                                    height: 28,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? colorScheme.primary
-                                          : (isDark
-                                              ? Colors.white.withValues(alpha: 0.07)
-                                              : Colors.black.withValues(alpha: 0.05)),
-                                      borderRadius: BorderRadius.circular(7),
-                                    ),
-                                    child: Text(
-                                      s.number.toPersianDigit(),
-                                      style: TextStyle(
-                                        fontFamily: AppTypography.fontFamily,
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : (isDark ? Colors.white70 : Colors.black87),
-                                      ),
-                                    ),
-                                  ),
-                                  10.hSpace,
-                                  Expanded(
-                                    child: Text(
-                                      'سوره ${s.nameFa}',
-                                      style: TextStyle(
-                                        fontFamily: AppTypography.fontFamily,
-                                        fontSize: 13.5,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                        color: isSelected
-                                            ? colorScheme.primary
-                                            : (isDark ? Colors.white : const Color(0xFF1C1B1B)),
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    '${s.numberOfAyahs.toPersianDigit()} آیه • ص ${s.startPage.toPersianDigit()}',
-                                    style: TextStyle(
-                                      fontFamily: AppTypography.fontFamily,
-                                      fontSize: 11,
-                                      color: isDark ? Colors.white38 : Colors.black45,
-                                    ),
-                                  ),
-                                  if (isSelected) ...[
-                                    8.hSpace,
-                                    Icon(
-                                      CupertinoIcons.checkmark_alt,
-                                      color: colorScheme.primary,
-                                      size: 16,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-          ),
-          6.vSpace,
-        ],
+  Future<void> _openSurahPickerDialog(
+    BuildContext context,
+    List<SurahEntity> surahs,
+    SurahEntity? activeSurah,
+  ) async {
+    HapticFeedback.selectionClick();
+    final selected = await showDialog<SurahEntity>(
+      context: context,
+      builder: (ctx) => _SurahPickerCenterDialog(
+        surahs: surahs,
+        activeSurah: activeSurah,
       ),
     );
+
+    if (selected != null && mounted) {
+      _onSurahSelected(selected);
+    }
   }
 
   void _promptDirectNumber({
@@ -1280,6 +1089,272 @@ class _QuranQuickJumpBottomSheetState
           ],
         );
       },
+    );
+  }
+}
+
+/// Regular Centered Dialog for picking a Surah.
+/// Features instant search and scrollable Surah list without nesting bottom sheets.
+class _SurahPickerCenterDialog extends StatefulWidget {
+  final List<SurahEntity> surahs;
+  final SurahEntity? activeSurah;
+
+  const _SurahPickerCenterDialog({
+    required this.surahs,
+    required this.activeSurah,
+  });
+
+  @override
+  State<_SurahPickerCenterDialog> createState() =>
+      _SurahPickerCenterDialogState();
+}
+
+class _SurahPickerCenterDialogState extends State<_SurahPickerCenterDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+
+    final normalized = _searchQuery.normalizeForSearch();
+    final filtered = widget.surahs.where((s) {
+      if (normalized.isEmpty) return true;
+      return s.name.normalizeForSearch().contains(normalized) ||
+          s.nameFa.normalizeForSearch().contains(normalized) ||
+          s.englishName.normalizeForSearch().contains(normalized) ||
+          s.number.toString() == normalized;
+    }).toList();
+
+    return Dialog(
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.72,
+          maxWidth: 420,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'انتخاب سوره',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1C1B1B),
+                    ),
+                  ),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () => Navigator.pop(context),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Icon(
+                          CupertinoIcons.xmark_circle_fill,
+                          size: 22,
+                          color: isDark ? Colors.white38 : Colors.black26,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Search Field
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: CupertinoSearchTextField(
+                controller: _searchController,
+                placeholder: 'جستجوی نام یا شماره سوره...',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 13,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                placeholderStyle: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12.5,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+              ),
+            ),
+            10.vSpace,
+            Divider(
+              height: 1,
+              thickness: 0.6,
+              color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE8E5DF),
+            ),
+
+            // Surah List
+            Flexible(
+              child: filtered.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text(
+                          'سوره‌ای یافت نشد',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 13,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                      ),
+                    )
+                  : RawScrollbar(
+                      thumbColor: colorScheme.primary.withValues(alpha: 0.4),
+                      radius: const Radius.circular(4),
+                      thickness: 3,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        itemCount: filtered.length,
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          indent: 44,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.04)
+                              : Colors.black.withValues(alpha: 0.04),
+                        ),
+                        itemBuilder: (context, index) {
+                          final s = filtered[index];
+                          final isSelected =
+                              widget.activeSurah?.number == s.number;
+
+                          return Material(
+                            color: isSelected
+                                ? colorScheme.primary.withValues(
+                                    alpha: isDark ? 0.16 : 0.08,
+                                  )
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                Navigator.pop(context, s);
+                              },
+                              borderRadius: BorderRadius.circular(10),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 30,
+                                      height: 30,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? colorScheme.primary
+                                            : (isDark
+                                                ? Colors.white.withValues(
+                                                    alpha: 0.07,
+                                                  )
+                                                : Colors.black.withValues(
+                                                    alpha: 0.05,
+                                                  )),
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        s.number.toPersianDigit(),
+                                        style: TextStyle(
+                                          fontFamily:
+                                              AppTypography.fontFamily,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : (isDark
+                                                  ? Colors.white70
+                                                  : Colors.black87),
+                                        ),
+                                      ),
+                                    ),
+                                    12.hSpace,
+                                    Expanded(
+                                      child: Text(
+                                        'سوره ${s.nameFa}',
+                                        style: TextStyle(
+                                          fontFamily:
+                                              AppTypography.fontFamily,
+                                          fontSize: 14,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.w500,
+                                          color: isSelected
+                                              ? colorScheme.primary
+                                              : (isDark
+                                                  ? Colors.white
+                                                  : const Color(0xFF1C1B1B)),
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${s.numberOfAyahs.toPersianDigit()} آیه • ص ${s.startPage.toPersianDigit()}',
+                                      style: TextStyle(
+                                        fontFamily:
+                                            AppTypography.fontFamily,
+                                        fontSize: 11.5,
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black45,
+                                      ),
+                                    ),
+                                    if (isSelected) ...[
+                                      8.hSpace,
+                                      Icon(
+                                        CupertinoIcons.checkmark_alt,
+                                        color: colorScheme.primary,
+                                        size: 17,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+            6.vSpace,
+          ],
+        ),
+      ),
     );
   }
 }
