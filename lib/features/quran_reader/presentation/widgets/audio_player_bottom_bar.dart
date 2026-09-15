@@ -368,7 +368,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
 
                                                         // 2. Next Ayah
                                                         _buildControlButton(
-                                                          icon: CupertinoIcons.forward,
+                                                          icon: CupertinoIcons.forward_fill,
                                                           size: 20,
                                                           color: (currentAyahNumber != null &&
                                                                   totalAyahsInSurah != null &&
@@ -385,7 +385,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
 
                                                         // 3. Previous Ayah
                                                         _buildControlButton(
-                                                          icon: CupertinoIcons.backward,
+                                                          icon: CupertinoIcons.backward_fill,
                                                           size: 20,
                                                           color: (currentAyahNumber != null && currentAyahNumber > 1)
                                                               ? colorScheme.onSurface
