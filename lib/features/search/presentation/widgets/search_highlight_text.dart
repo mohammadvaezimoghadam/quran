@@ -37,11 +37,11 @@ class SearchHighlightText extends StatelessWidget {
       );
     }
 
-    final goldAccent = context.colors.goldAccent;
+    final primaryColor = context.colorScheme.primary;
     final effectiveHighlightStyle = highlightStyle ??
         baseStyle.copyWith(
-          color: goldAccent,
-          backgroundColor: goldAccent.withValues(alpha: 0.15),
+          color: primaryColor,
+          backgroundColor: primaryColor.withValues(alpha: 0.16),
           fontWeight: FontWeight.bold,
         );
 

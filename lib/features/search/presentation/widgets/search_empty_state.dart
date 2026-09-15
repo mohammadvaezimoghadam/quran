@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../core/theme/app_typography.dart';
 
 class SearchEmptyState extends StatelessWidget {
   final String query;
@@ -12,36 +13,39 @@ class SearchEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
+        padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 56.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(18),
+              width: 68,
+              height: 68,
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : const Color(0xFFF3EFE9),
+                color: colorScheme.primary.withValues(
+                  alpha: isDark ? 0.14 : 0.08,
+                ),
                 shape: BoxShape.circle,
               ),
+              alignment: Alignment.center,
               child: Icon(
                 CupertinoIcons.search,
-                size: 40,
-                color: isDark ? Colors.white38 : Colors.black38,
+                size: 32,
+                color: colorScheme.primary,
               ),
             ),
-            16.vSpace,
+            18.vSpace,
             Text(
               'نتیجه‌ای یافت نشد',
               style: TextStyle(
-                fontSize: 16,
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 16.5,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white70 : Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             8.vSpace,
@@ -49,9 +53,10 @@ class SearchEmptyState extends StatelessWidget {
               'برای «$query» هیچ سوره، آیه یا ترجمه‌ای پیدا نشد.\nلطفاً املای کلمه را بررسی کرده یا عبارت دیگری را جستجو کنید.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12.5,
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13,
                 height: 1.6,
-                color: isDark ? Colors.white38 : Colors.black45,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
               ),
             ),
           ],

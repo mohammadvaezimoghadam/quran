@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../domain/entities/search_result_item.dart';
@@ -41,27 +41,21 @@ class SearchResultAyahCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
       decoration: BoxDecoration(
         color: colors.cardBackground,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: colors.cardBorder,
-          width: 1,
+          width: 0.8,
         ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: Column(
@@ -70,7 +64,7 @@ class SearchResultAyahCard extends ConsumerWidget {
                 // Header: Surah Name, Ayah Number, Page, Juz
                 Row(
                   children: [
-                    // Surah & Ayah Info
+                    // Surah & Ayah Info in Tafakor Mint Green
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -80,9 +74,7 @@ class SearchResultAyahCard extends ConsumerWidget {
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 13.5,
                             fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? colors.goldAccent
-                                : colorScheme.primary,
+                            color: colorScheme.primary,
                           ),
                         ),
                         4.hSpace,
@@ -92,9 +84,7 @@ class SearchResultAyahCard extends ConsumerWidget {
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? colors.goldAccent.withValues(alpha: 0.8)
-                                : colorScheme.primary.withValues(alpha: 0.8),
+                            color: colorScheme.primary.withValues(alpha: 0.85),
                           ),
                         ),
                       ],
@@ -106,15 +96,16 @@ class SearchResultAyahCard extends ConsumerWidget {
                       Text(
                         'ص ${item.pageNumber!.toPersianDigit()} • جزء ${item.juzNumber?.toPersianDigit() ?? '۱'}',
                         style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
                           fontSize: 11,
-                          color: isDark ? Colors.white38 : Colors.black38,
+                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                         ),
                       ),
                     8.hSpace,
                     Icon(
                       CupertinoIcons.chevron_left,
-                      size: 14,
-                      color: isDark ? Colors.white38 : Colors.black26,
+                      size: 13,
+                      color: isDark ? Colors.white38 : Colors.black38,
                     ),
                   ],
                 ),
@@ -125,9 +116,9 @@ class SearchResultAyahCard extends ConsumerWidget {
                   Row(
                     children: [
                       Icon(
-                        Icons.translate_rounded,
+                        CupertinoIcons.text_quote,
                         size: 13,
-                        color: isDark ? Colors.amber[300] : const Color(0xFFB78103),
+                        color: colorScheme.primary,
                       ),
                       4.hSpace,
                       Text(
@@ -135,8 +126,8 @@ class SearchResultAyahCard extends ConsumerWidget {
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 11,
-                          color: isDark ? Colors.amber[300] : const Color(0xFFB78103),
-                          fontWeight: FontWeight.w500,
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -155,7 +146,7 @@ class SearchResultAyahCard extends ConsumerWidget {
                       fontFamily: arabicFontFamily,
                       fontSize: 18,
                       height: 1.8,
-                      color: isDark ? Colors.white : const Color(0xFF1E2421),
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -168,9 +159,8 @@ class SearchResultAyahCard extends ConsumerWidget {
                     decoration: BoxDecoration(
                       border: Border(
                         top: BorderSide(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : const Color(0xFFF0ECE6),
+                          color: colors.cardBorder,
+                          width: 0.6,
                         ),
                       ),
                     ),
@@ -180,11 +170,9 @@ class SearchResultAyahCard extends ConsumerWidget {
                       textAlign: TextAlign.justify,
                       baseStyle: TextStyle(
                         fontFamily: AppTypography.fontFamily,
-                        fontSize: 12.5,
+                        fontSize: 13,
                         height: 1.65,
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.65)
-                            : const Color(0xFF55524C),
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                       ),
                     ),
                   ),

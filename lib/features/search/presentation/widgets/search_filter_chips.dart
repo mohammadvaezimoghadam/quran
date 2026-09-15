@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -63,50 +64,49 @@ class SearchFilterChips extends StatelessWidget {
 
           return Padding(
             padding: const EdgeInsets.only(left: 8.0),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => onFilterSelected(filter),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14.0,
-                      vertical: 7.0,
-                    ),
-                    decoration: BoxDecoration(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onFilterSelected(filter);
+                },
+                borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14.0,
+                    vertical: 7.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? colorScheme.primary.withValues(
+                            alpha: isDark ? 0.20 : 0.12,
+                          )
+                        : colors.cardBackground,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                    border: Border.all(
                       color: isSelected
-                          ? (isDark
-                              ? colors.goldAccent.withValues(alpha: 0.18)
-                              : colorScheme.primary)
-                          : (isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : const Color(0xFFF3F0EB)),
-                      borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                      border: Border.all(
-                        color: isSelected
-                            ? (isDark
-                                ? colors.goldAccent
-                                : colorScheme.primary)
-                            : Colors.transparent,
-                        width: 1,
-                      ),
+                          ? colorScheme.primary.withValues(
+                              alpha: isDark ? 0.50 : 0.35,
+                            )
+                          : colors.cardBorder,
+                      width: 0.8,
                     ),
-                    child: Text(
-                      '${filter.label}$countSuffix',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12.5,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected
-                            ? (isDark ? colors.goldAccent : Colors.white)
-                            : (isDark
-                                ? Colors.white70
-                                : const Color(0xFF5A5852)),
-                      ),
+                  ),
+                  child: Text(
+                    '${filter.label}$countSuffix',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 12.5,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected
+                          ? colorScheme.primary
+                          : (isDark
+                              ? Colors.white60
+                              : const Color(0xFF6B6760)),
                     ),
                   ),
                 ),

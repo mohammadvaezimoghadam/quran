@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -27,23 +28,34 @@ class SearchRecentHistoryView extends StatelessWidget {
     if (recentSearches.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 56.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                CupertinoIcons.search,
-                size: 52,
-                color: isDark ? Colors.white24 : Colors.black12,
+              Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(
+                    alpha: isDark ? 0.14 : 0.08,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  CupertinoIcons.search,
+                  size: 32,
+                  color: colorScheme.primary,
+                ),
               ),
-              16.vSpace,
+              18.vSpace,
               Text(
                 'جستجو در قرآن کریم',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
-                  fontSize: 16,
+                  fontSize: 16.5,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
+                  color: colorScheme.onSurface,
                 ),
               ),
               8.vSpace,
@@ -52,9 +64,9 @@ class SearchRecentHistoryView extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
-                  fontSize: 12.5,
+                  fontSize: 13,
                   height: 1.6,
-                  color: isDark ? Colors.white38 : Colors.black45,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
                 ),
               ),
             ],
@@ -64,7 +76,7 @@ class SearchRecentHistoryView extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -73,7 +85,7 @@ class SearchRecentHistoryView extends StatelessWidget {
               Icon(
                 CupertinoIcons.clock,
                 size: 16,
-                color: isDark ? colors.goldAccent : colorScheme.primary,
+                color: colorScheme.primary,
               ),
               8.hSpace,
               Text(
@@ -82,17 +94,22 @@ class SearchRecentHistoryView extends StatelessWidget {
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
+                  color: colorScheme.onSurface,
                 ),
               ),
               const Spacer(),
               GestureDetector(
-                onTap: onClearAll,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onClearAll();
+                },
                 child: Text(
                   'پاک کردن همه',
                   style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
                     fontSize: 11.5,
-                    color: isDark ? Colors.white38 : Colors.black45,
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                 ),
               ),
@@ -105,24 +122,24 @@ class SearchRecentHistoryView extends StatelessWidget {
             children: recentSearches.map((term) {
               return Container(
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : const Color(0xFFF1EFEA),
+                  color: colors.cardBackground,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.06)
-                        : const Color(0xFFE5E2DB),
+                    color: colors.cardBorder,
+                    width: 0.8,
                   ),
                 ),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => onSearchSelected(term),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      onSearchSelected(term);
+                    },
                     borderRadius: BorderRadius.circular(20),
                     child: Padding(
                       padding: const EdgeInsets.only(
-                        left: 6.0,
+                        left: 8.0,
                         right: 12.0,
                         top: 5.0,
                         bottom: 5.0,
@@ -133,17 +150,27 @@ class SearchRecentHistoryView extends StatelessWidget {
                           Text(
                             term,
                             style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
                               fontSize: 12.5,
-                              color: isDark ? Colors.white70 : Colors.black87,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                           6.hSpace,
                           GestureDetector(
-                            onTap: () => onRemoveSearch(term),
-                            child: Icon(
-                              CupertinoIcons.xmark,
-                              size: 13,
-                              color: isDark ? Colors.white38 : Colors.black38,
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              onRemoveSearch(term);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(3.0),
+                              child: Icon(
+                                CupertinoIcons.xmark,
+                                size: 12,
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
                             ),
                           ),
                         ],

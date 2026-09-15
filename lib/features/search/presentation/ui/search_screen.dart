@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,7 +8,6 @@ import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/recent_searches_controller.dart';
 import '../../application/controllers/search_controller.dart';
@@ -74,40 +74,57 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
-            // 1. Top Fixed Search Bar (Stable Header - Never rebuilds unnecessarily)
-            Padding(
+            // 1. Apple Navigation Search Header
+            Container(
               padding: const EdgeInsets.only(
                 left: 12.0,
-                right: 8.0,
-                top: 8.0,
+                right: 6.0,
+                top: 6.0,
                 bottom: 8.0,
+              ),
+              decoration: BoxDecoration(
+                color: colors.cardBackground,
+                border: Border(
+                  bottom: BorderSide(
+                    color: colors.cardBorder,
+                    width: 0.8,
+                  ),
+                ),
               ),
               child: Row(
                 children: [
-                  // Back Button
+                  // Back Button (Cupertino Chevron with Haptic feedback)
                   IconButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
+                    tooltip: 'بازگشت',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.of(context).maybePop();
+                    },
                     icon: Icon(
-                      CupertinoIcons.arrow_right,
-                      color: isDark ? Colors.white70 : Colors.black87,
+                      CupertinoIcons.chevron_forward,
+                      size: 22,
+                      color: colorScheme.onSurface,
                     ),
-                    splashRadius: 22,
                   ),
+                  4.hSpace,
 
-                  // Integrated Search Input Container
+                  // Integrated Apple Search Input Container
                   Expanded(
                     child: Container(
-                      height: 48,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: colors.cardBackground,
-                        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.07)
+                            : const Color(0xFFF1EFEA),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: colors.cardBorder,
-                          width: 1,
+                          width: 0.8,
                         ),
                       ),
                       child: Row(
@@ -115,10 +132,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           12.hSpace,
                           Icon(
                             CupertinoIcons.search,
-                            size: 19,
-                            color: isDark
-                                ? colors.goldAccent
-                                : colorScheme.primary,
+                            size: 18,
+                            color: colorScheme.primary,
                           ),
                           10.hSpace,
                           Expanded(
@@ -140,7 +155,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               style: TextStyle(
                                 fontFamily: AppTypography.fontFamily,
                                 fontSize: 14.5,
-                                color: isDark ? Colors.white : Colors.black87,
+                                color: colorScheme.onSurface,
                               ),
                               decoration: InputDecoration(
                                 hintText:
@@ -148,14 +163,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 hintStyle: TextStyle(
                                   fontFamily: AppTypography.fontFamily,
                                   fontSize: 13,
-                                  color: isDark
-                                      ? Colors.white38
-                                      : Colors.black38,
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.55),
                                 ),
                                 border: InputBorder.none,
                                 isDense: true,
                                 contentPadding:
-                                    const EdgeInsets.symmetric(vertical: 12.0),
+                                    const EdgeInsets.symmetric(vertical: 11.0),
                               ),
                             ),
                           ),
@@ -175,18 +189,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               if (isSearching) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 10.0,
+                                    horizontal: 12.0,
                                   ),
                                   child: SizedBox(
-                                    width: 18,
-                                    height: 18,
+                                    width: 17,
+                                    height: 17,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
-                                        isDark
-                                            ? colors.goldAccent
-                                            : colorScheme.primary,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        colorScheme.primary,
                                       ),
                                     ),
                                   ),
@@ -196,6 +207,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               if (hasQuery) {
                                 return IconButton(
                                   onPressed: () {
+                                    HapticFeedback.lightImpact();
                                     _textController.clear();
                                     ref
                                         .read(
@@ -203,11 +215,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                         .clearSearch();
                                   },
                                   icon: Icon(
-                                    CupertinoIcons.clear_circled_solid,
+                                    CupertinoIcons.xmark_circle,
                                     size: 18,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : Colors.black38,
+                                    color: colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.6),
                                   ),
                                   splashRadius: 18,
                                 );
@@ -299,7 +310,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     return Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isDark ? colors.goldAccent : colorScheme.primary,
+                          colorScheme.primary,
                         ),
                       ),
                     );
@@ -415,7 +426,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildSectionHeader(String title, bool isDark) {
-    final colors = context.colors;
     final colorScheme = context.colorScheme;
     return Padding(
       padding: const EdgeInsets.only(
@@ -430,7 +440,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           fontFamily: AppTypography.fontFamily,
           fontSize: 12.5,
           fontWeight: FontWeight.bold,
-          color: isDark ? colors.goldAccent : colorScheme.primary,
+          color: colorScheme.primary,
         ),
       ),
     );
