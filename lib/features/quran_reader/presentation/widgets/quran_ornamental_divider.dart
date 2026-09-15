@@ -96,13 +96,17 @@ class _QuranOrnamentPainter extends CustomPainter {
     final lineEndOffset = size.width * 0.46;
 
     if (lineEndOffset > lineStartOffset) {
-      // Right line with gradient fade
+      // Right line: starts solid near center ornament, fades outwards to right edge
       final rightLinePaint = Paint()
         ..shader = LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
           colors: [color, color.withValues(alpha: 0.0)],
-        ).createShader(Rect.fromPoints(
-          Offset(cx + lineStartOffset, cy),
-          Offset(cx + lineEndOffset, cy),
+        ).createShader(Rect.fromLTRB(
+          cx + lineStartOffset,
+          cy - 1,
+          cx + lineEndOffset,
+          cy + 1,
         ))
         ..strokeWidth = 1.2
         ..strokeCap = StrokeCap.round;
@@ -112,13 +116,17 @@ class _QuranOrnamentPainter extends CustomPainter {
         rightLinePaint,
       );
 
-      // Left line with gradient fade
+      // Left line: starts solid near center ornament, fades outwards to left edge
       final leftLinePaint = Paint()
         ..shader = LinearGradient(
+          begin: Alignment.centerRight,
+          end: Alignment.centerLeft,
           colors: [color, color.withValues(alpha: 0.0)],
-        ).createShader(Rect.fromPoints(
-          Offset(cx - lineStartOffset, cy),
-          Offset(cx - lineEndOffset, cy),
+        ).createShader(Rect.fromLTRB(
+          cx - lineEndOffset,
+          cy - 1,
+          cx - lineStartOffset,
+          cy + 1,
         ))
         ..strokeWidth = 1.2
         ..strokeCap = StrokeCap.round;
