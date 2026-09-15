@@ -112,7 +112,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
             context: context,
             title: 'ترجمه‌ها',
             iconWidget: Icon(
-              CupertinoIcons.text_bubble_fill,
+              CupertinoIcons.text_bubble,
               size: 26,
               color: primaryMint,
             ),
@@ -134,7 +134,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
             context: context,
             title: 'تنظیمات',
             iconWidget: Icon(
-              CupertinoIcons.gear_alt_fill,
+              CupertinoIcons.gear_alt,
               size: 26,
               color: primaryMint,
             ),

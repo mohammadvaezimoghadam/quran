@@ -261,7 +261,7 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                           ],
                         ] else ...[
                           Icon(
-                            widget.tool!.iconData ?? CupertinoIcons.star_fill,
+                            widget.tool!.iconData ?? CupertinoIcons.star,
                             color: colorScheme.primary,
                             size: widget.subtitle != null ? 22 : 26,
                           ),
