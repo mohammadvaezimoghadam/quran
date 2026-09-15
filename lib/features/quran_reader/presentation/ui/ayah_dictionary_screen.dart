@@ -6,9 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
-import '../../../../core/theme/app_dimens.dart';
+import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../common/widgets/surah_picker_dialog.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
@@ -17,7 +19,8 @@ import '../../domain/entities/word_entity.dart';
 import 'surah_dictionary_screen.dart';
 
 /// Full-screen view displaying the word-by-word vocabulary of a specific Ayah,
-/// with previous/next navigation and a shortcut to the full Surah dictionary.
+/// with previous/next navigation, direct Ayah number picker, Surah switcher,
+/// and a shortcut to the full Surah dictionary.
 class AyahDictionaryScreen extends ConsumerStatefulWidget {
   final int surahId;
   final String surahName;
@@ -54,30 +57,32 @@ class AyahDictionaryScreen extends ConsumerStatefulWidget {
 }
 
 class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
+  late int _currentSurahId;
   late int _currentAyahNumber;
 
   @override
   void initState() {
     super.initState();
+    _currentSurahId = widget.surahId;
     _currentAyahNumber = widget.ayahNumber;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
 
     final surahs = ref.watch(
       surahListControllerProvider.select((s) => s.surahs),
     );
-    final surah = surahs.where((s) => s.number == widget.surahId).firstOrNull;
+    final surah = surahs.where((s) => s.number == _currentSurahId).firstOrNull;
     final totalAyahs = surah?.numberOfAyahs ?? 286;
 
     final wordsAsync = ref.watch(
       ayahWordsProvider((
-        surahId: widget.surahId,
+        surahId: _currentSurahId,
         ayahNumber: _currentAyahNumber,
       )),
     );
@@ -91,8 +96,7 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
     final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
     final harakatColor = ArabicTextHelper.parseHexColor(harakatColorHex);
 
-    final baseArabicColor =
-        isDark ? context.colors.goldAccent : context.colorScheme.onSurface;
+    final baseArabicColor = colorScheme.onSurface;
     final baseArabicStyle = TextStyle(
       fontFamily: fontFamily,
       fontSize: 22,
@@ -103,117 +107,131 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
     final bool useCustomColor =
         harakatColor != null && harakatColor != baseArabicColor;
 
-    final rawSurahName = widget.surahName.isNotEmpty
-        ? widget.surahName
-        : widget.surahId.surahNameFa;
-    final cleanSurahName = rawSurahName.replaceAll('سوره', '').trim();
-    final surahDisplayName = 'سوره $cleanSurahName';
+    final surahDisplayName = surah?.nameFa ?? _currentSurahId.surahNameFa;
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: context.colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: context.colors.cardBackground,
-        elevation: 0.5,
-        centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsetsDirectional.only(start: 10.0),
-          child: Center(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
+      backgroundColor: colorScheme.surface,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56.0),
+        child: Container(
+          padding: EdgeInsets.only(
+            top: topPadding + 4.0,
+            left: 10.0,
+            right: 8.0,
+            bottom: 6.0,
+          ),
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            border: Border(
+              bottom: BorderSide(
+                color: colors.cardBorder,
+                width: 0.8,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Back Button (Apple-style chevron)
+              IconButton(
+                tooltip: 'بازگشت',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  CupertinoIcons.chevron_forward,
+                  size: 22,
+                  color: colorScheme.onSurface,
+                ),
+                onPressed: () {
                   if (Navigator.of(context).canPop()) {
                     Navigator.of(context).pop();
                   }
                 },
-                customBorder: const CircleBorder(),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.12)
-                        : context.colorScheme.primary.withValues(alpha: 0.08),
-                    border: Border.all(
-                      color: isDark
-                          ? context.colors.softGoldText.withValues(alpha: 0.3)
-                          : context.colorScheme.primary.withValues(alpha: 0.25),
-                      width: 1.0,
-                    ),
-                  ),
-                  child: Tooltip(
-                    message: 'بازگشت',
-                    child: Center(
-                      child: Icon(
-                        CupertinoIcons.chevron_forward,
-                        size: 19,
-                        color: isDark
-                            ? context.colors.softGoldText
-                            : context.colorScheme.primary,
+              ),
+
+              4.hSpace,
+
+              // Surah & Ayah Switcher Pill
+              Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      final selected = await SurahPickerDialog.show(
+                        context,
+                        title: 'انتخاب سوره لغت‌نامه',
+                        activeSurah: surah,
+                        surahs: surahs,
+                      );
+                      if (selected != null && mounted) {
+                        setState(() {
+                          _currentSurahId = selected.number;
+                          _currentAyahNumber = 1;
+                        });
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6.0,
+                        vertical: 4.0,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'لغت‌نامه آیه ${_currentAyahNumber.toPersianDigit()} $surahDisplayName',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          4.hSpace,
+                          Icon(
+                            CupertinoIcons.chevron_down,
+                            size: 13,
+                            color: colorScheme.primary,
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-        title: Text(
-          'لغت‌نامه آیه ${_currentAyahNumber.toPersianDigit()} $surahDisplayName',
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 16.5,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFF2C2A29),
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: 10),
-            child: InkWell(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => SurahDictionaryScreen(
-                      surahId: widget.surahId,
-                      surahName: widget.surahName,
-                    ),
+
+              // Button to jump to full Surah Dictionary
+              Tooltip(
+                message: 'لغت‌نامه کامل سوره',
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    CupertinoIcons.book,
+                    size: 21,
+                    color: colorScheme.primary,
                   ),
-                );
-              },
-              borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      CupertinoIcons.book,
-                      size: 20,
-                      color: isDark ? context.colors.goldAccent : context.colorScheme.primary,
-                    ),
-                    2.vSpace,
-                    Text(
-                      'لغت‌نامه سوره',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? context.colors.goldAccent : context.colorScheme.primary,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SurahDictionaryScreen(
+                          surahId: _currentSurahId,
+                          surahName: surahDisplayName,
+                        ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
       body: wordsAsync.when(
         loading: () => Center(
-          child: CircularProgressIndicator(color: context.colorScheme.primary),
+          child: CircularProgressIndicator(color: colorScheme.primary),
         ),
         error: (error, stack) => Center(
           child: Padding(
@@ -240,7 +258,7 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                 ElevatedButton(
                   onPressed: () => ref.refresh(
                     ayahWordsProvider((
-                      surahId: widget.surahId,
+                      surahId: _currentSurahId,
                       ayahNumber: _currentAyahNumber,
                     )),
                   ),
@@ -269,6 +287,7 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
               horizontal: 16,
               vertical: 14,
             ),
+            physics: const BouncingScrollPhysics(),
             itemCount: words.length,
             itemBuilder: (context, index) {
               return _AyahWordCard(
@@ -285,19 +304,25 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF192220) : Colors.white,
+          color: colors.cardBackground,
+          border: Border(
+            top: BorderSide(
+              color: colors.cardBorder,
+              width: 0.8,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, -3),
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
             ),
           ],
         ),
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -305,6 +330,7 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                 TextButton.icon(
                   onPressed: _currentAyahNumber < totalAyahs
                       ? () {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             _currentAyahNumber++;
                           });
@@ -319,35 +345,63 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colorScheme.primary,
+                  ),
                 ),
 
-                // Center indicator
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
+                // Center indicator with direct Ayah edit
+                Material(
+                  color: colorScheme.primary.withValues(
+                    alpha: isDark ? 0.12 : 0.08,
                   ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.06)
-                        : Colors.black.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${_currentAyahNumber.toPersianDigit()} / ${totalAyahs.toPersianDigit()}',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : Colors.black87,
+                  borderRadius: BorderRadius.circular(10),
+                  child: InkWell(
+                    onTap: () => _promptDirectNumber(
+                      context: context,
+                      title: 'شماره آیه سوره $surahDisplayName',
+                      currentVal: _currentAyahNumber,
+                      minVal: 1,
+                      maxVal: totalAyahs,
+                      onSubmitted: (newAyah) {
+                        setState(() {
+                          _currentAyahNumber = newAyah;
+                        });
+                      },
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: colorScheme.primary.withValues(
+                            alpha: isDark ? 0.35 : 0.25,
+                          ),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Text(
+                        'آیه ${_currentAyahNumber.toPersianDigit()} از ${totalAyahs.toPersianDigit()}',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
 
-                // Previous Ayah Button
+                // Previous Ayah Button (In RTL, Previous is to the right / back)
                 TextButton.icon(
                   onPressed: _currentAyahNumber > 1
                       ? () {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             _currentAyahNumber--;
                           });
@@ -362,12 +416,110 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colorScheme.primary,
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  void _promptDirectNumber({
+    required BuildContext context,
+    required String title,
+    required int currentVal,
+    required int minVal,
+    required int maxVal,
+    required ValueChanged<int> onSubmitted,
+  }) {
+    final textController = TextEditingController(text: currentVal.toPersianDigit());
+    textController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: textController.text.length,
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: TextField(
+            controller: textController,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            textAlign: TextAlign.center,
+            inputFormatters: [
+              TextInputFormatter.withFunction((oldValue, newValue) {
+                final converted = newValue.text.toPersianDigit();
+                return newValue.copyWith(
+                  text: converted,
+                  selection: newValue.selection,
+                );
+              }),
+            ],
+            style: const TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+            decoration: InputDecoration(
+              hintText: '${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()}',
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              filled: true,
+              fillColor: isDark
+                  ? Colors.white.withValues(alpha: 0.07)
+                  : const Color(0xFFF2EFEB),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('انصراف'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final raw = textController.text.trim().toEnglishDigit();
+                final val = int.tryParse(raw);
+                if (val != null && val >= minVal && val <= maxVal) {
+                  Navigator.pop(ctx);
+                  onSubmitted(val);
+                } else {
+                  AppSnackBar.showError(
+                    ctx,
+                    'عدد باید بین ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()} باشد.',
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(ctx).colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('تأیید'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -392,118 +544,119 @@ class _AyahWordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1B2523) : Colors.white,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : const Color(0xFFEBE7DF),
+          color: colors.cardBorder,
+          width: 0.8,
         ),
       ),
-      child: InkWell(
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          Clipboard.setData(
-            ClipboardData(text: '${word.arabicText} : ${word.translation}'),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '«${word.arabicText}» در حافظه کپی شد',
-                textDirection: TextDirection.rtl,
-              ),
-              duration: const Duration(seconds: 1),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            textDirection: TextDirection.rtl,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Word position indicator
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? context.colors.goldAccent.withValues(alpha: 0.15)
-                      : context.colorScheme.primary.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  word.position.toPersianDigit(),
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? context.colors.goldAccent
-                        : context.colorScheme.primary,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            Clipboard.setData(
+              ClipboardData(text: '${word.arabicText} : ${word.translation}'),
+            );
+            AppSnackBar.showSuccess(
+              context,
+              '«${word.arabicText}» در حافظه کپی شد.',
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              textDirection: TextDirection.rtl,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Word position indicator
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(
+                      alpha: isDark ? 0.14 : 0.09,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    word.position.toPersianDigit(),
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(width: 12),
+                12.hSpace,
 
-              // Arabic Text (Right side)
-              Expanded(
-                flex: 5,
-                child: useCustomColor
-                    ? RichText(
-                        textAlign: TextAlign.right,
-                        textDirection: TextDirection.rtl,
-                        text: TextSpan(
-                          style: baseArabicStyle,
-                          children: ArabicTextHelper.buildColoredSpans(
-                            text: word.arabicText,
-                            baseStyle: baseArabicStyle,
-                            baseColor: baseArabicColor,
-                            harakatColor: harakatColor!,
+                // Arabic Text (Right side)
+                Expanded(
+                  flex: 5,
+                  child: useCustomColor
+                      ? RichText(
+                          textAlign: TextAlign.right,
+                          textDirection: TextDirection.rtl,
+                          text: TextSpan(
+                            style: baseArabicStyle,
+                            children: ArabicTextHelper.buildColoredSpans(
+                              text: word.arabicText,
+                              baseStyle: baseArabicStyle,
+                              baseColor: baseArabicColor,
+                              harakatColor: harakatColor!,
+                            ),
                           ),
+                        )
+                      : Text(
+                          word.arabicText,
+                          textAlign: TextAlign.right,
+                          textDirection: TextDirection.rtl,
+                          style: baseArabicStyle,
                         ),
-                      )
-                    : Text(
-                        word.arabicText,
-                        textAlign: TextAlign.right,
-                        textDirection: TextDirection.rtl,
-                        style: baseArabicStyle,
-                      ),
-              ),
+                ),
 
-              const SizedBox(width: 10),
+                10.hSpace,
 
-              // Separator arrow
-              Icon(
-                CupertinoIcons.arrow_left,
-                size: 14,
-                color: isDark ? Colors.white24 : Colors.black26,
-              ),
+                // Separator arrow
+                Icon(
+                  CupertinoIcons.arrow_left,
+                  size: 13,
+                  color: isDark ? Colors.white24 : Colors.black26,
+                ),
 
-              const SizedBox(width: 10),
+                10.hSpace,
 
-              // Persian Translation (Left side)
-              Expanded(
-                flex: 6,
-                child: Text(
-                  word.translation,
-                  textAlign: TextAlign.left,
-                  textDirection: TextDirection.rtl,
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? const Color(0xFFDFE2E0) : const Color(0xFF2C3238),
+                // Persian Translation (Left side)
+                Expanded(
+                  flex: 6,
+                  child: Text(
+                    word.translation,
+                    textAlign: TextAlign.left,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.88)
+                          : const Color(0xFF2C3238),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
