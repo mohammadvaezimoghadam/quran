@@ -9,6 +9,7 @@ import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../core/data/local/sqflite/sqflite_service_provider.dart';
 import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../../../../core/services/quran_navigation/quran_navigation_service_provider.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -308,22 +309,14 @@ class _QuranQuickJumpBottomSheetState
                             maxVal: maxAyahs,
                             isDark: isDark,
                             primaryColor: colorScheme.primary,
-                            onChanged: (newVal) {
-                              setState(() {
-                                _currentAyahNumber = newVal;
-                              });
-                            },
+                            onChanged: (newVal) => _updateAyah(newVal),
                             onTapDirectEdit: () => _promptDirectNumber(
                               context: context,
                               title: 'شماره آیه سوره ${activeSurah?.nameFa ?? ""}',
                               currentVal: _currentAyahNumber,
                               minVal: 1,
                               maxVal: maxAyahs,
-                              onSubmitted: (val) {
-                                setState(() {
-                                  _currentAyahNumber = val;
-                                });
-                              },
+                              onSubmitted: (val) => _updateAyah(val),
                             ),
                           ),
                         ],
@@ -701,18 +694,66 @@ class _QuranQuickJumpBottomSheetState
     }
   }
 
+  Future<void> _updateAyah(int newAyah) async {
+    setState(() {
+      _currentAyahNumber = newAyah;
+    });
+
+    final surah = _selectedSurah;
+    if (surah == null) return;
+
+    // Fast path: check loaded ayahs in reader
+    final ayahs = ref.read(quranReaderControllerProvider).ayahs;
+    final match = ayahs.where((a) => a.surahId == surah.number && a.ayahNumber == newAyah).firstOrNull;
+    if (match != null && match.page != null) {
+      final page = match.page!;
+      final calculatedJuz = page <= 1 ? 1 : (((page - 2) ~/ 20) + 1).clamp(1, 30);
+      if (mounted) {
+        setState(() {
+          _currentPageNumber = page;
+          _currentJuzNumber = match.juz ?? calculatedJuz;
+        });
+      }
+      return;
+    }
+
+    // Database lookup
+    try {
+      final sqflite = ref.read(sqfliteServiceProvider);
+      final res = await sqflite.rawQuery(
+        'SELECT page, juz FROM ayahs WHERE surah_number = ? AND number_in_surah = ? LIMIT 1',
+        [surah.number, newAyah],
+      );
+      if (res.isNotEmpty && mounted) {
+        final page = res.first['page'] as int?;
+        final juz = res.first['juz'] as int?;
+        if (page != null) {
+          final calculatedJuz = page <= 1 ? 1 : (((page - 2) ~/ 20) + 1).clamp(1, 30);
+          setState(() {
+            _currentPageNumber = page;
+            _currentJuzNumber = juz ?? calculatedJuz;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
   void _onSurahSelected(SurahEntity newSurah) {
+    final calculatedJuz = newSurah.startPage <= 1
+        ? 1
+        : (((newSurah.startPage - 2) ~/ 20) + 1).clamp(1, 30);
     setState(() {
       _selectedSurah = newSurah;
-      _currentAyahNumber = _currentAyahNumber.clamp(1, newSurah.numberOfAyahs);
+      _currentAyahNumber = 1;
       _currentPageNumber = newSurah.startPage;
-      _currentJuzNumber = newSurah.startJuz;
+      _currentJuzNumber = newSurah.startJuz > 0 ? newSurah.startJuz : calculatedJuz;
     });
   }
 
   Future<void> _onPageChanged(int page, List<SurahEntity> surahs) async {
     final navService = ref.read(quranNavigationServiceProvider);
     final target = await navService.getTargetByPage(page);
+    final calculatedJuz = page <= 1 ? 1 : (((page - 2) ~/ 20) + 1).clamp(1, 30);
 
     if (target != null && mounted) {
       final matchedSurah = surahs.firstWhere(
@@ -723,11 +764,12 @@ class _QuranQuickJumpBottomSheetState
         _currentPageNumber = page;
         _selectedSurah = matchedSurah;
         _currentAyahNumber = target.ayahNumber;
-        _currentJuzNumber = matchedSurah.startJuz;
+        _currentJuzNumber = calculatedJuz;
       });
     } else if (mounted) {
       setState(() {
         _currentPageNumber = page;
+        _currentJuzNumber = calculatedJuz;
       });
     }
   }
@@ -735,6 +777,7 @@ class _QuranQuickJumpBottomSheetState
   Future<void> _onJuzChanged(int juz, List<SurahEntity> surahs) async {
     final navService = ref.read(quranNavigationServiceProvider);
     final target = await navService.getTargetByJuz(juz);
+    final juzStartPage = juz <= 1 ? 1 : (juz - 1) * 20 + 2;
 
     if (target != null && mounted) {
       final matchedSurah = surahs.firstWhere(
@@ -745,11 +788,12 @@ class _QuranQuickJumpBottomSheetState
         _currentJuzNumber = juz;
         _selectedSurah = matchedSurah;
         _currentAyahNumber = target.ayahNumber;
-        _currentPageNumber = matchedSurah.startPage;
+        _currentPageNumber = juzStartPage;
       });
     } else if (mounted) {
       setState(() {
         _currentJuzNumber = juz;
+        _currentPageNumber = juzStartPage;
       });
     }
   }
@@ -783,9 +827,14 @@ class _QuranQuickJumpBottomSheetState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => _SurahSearchModal(
-        surahs: surahs,
-        selectedSurah: _selectedSurah,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+        ),
+        child: _SurahSearchModal(
+          surahs: surahs,
+          selectedSurah: _selectedSurah,
+        ),
       ),
     ).then((selected) {
       if (selected != null && mounted) {
@@ -849,7 +898,8 @@ class _QuranQuickJumpBottomSheetState
             ),
             ElevatedButton(
               onPressed: () {
-                final val = int.tryParse(textController.text.trim());
+                final raw = textController.text.trim().toEnglishDigit();
+                final val = int.tryParse(raw);
                 if (val != null && val >= minVal && val <= maxVal) {
                   Navigator.pop(ctx);
                   onSubmitted(val);

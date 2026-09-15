@@ -54,4 +54,17 @@ extension StringSearchNormalizeExtension on String {
     }
     return text;
   }
+
+  /// Converts Persian and Arabic digits in a String to standard English ASCII digits.
+  String toEnglishDigit() {
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+
+    String text = this;
+    for (int i = 0; i < 10; i++) {
+      text = text.replaceAll(arabic[i], i.toString());
+      text = text.replaceAll(persian[i], i.toString());
+    }
+    return text;
+  }
 }
