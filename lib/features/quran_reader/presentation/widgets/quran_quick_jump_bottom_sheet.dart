@@ -306,97 +306,42 @@ class _QuranQuickJumpBottomSheetState
 
                     // ROW 3: Page & Juz Interconnected Row
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(14.0, 10.0, 14.0, 12.0),
-                      child: Column(
+                      padding: const EdgeInsets.fromLTRB(14.0, 10.0, 14.0, 14.0),
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              // Page Card
-                              Expanded(
-                                child: _buildPageCard(
-                                  currentPage: _currentPageNumber,
-                                  isDark: isDark,
-                                  primaryColor: colorScheme.primary,
-                                  onTapEdit: () => _promptDirectNumber(
-                                    context: context,
-                                    title: 'شماره صفحه قرآن',
-                                    currentVal: _currentPageNumber,
-                                    minVal: 1,
-                                    maxVal: 604,
-                                    onSubmitted: (val) => _onPageChanged(val, surahs),
-                                  ),
-                                ),
+                          // Page Card
+                          Expanded(
+                            child: _buildPageCard(
+                              currentPage: _currentPageNumber,
+                              isDark: isDark,
+                              primaryColor: colorScheme.primary,
+                              onTapEdit: () => _promptDirectNumber(
+                                context: context,
+                                title: 'شماره صفحه قرآن',
+                                currentVal: _currentPageNumber,
+                                minVal: 1,
+                                maxVal: 604,
+                                onSubmitted: (val) => _onPageChanged(val, surahs),
                               ),
-                              10.hSpace,
-
-                              // Juz Card
-                              Expanded(
-                                child: _buildJuzCard(
-                                  currentJuz: _currentJuzNumber,
-                                  isDark: isDark,
-                                  primaryColor: colorScheme.primary,
-                                  onChanged: (newVal) => _onJuzChanged(newVal, surahs),
-                                  onTapEdit: () => _promptDirectNumber(
-                                    context: context,
-                                    title: 'شماره جزء قرآن',
-                                    currentVal: _currentJuzNumber,
-                                    minVal: 1,
-                                    maxVal: 30,
-                                    onSubmitted: (val) => _onJuzChanged(val, surahs),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          10.vSpace,
-
-                          // Page Scrubber Slider (۱ تا ۶۰۴)
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              activeTrackColor: colorScheme.primary,
-                              inactiveTrackColor: colorScheme.primary.withValues(
-                                alpha: isDark ? 0.20 : 0.15,
-                              ),
-                              thumbColor: colorScheme.primary,
-                              overlayColor: colorScheme.primary.withValues(alpha: 0.18),
-                              trackHeight: 3.5,
-                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                            ),
-                            child: Slider(
-                              value: _currentPageNumber.toDouble().clamp(1.0, 604.0),
-                              min: 1.0,
-                              max: 604.0,
-                              onChanged: (val) {
-                                final page = val.round();
-                                if (page != _currentPageNumber) {
-                                  _onPageChanged(page, surahs);
-                                }
-                              },
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'صفحه ۱ (آغاز)',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 10,
-                                    color: isDark ? Colors.white38 : Colors.black38,
-                                  ),
-                                ),
-                                Text(
-                                  'صفحه ۶۰۴ (پایان)',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 10,
-                                    color: isDark ? Colors.white38 : Colors.black38,
-                                  ),
-                                ),
-                              ],
+                          10.hSpace,
+
+                          // Juz Card
+                          Expanded(
+                            child: _buildJuzCard(
+                              currentJuz: _currentJuzNumber,
+                              isDark: isDark,
+                              primaryColor: colorScheme.primary,
+                              onChanged: (newVal) => _onJuzChanged(newVal, surahs),
+                              onTapEdit: () => _promptDirectNumber(
+                                context: context,
+                                title: 'شماره جزء قرآن',
+                                currentVal: _currentJuzNumber,
+                                minVal: 1,
+                                maxVal: 30,
+                                onSubmitted: (val) => _onJuzChanged(val, surahs),
+                              ),
                             ),
                           ),
                         ],
@@ -494,7 +439,7 @@ class _QuranQuickJumpBottomSheetState
             onTap: onTapDirectEdit,
             borderRadius: BorderRadius.circular(8),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
@@ -503,25 +448,14 @@ class _QuranQuickJumpBottomSheetState
                 ),
               ),
               alignment: Alignment.center,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    CupertinoIcons.pencil,
-                    size: 11.5,
-                    color: primaryColor,
-                  ),
-                  4.hSpace,
-                  Text(
-                    currentVal.toPersianDigit(),
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                ],
+              child: Text(
+                currentVal.toPersianDigit(),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
               ),
             ),
           ),
@@ -590,7 +524,7 @@ class _QuranQuickJumpBottomSheetState
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
@@ -598,38 +532,16 @@ class _QuranQuickJumpBottomSheetState
                     width: 0.9,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      CupertinoIcons.pencil,
-                      size: 12,
-                      color: primaryColor,
-                    ),
-                    4.hSpace,
-                    Text(
-                      'صفحه ${currentPage.toPersianDigit()}',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1C1B1B),
-                      ),
-                    ),
-                  ],
+                alignment: Alignment.center,
+                child: Text(
+                  'صفحه ${currentPage.toPersianDigit()}',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1C1B1B),
+                  ),
                 ),
-              ),
-            ),
-          ),
-          4.vSpace,
-          Center(
-            child: Text(
-              'لمس جهت تایپ',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 9.5,
-                fontWeight: FontWeight.w600,
-                color: primaryColor,
               ),
             ),
           ),
@@ -706,7 +618,7 @@ class _QuranQuickJumpBottomSheetState
                   onTap: onTapEdit,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -714,25 +626,15 @@ class _QuranQuickJumpBottomSheetState
                         width: 0.9,
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          CupertinoIcons.pencil,
-                          size: 11,
-                          color: primaryColor,
-                        ),
-                        3.hSpace,
-                        Text(
-                          'جزء ${currentJuz.toPersianDigit()}',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF1C1B1B),
-                          ),
-                        ),
-                      ],
+                    alignment: Alignment.center,
+                    child: Text(
+                      'جزء ${currentJuz.toPersianDigit()}',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1C1B1B),
+                      ),
                     ),
                   ),
                 ),
@@ -748,17 +650,6 @@ class _QuranQuickJumpBottomSheetState
                 },
               ),
             ],
-          ),
-          4.vSpace,
-          Center(
-            child: Text(
-              'پرش ۲۰ صفحه‌ای',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 9.5,
-                color: isDark ? Colors.white38 : Colors.black38,
-              ),
-            ),
           ),
         ],
       ),
