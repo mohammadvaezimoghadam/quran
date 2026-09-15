@@ -137,7 +137,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
   }
 
   void _handleTargetSelected(AyahTarget target) {
-    ref.read(activeAyahProvider.notifier).setActiveAyah(target.ayahNumber);
+    ref.read(navigationTargetProvider.notifier).setTarget(target);
 
     final currentSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
     if (_pageController.hasClients && target.surahId != currentSurahId) {

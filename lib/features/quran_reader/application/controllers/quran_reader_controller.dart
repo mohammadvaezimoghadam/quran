@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
+import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../ayah_service.dart';
 import '../states/quran_reader_state.dart';
 
@@ -54,6 +55,20 @@ class ActiveAyahNotifier extends Notifier<int?> {
 
 final activeAyahProvider = NotifierProvider<ActiveAyahNotifier, int?>(
   ActiveAyahNotifier.new,
+);
+
+class NavigationTargetNotifier extends Notifier<AyahTarget?> {
+  @override
+  AyahTarget? build() => null;
+
+  void setTarget(AyahTarget? target) {
+    state = target;
+  }
+}
+
+final navigationTargetProvider =
+    NotifierProvider<NavigationTargetNotifier, AyahTarget?>(
+  NavigationTargetNotifier.new,
 );
 
 class ActiveItemPositionsListenerNotifier

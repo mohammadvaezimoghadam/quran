@@ -5,6 +5,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../common/constants/app_constants.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
+import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
@@ -64,7 +65,14 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(activeAyahProvider.notifier).setActiveAyah(targetAyah);
+      final audioState = ref.read(quranAudioControllerProvider);
+      final isPlayingOther = audioState.status != AudioStatus.stopped &&
+          audioState.status != AudioStatus.initial &&
+          audioState.currentSurahId != null &&
+          audioState.currentSurahId != widget.surahId;
+      if (!isPlayingOther) {
+        ref.read(activeAyahProvider.notifier).setActiveAyah(targetAyah);
+      }
 
       void attemptScroll([int attempt = 0]) {
         if (!mounted) return;
@@ -96,7 +104,13 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
   }
 
   int _getInitialScrollIndex(List<dynamic> ayahs) {
-    final targetAyah = widget.initialAyahNumber ?? ref.read(activeAyahProvider);
+    int? targetAyah = widget.initialAyahNumber;
+    if (targetAyah == null) {
+      final audioState = ref.read(quranAudioControllerProvider);
+      if (audioState.currentSurahId == widget.surahId) {
+        targetAyah = audioState.currentAyahNumber;
+      }
+    }
     if (targetAyah != null) {
       final index = ayahs.indexWhere((a) => a.ayahNumber == targetAyah);
       if (index != -1) {
@@ -164,7 +178,26 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
       _scrollToInitialAyahIfNeeded(state.ayahs);
     }
 
-    // Auto-scroll listener for ayah navigation and audio playback
+    // Target navigation listener (e.g. QuickJump)
+    ref.listen<AyahTarget?>(navigationTargetProvider, (previous, target) {
+      if (target != null && target.surahId == widget.surahId) {
+        final targetIndex = state.ayahs.indexWhere((a) => a.ayahNumber == target.ayahNumber);
+        if (targetIndex != -1 && _itemScrollController.isAttached) {
+          try {
+            if (_itemPositionsListener.itemPositions.value.isNotEmpty) {
+              _itemScrollController.scrollTo(
+                index: targetIndex,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCubic,
+                alignment: 0.0,
+              );
+            }
+          } catch (_) {}
+        }
+      }
+    });
+
+    // Auto-scroll listener for ayah audio playback
     ref.listen<int?>(activeAyahProvider, (previous, next) {
       if (next != null) {
         // Skip duplicate scroll while initial scroll is handling this ayah
@@ -172,12 +205,16 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
           return;
         }
 
+        // CRITICAL GUARD: Audio auto-scroll MUST only scroll the Surah currently being played!
+        final audioState = ref.read(quranAudioControllerProvider);
+        if (audioState.currentSurahId != widget.surahId) {
+          return;
+        }
+
         final targetIndex = state.ayahs.indexWhere((a) => a.ayahNumber == next);
         if (targetIndex != -1 && _itemScrollController.isAttached) {
-          final isAudioPlaying = ref.read(quranAudioControllerProvider).status == AudioStatus.playing;
-          final isSuspended = ref.read(
-            quranAudioControllerProvider.select((s) => s.isAutoScrollSuspended),
-          );
+          final isAudioPlaying = audioState.status == AudioStatus.playing;
+          final isSuspended = audioState.isAutoScrollSuspended;
 
           if (isAudioPlaying && isSuspended) return;
 
