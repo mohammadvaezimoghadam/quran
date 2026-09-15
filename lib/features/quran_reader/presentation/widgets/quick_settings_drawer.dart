@@ -9,6 +9,7 @@ import '../../../../common/widgets/app_theme_toggle_button.dart';
 import '../../../../common/widgets/reciter/horizontal_reciter_selector.dart';
 import '../../../../common/widgets/reciter/reciter_selection_bottom_sheet.dart';
 import '../../../../common/widgets/settings_switch_tile.dart';
+import '../../../../common/widgets/app_segmented_tab_bar.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/presentation/theme_controller.dart';
 import '../../../translation_manager/presentation/widgets/translation_settings_section.dart';
@@ -152,40 +153,15 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
 
               14.0.vSpace,
 
-              // 3. Tab Switcher (3 Tabs: متن قرآن / ترجمه / صوت و تلاوت)
-              Container(
-                height: 44,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    _buildTabButton(
-                      index: 0,
-                      title: 'متن قرآن',
-                      cardBgColor: cardBgColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                    ),
-                    _buildTabButton(
-                      index: 1,
-                      title: 'ترجمه',
-                      cardBgColor: cardBgColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                    ),
-                    _buildTabButton(
-                      index: 2,
-                      title: 'صوت و تلاوت',
-                      cardBgColor: cardBgColor,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                    ),
-                  ],
-                ),
+              // 3. Tab Switcher (Hayat/Tafakor Style: متن قرآن / ترجمه / صوت و تلاوت)
+              AppSegmentedTabBar(
+                items: const [
+                  AppSegmentedTabItem(title: 'متن قرآن'),
+                  AppSegmentedTabItem(title: 'ترجمه'),
+                  AppSegmentedTabItem(title: 'صوت و تلاوت'),
+                ],
+                selectedIndex: _selectedTabIndex,
+                onTabSelected: (index) => setState(() => _selectedTabIndex = index),
               ),
 
               14.0.vSpace,
@@ -228,49 +204,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                           ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabButton({
-    required int index,
-    required String title,
-    required Color cardBgColor,
-    required Color textPrimary,
-    required Color textSecondary,
-  }) {
-    final isSelected = _selectedTabIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedTabIndex = index),
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          decoration: BoxDecoration(
-            color: isSelected ? cardBgColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.07),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    )
-                  ]
-                : null,
-          ),
-          child: Center(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 12.5,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? textPrimary : textSecondary,
-              ),
-            ),
           ),
         ),
       ),

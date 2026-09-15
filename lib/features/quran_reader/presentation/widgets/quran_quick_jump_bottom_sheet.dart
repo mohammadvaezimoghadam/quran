@@ -7,6 +7,7 @@ import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../common/widgets/app_segmented_tab_bar.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
 import '../../../../core/services/quran_navigation/quran_navigation_service_provider.dart';
@@ -266,25 +267,22 @@ class _QuranQuickJumpBottomSheetState
           ),
           8.vSpace,
 
-          // Tab Bar Selector (Apple Style Sliding Segment)
+          // Tab Bar Selector (Hayat/Tafakor Style Segmented Track)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : const Color(0xFFEBE8E2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  _buildTabButton(QuickJumpTab.surah, 'سوره و آیه'),
-                  _buildTabButton(QuickJumpTab.juz, 'جزء'),
-                  _buildTabButton(QuickJumpTab.hizb, 'حزب'),
-                  _buildTabButton(QuickJumpTab.page, 'صفحه'),
-                ],
-              ),
+            child: AppSegmentedTabBar(
+              items: const [
+                AppSegmentedTabItem(title: 'سوره و آیه'),
+                AppSegmentedTabItem(title: 'جزء'),
+                AppSegmentedTabItem(title: 'حزب'),
+                AppSegmentedTabItem(title: 'صفحه'),
+              ],
+              selectedIndex: _activeTab.index,
+              onTabSelected: (index) {
+                setState(() {
+                  _activeTab = QuickJumpTab.values[index];
+                });
+              },
             ),
           ),
           16.vSpace,
@@ -338,57 +336,6 @@ class _QuranQuickJumpBottomSheetState
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTabButton(QuickJumpTab tab, String label) {
-    final isSelected = _activeTab == tab;
-    final isDark = context.isDark;
-    final primaryColor = context.colorScheme.primary;
-
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            setState(() {
-              _activeTab = tab;
-            });
-          },
-          borderRadius: BorderRadius.circular(10),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? (isDark ? const Color(0xFF223430) : Colors.white)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: isSelected && !isDark
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 12.5,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected
-                    ? primaryColor
-                    : (isDark ? Colors.white60 : Colors.black54),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

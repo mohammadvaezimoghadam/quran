@@ -9,6 +9,7 @@ import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../common/widgets/app_segmented_tab_bar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -270,37 +271,19 @@ class _BookmarksManagerBottomSheetState
             // 3. Segmented Tab Bar for Switching between "Page Bookmarks" and "Saved Ayahs"
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Container(
-                height: 40,
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : const Color(0xFFEFECE6),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildTabButton(
-                        title: 'نشانک صفحه (${readingBookmarks.length.toPersianDigit()})',
-                        isSelected: _selectedTabIndex == 0,
-                        isDark: isDark,
-                        primaryColor: primaryColor,
-                        onTap: () => setState(() => _selectedTabIndex = 0),
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildTabButton(
-                        title: 'آیات نشان‌شده (${ayahBookmarks.length.toPersianDigit()})',
-                        isSelected: _selectedTabIndex == 1,
-                        isDark: isDark,
-                        primaryColor: primaryColor,
-                        onTap: () => setState(() => _selectedTabIndex = 1),
-                      ),
-                    ),
-                  ],
-                ),
+              child: AppSegmentedTabBar(
+                items: [
+                  AppSegmentedTabItem(
+                    title: 'نشانک صفحه',
+                    badge: '(${readingBookmarks.length.toPersianDigit()})',
+                  ),
+                  AppSegmentedTabItem(
+                    title: 'آیات نشان‌شده',
+                    badge: '(${ayahBookmarks.length.toPersianDigit()})',
+                  ),
+                ],
+                selectedIndex: _selectedTabIndex,
+                onTabSelected: (index) => setState(() => _selectedTabIndex = index),
               ),
             ),
             12.vSpace,
@@ -356,52 +339,6 @@ class _BookmarksManagerBottomSheetState
                     ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabButton({
-    required String title,
-    required bool isSelected,
-    required bool isDark,
-    required Color primaryColor,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark ? const Color(0xFF24302C) : Colors.white)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected && !isDark
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 12.5,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected
-                  ? (isDark ? primaryColor : const Color(0xFF1E2421))
-                  : (isDark ? Colors.white54 : Colors.black45),
-            ),
-          ),
         ),
       ),
     );

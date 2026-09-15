@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/widgets/app_segmented_tab_bar.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/surah_list_controller.dart';
@@ -104,42 +105,18 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
 
           16.vSpace,
 
-          // 1. Apple-Style Sliding Segmented Control for Sort Order
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : const Color(0xFFEBE8E2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildSegmentButton(
-                    title: 'صعودی (الف تا ی / ۱ تا ۱۱۴)',
-                    isSelected: _tempSortOrder == SortOrder.ascending,
-                    isDark: isDark,
-                    colorScheme: colorScheme,
-                    onTap: () {
-                      setState(() => _tempSortOrder = SortOrder.ascending);
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: _buildSegmentButton(
-                    title: 'نزولی (ی تا الف / ۱۱۴ تا ۱)',
-                    isSelected: _tempSortOrder == SortOrder.descending,
-                    isDark: isDark,
-                    colorScheme: colorScheme,
-                    onTap: () {
-                      setState(() => _tempSortOrder = SortOrder.descending);
-                    },
-                  ),
-                ),
-              ],
-            ),
+          // 1. Hayat/Tafakor Style Segmented Control for Sort Order
+          AppSegmentedTabBar(
+            items: const [
+              AppSegmentedTabItem(title: 'صعودی (الف تا ی / ۱ تا ۱۱۴)'),
+              AppSegmentedTabItem(title: 'نزولی (ی تا الف / ۱۱۴ تا ۱)'),
+            ],
+            selectedIndex: _tempSortOrder == SortOrder.ascending ? 0 : 1,
+            onTabSelected: (index) {
+              setState(() {
+                _tempSortOrder = index == 0 ? SortOrder.ascending : SortOrder.descending;
+              });
+            },
           ),
 
           18.vSpace,
@@ -255,51 +232,4 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
     );
   }
 
-  Widget _buildSegmentButton({
-    required String title,
-    required bool isSelected,
-    required bool isDark,
-    required ColorScheme colorScheme,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark ? const Color(0xFF223430) : Colors.white)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected && !isDark
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 12.0,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected
-                  ? colorScheme.primary
-                  : (isDark ? Colors.white60 : Colors.black54),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
