@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,19 +68,8 @@ class QuranHomeScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  // VIP Subscription shortcut with Cupertino outline star circle
-                  IconButton(
-                    tooltip: 'اشتراک ویژه',
-                    icon: Icon(
-                      CupertinoIcons.star_circle,
-                      size: 22,
-                      color: colorScheme.primary,
-                    ),
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      context.pushNamed(vipSubscriptionRoute);
-                    },
-                  ),
+                  // Balance spacer so title remains perfectly centered
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
