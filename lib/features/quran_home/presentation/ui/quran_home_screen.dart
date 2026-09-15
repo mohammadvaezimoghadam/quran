@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,12 +69,12 @@ class QuranHomeScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  // VIP Subscription shortcut with Sparkles icon
+                  // VIP Subscription shortcut with premium medal badge
                   IconButton(
-                    tooltip: 'اشتراک تفکر',
+                    tooltip: 'اشتراک ویژه',
                     icon: Icon(
-                      CupertinoIcons.sparkles,
-                      size: 20,
+                      Icons.workspace_premium_rounded,
+                      size: 22,
                       color: colorScheme.primary,
                     ),
                     onPressed: () {
