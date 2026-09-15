@@ -100,7 +100,6 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _buildSettingsTile(
                 context: context,
-                icon: CupertinoIcons.textformat_size,
                 title: 'تنظیمات متن و قرائت',
                 subtitle: 'اندازه قلم، نوع خط، فاصله خطوط و رنگ اعراب',
                 onTap: () => QuickSettingsDrawer.show(context),
@@ -108,12 +107,12 @@ class SettingsScreen extends ConsumerWidget {
               Divider(
                 height: 1,
                 thickness: 0.6,
-                indent: 58,
+                indent: 16,
+                endIndent: 16,
                 color: colors.cardBorder,
               ),
               _buildSettingsTile(
                 context: context,
-                icon: CupertinoIcons.book,
                 title: 'مدیریت ترجمه‌ها',
                 subtitle: 'انتخاب مترجم و تنظیمات نمایش ترجمه',
                 onTap: () => TranslationManagerBottomSheet.show(context),
@@ -130,7 +129,6 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _buildSettingsTile(
                 context: context,
-                icon: CupertinoIcons.star_circle,
                 title: 'اشتراک ویژه تفکر',
                 subtitle: vipSubtitle,
                 trailing: isVip
@@ -259,7 +257,7 @@ class SettingsScreen extends ConsumerWidget {
 
   Widget _buildSettingsTile({
     required BuildContext context,
-    required IconData icon,
+    IconData? icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
@@ -276,27 +274,28 @@ class SettingsScreen extends ConsumerWidget {
           onTap();
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           child: Row(
             children: [
-              // Signature Apple Outline Icon Badge
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(
-                    alpha: isDark ? 0.14 : 0.08,
+              if (icon != null) ...[
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(
+                      alpha: isDark ? 0.14 : 0.08,
+                    ),
+                    borderRadius: BorderRadius.circular(9),
                   ),
-                  borderRadius: BorderRadius.circular(9),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    icon,
+                    color: colorScheme.primary,
+                    size: 19,
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: Icon(
-                  icon,
-                  color: colorScheme.primary,
-                  size: 19,
-                ),
-              ),
-              12.hSpace,
+                12.hSpace,
+              ],
 
               // Title and Subtitle
               Expanded(
