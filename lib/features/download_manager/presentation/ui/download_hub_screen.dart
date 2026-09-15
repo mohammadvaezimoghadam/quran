@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
-import '../../../../common/widgets/islamic_katibah_app_bar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/download_hub_controller.dart';
@@ -20,15 +21,69 @@ class DownloadHubScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
     final state = ref.watch(downloadHubControllerProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: const IslamicKatibahAppBar(
-        surahName: 'مدیریت دانلودها',
-        fontFamily: AppTypography.fontFamily,
+      backgroundColor: colorScheme.surface,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(54.0),
+        child: Container(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 2,
+            left: 8.0,
+            right: 8.0,
+            bottom: 4.0,
+          ),
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            border: Border(
+              bottom: BorderSide(
+                color: colors.cardBorder,
+                width: 0.8,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: 'بازگشت',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  CupertinoIcons.chevron_forward,
+                  size: 22,
+                  color: colorScheme.onSurface,
+                ),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    context.goNamed(quranHomeRoute);
+                  }
+                },
+              ),
+              Expanded(
+                child: Text(
+                  'مدیریت دانلودها',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 48), // Balance back button
+            ],
+          ),
+        ),
       ),
       body: RefreshIndicator(
+        color: colorScheme.primary,
         onRefresh: () async {
           await Future.wait([
             ref.read(downloadHubControllerProvider.notifier).loadSummary(),
@@ -46,14 +101,16 @@ class DownloadHubScreen extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              // 2. Main Categories Grid
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+              // 2. Main Categories Grid Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 6.0),
                 child: Text(
                   'دسته‌بندی فایل‌های آفلاین',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white70 : const Color(0xFF5A5852),
                   ),
                 ),
               ),
@@ -91,7 +148,7 @@ class DownloadHubScreen extends ConsumerWidget {
                       child: DownloadCategoryCard(
                         title: 'ترجمه گویا',
                         subtitle: state.activeTranslationReciterName,
-                        icon: CupertinoIcons.speaker_2_fill,
+                        icon: CupertinoIcons.speaker_2,
                         badgeText: '${state.downloadedTranslationSurahs.toPersianDigit()} / ${state.totalTranslationSurahs.toPersianDigit()}',
                         progress: state.totalTranslationSurahs > 0
                             ? state.downloadedTranslationSurahs / state.totalTranslationSurahs
@@ -113,7 +170,7 @@ class DownloadHubScreen extends ConsumerWidget {
                       child: DownloadCategoryCard(
                         title: 'متن ترجمه',
                         subtitle: 'ترجمه‌ها',
-                        icon: CupertinoIcons.book_fill,
+                        icon: CupertinoIcons.book,
                         badgeText: '${state.downloadedTextTranslations.toPersianDigit()} / ${state.totalTextTranslations.toPersianDigit()}',
                         progress: state.totalTextTranslations > 0
                             ? state.downloadedTextTranslations / state.totalTextTranslations

@@ -41,26 +41,16 @@ class DownloadActiveQueueSection extends ConsumerWidget {
 
     final totalCount = audioQueueTasks.length + downloadingTranslationIds.length;
 
-    final cardBgColor = isDark ? const Color(0xFF192220) : Colors.white;
-    final cardBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFEAE7E3);
+    final colors = context.colors;
+    final cardBgColor = colors.cardBackground;
+    final cardBorderColor = colors.cardBorder;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: cardBorderColor, width: 1),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 12.0,
-                  offset: const Offset(0, 3.0),
-                ),
-              ],
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: cardBorderColor, width: 0.8),
       ),
       child: Padding(
         padding: const EdgeInsets.all(18.0),
@@ -71,7 +61,7 @@ class DownloadActiveQueueSection extends ConsumerWidget {
             Row(
               children: [
                 Icon(
-                  CupertinoIcons.arrow_down_circle_fill,
+                  CupertinoIcons.arrow_down_circle,
                   color: context.colorScheme.primary,
                   size: 20,
                 ),
@@ -106,9 +96,9 @@ class DownloadActiveQueueSection extends ConsumerWidget {
                   child: Column(
                     children: [
                       Icon(
-                        CupertinoIcons.checkmark_seal_fill,
+                        CupertinoIcons.checkmark_seal,
                         size: 38,
-                        color: Colors.green.withValues(alpha: 0.7),
+                        color: context.colorScheme.primary.withValues(alpha: 0.7),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -207,7 +197,7 @@ class _AudioQueueTaskItem extends ConsumerWidget {
         : context.colorScheme.primary;
     final badgeLabel = isAudioTranslation ? 'ترجمه گویا' : 'صوت قرآن';
     final badgeIcon = isAudioTranslation
-        ? CupertinoIcons.speaker_2_fill
+        ? CupertinoIcons.speaker_2
         : CupertinoIcons.waveform;
 
     return Column(
@@ -431,7 +421,7 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
                 child: Container(
                   color: badgeColor.withValues(alpha: 0.12),
                   alignment: Alignment.center,
-                  child: const Icon(CupertinoIcons.book_fill, size: 20, color: badgeColor),
+                  child: const Icon(CupertinoIcons.book, size: 20, color: badgeColor),
                 ),
               ),
             ),
@@ -481,8 +471,9 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '$percent٪',
+                        '${percent.toPersianDigit()}٪',
                         style: const TextStyle(
+                          fontFamily: AppTypography.fontFamily,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: badgeColor,

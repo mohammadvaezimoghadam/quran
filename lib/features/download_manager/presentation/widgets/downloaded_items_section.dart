@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -35,28 +36,17 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final colors = context.colors;
+    final cardBgColor = colors.cardBackground;
+    final cardBorderColor = colors.cardBorder;
     final asyncItems = ref.watch(downloadedItemsControllerProvider);
-
-    final cardBgColor = isDark ? const Color(0xFF192220) : Colors.white;
-    final cardBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : const Color(0xFFEAE7E3);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: cardBorderColor, width: 1),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 12.0,
-                  offset: const Offset(0, 3.0),
-                ),
-              ],
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: cardBorderColor, width: 0.8),
       ),
       child: Padding(
         padding: const EdgeInsets.all(18.0),
@@ -107,7 +97,7 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                 Row(
                   children: [
                     Icon(
-                      CupertinoIcons.tray_full_fill,
+                      CupertinoIcons.tray_full,
                       color: context.colorScheme.primary,
                       size: 20,
                     ),
@@ -224,45 +214,67 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
 
   Widget _buildFilterChip(String key, String label, int count) {
     final isSelected = _selectedFilter == key;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedFilter = key;
-        });
-      },
-      borderRadius: BorderRadius.circular(14),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? context.colorScheme.primary
-              : (context.isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : context.colors.cardBackground),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? Colors.white : null,
-              ),
+    final colorScheme = context.colorScheme;
+    final colors = context.colors;
+    final isDark = context.isDark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() {
+            _selectedFilter = key;
+          });
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colorScheme.primary.withValues(
+                    alpha: isDark ? 0.20 : 0.12,
+                  )
+                : colors.cardBackground,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? colorScheme.primary.withValues(
+                      alpha: isDark ? 0.50 : 0.35,
+                    )
+                  : colors.cardBorder,
+              width: 0.8,
             ),
-            const SizedBox(width: 4),
-            Text(
-              '(${count.toPersianDigit()})',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 10,
-                color: isSelected ? Colors.white70 : Colors.grey,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : (isDark ? Colors.white70 : const Color(0xFF5A5852)),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 4),
+              Text(
+                '(${count.toPersianDigit()})',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : (isDark ? Colors.white38 : Colors.black38),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -349,9 +361,9 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
   }
 
   Future<void> _confirmDelete(DownloadedItemEntity item) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => CupertinoAlertDialog(
         title: const Text(
           'حذف فایل دانلود شده',
           style: TextStyle(
@@ -360,23 +372,26 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
             fontWeight: FontWeight.bold,
           ),
         ),
-        content: Text(
-          'آیا از حذف «${item.title}» (${item.subtitle}) از حافظه دستگاه اطمینان دارید؟',
-          style: const TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 13,
-            height: 1.5,
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(
+            'آیا از حذف «${item.title}» (${item.subtitle}) از حافظه دستگاه اطمینان دارید؟',
+            style: const TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 13,
+              height: 1.5,
+            ),
           ),
         ),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('انصراف'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: context.colorScheme.error),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('حذف فایل', style: TextStyle(color: Colors.white)),
+            child: const Text('حذف فایل'),
           ),
         ],
       ),
@@ -428,12 +443,12 @@ class _DownloadedItemRow extends StatelessWidget {
       case DownloadedItemType.audioTranslation:
         badgeColor = Colors.deepPurple;
         badgeLabel = 'ترجمه گویا';
-        iconData = CupertinoIcons.speaker_2_fill;
+        iconData = CupertinoIcons.speaker_2;
         break;
       case DownloadedItemType.textTranslation:
         badgeColor = const Color(0xFF0277BD);
         badgeLabel = 'متن ترجمه';
-        iconData = CupertinoIcons.book_fill;
+        iconData = CupertinoIcons.book;
         break;
     }
 
@@ -542,8 +557,8 @@ class _DownloadedItemRow extends StatelessWidget {
         IconButton(
           tooltip: 'مشاهده / پخش',
           icon: Icon(
-            CupertinoIcons.play_arrow_solid,
-            size: 18,
+            CupertinoIcons.play_circle,
+            size: 19,
             color: context.colorScheme.primary,
           ),
           onPressed: onOpen,

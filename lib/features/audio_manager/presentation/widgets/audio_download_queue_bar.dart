@@ -40,6 +40,7 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
     final allReciters = ref.watch(allRecitersListProvider).asData?.value.tryGetSuccess() ?? [];
 
     final colors = context.colors;
+    final colorScheme = context.colorScheme;
     final isDark = context.isDark;
 
     final cardBgColor = colors.cardBackground;
@@ -81,9 +82,9 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
                 children: [
                   Icon(
                     hasDownloading
-                        ? CupertinoIcons.arrow_down_circle_fill
-                        : CupertinoIcons.pause_circle_fill,
-                    color: hasDownloading ? colors.goldAccent : Colors.orange,
+                        ? CupertinoIcons.arrow_down_circle
+                        : CupertinoIcons.pause_circle,
+                    color: hasDownloading ? colorScheme.primary : Colors.orange,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -99,7 +100,7 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
                     decoration: BoxDecoration(
-                      color: (hasDownloading ? colors.goldAccent : Colors.orange)
+                      color: (hasDownloading ? colorScheme.primary : Colors.orange)
                           .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -109,7 +110,7 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: hasDownloading ? colors.goldAccent : Colors.orange,
+                        color: hasDownloading ? colorScheme.primary : Colors.orange,
                       ),
                     ),
                   ),
@@ -224,7 +225,7 @@ class _QueueTaskRow extends ConsumerWidget {
     final isFailed = task.status == DownloadTaskStatus.failed;
 
     final statusColor = isDownloading
-        ? colors.goldAccent
+        ? colorScheme.primary
         : isPaused
             ? Colors.orange
             : colorScheme.error;

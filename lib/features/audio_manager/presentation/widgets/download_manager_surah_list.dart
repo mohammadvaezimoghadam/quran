@@ -241,7 +241,7 @@ class _DownloadManagerSurahListState
                       fontFamily: AppTypography.fontFamily,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: context.colors.goldAccent,
+                      color: context.colorScheme.primary,
                     ),
                   ),
                 ),
@@ -481,7 +481,7 @@ class _SurahListItem extends ConsumerWidget {
                             width: 12,
                             height: 12,
                             colorFilter: ColorFilter.mode(
-                              context.colors.goldAccent,
+                              context.colorScheme.primary,
                               BlendMode.srcIn,
                             ),
                           ),
@@ -624,7 +624,7 @@ class _SurahListItem extends ConsumerWidget {
     // 2. Downloading State: Progress % and X (cancel/stop) button inside same button (No border)
     if (isDownloading && downloadTask != null) {
       final percent = (downloadTask.progress * 100).clamp(0, 100).toInt();
-      final accentColor = context.colors.goldAccent;
+      final accentColor = context.colorScheme.primary;
 
       return InkWell(
         onTap: () {
@@ -728,9 +728,9 @@ class _SurahListItem extends ConsumerWidget {
 
     // 4. Idle / Not Downloaded State: Action pill with No Border
     final pillBgColor = isDark
-        ? context.colors.goldAccent.withValues(alpha: 0.12)
+        ? context.colorScheme.primary.withValues(alpha: 0.14)
         : context.colors.cardBackground;
-    final pillTextColor = context.colors.goldAccent;
+    final pillTextColor = context.colorScheme.primary;
 
     return InkWell(
       onTap: () => _startSurahDownload(context, ref, isLocked, isTranslation),

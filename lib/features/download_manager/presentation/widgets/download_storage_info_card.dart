@@ -18,26 +18,27 @@ class DownloadStorageInfoCard extends ConsumerWidget {
   });
 
   void _showClearCacheDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
+      builder: (dialogCtx) => CupertinoAlertDialog(
         title: const Text(
           'پاک‌سازی کل فایل‌های دانلودی',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        content: const Text(
-          'آیا از حذف تمام فایل‌های دانلود شده (صوت قرآن، ترجمه گویا و متن ترجمه‌ها) از حافظه دستگاه اطمینان دارید؟ این عملیات غیرقابل بازگشت است.',
-          style: TextStyle(fontSize: 14, height: 1.5),
+        content: const Padding(
+          padding: EdgeInsets.only(top: 8.0),
+          child: Text(
+            'آیا از حذف تمام فایل‌های دانلود شده (صوت قرآن، ترجمه گویا و متن ترجمه‌ها) از حافظه دستگاه اطمینان دارید؟ این عملیات غیرقابل بازگشت است.',
+            style: TextStyle(fontSize: 13, height: 1.5),
+          ),
         ),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
             onPressed: () => Navigator.pop(dialogCtx),
             child: const Text('انصراف'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: context.colorScheme.error,
-            ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
             onPressed: () async {
               Navigator.pop(dialogCtx);
               await ref
@@ -73,17 +74,8 @@ class DownloadStorageInfoCard extends ConsumerWidget {
       ),
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-        border: Border.all(color: cardBorderColor, width: 1),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 16.0,
-                  offset: const Offset(0, 4.0),
-                ),
-              ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cardBorderColor, width: 0.8),
       ),
       child: Padding(
         padding: const EdgeInsets.all(18.0),
@@ -94,15 +86,23 @@ class DownloadStorageInfoCard extends ConsumerWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(11),
                   decoration: BoxDecoration(
-                    color: colors.goldAccent.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
+                    color: colorScheme.primary.withValues(
+                      alpha: isDark ? 0.16 : 0.10,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.primary.withValues(
+                        alpha: isDark ? 0.35 : 0.20,
+                      ),
+                      width: 0.8,
+                    ),
                   ),
                   child: Icon(
-                    CupertinoIcons.square_stack_3d_up_fill,
-                    color: colors.goldAccent,
-                    size: 26,
+                    CupertinoIcons.square_stack_3d_up,
+                    color: colorScheme.primary,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -199,7 +199,7 @@ class DownloadStorageInfoCard extends ConsumerWidget {
                       child: Icon(
                         CupertinoIcons.doc_on_clipboard,
                         size: 16,
-                        color: colors.goldAccent,
+                        color: colorScheme.primary,
                       ),
                     ),
                   ),

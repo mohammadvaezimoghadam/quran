@@ -1,7 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../common/extensions/context_extension.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 
 class DownloadCategoryCard extends StatelessWidget {
@@ -33,30 +34,24 @@ class DownloadCategoryCard extends StatelessWidget {
 
     final isCompleted = progress >= 1.0;
     final ringColor = isCompleted
-        ? Colors.green
-        : (isDark ? colors.goldAccent : colorScheme.primary);
+        ? colorScheme.primary
+        : colorScheme.primary;
 
     return Container(
       decoration: BoxDecoration(
         color: cardBgColor,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-        border: Border.all(color: cardBorderColor, width: 1),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10.0,
-                  offset: const Offset(0, 2.0),
-                ),
-              ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cardBorderColor, width: 0.8),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16.0),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 12.0),
             child: Column(
@@ -110,12 +105,12 @@ class DownloadCategoryCard extends StatelessWidget {
                           right: 0,
                           child: Container(
                             padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: Colors.green,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
-                              Icons.check,
+                              CupertinoIcons.checkmark,
                               size: 10,
                               color: Colors.white,
                             ),
