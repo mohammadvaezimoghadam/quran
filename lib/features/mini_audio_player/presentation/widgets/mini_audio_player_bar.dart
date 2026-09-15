@@ -243,8 +243,8 @@ class _MiniPlayPauseButton extends ConsumerWidget {
 
     final isPlaying = status == AudioStatus.playing;
     final isLoading = status == AudioStatus.loading;
+    final primary = context.colorScheme.primary;
 
-    final colors = context.colors;
     return GestureDetector(
       onTap: () {
         final controller = ref.read(quranAudioControllerProvider.notifier);
@@ -259,17 +259,15 @@ class _MiniPlayPauseButton extends ConsumerWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: isPlaying ? context.colorScheme.primary : colors.cardBackground,
+          color: primary,
           shape: BoxShape.circle,
-          boxShadow: isPlaying
-              ? [
-                  BoxShadow(
-                    color: context.colorScheme.primary.withValues(alpha: 0.4),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : [],
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: isPlaying ? 0.45 : 0.25),
+              blurRadius: isPlaying ? 8 : 4,
+              spreadRadius: isPlaying ? 1 : 0,
+            ),
+          ],
         ),
         child: Center(
           child: isLoading
@@ -278,15 +276,18 @@ class _MiniPlayPauseButton extends ConsumerWidget {
                   height: 14,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: Color(0xFF081C15),
                   ),
                 )
-              : Icon(
-                  isPlaying
-                      ? CupertinoIcons.pause
-                      : CupertinoIcons.play,
-                  size: 15,
-                  color: isPlaying ? Colors.black : Colors.white,
+              : Padding(
+                  padding: EdgeInsets.only(left: isPlaying ? 0 : 2.0),
+                  child: Icon(
+                    isPlaying
+                        ? CupertinoIcons.pause
+                        : CupertinoIcons.play,
+                    size: 16,
+                    color: const Color(0xFF081C15),
+                  ),
                 ),
         ),
       ),
