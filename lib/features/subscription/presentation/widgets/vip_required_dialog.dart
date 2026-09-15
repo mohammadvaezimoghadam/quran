@@ -1,13 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
 
-/// Clean Apple-style VIP Subscription Required dialog.
-/// Displays an elegant prompt informing the user of the subscription requirement
-/// with a direct action to navigate to the Subscriptions screen.
+/// Minimal, clean VIP Subscription Required dialog.
+/// Simple short text without icons, directing user to the subscriptions screen.
 class VipRequiredDialog extends StatelessWidget {
   final String? reciterName;
   final bool isTranslation;
@@ -47,104 +45,76 @@ class VipRequiredDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final titleText = customTitle ?? 'نیاز به اشتراک ویژه';
+    final titleText = customTitle ?? 'نیاز به اشتراک';
 
     final String messageText;
     if (customMessage != null) {
       messageText = customMessage!;
     } else if (reciterName != null && reciterName!.isNotEmpty) {
-      if (isTranslation) {
-        messageText =
-            'استفاده از ترجمه گویای «$reciterName» نیازمند اشتراک ویژه است.\nبرای دسترسی به تمامی قاریان و ترجمه‌های گویا، می‌توانید اشتراک ویژه تهیه کنید.';
-      } else {
-        messageText =
-            'استفاده از تلاوت «$reciterName» نیازمند اشتراک ویژه است.\nبرای دسترسی به تمامی قاریان و صوت‌ها، می‌توانید اشتراک ویژه تهیه کنید.';
-      }
+      messageText = isTranslation
+          ? 'برای استفاده از این ترجمه گویا، نیاز به اشتراک دارید.'
+          : 'برای استفاده از صوت این قاری، نیاز به اشتراک دارید.';
     } else {
-      messageText =
-          'برای دسترسی به این بخش، نیاز به تهیه اشتراک ویژه دارید.\nبا تهیه اشتراک، به تمامی قاریان، ترجمه‌های گویا و امکانات اختصاصی دسترسی خواهید داشت.';
+      messageText = 'برای استفاده از این بخش، نیاز به اشتراک دارید.';
     }
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           side: BorderSide(
             color: colorScheme.outlineVariant.withValues(alpha: 0.25),
             width: 0.8,
           ),
         ),
         backgroundColor: colorScheme.surface,
-        elevation: 12,
+        elevation: 8,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Star badge circle
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colorScheme.primary.withValues(alpha: 0.12),
-                  border: Border.all(
-                    color: colorScheme.primary.withValues(alpha: 0.25),
-                    width: 1.2,
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    CupertinoIcons.star_circle_fill,
-                    size: 32,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Title
+              // Title (Clean & Simple, No icon)
               Text(
                 titleText,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
-                  fontSize: 16.5,
+                  fontSize: 16.0,
                   fontWeight: FontWeight.bold,
                   color: colorScheme.onSurface,
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
-              // Body Message
+              // Body Message (Short & Concise)
               Text(
                 messageText,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
-                  fontSize: 13.0,
-                  height: 1.55,
+                  fontSize: 13.5,
+                  height: 1.45,
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
 
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
 
-              // Action Buttons
+              // Action Buttons (No icon on primary button)
               Row(
                 children: [
-                  // Cancel / Dismiss button
+                  // Cancel button
                   Expanded(
                     flex: 1,
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       child: Text(
@@ -159,37 +129,32 @@ class VipRequiredDialog extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
 
-                  // Go to Subscriptions button
+                  // Primary button without icon
                   Expanded(
                     flex: 2,
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).pop();
                         context.pushNamed(vipSubscriptionRoute);
                       },
-                      icon: const Icon(
-                        CupertinoIcons.arrow_left,
-                        size: 15,
-                        color: Colors.white,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      label: const Text(
+                      child: const Text(
                         'مشاهده اشتراک‌ها',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 13.0,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
