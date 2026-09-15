@@ -67,8 +67,10 @@ class _DownloadManagerSurahListState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 150), () {
         if (!mounted || !_scrollController.hasClients) return;
-        const itemExtent = 74.0;
-        final targetOffset = (initialSurahId - 1) * itemExtent;
+        // Each surah item is ~61px + 1px divider = 62.0px
+        const itemExtent = 62.0;
+        // Offset by 18px so the target surah sits comfortably down in full view without being clipped at the top
+        final targetOffset = ((initialSurahId - 1) * itemExtent - 18.0);
         final maxScroll = _scrollController.position.maxScrollExtent;
         _scrollController.animateTo(
           targetOffset.clamp(0.0, maxScroll),
@@ -274,7 +276,7 @@ class _DownloadManagerSurahListState
             child: ListView.separated(
               controller: _scrollController,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 24),
               itemCount: surahs.length,
               separatorBuilder: (context, index) => Divider(
                 height: 1,
