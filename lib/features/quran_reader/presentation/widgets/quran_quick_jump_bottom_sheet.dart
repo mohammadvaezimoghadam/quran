@@ -238,28 +238,6 @@ class _QuranQuickJumpBottomSheetState
                                   ],
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 9,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary.withValues(
-                                    alpha: isDark ? 0.18 : 0.10,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '${maxAyahs.toPersianDigit()} آیه',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                              8.hSpace,
                               AnimatedRotation(
                                 turns: _isSurahDropdownOpen ? 0.5 : 0.0,
                                 duration: const Duration(milliseconds: 200),
