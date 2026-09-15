@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_theme_toggle_button.dart';
 import '../../../../core/routes/route_name.dart';
@@ -17,44 +19,72 @@ import 'widgets/home_quick_access_grid.dart';
 import 'widgets/home_search_bar_widget.dart';
 import '../../../quick_access/presentation/ui/quick_access_row.dart';
 
-/// Home Screen with Permanent Calligraphic Header & Theme Toggle Button
+/// Clean Apple-Style Quran Home Screen with Tafakor Mint Green Theme
 class QuranHomeScreen extends ConsumerWidget {
   const QuranHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       extendBody: true,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 12),
-        child: SafeArea(
-          child: Container(
-            height: kToolbarHeight + 12,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimens.marginPage,
+        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.cardBackground.withValues(alpha: isDark ? 0.90 : 0.98),
+            border: Border(
+              bottom: BorderSide(
+                color: colors.cardBorder,
+                width: 0.8,
+              ),
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Centered Clean Title "قرآن تفکر" with IRANSans
-                Center(
-                  child: Text(
-                    AppConstants.appTitle.replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), ''),
-                    textAlign: TextAlign.center,
-                    style: AppTypography.appBarTitle.copyWith(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8.0,
+                vertical: 2.0,
+              ),
+              child: Row(
+                children: [
+                  // Theme Toggle Button (Apple circular pill on Left)
+                  const AppThemeToggleButton(),
+
+                  // Centered Clean Title "قرآن تفکر"
+                  Expanded(
+                    child: Text(
+                      AppConstants.appTitle.replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), ''),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.appBarTitle.copyWith(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
                   ),
-                ),
 
-                // Theme Toggle Button (Permanently Available on Left)
-                const Positioned(
-                  left: 0,
-                  child: AppThemeToggleButton(),
-                ),
-              ],
+                  // VIP Subscription shortcut with Sparkles icon
+                  IconButton(
+                    tooltip: 'اشتراک تفکر',
+                    icon: Icon(
+                      CupertinoIcons.sparkles,
+                      size: 20,
+                      color: colorScheme.primary,
+                    ),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      context.pushNamed(vipSubscriptionRoute);
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),

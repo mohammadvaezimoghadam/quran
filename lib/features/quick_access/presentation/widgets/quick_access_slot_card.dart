@@ -133,12 +133,12 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
         ? (isEmpty
             ? Colors.white.withValues(alpha: 0.06)
             : (widget.isEditMode
-                ? colors.goldAccent.withValues(alpha: 0.35)
+                ? colorScheme.primary.withValues(alpha: 0.45)
                 : colors.cardBorder))
         : (isEmpty
-            ? const Color(0xFFEAE7DF)
+            ? colors.cardBorder
             : (widget.isEditMode
-                ? colors.goldAccent.withValues(alpha: 0.45)
+                ? colorScheme.primary.withValues(alpha: 0.50)
                 : colors.cardBorder));
 
     return RotationTransition(
@@ -152,10 +152,10 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
             height: 84,
             decoration: BoxDecoration(
               color: cardBgColor,
-              borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: cardBorderColor,
-                width: 1.0,
+                width: 0.8,
               ),
               boxShadow: (!isDark && !isEmpty)
                   ? [
@@ -209,9 +209,9 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                               vertical: 1.5,
                             ),
                             decoration: BoxDecoration(
-                              color: isDark
-                                  ? colors.goldAccent.withValues(alpha: 0.14)
-                                  : colorScheme.primary.withValues(alpha: 0.08),
+                              color: colorScheme.primary.withValues(
+                                alpha: isDark ? 0.16 : 0.09,
+                              ),
                               borderRadius: BorderRadius.circular(6.0),
                             ),
                             child: Text(
@@ -219,9 +219,7 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                               style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? colors.goldAccent
-                                    : colorScheme.primary,
+                                color: colorScheme.primary,
                               ),
                             ),
                           ),
@@ -264,9 +262,7 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                         ] else ...[
                           Icon(
                             widget.tool!.iconData ?? CupertinoIcons.star_fill,
-                            color: isDark
-                                ? colors.goldAccent
-                                : colorScheme.primary,
+                            color: colorScheme.primary,
                             size: widget.subtitle != null ? 22 : 26,
                           ),
                           (widget.subtitle != null ? 3.0 : 8.0).vSpace,
@@ -293,9 +289,7 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? colors.goldAccent
-                                    : colorScheme.primary,
+                                color: colorScheme.primary,
                               ),
                             ),
                           ] else ...[

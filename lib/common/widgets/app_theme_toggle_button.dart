@@ -42,7 +42,7 @@ class AppThemeToggleButton extends ConsumerWidget {
           width: iconSize,
           height: iconSize,
           colorFilter: ColorFilter.mode(
-            color ?? (isDark ? const Color(0xFFC5A059) : const Color(0xFF005C55)),
+            color ?? Theme.of(context).colorScheme.primary,
             BlendMode.srcIn,
           ),
         ),

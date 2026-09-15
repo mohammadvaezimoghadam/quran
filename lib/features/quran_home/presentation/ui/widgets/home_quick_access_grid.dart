@@ -22,74 +22,60 @@ class HomeQuickAccessGrid extends StatelessWidget {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
 
-    final primaryEmerald = colorScheme.primary;
-    final iconColor = isDark ? colors.goldAccent : colorScheme.primary;
-
+    final primaryMint = colorScheme.primary;
     final cardBorderColor = colors.cardBorder;
-    final secondaryBg = colors.cardBackground;
+    final cardBg = colors.cardBackground;
 
     return Row(
       children: [
-        // 1. Primary Hero Card: "فهرست سوره‌ها" (Prominent & Inviting)
+        // 1. Primary Hero Card: "فهرست سوره‌ها" (Apple Hero Card)
         Expanded(
           flex: 5,
           child: Container(
-            height: 82,
+            height: 80,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.0),
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: isDark
-                    ? [
-                        const Color(0xFF1E332B),
-                        const Color(0xFF13221C),
-                      ]
-                    : [
-                        const Color(0xFFF0F7F3),
-                        const Color(0xFFE5EFE9),
-                      ],
-              ),
+              color: isDark
+                  ? Color.alphaBlend(primaryMint.withValues(alpha: 0.08), cardBg)
+                  : Color.alphaBlend(primaryMint.withValues(alpha: 0.05), cardBg),
+              borderRadius: BorderRadius.circular(16.0),
               border: Border.all(
-                color: isDark
-                    ? primaryEmerald.withValues(alpha: 0.35)
-                    : primaryEmerald.withValues(alpha: 0.25),
-                width: 1.2,
+                color: primaryMint.withValues(alpha: isDark ? 0.30 : 0.22),
+                width: 0.8,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: primaryEmerald.withValues(alpha: isDark ? 0.2 : 0.08),
-                  blurRadius: 12.0,
-                  offset: const Offset(0, 3.0),
+                  color: primaryMint.withValues(alpha: isDark ? 0.12 : 0.05),
+                  blurRadius: 10.0,
+                  offset: const Offset(0, 2.0),
                 ),
               ],
             ),
             child: Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(20.0),
+              borderRadius: BorderRadius.circular(16.0),
               child: InkWell(
                 onTap: () {
                   HapticFeedback.lightImpact();
                   context.pushNamed(surahListRoute);
                 },
-                borderRadius: BorderRadius.circular(20.0),
+                borderRadius: BorderRadius.circular(16.0),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                   child: Row(
                     children: [
-                      // Quran Icon
+                      // Quran Surahs Icon
                       SvgPicture.asset(
                         'assets/icons/ic_surah_list.svg',
-                        width: 40,
-                        height: 40,
+                        width: 38,
+                        height: 38,
                         colorFilter: ColorFilter.mode(
-                          iconColor,
+                          primaryMint,
                           BlendMode.srcIn,
                         ),
                       ),
-                      8.hSpace,
+                      10.hSpace,
 
-                      // Surah List Typography (Zero Overflow Guarantee)
+                      // Surah List Typography
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,22 +89,22 @@ class HomeQuickAccessGrid extends StatelessWidget {
                                 'فهرست سوره‌ها',
                                 style: TextStyle(
                                   fontFamily: AppTypography.fontFamily,
-                                  fontSize: 14.0,
+                                  fontSize: 14.5,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF16241E),
+                                  color: colorScheme.onSurface,
                                   height: 1.2,
                                 ),
                                 maxLines: 1,
                               ),
                             ),
-                            2.vSpace,
+                            3.vSpace,
                             Text(
-                              '۱۱۴ سوره قرآن',
+                              '۱۱۴ سوره قرآن کریم',
                               style: TextStyle(
                                 fontFamily: AppTypography.fontFamily,
                                 fontSize: 11.0,
-                                fontWeight: FontWeight.w500,
-                                color: isDark ? primaryEmerald : const Color(0xFF3F7760),
+                                fontWeight: FontWeight.w600,
+                                color: primaryMint,
                                 height: 1.2,
                               ),
                               maxLines: 1,
@@ -132,7 +118,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
                       Icon(
                         CupertinoIcons.chevron_left,
                         size: 13,
-                        color: isDark ? Colors.white54 : Colors.black45,
+                        color: isDark ? Colors.white38 : Colors.black38,
                       ),
                     ],
                   ),
@@ -151,15 +137,15 @@ class HomeQuickAccessGrid extends StatelessWidget {
             title: 'ترجمه‌ها',
             iconWidget: SvgPicture.asset(
               'assets/icons/ic_translation.svg',
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               colorFilter: ColorFilter.mode(
-                iconColor,
+                primaryMint,
                 BlendMode.srcIn,
               ),
             ),
             isDark: isDark,
-            bgColor: secondaryBg,
+            bgColor: cardBg,
             borderColor: cardBorderColor,
             onTap: () {
               HapticFeedback.lightImpact();
@@ -177,15 +163,15 @@ class HomeQuickAccessGrid extends StatelessWidget {
             title: 'تنظیمات',
             iconWidget: SvgPicture.asset(
               'assets/icons/ic_settings.svg',
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               colorFilter: ColorFilter.mode(
-                iconColor,
+                primaryMint,
                 BlendMode.srcIn,
               ),
             ),
             isDark: isDark,
-            bgColor: secondaryBg,
+            bgColor: cardBg,
             borderColor: cardBorderColor,
             onTap: () {
               HapticFeedback.lightImpact();
@@ -207,30 +193,30 @@ class HomeQuickAccessGrid extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Container(
-      height: 82,
+      height: 80,
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
           color: borderColor,
-          width: 1,
+          width: 0.8,
         ),
         boxShadow: isDark
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.035),
-                  blurRadius: 10.0,
-                  offset: const Offset(0, 3.0),
+                  color: Colors.black.withValues(alpha: 0.025),
+                  blurRadius: 8.0,
+                  offset: const Offset(0, 2.0),
                 ),
               ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(16.0),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(16.0),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 6.0),
             child: Column(
@@ -238,8 +224,8 @@ class HomeQuickAccessGrid extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 36,
-                  height: 36,
+                  width: 32,
+                  height: 32,
                   child: Center(
                     child: iconWidget,
                   ),
@@ -253,7 +239,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
                       fontFamily: AppTypography.fontFamily,
                       fontSize: 11.5,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white70 : const Color(0xFF2C2C2C),
+                      color: isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF2C2C2C),
                       height: 1.1,
                     ),
                     maxLines: 1,

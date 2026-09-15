@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,7 +11,6 @@ import '../../../../../common/extensions/int_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../common/extensions/surah_name_extension.dart';
 import '../../../../../core/routes/route_name.dart';
-import '../../../../../core/theme/app_dimens.dart';
 import '../../../../../core/theme/app_typography.dart';
 
 import '../../../application/states/continue_reading_state.dart';
@@ -104,17 +104,17 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
     final colorScheme = context.colorScheme;
     final isDark = context.isDark;
 
-    // Theme-Aware Colors (Apple Minimalist & Perfect Readability)
+    // Theme-Aware Colors (Apple Minimalist & Tafakor Mint Green)
     final cardBgColor = colors.cardBackground;
     final cardBorderColor = colors.cardBorder;
 
-    final headerColor = colors.goldAccent;
+    final primaryColor = colorScheme.primary;
     final titleColor = colorScheme.onSurface;
     final subtitleColor = colorScheme.onSurfaceVariant;
 
     final buttonBgColor = colorScheme.primary;
-    final buttonTextColor = colorScheme.onPrimary;
-    final gaugeColor = colors.goldAccent;
+    final buttonTextColor = Colors.white;
+    final gaugeColor = colorScheme.primary;
 
     return ValueListenableBuilder<int>(
       valueListenable: _selectedTabNotifier,
@@ -137,16 +137,16 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Compact Tabs at the top (Always available)
+            // Compact Cupertino-style Tabs at the top
             Center(
               child: Container(
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : colorScheme.surfaceContainerHigh.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(3.5),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -155,7 +155,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                       icon: CupertinoIcons.clock,
                       isSelected: selectedTab == 0,
                       onTap: () => _selectedTabNotifier.value = 0,
-                      activeColor: headerColor,
+                      activeColor: primaryColor,
                       inactiveColor: subtitleColor,
                       isDark: isDark,
                     ),
@@ -164,7 +164,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                       icon: CupertinoIcons.bookmark,
                       isSelected: selectedTab == 1,
                       onTap: () => _selectedTabNotifier.value = 1,
-                      activeColor: headerColor,
+                      activeColor: primaryColor,
                       inactiveColor: subtitleColor,
                       isDark: isDark,
                     ),
@@ -178,24 +178,24 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
             Container(
               decoration: BoxDecoration(
                 color: cardBgColor,
-                borderRadius: BorderRadius.circular(20.0),
-                border: Border.all(color: cardBorderColor, width: 1),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(color: cardBorderColor, width: 0.8),
                 boxShadow: isDark
                     ? null
                     : [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 10.0,
-                          offset: const Offset(0, 4.0),
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 8.0,
+                          offset: const Offset(0, 2.0),
                         ),
                       ],
               ),
               child: Material(
                 color: Colors.transparent,
-                borderRadius: BorderRadius.circular(20.0),
+                borderRadius: BorderRadius.circular(16.0),
                 child: InkWell(
                   onTap: _onCardTap,
-                  borderRadius: BorderRadius.circular(20.0),
+                  borderRadius: BorderRadius.circular(16.0),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16.0,
@@ -375,23 +375,26 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
     required bool isDark,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
               ? (isDark
                   ? Colors.white.withValues(alpha: 0.12)
                   : Colors.white)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+          borderRadius: BorderRadius.circular(10),
           boxShadow: isSelected && !isDark
               ? [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    offset: const Offset(0, 1.5),
                   ),
                 ]
               : null,
@@ -406,7 +409,7 @@ class _ContinueReadingCardState extends ConsumerState<ContinueReadingCard> {
                   ? activeColor
                   : inactiveColor.withValues(alpha: 0.6),
             ),
-            4.hSpace,
+            5.hSpace,
             Text(
               title,
               style: TextStyle(
