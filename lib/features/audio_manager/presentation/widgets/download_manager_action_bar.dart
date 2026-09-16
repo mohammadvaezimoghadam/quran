@@ -8,7 +8,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../download_manager/infrastructure/datasources/download_manager_local_datasource.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/audio_vip_policy.dart';
-import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 import '../../../subscription/presentation/utils/audio_vip_helper.dart';
 import '../../application/states/download_manager_state.dart';
 import '../../application/states/download_manager_selected_surahs_provider.dart';
@@ -28,115 +28,121 @@ class DownloadManagerActionBar extends ConsumerWidget {
       padding: const EdgeInsets.all(16.0),
       color: colorScheme.surface,
       child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: isEnabled
-                ? () async {
-                    final isWifiOnly = ref
-                        .read(downloadManagerLocalDataSourceProvider)
-                        .getWifiOnlyPreference();
-                    if (isWifiOnly) {
-                      final isWifi = await NetworkInfoHelper.isWifiConnected();
-                      if (!isWifi) {
-                        if (context.mounted) {
-                          AppSnackBar.showError(
-                            context,
-                            'دانلود انجام نشد: تنظیم «فقط با وای‌فای» فعال است. لطفاً وای‌فای را روشن کرده یا این گزینه را در مدیریت دانلود غیرفعال کنید.',
-                          );
-                        }
-                        return;
-                      }
-                    }
-
-                    final isVip = ref.read(hasVipAccessProvider);
-                    final isTranslation = selectedReciter.styleId == 4;
-
-                    final permittedSurahs = <int>[];
-                    final lockedSurahs = <int>[];
-
-                    for (final sId in selectedSurahs) {
-                      final allowed = isTranslation
-                          ? AudioVipPolicy.canPlayAudioTranslation(isVip: isVip)
-                          : AudioVipPolicy.canPlayReciter(
-                              reciterIdentifier: selectedReciter.identifier,
-                              surahId: sId,
-                              isVip: isVip,
-                            );
-                      if (allowed) {
-                        permittedSurahs.add(sId);
-                      } else {
-                        lockedSurahs.add(sId);
-                      }
-                    }
-
-                    if (lockedSurahs.isNotEmpty && permittedSurahs.isEmpty) {
+        top: false,
+        child: ElevatedButton(
+          onPressed: isEnabled
+              ? () async {
+                  final isWifiOnly = ref
+                      .read(downloadManagerLocalDataSourceProvider)
+                      .getWifiOnlyPreference();
+                  if (isWifiOnly) {
+                    final isWifi = await NetworkInfoHelper.isWifiConnected();
+                    if (!isWifi) {
                       if (context.mounted) {
-                        if (isTranslation) {
-                          VipSubscriptionSheet.show(context);
-                        } else {
-                          AudioVipHelper.checkAndPromptVip(
-                            context: context,
-                            ref: ref,
-                            surahId: lockedSurahs.first,
-                            targetReciter: selectedReciter,
-                          );
-                        }
+                        AppSnackBar.showError(
+                          context,
+                          'تنظیم «فقط با وای‌فای» فعال است اما دستگاه به وای‌فای متصل نیست.',
+                        );
                       }
                       return;
                     }
+                  }
 
-                    final surahCount = permittedSurahs.length;
-                    for (final surahId in permittedSurahs) {
-                      ref
-                          .read(audioDownloadControllerProvider.notifier)
-                          .startDownload(
-                            reciter: selectedReciter,
-                            surahId: surahId,
+                  final isVip = ref.read(hasVipAccessProvider);
+                  final isTranslation = selectedReciter.styleId == 4;
+
+                  final permittedSurahs = <int>[];
+                  final lockedSurahs = <int>[];
+
+                  for (final sId in selectedSurahs) {
+                    final allowed = isTranslation
+                        ? AudioVipPolicy.canPlayAudioTranslation(isVip: isVip)
+                        : AudioVipPolicy.canPlayReciter(
+                            reciterIdentifier: selectedReciter.identifier,
+                            surahId: sId,
+                            isVip: isVip,
                           );
+                    if (allowed) {
+                      permittedSurahs.add(sId);
+                    } else {
+                      lockedSurahs.add(sId);
                     }
-                    ref
-                        .read(downloadManagerSelectedSurahsProvider.notifier)
-                        .setSurahs({});
+                  }
 
+                  if (lockedSurahs.isNotEmpty && permittedSurahs.isEmpty) {
                     if (context.mounted) {
-                      if (lockedSurahs.isNotEmpty) {
-                        AppSnackBar.showWarning(
-                          context,
-                          'دانلود ${surahCount.toPersianDigit()} سوره رایگان شروع شد. دانلود سایر سوره‌ها با صدای ${selectedReciter.name} نیازمند اشتراک VIP است.',
+                      if (isTranslation) {
+                        VipRequiredDialog.show(
+                          context: context,
+                          reciterName: selectedReciter.name,
+                          isTranslation: true,
                         );
-                        VipSubscriptionSheet.show(context);
                       } else {
-                        AppSnackBar.showSuccess(
-                          context,
-                          'دانلود ${surahCount.toPersianDigit()} سوره شروع شد.',
+                        AudioVipHelper.checkAndPromptVip(
+                          context: context,
+                          ref: ref,
+                          surahId: lockedSurahs.first,
+                          targetReciter: selectedReciter,
                         );
                       }
                     }
+                    return;
                   }
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              disabledBackgroundColor: colorScheme.onSurface.withValues(alpha: 0.12),
-              disabledForegroundColor: colorScheme.onSurface.withValues(alpha: 0.38),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+
+                  final surahCount = permittedSurahs.length;
+                  for (final surahId in permittedSurahs) {
+                    ref
+                        .read(audioDownloadControllerProvider.notifier)
+                        .startDownload(
+                          reciter: selectedReciter,
+                          surahId: surahId,
+                        );
+                  }
+                  ref
+                      .read(downloadManagerSelectedSurahsProvider.notifier)
+                      .setSurahs({});
+
+                  if (context.mounted) {
+                    if (lockedSurahs.isNotEmpty) {
+                      AppSnackBar.showWarning(
+                        context,
+                        'دانلود ${surahCount.toPersianDigit()} سوره رایگان شروع شد. دانلود سایر سوره‌ها با صدای ${selectedReciter.name} نیازمند اشتراک VIP است.',
+                      );
+                      VipRequiredDialog.show(
+                        context: context,
+                        reciterName: selectedReciter.name,
+                        isTranslation: isTranslation,
+                      );
+                    } else {
+                      AppSnackBar.showSuccess(
+                        context,
+                        'دانلود ${surahCount.toPersianDigit()} سوره شروع شد.',
+                      );
+                    }
+                  }
+                }
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            disabledBackgroundColor: colorScheme.onSurface.withValues(alpha: 0.12),
+            disabledForegroundColor: colorScheme.onSurface.withValues(alpha: 0.38),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              selectedSurahs.isEmpty
-                  ? 'لطفاً سوره‌های مورد نظر را انتخاب کنید'
-                  : 'دانلود ${selectedSurahs.length.toPersianDigit()} سوره انتخاب شده',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: AppTypography.fontFamily,
-                    fontWeight: FontWeight.bold,
-                    color: isEnabled 
-                        ? Colors.white
-                        : colorScheme.onSurface.withValues(alpha: 0.38),
-                  ),
-            ),
+          ),
+          child: Text(
+            selectedSurahs.isEmpty
+                ? 'لطفاً سوره‌های مورد نظر را انتخاب کنید'
+                : 'دانلود ${selectedSurahs.length.toPersianDigit()} سوره انتخاب شده',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontFamily: AppTypography.fontFamily,
+                  fontWeight: FontWeight.bold,
+                  color: isEnabled 
+                      ? Colors.white
+                      : colorScheme.onSurface.withValues(alpha: 0.38),
+                ),
           ),
         ),
       ),

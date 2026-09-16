@@ -93,10 +93,10 @@ class _AudioDownloadManagerScreenState
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(102.0),
+          preferredSize: const Size.fromHeight(116.0),
           child: Container(
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 2,
+              top: MediaQuery.of(context).padding.top + 4,
               left: 12.0,
               right: 8.0,
               bottom: 8.0,
@@ -113,47 +113,50 @@ class _AudioDownloadManagerScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: 'بازگشت',
-                      visualDensity: VisualDensity.compact,
-                      icon: Icon(
-                        CupertinoIcons.chevron_forward,
-                        size: 22,
-                        color: colorScheme.onSurface,
-                      ),
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        Navigator.of(context).maybePop();
-                      },
-                    ),
-                    Expanded(
-                      child: Text(
-                        widget.isTranslationMode
-                            ? 'دانلود ترجمه صوتی'
-                            : 'دانلود صوت قرآن',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        tooltip: 'بازگشت',
+                        icon: Icon(
+                          CupertinoIcons.chevron_forward,
+                          size: 24,
                           color: colorScheme.onSurface,
                         ),
+                        splashRadius: 22,
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.of(context).maybePop();
+                        },
                       ),
-                    ),
-                    const SizedBox(width: 48), // Balance for back button
-                  ],
+                      Expanded(
+                        child: Text(
+                          widget.isTranslationMode
+                              ? 'دانلود ترجمه صوتی'
+                              : 'دانلود صوت قرآن',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 48), // Balance for back button
+                    ],
+                  ),
                 ),
-                4.vSpace,
+                6.vSpace,
                 Container(
-                  height: 38,
+                  height: 42,
                   margin: const EdgeInsets.symmetric(horizontal: 4.0),
                   decoration: BoxDecoration(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.07)
                         : const Color(0xFFF1EFEA),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(11),
                     border: Border.all(
                       color: colors.cardBorder,
                       width: 0.8,

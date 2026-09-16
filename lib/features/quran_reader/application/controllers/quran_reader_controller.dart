@@ -147,10 +147,14 @@ class ReaderControlsNotifier extends Notifier<ReaderControlsState> {
       );
     }
   }
+
+  void reset() {
+    state = const ReaderControlsState();
+  }
 }
 
 final readerControlsProvider =
-    NotifierProvider<ReaderControlsNotifier, ReaderControlsState>(
+    NotifierProvider.autoDispose<ReaderControlsNotifier, ReaderControlsState>(
   ReaderControlsNotifier.new,
 );
 

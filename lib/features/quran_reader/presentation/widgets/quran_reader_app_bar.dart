@@ -43,7 +43,7 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(60.0);
 
   Widget _buildIconButton({
     required BuildContext context,
@@ -62,10 +62,10 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(19),
+          borderRadius: BorderRadius.circular(21),
           child: Container(
-            width: 38,
-            height: 38,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isDark
@@ -73,15 +73,15 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
                   : const Color(0xFFF2F2F7),
               border: Border.all(
                 color: isDark
-                    ? Colors.white.withValues(alpha: 0.10)
-                    : const Color(0xFFE5E5EA),
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : const Color(0xFFE5E5EA),
                 width: 0.8,
               ),
             ),
             child: Center(
               child: Icon(
                 icon,
-                size: 19,
+                size: 21,
                 color: effectiveColor,
               ),
             ),
@@ -98,11 +98,12 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     final topPadding = MediaQuery.paddingOf(context).top;
 
     return Container(
-      height: topPadding + kToolbarHeight,
+      height: topPadding + 60.0,
       padding: EdgeInsets.only(
-        top: topPadding,
+        top: topPadding + 2.0,
         left: 8.0,
         right: 8.0,
+        bottom: 2.0,
       ),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF16191C) : Colors.white,

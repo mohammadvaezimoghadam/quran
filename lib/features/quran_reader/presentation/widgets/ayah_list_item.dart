@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/int_extension.dart';
-import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../translation_manager/presentation/widgets/ayah_translation_text.dart';
@@ -13,7 +12,6 @@ import '../../application/controllers/quran_reader_controller.dart';
 import '../../application/controllers/selected_ayah_action_provider.dart';
 import '../../domain/entities/ayah_entity.dart';
 import '../../../../common/widgets/smart_selection_area.dart';
-import '../utils/reciter_download_helper.dart';
 import 'ayah_arabic_text.dart';
 import 'quran_ornamental_divider.dart';
 import 'single_ayah_action_bottom_sheet.dart';
@@ -61,13 +59,6 @@ class AyahListItem extends ConsumerWidget {
         isAudioForThisSurah &&
         ref.watch(
           activeAyahProvider.select((active) => active == ayah.ayahNumber),
-        );
-    final isAudioPlayingNow =
-        isPlayingAyah &&
-        ref.watch(
-          quranAudioControllerProvider.select(
-            (s) => s.status == AudioStatus.playing,
-          ),
         );
 
     final showTranslation = ref.watch(
@@ -135,44 +126,6 @@ class AyahListItem extends ConsumerWidget {
         ref
             .read(selectedAyahActionProvider.notifier)
             .toggleAyah(ayah.ayahNumber);
-      } else {
-        // Single tap plays/pauses ayah audio directly in normal mode
-        final controller = ref.read(quranAudioControllerProvider.notifier);
-        if (isAudioPlayingNow) {
-          controller.pause();
-        } else {
-          final reciter =
-              ref.read(quranAudioControllerProvider).selectedReciter;
-          if (reciter != null) {
-            ReciterDownloadHelper.checkAndPromptSurahDownload(
-              context: context,
-              ref: ref,
-              reciter: reciter,
-              surahId: ayah.surahId,
-            ).then((isDownloaded) {
-              if (isDownloaded) {
-                controller.resumeAutoScrollAndSync();
-                controller.playAyah(
-                  surahId: ayah.surahId,
-                  ayahNumber: ayah.ayahNumber,
-                  totalAyahsInSurah: totalAyahsInSurah,
-                );
-              }
-            });
-          } else {
-            controller.resumeAutoScrollAndSync();
-            controller.playAyah(
-              surahId: ayah.surahId,
-              ayahNumber: ayah.ayahNumber,
-              totalAyahsInSurah: totalAyahsInSurah,
-            );
-          }
-        }
-      }
-
-      // If full-screen mode is active, collapse controls after clicking ayah
-      if (controlsState.isFullScreen) {
-        ref.read(readerControlsProvider.notifier).toggleControls();
       }
     }
 

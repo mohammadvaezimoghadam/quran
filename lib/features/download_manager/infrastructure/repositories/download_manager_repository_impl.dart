@@ -264,8 +264,8 @@ class DownloadManagerRepositoryImpl implements IDownloadManagerRepository {
                 : DownloadedItemType.quranAudio,
             title: 'سوره $surahName',
             subtitle: isAudioTranslation
-                ? 'گوینده: ${reciter?.name ?? 'گوینده ناشناس'}'
-                : 'قاری: ${reciter?.name ?? 'قاری ناشناس'}',
+                ? (reciter?.name.replaceAll('استاد ', '') ?? 'گوینده ناشناس')
+                : (reciter?.name.replaceAll('استاد ', '') ?? 'قاری ناشناس'),
             surahId: item.surahId,
             reciterId: item.reciterId,
             imageUrl: reciter?.imageUrl,

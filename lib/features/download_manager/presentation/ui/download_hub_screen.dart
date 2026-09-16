@@ -28,13 +28,13 @@ class DownloadHubScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(54.0),
+        preferredSize: const Size.fromHeight(62.0),
         child: Container(
           padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + 2,
+            top: MediaQuery.of(context).padding.top + 4,
             left: 8.0,
             right: 8.0,
-            bottom: 4.0,
+            bottom: 6.0,
           ),
           decoration: BoxDecoration(
             color: colors.cardBackground,
@@ -49,12 +49,12 @@ class DownloadHubScreen extends ConsumerWidget {
             children: [
               IconButton(
                 tooltip: 'بازگشت',
-                visualDensity: VisualDensity.compact,
                 icon: Icon(
                   CupertinoIcons.chevron_forward,
-                  size: 22,
+                  size: 24,
                   color: colorScheme.onSurface,
                 ),
+                splashRadius: 22,
                 onPressed: () {
                   HapticFeedback.lightImpact();
                   if (Navigator.of(context).canPop()) {
@@ -91,7 +91,10 @@ class DownloadHubScreen extends ConsumerWidget {
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(vertical: 6.0),
+          padding: EdgeInsets.only(
+            top: 6.0,
+            bottom: MediaQuery.paddingOf(context).bottom + 28.0,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -191,8 +194,6 @@ class DownloadHubScreen extends ConsumerWidget {
 
               // 4. Downloaded Offline Items Section
               const DownloadedItemsSection(),
-
-              const SizedBox(height: 20),
             ],
           ),
         ),

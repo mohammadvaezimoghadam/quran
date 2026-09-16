@@ -1,12 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/int_extension.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/translation_vip_policy.dart';
-import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 import '../../../translation_manager/application/controllers/translation_manager_controller.dart';
 import '../../../translation_manager/domain/entities/translation_entity.dart';
 
@@ -34,8 +37,9 @@ class _TextTranslationsDownloadBottomSheetState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
 
     final translationState = ref.watch(translationManagerControllerProvider);
     final translations = translationState.value?.translations ?? [];
@@ -54,257 +58,287 @@ class _TextTranslationsDownloadBottomSheetState
 
     final downloadedCount = translations.where((t) => t.isDownloaded).length;
 
-    return ScaffoldMessenger(
-      child: Container(
-        height: MediaQuery.sizeOf(context).height * 0.82,
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1B1E22) : const Color(0xFFF9F7F2),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
-        ),
-        child: Column(
-          children: [
-            // Top Drag Handle
-            Container(
+    return Container(
+      height: MediaQuery.sizeOf(context).height * 0.78,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28.0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          // Top Drag Handle
+          Center(
+            child: Container(
               width: 38,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
+              height: 4.5,
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.black.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(2),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(AppDimens.radiusFull),
               ),
             ),
+          ),
+          const SizedBox(height: 10),
 
-            // Header Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                children: [
-                  const SizedBox(width: 48),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'دانلود ترجمه‌های متنی',
-                          textAlign: TextAlign.center,
+          // Header Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                const SizedBox(width: 40),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'دانلود ترجمه‌های متنی',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${downloadedCount.toPersianDigit()} از ${translations.length.toPersianDigit()} دانلود شده',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'بستن',
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    CupertinoIcons.chevron_down,
+                    size: 22,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Language Filter Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                _buildFilterChip('all', 'همه زبان‌ها', translations.length),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  'fa',
+                  'فارسی',
+                  translations.where((t) => t.languageCode == 'fa').length,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  'en',
+                  'English',
+                  translations.where((t) => t.languageCode == 'en').length,
+                ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  'other',
+                  'سایر زبان‌ها',
+                  translations
+                      .where((t) =>
+                          t.languageCode != 'fa' && t.languageCode != 'en')
+                      .length,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 8),
+          Divider(
+            height: 1,
+            thickness: 0.6,
+            color: colors.cardBorder,
+          ),
+
+          // Translations List
+          Expanded(
+            child: translationState.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredTranslations.isEmpty
+                    ? Center(
+                        child: Text(
+                          'ترجمه‌ای یافت نشد',
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 13,
+                            color: isDark ? Colors.white54 : Colors.black45,
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '$downloadedCount از ${translations.length} دانلود شده',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11,
-                            color: isDark ? Colors.white60 : Colors.black54,
-                          ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
                         ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'بستن',
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle_fill,
-                      size: 24,
-                      color: isDark ? Colors.white38 : Colors.black26,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Language Filter Chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  _buildFilterChip('all', 'همه زبان‌ها', translations.length),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(
-                    'fa',
-                    'فارسی',
-                    translations.where((t) => t.languageCode == 'fa').length,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(
-                    'en',
-                    'English',
-                    translations.where((t) => t.languageCode == 'en').length,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(
-                    'other',
-                    'سایر زبان‌ها',
-                    translations
-                        .where((t) =>
-                            t.languageCode != 'fa' && t.languageCode != 'en')
-                        .length,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 8),
-            const Divider(height: 1),
-
-            // Translations List
-            Expanded(
-              child: translationState.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filteredTranslations.isEmpty
-                      ? Center(
-                          child: Text(
-                            'ترجمه‌ای یافت نشد',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 14,
-                              color: isDark ? Colors.white54 : Colors.black45,
-                            ),
-                          ),
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 8.0,
-                          ),
-                          itemCount: filteredTranslations.length,
-                          separatorBuilder: (context, index) =>
-                              const Divider(height: 16),
-                          itemBuilder: (context, index) {
-                            final translation = filteredTranslations[index];
-                            final isDownloading =
-                                downloadProgress.containsKey(translation.id);
-                            final progress = downloadProgress[translation.id] ?? 0.0;
-                            final isActive = translation.id == activeId;
-
-                            return _TranslationListItem(
-                              translation: translation,
-                              isDownloading: isDownloading,
-                              progress: progress,
-                              isActive: isActive,
-                              isDark: isDark,
-                              hasVip: hasVip,
-                              onDownload: () {
-                                if (!TranslationVipPolicy.canAccessTranslation(
-                                    translationId: translation.id, hasVip: hasVip)) {
-                                  VipSubscriptionSheet.show(context);
-                                  return;
-                                }
-                                ref
-                                    .read(translationManagerControllerProvider.notifier)
-                                    .downloadTranslation(translation);
-                              },
-                              onCancelDownload: () {
-                                ref
-                                    .read(translationManagerControllerProvider.notifier)
-                                    .cancelDownload(translation.id);
-                              },
-                              onDelete: () => _confirmDelete(context, translation),
-                              onSetActive: () {
-                                if (!TranslationVipPolicy.canAccessTranslation(
-                                    translationId: translation.id, hasVip: hasVip)) {
-                                  VipSubscriptionSheet.show(context);
-                                  return;
-                                }
-                                ref
-                                    .read(translationManagerControllerProvider.notifier)
-                                    .setActiveTranslation(translation.id);
-                              },
-                            );
-                          },
+                        itemCount: filteredTranslations.length,
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: colors.cardBorder.withValues(alpha: 0.6),
                         ),
-            ),
-          ],
-        ),
+                        itemBuilder: (context, index) {
+                          final translation = filteredTranslations[index];
+                          final isDownloading =
+                              downloadProgress.containsKey(translation.id);
+                          final progress = downloadProgress[translation.id] ?? 0.0;
+                          final isActive = translation.id == activeId;
+
+                          return _TranslationListItem(
+                            translation: translation,
+                            isDownloading: isDownloading,
+                            progress: progress,
+                            isActive: isActive,
+                            isDark: isDark,
+                            hasVip: hasVip,
+                            onDownload: () {
+                              if (!TranslationVipPolicy.canAccessTranslation(
+                                  translationId: translation.id, hasVip: hasVip)) {
+                                VipRequiredDialog.show(context: context);
+                                return;
+                              }
+                              ref
+                                  .read(translationManagerControllerProvider.notifier)
+                                  .downloadTranslation(translation);
+                            },
+                            onCancelDownload: () {
+                              ref
+                                  .read(translationManagerControllerProvider.notifier)
+                                  .cancelDownload(translation.id);
+                            },
+                            onDelete: () => _confirmDelete(context, translation),
+                            onSetActive: () {
+                              if (!TranslationVipPolicy.canAccessTranslation(
+                                  translationId: translation.id, hasVip: hasVip)) {
+                                VipRequiredDialog.show(context: context);
+                                return;
+                              }
+                              ref
+                                  .read(translationManagerControllerProvider.notifier)
+                                  .setActiveTranslation(translation.id);
+                            },
+                          );
+                        },
+                      ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildFilterChip(String key, String label, int count) {
     final isSelected = _selectedLanguageFilter == key;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedLanguageFilter = key;
-        });
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF0277BD)
-              : (Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : const Color(0xFFF0ECE6)),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? Colors.white : null,
-              ),
+    final colorScheme = context.colorScheme;
+    final colors = context.colors;
+    final isDark = context.isDark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() {
+            _selectedLanguageFilter = key;
+          });
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colorScheme.primary.withValues(
+                    alpha: isDark ? 0.20 : 0.12,
+                  )
+                : colors.cardBackground,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? colorScheme.primary.withValues(
+                      alpha: isDark ? 0.50 : 0.35,
+                    )
+                  : colors.cardBorder,
+              width: 0.8,
             ),
-            const SizedBox(width: 4),
-            Text(
-              '($count)',
-              style: TextStyle(
-                fontSize: 11,
-                color: isSelected ? Colors.white70 : Colors.grey,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : (isDark ? Colors.white70 : const Color(0xFF5A5852)),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 4),
+              Text(
+                '(${count.toPersianDigit()})',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11,
+                  color: isSelected
+                      ? colorScheme.primary.withValues(alpha: 0.8)
+                      : (isDark ? Colors.white38 : Colors.black38),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, TranslationEntity translation) async {
-    final confirmed = await showDialog<bool>(
+  Future<void> _confirmDelete(
+    BuildContext context,
+    TranslationEntity translation,
+  ) async {
+    final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text(
-          'حذف ترجمه',
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          'آیا از حذف داده‌های ترجمه «${translation.name}» از حافظه اطمینان دارید؟',
-          style: const TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 13,
-          ),
-        ),
+      builder: (dialogCtx) => CupertinoAlertDialog(
+        title: const Text('حذف ترجمه'),
+        content: Text('آیا از حذف داده‌های ترجمه «${translation.name}» از حافظه اطمینان دارید؟'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('انصراف'),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
+            child: const Text('حذف'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: context.colorScheme.error),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('حذف', style: TextStyle(color: Colors.white)),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.of(dialogCtx).pop(false),
+            child: const Text('انصراف'),
           ),
         ],
       ),
@@ -345,207 +379,220 @@ class _TranslationListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
     final percent = (progress * 100).toInt();
     final isFree = TranslationVipPolicy.isTranslationFree(translation.id);
     final isLocked = !hasVip && !isFree;
 
-    return Column(
-      children: [
-        Row(
-          children: [
-            // Icon
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : const Color(0xFFF4F1EA),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: Icon(
-                  translation.isDownloaded
-                      ? CupertinoIcons.checkmark_seal_fill
-                      : CupertinoIcons.book,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Clean Icon Badge
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
                   color: translation.isDownloaded
-                      ? Colors.green
-                      : (isDark ? Colors.white60 : Colors.black54),
-                  size: 20,
+                      ? colorScheme.primary.withValues(alpha: isDark ? 0.18 : 0.10)
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : const Color(0xFFF2EFE9)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Icon(
+                    translation.isDownloaded
+                        ? CupertinoIcons.checkmark_seal_fill
+                        : CupertinoIcons.book,
+                    color: translation.isDownloaded
+                        ? colorScheme.primary
+                        : (isDark ? Colors.white54 : Colors.black45),
+                    size: 18,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
+              const SizedBox(width: 10),
 
-            // Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          translation.name,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+              // Title
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        translation.name,
+                        style: const TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (isActive) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        '• ترجمه فعال',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.greenAccent : Colors.green.shade700,
                         ),
                       ),
+                    ],
+                  ],
+                ),
+              ),
 
-                      if (isActive) ...[
-                        const SizedBox(width: 6),
-                        const Text(
-                          '• ترجمه فعال',
+              // Actions (Unboxed, clean plain text)
+              if (isDownloading) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${percent.toPersianDigit()}٪',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    InkWell(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        onCancelDownload();
+                      },
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        child: Text(
+                          'لغو',
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.green,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.error,
                           ),
                         ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'مترجم: ${translation.translatorName} (${translation.languageCode.toUpperCase()})',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark ? Colors.white54 : Colors.black54,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            // Actions
-            if (isDownloading) ...[
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$percent٪',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0277BD),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'لغو دانلود',
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle,
-                      size: 22,
-                      color: context.colorScheme.error,
-                    ),
-                    onPressed: onCancelDownload,
-                  ),
-                ],
-              ),
-            ] else if (translation.isDownloaded) ...[
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!isActive)
-                    if (isLocked)
-                      TextButton.icon(
-                        icon: Icon(CupertinoIcons.lock_fill, size: 12, color: context.colorScheme.primary),
-                        label: Text('انتخاب', style: TextStyle(fontSize: 12, color: context.colorScheme.primary)),
-                        onPressed: onSetActive,
-                      )
-                    else
-                      TextButton(
-                        onPressed: onSetActive,
-                        child: const Text(
-                          'انتخاب',
-                          style: TextStyle(fontSize: 12),
+                  ],
+                ),
+              ] else if (translation.isDownloaded) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!isActive)
+                      InkWell(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          onSetActive();
+                        },
+                        borderRadius: BorderRadius.circular(4),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          child: Text(
+                            'انتخاب',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.primary,
+                            ),
+                          ),
                         ),
                       ),
-                  if (!translation.isDefault)
-                    IconButton(
-                      tooltip: 'حذف از حافظه',
-                      icon: const Icon(
-                        CupertinoIcons.trash,
-                        size: 19,
-                        color: Colors.redAccent,
+                    if (!translation.isDefault) ...[
+                      const SizedBox(width: 4),
+                      InkWell(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          onDelete();
+                        },
+                        borderRadius: BorderRadius.circular(4),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          child: Text(
+                            'حذف',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w500,
+                              color: colorScheme.error,
+                            ),
+                          ),
+                        ),
                       ),
-                      onPressed: onDelete,
+                    ],
+                  ],
+                ),
+              ] else if (isLocked) ...[
+                InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    onDownload();
+                  },
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Text(
+                      'اشتراک ویژه',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.primary,
+                      ),
                     ),
-                ],
-              ),
-            ] else if (isLocked) ...[
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.lock_rounded, size: 14, color: Colors.white),
-                label: const Text(
-                  'خرید اشتراک ویژه',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
                   ),
                 ),
-                onPressed: onDownload,
-              ),
-            ] else ...[
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0277BD),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+              ] else ...[
+                InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    onDownload();
+                  },
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Text(
+                      'دانلود',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.primary,
+                      ),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
                 ),
-                icon: const Icon(CupertinoIcons.cloud_download, size: 16),
-                label: const Text(
-                  'دانلود',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-                onPressed: onDownload,
-              ),
+              ],
             ],
-          ],
-        ),
-
-        // Progress bar when downloading
-        if (isDownloading) ...[
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              minHeight: 4,
-              backgroundColor: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : const Color(0xFFF0ECE6),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0277BD)),
-            ),
           ),
+
+          // Progress bar when downloading
+          if (isDownloading) ...[
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: progress.clamp(0.0, 1.0),
+                minHeight: 2.5,
+                backgroundColor: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : const Color(0xFFF0ECE6),
+                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

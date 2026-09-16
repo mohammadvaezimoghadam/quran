@@ -16,6 +16,8 @@ class ReciterAvatarButton extends ConsumerStatefulWidget {
   final double radius;
   final bool showLabel;
   final bool isPlayButton;
+  final bool isDownloading;
+  final double? downloadProgress;
   final VoidCallback? onTap;
 
   const ReciterAvatarButton({
@@ -23,6 +25,8 @@ class ReciterAvatarButton extends ConsumerStatefulWidget {
     this.radius = 24,
     this.showLabel = true,
     this.isPlayButton = false,
+    this.isDownloading = false,
+    this.downloadProgress,
     this.onTap,
   });
 
@@ -88,7 +92,10 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
 
     final String tooltipMessage;
     if (widget.isPlayButton) {
-      if (isPlaying) {
+      if (widget.isDownloading) {
+        final pct = ((widget.downloadProgress ?? 0) * 100).clamp(0, 100).toInt();
+        tooltipMessage = 'در حال دانلود صوت ($pct٪)';
+      } else if (isPlaying) {
         tooltipMessage = 'توقف پخش';
       } else if (isSessionActive) {
         tooltipMessage = isTranslationTrack ? 'ادامه پخش ترجمه' : 'ادامه تلاوت';
@@ -198,7 +205,29 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                           color: Colors.black.withValues(alpha: 0.38),
                         ),
                       ),
-                      if (isLoading)
+                      if (widget.isDownloading)
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: avatarSize * 0.44,
+                              height: avatarSize * 0.44,
+                              child: CircularProgressIndicator(
+                                value: (widget.downloadProgress != null && widget.downloadProgress! > 0)
+                                    ? widget.downloadProgress
+                                    : null,
+                                strokeWidth: 2.5,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Icon(
+                              CupertinoIcons.arrow_down,
+                              color: Colors.white,
+                              size: avatarSize * 0.22,
+                            ),
+                          ],
+                        )
+                      else if (isLoading)
                         SizedBox(
                           width: avatarSize * 0.38,
                           height: avatarSize * 0.38,

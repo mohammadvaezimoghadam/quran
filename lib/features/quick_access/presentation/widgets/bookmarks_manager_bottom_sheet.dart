@@ -486,17 +486,6 @@ class _BookmarksManagerBottomSheetState
                                 color: primaryColor,
                               ),
                             ),
-                          ] else if (item.isAyahBookmark) ...[
-                            6.hSpace,
-                            Text(
-                              '• آیه نشان‌شده',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w500,
-                                color: isDark ? Colors.white54 : Colors.black45,
-                              ),
-                            ),
                           ],
                         ],
                       ),

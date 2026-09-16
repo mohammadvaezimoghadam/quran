@@ -48,6 +48,7 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
   );
   bool _showScanner = false;
   bool _isProcessingScanner = false;
+  String? _pageError;
 
   @override
   void dispose() {
@@ -271,12 +272,43 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                   fontWeight: FontWeight.bold,
                   color: colorScheme.onSurface,
                 ),
+                onChanged: (text) {
+                  final clean = text.trim().toEnglishDigit();
+                  if (clean.isEmpty) {
+                    if (_pageError != null) setState(() => _pageError = null);
+                    return;
+                  }
+                  final num = int.tryParse(clean);
+                  String? newErr;
+                  if (num == null) {
+                    newErr = 'عدد معتبر وارد کنید';
+                  } else if (num < 1 || num > 604) {
+                    newErr = 'صفحه باید بین ۱ تا ۶۰۴ باشد';
+                  }
+                  if (newErr != _pageError) {
+                    setState(() => _pageError = newErr);
+                  }
+                },
                 decoration: InputDecoration(
                   hintText: 'شماره صفحه (۱ تا ۶۰۴)',
                   hintStyle: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 13,
                     color: isDark ? Colors.white38 : Colors.black38,
+                  ),
+                  helperText: _pageError == null ? 'از ۱ تا ۶۰۴' : null,
+                  helperStyle: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11.5,
+                    color: isDark ? Colors.white54 : Colors.black45,
+                  ),
+                  errorText: _pageError,
+                  errorMaxLines: 2,
+                  errorStyle: const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.redAccent,
                   ),
                   filled: true,
                   fillColor: isDark 
@@ -290,13 +322,24 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                     borderSide: BorderSide(
-                      color: colors.cardBorder,
+                      color: _pageError != null ? Colors.redAccent : colors.cardBorder,
                       width: 1,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                    borderSide: BorderSide(
+                      color: _pageError != null ? Colors.redAccent : colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                    borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                    borderSide: const BorderSide(color: Colors.redAccent, width: 2),
                   ),
                 ),
               ),
@@ -306,13 +349,14 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
               onPressed: isLoading ? null : () {
                 final text = _pageController.text.trim().toEnglishDigit();
                 final pageNum = int.tryParse(text);
-                if (pageNum != null) {
+                if (pageNum != null && pageNum >= 1 && pageNum <= 604) {
+                  setState(() => _pageError = null);
                   ref.read(pageNavigationControllerProvider.notifier).processPageNumber(pageNum);
                 } else {
-                   if (context.canPop()) {
-                     context.pop();
-                   }
-                   AppSnackBar.showError(context, 'لطفاً یک عدد معتبر وارد کنید');
+                  setState(() {
+                    _pageError = 'صفحه باید بین ۱ تا ۶۰۴ باشد';
+                  });
+                  HapticFeedback.heavyImpact();
                 }
               },
               style: ElevatedButton.styleFrom(

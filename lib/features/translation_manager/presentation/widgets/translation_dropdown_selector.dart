@@ -7,7 +7,7 @@ import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/translation_vip_policy.dart';
-import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 import '../../application/controllers/translation_manager_controller.dart';
 import '../../domain/entities/translation_entity.dart';
 
@@ -36,7 +36,7 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(translationManagerControllerProvider).value;
-      if (state != null && state.activeTranslationId != null && mounted) {
+      if (state != null) {
         setState(() {
           _selectedTranslationId = state.activeTranslationId;
         });
@@ -47,8 +47,15 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
   Future<void> _handleApply(BuildContext context, TranslationEntity translation) async {
     final hasVip = ref.read(hasVipAccessProvider);
     if (!TranslationVipPolicy.canAccessTranslation(translationId: translation.id, hasVip: hasVip)) {
-      VipSubscriptionSheet.show(context);
-      return;
+      await VipRequiredDialog.show(
+        context: context,
+        customTitle: 'نیاز به اشتراک',
+        customMessage: 'برای فعال‌سازی و استفاده از ترجمه ${translation.name}، نیاز به اشتراک دارید.',
+      );
+      if (!context.mounted) return;
+      if (!ref.read(hasVipAccessProvider)) {
+        return;
+      }
     }
 
     final controller = ref.read(translationManagerControllerProvider.notifier);
@@ -274,12 +281,19 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
                             ),
                           );
                         }).toList(),
-                        onChanged: (ref.watch(translationManagerControllerProvider).value?.downloadProgress.isNotEmpty == true) ? null : (newVal) {
+                        onChanged: (ref.watch(translationManagerControllerProvider).value?.downloadProgress.isNotEmpty == true) ? null : (newVal) async {
                           if (newVal != null && newVal != effectiveSelectedId) {
                             final isFree = TranslationVipPolicy.isTranslationFree(newVal);
                             if (!hasVip && !isFree) {
-                              VipSubscriptionSheet.show(context);
-                              return;
+                              await VipRequiredDialog.show(
+                                context: context,
+                                customTitle: 'نیاز به اشتراک',
+                                customMessage: 'برای انتخاب این ترجمه، نیاز به اشتراک دارید.',
+                              );
+                              if (!context.mounted) return;
+                              if (!ref.read(hasVipAccessProvider)) {
+                                return;
+                              }
                             }
                             final newTranslation = translations.firstWhere((t) => t.id == newVal);
                             _handleApply(context, newTranslation);

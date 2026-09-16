@@ -141,7 +141,7 @@ class _AudioDownloadQueueBarState extends ConsumerState<AudioDownloadQueueBar> {
                       }
                     },
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                       visualDensity: VisualDensity.compact,
                     ),
                     icon: Icon(
@@ -314,16 +314,12 @@ class _QueueTaskRow extends ConsumerWidget {
             else if (isPaused || isFailed)
               InkWell(
                 onTap: () async {
-                  final allReciters = await ref.read(allRecitersListProvider.future);
-                  final r = allReciters
-                      .tryGetSuccess()
-                      ?.where((item) => item.id == task.reciterId)
-                      .firstOrNull;
-                  if (r != null) {
-                    ref
-                        .read(audioDownloadControllerProvider.notifier)
-                        .resumeDownload(reciter: r, surahId: task.surahId);
-                  }
+                  await ref
+                      .read(audioDownloadControllerProvider.notifier)
+                      .resumeDownloadById(
+                        reciterId: task.reciterId,
+                        surahId: task.surahId,
+                      );
                 },
                 borderRadius: BorderRadius.circular(16),
                 child: const Padding(

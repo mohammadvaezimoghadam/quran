@@ -9,12 +9,17 @@ import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../core/routes/go_router_provider.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
+import '../../application/controllers/quran_audio_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
+import '../../application/controllers/quran_reader_controller.dart';
 import '../../application/controllers/selected_ayah_action_provider.dart';
 import '../../domain/entities/ayah_entity.dart';
+import '../utils/reciter_download_helper.dart';
 import 'word_by_word_bottom_sheet.dart';
 
 /// Luxury bottom sheet displayed when a user long-presses an Ayah.
@@ -64,6 +69,23 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
       ),
     );
 
+    // Audio playback status for this Ayah
+    final isAudioForThisSurah = ref.watch(
+      quranAudioControllerProvider.select(
+        (s) => s.currentSurahId == ayah.surahId,
+      ),
+    );
+    final isPlayingAyah = isAudioForThisSurah &&
+        ref.watch(
+          activeAyahProvider.select((active) => active == ayah.ayahNumber),
+        );
+    final isAudioPlayingNow = isPlayingAyah &&
+        ref.watch(
+          quranAudioControllerProvider.select(
+            (s) => s.status == AudioStatus.playing,
+          ),
+        );
+
     final colors = context.colors;
     final colorScheme = context.colorScheme;
     final sheetBg = colors.dialogSurface;
@@ -87,7 +109,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -167,10 +189,51 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
               ),
               14.vSpace,
 
-              // 3. Grid of 4 Standard Ayah Actions
+              // 3. Grid of 5 Standard Ayah Actions
               Row(
                 children: [
-                  // Action 1: Bookmark Ayah (نشانه‌گذاری آیه)
+                  // Action 1: Play / Pause Ayah (پخش / توقف آیه)
+                  Expanded(
+                    child: _buildActionButton(
+                      context: context,
+                      isDark: isDark,
+                      cardBg: cardBg,
+                      borderColor: isAudioPlayingNow ? primaryColor : borderColor,
+                      icon: isAudioPlayingNow
+                          ? CupertinoIcons.pause_fill
+                          : CupertinoIcons.play_fill,
+                      iconColor: isAudioPlayingNow ? primaryColor : (isDark ? Colors.white70 : Colors.black87),
+                      label: isAudioPlayingNow ? 'توقف' : 'پخش',
+                      onTap: () async {
+                        HapticFeedback.lightImpact();
+                        Navigator.of(context).pop();
+                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+
+                        final controller = ref.read(quranAudioControllerProvider.notifier);
+                        if (isAudioPlayingNow) {
+                          controller.pause();
+                        } else {
+                          final navContext = rootNavigatorKey.currentContext ?? context;
+                          final isReady = await ReciterDownloadHelper.checkAndPromptForPlayback(
+                            context: navContext,
+                            ref: ref,
+                            surahId: ayah.surahId,
+                          );
+                          if (isReady) {
+                            controller.resumeAutoScrollAndSync();
+                            controller.playAyah(
+                              surahId: ayah.surahId,
+                              ayahNumber: ayah.ayahNumber,
+                              totalAyahsInSurah: totalAyahsInSurah,
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                  8.hSpace,
+
+                  // Action 2: Bookmark Ayah (نشانه‌گذاری آیه)
                   Expanded(
                     child: _buildActionButton(
                       context: context,
@@ -184,6 +247,8 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       label: isBookmarked ? 'نشان‌شده' : 'نشانه‌گذاری',
                       onTap: () async {
                         HapticFeedback.lightImpact();
+                        Navigator.of(context).pop();
+                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
                         final isAdded = await ref
                             .read(bookmarksControllerProvider.notifier)
                             .toggleBookmark(
@@ -195,16 +260,16 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                               isAyahBookmark: true,
                             );
 
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
+                        final snackContext = rootNavigatorKey.currentContext;
+                        if (snackContext != null && snackContext.mounted) {
                           if (isAdded) {
                             AppSnackBar.showSuccess(
-                              context,
+                              snackContext,
                               'آیه ${ayah.ayahNumber.toPersianDigit()} سوره $cleanSurahName نشانه‌گذاری شد.',
                             );
                           } else {
                             AppSnackBar.showInfo(
-                              context,
+                              snackContext,
                               'نشانه آیه ${ayah.ayahNumber.toPersianDigit()} حذف شد.',
                             );
                           }
@@ -212,9 +277,9 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       },
                     ),
                   ),
-                  10.hSpace,
+                  8.hSpace,
 
-                  // Action 2: Dictionary / Word by Word (لغت‌نامه)
+                  // Action 3: Dictionary / Word by Word (لغت‌نامه)
                   Expanded(
                     child: _buildActionButton(
                       context: context,
@@ -227,8 +292,9 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       onTap: () {
                         Navigator.of(context).pop();
                         ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        final targetContext = rootNavigatorKey.currentContext ?? context;
                         WordByWordBottomSheet.show(
-                          context,
+                          targetContext,
                           surahId: ayah.surahId,
                           surahName: cleanSurahName,
                           ayahNumber: ayah.ayahNumber,
@@ -236,9 +302,9 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       },
                     ),
                   ),
-                  10.hSpace,
+                  8.hSpace,
 
-                  // Action 3: Copy (کپی)
+                  // Action 4: Copy (کپی آیه)
                   Expanded(
                     child: _buildActionButton(
                       context: context,
@@ -262,18 +328,19 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                         );
 
                         await Clipboard.setData(ClipboardData(text: formatted));
-                        if (context.mounted) {
+                        final snackContext = rootNavigatorKey.currentContext;
+                        if (snackContext != null && snackContext.mounted) {
                           AppSnackBar.showSuccess(
-                            context,
+                            snackContext,
                             'آیه ${ayah.ayahNumber.toPersianDigit()} سوره $cleanSurahName کپی شد.',
                           );
                         }
                       },
                     ),
                   ),
-                  10.hSpace,
+                  8.hSpace,
 
-                  // Action 4: Share (اشتراک‌گذاری)
+                  // Action 5: Share (اشتراک‌گذاری)
                   Expanded(
                     child: _buildActionButton(
                       context: context,
@@ -336,21 +403,27 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 22, color: iconColor),
-              6.vSpace,
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white70 : const Color(0xFF4A463F),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 21, color: iconColor),
+                5.vSpace,
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : const Color(0xFF4A463F),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

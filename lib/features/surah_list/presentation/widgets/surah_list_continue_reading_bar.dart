@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -77,12 +76,6 @@ class SurahListContinueReadingBar extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // Right Side: Surah Info + Ayah Number
-                      Icon(
-                        CupertinoIcons.book,
-                        size: 17,
-                        color: colorScheme.primary,
-                      ),
-                      10.hSpace,
                       Expanded(
                         child: Text(
                           'سوره $surahFaName • آیه ${ayahNumber.toPersianDigit()}',

@@ -14,8 +14,13 @@ import '../../domain/enums/audio_playback_mode.dart';
 import '../../domain/enums/current_track_type.dart';
 import 'audio_mini_progress_slider.dart';
 import 'quick_settings_drawer.dart';
+import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/widgets/reciter/reciter_avatar_button.dart';
 import '../../../../common/widgets/reciter/reciter_selection_bottom_sheet.dart';
+import '../../../../core/routes/go_router_provider.dart';
+import '../../../../core/routes/route_name.dart';
+import '../../../audio_manager/application/controllers/audio_download_controller.dart';
+import '../../../audio_manager/domain/entities/audio_download_task.dart';
 import '../utils/reciter_download_helper.dart';
 
 class AudioPlayerBottomBar extends ConsumerWidget {
@@ -90,6 +95,16 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     final totalAyahsInSurah = ref.watch(quranAudioControllerProvider.select((s) => s.totalAyahsInSurah));
     final playbackSpeed = ref.watch(quranAudioControllerProvider.select((s) => s.speed));
     
+    // Download tasks for current surah
+    final downloadTasks = ref.watch(audioDownloadControllerProvider);
+    final quranTask = selectedReciter != null ? downloadTasks['r${selectedReciter.id}_s$surahId'] : null;
+    final transTask = selectedTranslationReciter != null ? downloadTasks['r${selectedTranslationReciter.id}_s$surahId'] : null;
+    final isQuranDownloading = playbackMode.includesQuran && quranTask?.status == DownloadTaskStatus.downloading;
+    final isTransDownloading = playbackMode.includesTranslation && transTask?.status == DownloadTaskStatus.downloading;
+    final isCurrentSurahDownloading = isQuranDownloading || isTransDownloading;
+    final activeDownloadTask = isQuranDownloading ? quranTask : (isTransDownloading ? transTask : null);
+    final downloadPercent = ((activeDownloadTask?.progress ?? 0) * 100).clamp(0, 100).toInt();
+
     final audioController = ref.read(quranAudioControllerProvider.notifier);
 
     final isPlaying = audioStatus == AudioStatus.playing;
@@ -110,6 +125,14 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     final trackTypeLabel = isTranslationTrack ? '🔊 ترجمه' : '🔊 تلاوت';
 
     void onTogglePlay() async {
+      if (isCurrentSurahDownloading) {
+        AppSnackBar.showInfo(
+          context,
+          'صوت این سوره در پس‌زمینه در حال دانلود است (${downloadPercent.toPersianDigit()}٪). لطفاً تا پایان دانلود شکیبا باشید.',
+        );
+        return;
+      }
+
       if (isPlaying) {
         audioController.pause();
       } else if (audioStatus == AudioStatus.paused) {
@@ -284,17 +307,39 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                   // Reciter & Ayah Title (Clickable)
                                                   Expanded(
                                                     child: GestureDetector(
-                                                      onTap: () => ReciterSelectionBottomSheet.show(
-                                                        context,
-                                                        isTranslationMode: isTranslationTrack,
-                                                      ),
+                                                      onTap: () {
+                                                        if (isCurrentSurahDownloading) {
+                                                          ref.read(goRouterProvider).pushNamed(
+                                                            audioDownloadManagerRoute,
+                                                            queryParameters: {
+                                                              'surahId': surahId.toString(),
+                                                              if (isTransDownloading) 'isTranslation': 'true',
+                                                            },
+                                                          );
+                                                        } else {
+                                                          ReciterSelectionBottomSheet.show(
+                                                            context,
+                                                            isTranslationMode: isTranslationTrack,
+                                                          );
+                                                        }
+                                                      },
                                                       behavior: HitTestBehavior.opaque,
                                                       child: Row(
                                                         mainAxisSize: MainAxisSize.min,
                                                         children: [
+                                                          if (isCurrentSurahDownloading) ...[
+                                                            Icon(
+                                                              CupertinoIcons.arrow_down_circle_fill,
+                                                              size: 13,
+                                                              color: colorScheme.primary,
+                                                            ),
+                                                            const SizedBox(width: 5),
+                                                          ],
                                                           Flexible(
                                                             child: Text(
-                                                              '$activeReciterName • ${AppConstants.ayahLabel} ${(currentAyahNumber ?? 1).toPersianDigit()}',
+                                                              isCurrentSurahDownloading
+                                                                  ? 'در حال دانلود صوت (${downloadPercent.toPersianDigit()}٪)...'
+                                                                  : '$activeReciterName • ${AppConstants.ayahLabel} ${(currentAyahNumber ?? 1).toPersianDigit()}',
                                                               maxLines: 1,
                                                               overflow: TextOverflow.ellipsis,
                                                               style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -305,7 +350,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                                   ),
                                                             ),
                                                           ),
-                                                          if (isMixedMode && isSessionActive) ...[
+                                                          if (isMixedMode && isSessionActive && !isCurrentSurahDownloading) ...[
                                                             const SizedBox(width: 4),
                                                             Text(
                                                               '($trackTypeLabel)',
@@ -319,7 +364,9 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                           ],
                                                           const SizedBox(width: 3),
                                                           Icon(
-                                                            CupertinoIcons.chevron_down,
+                                                            isCurrentSurahDownloading
+                                                                ? CupertinoIcons.chevron_back
+                                                                : CupertinoIcons.chevron_down,
                                                             size: 11,
                                                             color: colorScheme.primary.withValues(alpha: 0.7),
                                                           ),
@@ -529,6 +576,8 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                       child: ReciterAvatarButton(
                         radius: discRadius,
                         isPlayButton: true,
+                        isDownloading: isCurrentSurahDownloading,
+                        downloadProgress: activeDownloadTask?.progress,
                         onTap: onTogglePlay,
                       ),
                     ),

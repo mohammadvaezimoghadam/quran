@@ -244,7 +244,6 @@ class _MiniPlayPauseButton extends ConsumerWidget {
     final isPlaying = status == AudioStatus.playing;
     final isLoading = status == AudioStatus.loading;
     final primary = context.colorScheme.primary;
-    final gold = context.colors.goldAccent;
 
     return GestureDetector(
       onTap: () {
@@ -272,22 +271,22 @@ class _MiniPlayPauseButton extends ConsumerWidget {
         ),
         child: Center(
           child: isLoading
-              ? SizedBox(
+              ? const SizedBox(
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: gold,
+                    color: Colors.white,
                   ),
                 )
               : Padding(
                   padding: EdgeInsets.only(left: isPlaying ? 0 : 2.0),
                   child: Icon(
                     isPlaying
-                        ? CupertinoIcons.pause
-                        : CupertinoIcons.play,
+                        ? CupertinoIcons.pause_fill
+                        : CupertinoIcons.play_fill,
                     size: 16,
-                    color: gold,
+                    color: Colors.white,
                   ),
                 ),
         ),

@@ -34,7 +34,7 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(114.0);
+  Size get preferredSize => const Size.fromHeight(126.0);
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +53,8 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
       height: preferredSize.height + topPadding,
       padding: EdgeInsets.only(
         top: topPadding + 4.0,
-        left: 16.0,
-        right: 8.0,
+        left: 12.0,
+        right: 6.0,
         bottom: 8.0,
       ),
       decoration: BoxDecoration(
@@ -72,19 +72,18 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
         children: [
           // Row 1: Back Button + Title + Action Icons
           SizedBox(
-            height: 42,
+            height: 50,
             child: Row(
               children: [
                 // Back Button (Apple-style chevron)
                 IconButton(
                   tooltip: 'بازگشت',
-                  visualDensity: VisualDensity.compact,
                   icon: Icon(
                     CupertinoIcons.chevron_forward,
-                    size: 22,
+                    size: 24,
                     color: colorScheme.onSurface,
                   ),
-                  splashRadius: 20,
+                  splashRadius: 22,
                   onPressed: onBackPressed ??
                       () {
                         if (Navigator.of(context).canPop()) {
@@ -100,7 +99,7 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
                   title,
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
-                    fontSize: 18,
+                    fontSize: 19,
                     fontWeight: FontWeight.bold,
                     color: colorScheme.onSurface,
                   ),
@@ -109,21 +108,21 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
 
                 // Reciter Selection Avatar
                 const ReciterAvatarButton(
-                  radius: 17,
+                  radius: 19,
                   showLabel: false,
                 ),
 
-                2.hSpace,
+                4.hSpace,
 
                 // Download Manager Action
                 IconButton(
                   tooltip: 'مدیریت دانلود صوت',
                   icon: Icon(
                     CupertinoIcons.arrow_down_to_line,
-                    size: 20,
+                    size: 22,
                     color: colorScheme.onSurface,
                   ),
-                  splashRadius: 20,
+                  splashRadius: 22,
                   onPressed: onAudioDownloadManagerTap,
                 ),
 
@@ -132,10 +131,10 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
                   tooltip: 'گزینه‌ها',
                   icon: Icon(
                     CupertinoIcons.ellipsis_circle,
-                    size: 21,
+                    size: 23,
                     color: colorScheme.onSurface,
                   ),
-                  splashRadius: 20,
+                  splashRadius: 22,
                   elevation: 6,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppDimens.radiusMd),
@@ -198,21 +197,21 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
             ),
           ),
 
-          6.vSpace,
+          8.vSpace,
 
           // Row 2: Apple-style Pill Search Box
           Container(
-            height: 40,
+            height: 44,
             decoration: BoxDecoration(
               color: searchBgColor,
               borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
             ),
             child: Row(
               children: [
-                10.hSpace,
+                12.hSpace,
                 Icon(
                   CupertinoIcons.search,
-                  size: 18,
+                  size: 19,
                   color: placeholderColor,
                 ),
                 8.hSpace,

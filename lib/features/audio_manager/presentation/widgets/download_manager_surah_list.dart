@@ -22,7 +22,7 @@ import '../../../quran_reader/domain/entities/reciter_entity.dart';
 import '../../../quran_reader/domain/enums/audio_playback_mode.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/audio_vip_policy.dart';
-import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 import '../../../subscription/presentation/utils/audio_vip_helper.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
@@ -48,6 +48,7 @@ class _DownloadManagerSurahListState
     extends ConsumerState<DownloadManagerSurahList> {
   late ScrollController _scrollController;
   bool _hasScrolled = false;
+  bool _highlightTarget = false;
 
   @override
   void initState() {
@@ -62,126 +63,33 @@ class _DownloadManagerSurahListState
   }
 
   void _scrollToInitialSurah(int initialSurahId, int totalSurahs) {
-    if (_hasScrolled || initialSurahId <= 1 || totalSurahs == 0) return;
+    if (_hasScrolled || totalSurahs == 0) return;
     _hasScrolled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 150), () {
-        if (!mounted || !_scrollController.hasClients) return;
-        // Each surah item is ~61px + 1px divider = 62.0px
-        const itemExtent = 62.0;
-        // Offset by 18px so the target surah sits comfortably down in full view without being clipped at the top
-        final targetOffset = ((initialSurahId - 1) * itemExtent - 18.0);
-        final maxScroll = _scrollController.position.maxScrollExtent;
-        _scrollController.animateTo(
-          targetOffset.clamp(0.0, maxScroll),
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCubic,
-        );
+      Future.delayed(const Duration(milliseconds: 150), () async {
+        if (!mounted) return;
+        if (initialSurahId > 1 && _scrollController.hasClients) {
+          // Each surah item is ~61px + 1px divider = 62.0px
+          const itemExtent = 62.0;
+          // Offset by 18px so the target surah sits comfortably down in full view without being clipped at the top
+          final targetOffset = ((initialSurahId - 1) * itemExtent - 18.0);
+          final maxScroll = _scrollController.position.maxScrollExtent;
+          await _scrollController.animateTo(
+            targetOffset.clamp(0.0, maxScroll),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutCubic,
+          );
+        }
+        if (mounted) {
+          setState(() {
+            _highlightTarget = true;
+          });
+        }
       });
     });
   }
 
-  Future<void> _handleDownloadAll({
-    required BuildContext context,
-    required WidgetRef ref,
-    required List<SurahEntity> surahs,
-    required ReciterEntity? selectedReciter,
-  }) async {
-    if (selectedReciter == null) return;
 
-    final isWifiOnly = ref
-        .read(downloadManagerLocalDataSourceProvider)
-        .getWifiOnlyPreference();
-    if (isWifiOnly) {
-      final isWifi = await NetworkInfoHelper.isWifiConnected();
-      if (!isWifi) {
-        if (context.mounted) {
-          AppSnackBar.showError(
-            context,
-            'دانلود انجام نشد: تنظیم «فقط با وای‌فای» فعال است. لطفاً وای‌فای را روشن کرده یا این گزینه را در مدیریت دانلود غیرفعال کنید.',
-          );
-        }
-        return;
-      }
-    }
-
-    final storage = ref.read(audioStorageServiceProvider);
-    final unDownloadedSurahs = surahs
-        .where((s) => !storage.isSurahDownloaded(selectedReciter.id, s.number))
-        .toList();
-
-    if (unDownloadedSurahs.isEmpty) {
-      if (context.mounted) {
-        AppSnackBar.showSuccess(
-          context,
-          'تمامی سوره‌ها با صدای «${selectedReciter.name}» قبلاً دانلود شده‌اند.',
-        );
-      }
-      return;
-    }
-
-    final isVip = ref.read(hasVipAccessProvider);
-    final isTranslation = selectedReciter.styleId == 4;
-
-    final permittedSurahs = <int>[];
-    final lockedSurahs = <int>[];
-
-    for (final s in unDownloadedSurahs) {
-      final allowed = isTranslation
-          ? AudioVipPolicy.canPlayAudioTranslation(isVip: isVip)
-          : AudioVipPolicy.canPlayReciter(
-              reciterIdentifier: selectedReciter.identifier,
-              surahId: s.number,
-              isVip: isVip,
-            );
-      if (allowed) {
-        permittedSurahs.add(s.number);
-      } else {
-        lockedSurahs.add(s.number);
-      }
-    }
-
-    if (lockedSurahs.isNotEmpty && permittedSurahs.isEmpty) {
-      if (context.mounted) {
-        if (isTranslation) {
-          VipSubscriptionSheet.show(context);
-        } else {
-          AudioVipHelper.checkAndPromptVip(
-            context: context,
-            ref: ref,
-            surahId: lockedSurahs.first,
-            targetReciter: selectedReciter,
-          );
-        }
-      }
-      return;
-    }
-
-    final count = permittedSurahs.length;
-    for (final surahId in permittedSurahs) {
-      ref
-          .read(audioDownloadControllerProvider.notifier)
-          .startDownload(
-            reciter: selectedReciter,
-            surahId: surahId,
-          );
-    }
-
-    if (context.mounted) {
-      if (lockedSurahs.isNotEmpty) {
-        AppSnackBar.showWarning(
-          context,
-          'دانلود ${count.toPersianDigit()} سوره رایگان آغاز شد. دانلود باقی سوره‌ها نیازمند اشتراک VIP است.',
-        );
-        VipSubscriptionSheet.show(context);
-      } else {
-        AppSnackBar.showSuccess(
-          context,
-          'دانلود ${count.toPersianDigit()} سوره آغاز شد.',
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,43 +120,20 @@ class _DownloadManagerSurahListState
 
     return Column(
       children: [
-        // Section Header: "لیست سوره‌ها" + "دانلود همه"
+        // Section Header: "لیست سوره‌ها"
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'لیست سوره‌ها',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              'لیست سوره‌ها',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
               ),
-              InkWell(
-                onTap: () => _handleDownloadAll(
-                  context: context,
-                  ref: ref,
-                  surahs: surahs,
-                  selectedReciter: selectedReciter,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Text(
-                    'دانلود همه',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: context.colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
 
@@ -290,6 +175,7 @@ class _DownloadManagerSurahListState
                   surah: surah,
                   fontFamily: fontFamily,
                   selectedReciter: selectedReciter,
+                  isTargeted: _highlightTarget && widget.initialSurahId == surah.number,
                 );
               },
             ),
@@ -303,12 +189,14 @@ class _SurahListItem extends ConsumerWidget {
   final SurahEntity surah;
   final String fontFamily;
   final ReciterEntity? selectedReciter;
+  final bool isTargeted;
 
   const _SurahListItem({
     super.key,
     required this.surah,
     required this.fontFamily,
     required this.selectedReciter,
+    this.isTargeted = false,
   });
 
   @override
@@ -542,19 +430,22 @@ class _SurahListItem extends ConsumerWidget {
                 ),
 
                 // Left Action Widget
-                _buildActionWidget(
-                  context: context,
-                  ref: ref,
-                  isDark: isDark,
-                  colorScheme: colorScheme,
-                  isDownloaded: isDownloaded,
-                  isDownloading: isDownloading,
-                  isPaused: isPaused,
-                  hasPartialDownload: hasPartialDownload,
-                  downloadTask: downloadTask,
-                  downloadedAyahsCount: downloadedAyahsCount,
-                  isLocked: isLocked,
-                  isTranslation: isTranslation,
+                _PulsingActionButton(
+                  isTargeted: isTargeted && !isDownloaded,
+                  child: _buildActionWidget(
+                    context: context,
+                    ref: ref,
+                    isDark: isDark,
+                    colorScheme: colorScheme,
+                    isDownloaded: isDownloaded,
+                    isDownloading: isDownloading,
+                    isPaused: isPaused,
+                    hasPartialDownload: hasPartialDownload,
+                    downloadTask: downloadTask,
+                    downloadedAyahsCount: downloadedAyahsCount,
+                    isLocked: isLocked,
+                    isTranslation: isTranslation,
+                  ),
                 ),
               ],
             ),
@@ -813,7 +704,11 @@ class _SurahListItem extends ConsumerWidget {
 
     if (isLocked) {
       if (isTranslation) {
-        VipSubscriptionSheet.show(context);
+        VipRequiredDialog.show(
+          context: context,
+          reciterName: selectedReciter?.name,
+          isTranslation: true,
+        );
       } else {
         AudioVipHelper.checkAndPromptVip(
           context: context,
@@ -1071,7 +966,11 @@ class _SurahListItem extends ConsumerWidget {
                               );
                         if (isLocked) {
                           if (isTranslation) {
-                            VipSubscriptionSheet.show(context);
+                            VipRequiredDialog.show(
+                              context: context,
+                              reciterName: reciter.name,
+                              isTranslation: true,
+                            );
                           } else {
                             AudioVipHelper.checkAndPromptVip(
                               context: context,
@@ -1220,3 +1119,180 @@ class _SurahListItem extends ConsumerWidget {
     );
   }
 }
+
+class _PulsingActionButton extends StatefulWidget {
+  final bool isTargeted;
+  final Widget child;
+
+  const _PulsingActionButton({
+    required this.isTargeted,
+    required this.child,
+  });
+
+  @override
+  State<_PulsingActionButton> createState() => _PulsingActionButtonState();
+}
+
+class _PulsingActionButtonState extends State<_PulsingActionButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _colorAnimation;
+  bool _hasAnimated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+
+    _scaleAnimation = TweenSequence<double>([
+      // First click: press down
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.84)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 16,
+      ),
+      // First click: release pop up
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.84, end: 1.08)
+            .chain(CurveTween(curve: Curves.easeOutBack)),
+        weight: 18,
+      ),
+      // Settle
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.08, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 14,
+      ),
+      // Short pause between clicks
+      TweenSequenceItem(
+        tween: ConstantTween<double>(1.0),
+        weight: 14,
+      ),
+      // Second click: press down
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.87)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 14,
+      ),
+      // Second click: release pop up
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.87, end: 1.05)
+            .chain(CurveTween(curve: Curves.easeOutBack)),
+        weight: 12,
+      ),
+      // Settle
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.05, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 12,
+      ),
+    ]).animate(_controller);
+
+    _colorAnimation = TweenSequence<double>([
+      // Fade in subtle tint during first click
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 20,
+      ),
+      // Hold subtle tint throughout clicks
+      TweenSequenceItem(
+        tween: ConstantTween<double>(1.0),
+        weight: 55,
+      ),
+      // Fade out smoothly as animation ends
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 25,
+      ),
+    ]).animate(_controller);
+
+    if (widget.isTargeted && !_hasAnimated) {
+      _hasAnimated = true;
+      _controller.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _PulsingActionButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isTargeted && !_hasAnimated) {
+      _hasAnimated = true;
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasAnimated && !widget.isTargeted) {
+      return widget.child;
+    }
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final colorVal = _colorAnimation.value;
+        return ScaleTransition(
+          scale: _scaleAnimation,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: colorVal > 0.01
+                  ? [
+                      BoxShadow(
+                        color: primaryColor.withValues(
+                          alpha: (isDark ? 0.28 : 0.18) * colorVal,
+                        ),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                widget.child,
+                if (colorVal > 0.01)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: primaryColor.withValues(
+                            alpha: (isDark ? 0.18 : 0.12) * colorVal,
+                          ),
+                          border: Border.all(
+                            color: primaryColor.withValues(
+                              alpha: (isDark ? 0.40 : 0.30) * colorVal,
+                            ),
+                            width: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+

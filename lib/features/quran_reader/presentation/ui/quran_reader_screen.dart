@@ -317,9 +317,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     // Controls state in full-screen mode
     final bool controlsHidden = _isFullScreen && !_isControlsVisible;
     final double topPadding = MediaQuery.paddingOf(context).top;
-    final double appBarHeight = topPadding + kToolbarHeight;
+    final double appBarHeight = topPadding + 60.0;
 
-    final double infoBarHeight = 38.0;
+    final double infoBarHeight = 40.0;
     final double headerHeight = appBarHeight + infoBarHeight;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -330,6 +330,11 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop && isSelectionMode) {
           ref.read(selectedAyahActionProvider.notifier).clearSelection();
+          return;
+        }
+        if (didPop && _isFullScreen) {
+          _isFullScreen = false;
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
         }
       },
       child: Scaffold(
@@ -383,6 +388,13 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                 isSelectionMode: isSelectionMode,
                                 selectedCount: selectedCount,
                                 isBookmarked: isAyahBookmarked,
+                                onBackPressed: () {
+                                  if (_isFullScreen) {
+                                    _isFullScreen = false;
+                                    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+                                  }
+                                  Navigator.of(context).maybePop();
+                                },
                                 onSurahTap: () async {
                                   final surahs = ref.read(surahListControllerProvider).surahs;
                                   final currentSurah = surahs.where((s) => s.number == currentSurahId).firstOrNull;

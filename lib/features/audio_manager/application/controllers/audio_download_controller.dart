@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/data/local/preferences/preferences_service_provider.dart';
 import '../../../../core/services/downloader/file_download_providers.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../../core/services/audio/audio_url_helper.dart';
 import '../../../quran_reader/application/ayah_service.dart';
+import '../../../quran_reader/application/controllers/reciter_providers.dart';
 import '../../../quran_reader/domain/entities/reciter_entity.dart';
 import '../../../../core/services/network/network_info_helper.dart';
 import '../../../download_manager/infrastructure/datasources/download_manager_local_datasource.dart';
@@ -22,6 +25,7 @@ final audioDownloadControllerProvider = NotifierProvider<AudioDownloadController
 });
 
 class AudioDownloadController extends Notifier<DownloadTaskMap> {
+  static const String _persistedTasksKey = 'persisted_audio_download_tasks_v1';
   final Map<String, CancelToken> _cancelTokens = {};
 
   @override
@@ -32,15 +36,221 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
       }
       _cancelTokens.clear();
     });
-    return {};
+
+    final initialTasks = _loadPersistedTasks();
+    scheduleMicrotask(_verifyAndSyncTasks);
+    return initialTasks;
   }
 
-  Future<void> cancelAllDownloads() async {
-    for (final token in _cancelTokens.values) {
-      token.cancel('لغو به دلیل پاک‌سازی کلی');
+  DownloadTaskMap _loadPersistedTasks() {
+    try {
+      final prefs = ref.read(sharedPreferencesInstanceProvider);
+      final rawJson = prefs.getString(_persistedTasksKey);
+      if (rawJson == null || rawJson.isEmpty) return {};
+
+      final decoded = jsonDecode(rawJson) as Map<String, dynamic>;
+      final DownloadTaskMap loaded = {};
+
+      for (final entry in decoded.entries) {
+        try {
+          final task = AudioDownloadTaskSerialization.fromJsonMap(
+            entry.value as Map<String, dynamic>,
+          );
+          // If task was downloading when the app terminated, restore it as paused
+          final restoredStatus = task.status == DownloadTaskStatus.downloading
+              ? DownloadTaskStatus.paused
+              : task.status;
+
+          // Only keep active queue tasks (paused or failed)
+          if (restoredStatus == DownloadTaskStatus.paused ||
+              restoredStatus == DownloadTaskStatus.failed ||
+              restoredStatus == DownloadTaskStatus.downloading) {
+            loaded[entry.key] = task.copyWith(status: restoredStatus);
+          }
+        } catch (e) {
+          developer.log('Error parsing task ${entry.key}: $e', name: 'AudioDownload');
+        }
+      }
+      return loaded;
+    } catch (e) {
+      developer.log('Error loading persisted download tasks: $e', name: 'AudioDownload');
+      return {};
     }
-    _cancelTokens.clear();
-    state = {};
+  }
+
+  void _saveTasksToPrefs() {
+    try {
+      final prefs = ref.read(sharedPreferencesInstanceProvider);
+      final activeTasks = <String, dynamic>{};
+      for (final entry in state.entries) {
+        final task = entry.value;
+        if (task.status == DownloadTaskStatus.downloading ||
+            task.status == DownloadTaskStatus.paused ||
+            task.status == DownloadTaskStatus.failed) {
+          activeTasks[entry.key] = task.toJsonMap();
+        }
+      }
+      if (activeTasks.isEmpty) {
+        prefs.remove(_persistedTasksKey);
+      } else {
+        prefs.setString(_persistedTasksKey, jsonEncode(activeTasks));
+      }
+    } catch (e) {
+      developer.log('Error saving persisted download tasks: $e', name: 'AudioDownload');
+    }
+  }
+
+  Future<void> _verifyAndSyncTasks() async {
+    try {
+      final storage = ref.read(audioStorageServiceProvider);
+      final ayahService = ref.read(ayahServiceProvider);
+      var currentTasks = Map<String, AudioDownloadTask>.from(state);
+      bool stateChanged = false;
+
+      // 1. Verify and update currently tracked tasks against actual disk files
+      for (final key in currentTasks.keys.toList()) {
+        final task = currentTasks[key]!;
+        final isCompleted = storage.isSurahDownloaded(task.reciterId, task.surahId);
+        if (isCompleted) {
+          currentTasks.remove(key);
+          stateChanged = true;
+          continue;
+        }
+
+        final actualAyahs = await storage.getDownloadedAyahsCount(
+          reciterId: task.reciterId,
+          surahId: task.surahId,
+          totalAyahs: task.totalAyahs,
+        );
+
+        if (task.totalAyahs > 0 && actualAyahs >= task.totalAyahs) {
+          await storage.markSurahAsDownloaded(task.reciterId, task.surahId);
+          currentTasks.remove(key);
+          stateChanged = true;
+        } else if (actualAyahs != task.completedAyahs) {
+          currentTasks[key] = task.copyWith(
+            completedAyahs: actualAyahs,
+            currentAyah: actualAyahs > 0 ? actualAyahs : 1,
+            progress: task.totalAyahs > 0 ? actualAyahs / task.totalAyahs : 0.0,
+            status: (task.status == DownloadTaskStatus.downloading && !_cancelTokens.containsKey(key))
+                ? DownloadTaskStatus.paused
+                : task.status,
+          );
+          stateChanged = true;
+        }
+      }
+
+      // 2. Discover un-tracked partial downloads on physical disk
+      // (e.g. downloads made prior to task persistence or interrupted sessions)
+      final rootAudioPath = await storage.getRootAudioStorageDirectory();
+      final rootDir = Directory(rootAudioPath);
+      if (await rootDir.exists()) {
+        await for (final reciterEntity in rootDir.list(followLinks: false)) {
+          if (reciterEntity is Directory) {
+            final reciterDirName = reciterEntity.path.split(Platform.pathSeparator).last;
+            final reciterMatch = RegExp(r'^reciter_(\d+)$').firstMatch(reciterDirName);
+            if (reciterMatch == null) continue;
+            final reciterId = int.tryParse(reciterMatch.group(1) ?? '');
+            if (reciterId == null) continue;
+
+            await for (final surahEntity in reciterEntity.list(followLinks: false)) {
+              if (surahEntity is Directory) {
+                final surahDirName = surahEntity.path.split(Platform.pathSeparator).last;
+                final surahMatch = RegExp(r'^surah_(\d+)$').firstMatch(surahDirName);
+                if (surahMatch == null) continue;
+                final surahId = int.tryParse(surahMatch.group(1) ?? '');
+                if (surahId == null) continue;
+
+                // Check if already fully marked
+                if (storage.isSurahDownloaded(reciterId, surahId)) continue;
+
+                final key = _buildKey(reciterId, surahId);
+                if (currentTasks.containsKey(key)) continue;
+
+                // Check if there are any mp3 files inside
+                int fileCount = 0;
+                await for (final f in surahEntity.list(followLinks: false)) {
+                  if (f is File && f.path.endsWith('.mp3')) {
+                    fileCount++;
+                  }
+                }
+                if (fileCount == 0) continue;
+
+                // Fetch total ayahs for this surah
+                final ayahsResult = await ayahService.getAyahsBySurah(surahId);
+                final totalAyahs = ayahsResult.tryGetSuccess()?.length ?? 0;
+                if (totalAyahs == 0) continue;
+
+                final actualAyahs = await storage.getDownloadedAyahsCount(
+                  reciterId: reciterId,
+                  surahId: surahId,
+                  totalAyahs: totalAyahs,
+                );
+
+                if (actualAyahs >= totalAyahs) {
+                  await storage.markSurahAsDownloaded(reciterId, surahId);
+                } else if (actualAyahs > 0) {
+                  currentTasks[key] = AudioDownloadTask(
+                    surahId: surahId,
+                    reciterId: reciterId,
+                    status: DownloadTaskStatus.paused,
+                    totalAyahs: totalAyahs,
+                    completedAyahs: actualAyahs,
+                    currentAyah: actualAyahs,
+                    progress: actualAyahs / totalAyahs,
+                  );
+                  stateChanged = true;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (stateChanged) {
+        state = currentTasks;
+        _saveTasksToPrefs();
+        ref.invalidate(surahDownloadedAyahsCountProvider);
+      }
+    } catch (e) {
+      developer.log('Error verifying and syncing download tasks: $e', name: 'AudioDownload');
+    }
+  }
+
+  Future<void> cancelAllDownloads({int? reciterId}) async {
+    final storage = ref.read(audioStorageServiceProvider);
+    final tasksToCancel = state.values.where((task) {
+      if (reciterId != null) {
+        return task.reciterId == reciterId;
+      }
+      return true;
+    }).toList();
+
+    for (final task in tasksToCancel) {
+      final key = _buildKey(task.reciterId, task.surahId);
+      _cancelTokens[key]?.cancel('توسط کاربر لغو شد');
+      _cancelTokens.remove(key);
+      await storage.deleteSurahAudio(
+        reciterId: task.reciterId,
+        surahId: task.surahId,
+      );
+    }
+
+    if (reciterId != null) {
+      final updatedState = Map<String, AudioDownloadTask>.from(state);
+      updatedState.removeWhere((_, task) => task.reciterId == reciterId);
+      state = updatedState;
+      _saveTasksToPrefs();
+    } else {
+      for (final token in _cancelTokens.values) {
+        token.cancel('لغو به دلیل پاک‌سازی کلی');
+      }
+      _cancelTokens.clear();
+      state = {};
+      _saveTasksToPrefs();
+    }
+
+    ref.invalidate(surahDownloadedAyahsCountProvider);
   }
 
   String _buildKey(int reciterId, int surahId) => 'r${reciterId}_s$surahId';
@@ -119,6 +329,7 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
         progress: initialProgress,
       ),
     };
+    _saveTasksToPrefs();
 
     final cancelToken = CancelToken();
     _cancelTokens[key] = cancelToken;
@@ -209,6 +420,17 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
       }
 
       completedAyahs++;
+      if (state[key]?.status == DownloadTaskStatus.downloading) {
+        state = {
+          ...state,
+          key: state[key]!.copyWith(
+            completedAyahs: completedAyahs,
+            progress: completedAyahs / totalAyahs,
+            currentAyah: ayah.ayahNumber,
+          ),
+        };
+        _saveTasksToPrefs();
+      }
     }
 
     _cancelTokens.remove(key);
@@ -223,6 +445,8 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
           status: DownloadTaskStatus.completed,
         ),
       };
+      _saveTasksToPrefs();
+      ref.invalidate(surahDownloadedAyahsCountProvider);
     }
   }
 
@@ -235,9 +459,11 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
           ...state,
           key: currentTask.copyWith(status: DownloadTaskStatus.paused),
         };
+        _saveTasksToPrefs();
       }
       _cancelTokens[key]?.cancel('توسط کاربر متوقف شد');
       _cancelTokens.remove(key);
+      ref.invalidate(surahDownloadedAyahsCountProvider);
     }
   }
 
@@ -246,6 +472,20 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
     required int surahId,
   }) async {
     await startDownload(reciter: reciter, surahId: surahId);
+  }
+
+  Future<void> resumeDownloadById({
+    required int reciterId,
+    required int surahId,
+  }) async {
+    final allRecitersResult = await ref.read(allRecitersListProvider.future);
+    final reciter = allRecitersResult
+        .tryGetSuccess()
+        ?.where((r) => r.id == reciterId)
+        .firstOrNull;
+    if (reciter != null) {
+      await startDownload(reciter: reciter, surahId: surahId);
+    }
   }
 
   Future<void> cancelDownload(int reciterId, int surahId) async {
@@ -264,6 +504,7 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
       final updatedState = Map<String, AudioDownloadTask>.from(state);
       updatedState.remove(key);
       state = updatedState;
+      _saveTasksToPrefs();
     }
 
     // 4. Invalidate providers so UI surah grids immediately reflect 0 downloaded ayahs
@@ -280,6 +521,7 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
           errorMessage: error,
         ),
       };
+      _saveTasksToPrefs();
     }
   }
 }

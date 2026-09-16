@@ -20,15 +20,17 @@ class VipRequiredDialog extends StatelessWidget {
     this.customMessage,
   });
 
-  /// Displays the dialog cleanly
-  static Future<void> show({
+  /// Displays the dialog cleanly, and if the user clicks "مشاهده اشتراک‌ها",
+  /// navigates to the subscription screen and awaits the user's return.
+  /// Returns `true` if the user navigated to the subscription screen, or `false` if dismissed/canceled.
+  static Future<bool> show({
     required BuildContext context,
     String? reciterName,
     bool isTranslation = false,
     String? customTitle,
     String? customMessage,
-  }) {
-    return showDialog(
+  }) async {
+    final result = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => VipRequiredDialog(
@@ -38,6 +40,12 @@ class VipRequiredDialog extends StatelessWidget {
         customMessage: customMessage,
       ),
     );
+
+    if (result == true && context.mounted) {
+      await context.pushNamed(vipSubscriptionRoute);
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -110,7 +118,7 @@ class VipRequiredDialog extends StatelessWidget {
                   Expanded(
                     flex: 1,
                     child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(context).pop(false),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 11),
                         shape: RoundedRectangleBorder(
@@ -136,8 +144,7 @@ class VipRequiredDialog extends StatelessWidget {
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).pop();
-                        context.pushNamed(vipSubscriptionRoute);
+                        Navigator.of(context).pop(true);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,

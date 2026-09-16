@@ -67,19 +67,14 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     result.when(
       (reciters) {
         if (reciters.isNotEmpty) {
+          final arabicReciters = reciters.where((r) => r.styleId != 4).toList();
           ReciterEntity defaultReciter;
-          if (savedReciterId != null) {
-            defaultReciter = reciters.firstWhere(
-              (r) => r.id == savedReciterId,
-              orElse: () => reciters.firstWhere(
-                (r) => r.identifier.contains('parhizgar'),
-                orElse: () => reciters.first,
-              ),
-            );
+          if (savedReciterId != null && arabicReciters.any((r) => r.id == savedReciterId)) {
+            defaultReciter = arabicReciters.firstWhere((r) => r.id == savedReciterId);
           } else {
-            defaultReciter = reciters.firstWhere(
-              (r) => r.identifier.contains('parhizgar'),
-              orElse: () => reciters.first,
+            defaultReciter = arabicReciters.firstWhere(
+              (r) => AudioVipPolicy.isDefaultReciter(r.identifier),
+              orElse: () => arabicReciters.isNotEmpty ? arabicReciters.first : reciters.first,
             );
           }
 
@@ -292,6 +287,10 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
   /// Select reciter safely without stream interruption crashes
   Future<void> selectReciter(ReciterEntity reciter) async {
+    if (reciter.styleId == 4) {
+      await selectTranslationReciter(reciter);
+      return;
+    }
     final isActuallyPlayingOrPaused = state.status == AudioStatus.playing || state.status == AudioStatus.loading || state.status == AudioStatus.paused;
     state = state.copyWith(selectedReciter: reciter);
     ref.read(preferencesServiceProvider).setInt('selected_reciter_id', reciter.id);
@@ -311,6 +310,10 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
   /// Select translation reciter (گوینده ترجمه صوتی)
   Future<void> selectTranslationReciter(ReciterEntity reciter) async {
+    if (reciter.styleId != 4) {
+      await selectReciter(reciter);
+      return;
+    }
     final isActuallyPlayingOrPaused = state.status == AudioStatus.playing || state.status == AudioStatus.loading || state.status == AudioStatus.paused;
     state = state.copyWith(selectedTranslationReciter: reciter);
     ref.read(preferencesServiceProvider).setInt('selected_translation_reciter_id', reciter.id);

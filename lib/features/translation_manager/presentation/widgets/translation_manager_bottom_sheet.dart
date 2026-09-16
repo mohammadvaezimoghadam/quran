@@ -10,7 +10,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/translation_vip_policy.dart';
-import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 import '../../application/controllers/translation_manager_controller.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 
@@ -45,7 +45,7 @@ class _TranslationManagerBottomSheetState
 
   bool _isCurrentlyDownloading(List<dynamic> translations) {
     if (translations.isEmpty) return false;
-    final state = ref.read(translationManagerControllerProvider).value;
+    final state = ref.watch(translationManagerControllerProvider).value;
     if (state == null) return false;
     final selectedTranslation = translations[_selectedTranslatorIndex];
     return state.downloadProgress.containsKey(selectedTranslation.id);
@@ -55,8 +55,15 @@ class _TranslationManagerBottomSheetState
       BuildContext context, dynamic surah, dynamic translation) async {
     final hasVip = ref.read(hasVipAccessProvider);
     if (!TranslationVipPolicy.canAccessTranslation(translationId: translation.id, hasVip: hasVip)) {
-      VipSubscriptionSheet.show(context);
-      return;
+      await VipRequiredDialog.show(
+        context: context,
+        customTitle: 'نیاز به اشتراک',
+        customMessage: 'برای دانلود و استفاده از ترجمه ${translation.name}، نیاز به اشتراک دارید.',
+      );
+      if (!context.mounted) return;
+      if (!ref.read(hasVipAccessProvider)) {
+        return;
+      }
     }
 
     final controller = ref.read(translationManagerControllerProvider.notifier);
@@ -338,10 +345,18 @@ class _TranslationManagerBottomSheetState
                       ),
                       elevation: 0,
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       if (isSelectedLocked) {
-                        VipSubscriptionSheet.show(context);
-                        return;
+                        await VipRequiredDialog.show(
+                          context: context,
+                          customTitle: 'نیاز به اشتراک',
+                          customMessage:
+                              'برای دانلود و استفاده از ترجمه ${selectedTranslation.name}، نیاز به اشتراک دارید.',
+                        );
+                        if (!context.mounted) return;
+                        if (!ref.read(hasVipAccessProvider)) {
+                          return;
+                        }
                       }
                       if (_isCurrentlyDownloading(translations)) return;
                       if (surahs.isEmpty || translations.isEmpty) return;

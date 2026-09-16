@@ -81,22 +81,12 @@ class _DownloadActiveQueueSectionState
                 ),
                 const Spacer(),
                 if (totalCount > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: context.colorScheme.primary.withValues(
-                        alpha: isDark ? 0.16 : 0.08,
-                      ),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '${totalCount.toPersianDigit()} مورد',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: context.colorScheme.primary,
-                      ),
+                  Text(
+                    '${totalCount.toPersianDigit()} مورد',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11.5,
+                      color: isDark ? Colors.white60 : Colors.black54,
                     ),
                   ),
               ],
@@ -160,9 +150,9 @@ class _DownloadActiveQueueSectionState
                   }
                 },
               ),
-              // Show more / Collapse button at the bottom
+              // Show more / Collapse button at the bottom (Unboxed, clean)
               if (totalCount > 3) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Center(
                   child: InkWell(
                     onTap: () {
@@ -171,24 +161,16 @@ class _DownloadActiveQueueSectionState
                         _isExpanded = !_isExpanded;
                       });
                     },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: context.colorScheme.primary.withValues(
-                          alpha: isDark ? 0.16 : 0.08,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: Text(
-                        _isExpanded
-                            ? 'بستن لیست'
-                            : 'نمایش بیشتر (${(totalCount - 3).toPersianDigit()} مورد دیگر)',
+                        _isExpanded ? 'بستن لیست' : 'نمایش بیشتر',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: context.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white54 : Colors.black54,
                         ),
                       ),
                     ),
@@ -224,18 +206,6 @@ class _AudioQueueTaskItem extends ConsumerWidget {
     final isPaused = task.status == DownloadTaskStatus.paused;
     final isFailed = task.status == DownloadTaskStatus.failed;
 
-    final statusBadgeText = isDownloading
-        ? 'در حال دانلود...'
-        : isPaused
-            ? 'متوقف شده'
-            : 'خطا در دانلود';
-
-    final statusColor = isDownloading
-        ? Colors.green
-        : isPaused
-            ? Colors.orange
-            : context.colorScheme.error;
-
     final badgeColor = isAudioTranslation
         ? Colors.deepPurple
         : context.colorScheme.primary;
@@ -243,6 +213,13 @@ class _AudioQueueTaskItem extends ConsumerWidget {
     final badgeIcon = isAudioTranslation
         ? CupertinoIcons.speaker_2
         : CupertinoIcons.waveform;
+
+    final cleanReciterName = reciter != null
+        ? reciter!.name
+            .replaceAll('استاد ', '')
+            .replaceAll('قاری:', '')
+            .trim()
+        : 'قاری کد ${task.reciterId}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,30 +287,22 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Row(
                     children: [
-                      Expanded(
+                      Flexible(
                         child: Text(
-                          reciter != null ? reciter!.name : 'قاری کد ${task.reciterId}',
+                          cleanReciterName,
                           style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.white70 : Colors.black87,
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            color: isDark ? Colors.white60 : Colors.black54,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        statusBadgeText,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
                       Text(
                         '(${task.completedAyahs.toPersianDigit()}/${task.totalAyahs.toPersianDigit()})',
                         style: TextStyle(
@@ -360,70 +329,50 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                 ],
               ),
             ),
-            // Action Text Pills (Pause / Resume & Cancel)
+            // Action buttons (Icon for pause/resume + plain text 'حذف')
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (isDownloading)
-                  InkWell(
-                    onTap: () {
+                  IconButton(
+                    tooltip: 'توقف',
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    icon: Icon(
+                      CupertinoIcons.pause_circle,
+                      size: 22,
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: () {
                       HapticFeedback.lightImpact();
                       ref
                           .read(audioDownloadControllerProvider.notifier)
                           .pauseDownload(task.reciterId, task.surahId);
                     },
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: isDark ? 0.16 : 0.08),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'توقف',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.orangeAccent : const Color(0xFFD97706),
-                        ),
-                      ),
-                    ),
                   )
                 else if (isPaused || isFailed)
-                  InkWell(
-                    onTap: () async {
-                      HapticFeedback.lightImpact();
-                      final allReciters = await ref.read(allRecitersListProvider.future);
-                      final r = allReciters
-                          .tryGetSuccess()
-                          ?.where((item) => item.id == task.reciterId)
-                          .firstOrNull;
-                      if (r != null) {
-                        ref
-                            .read(audioDownloadControllerProvider.notifier)
-                            .resumeDownload(reciter: r, surahId: task.surahId);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: isDark ? 0.16 : 0.08),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'ادامه',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.greenAccent : Colors.green.shade700,
-                        ),
-                      ),
+                  IconButton(
+                    tooltip: 'ادامه',
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    icon: Icon(
+                      CupertinoIcons.play_circle,
+                      size: 22,
+                      color: context.colorScheme.onSurfaceVariant,
                     ),
+                    onPressed: () async {
+                      HapticFeedback.lightImpact();
+                      await ref
+                          .read(audioDownloadControllerProvider.notifier)
+                          .resumeDownloadById(
+                            reciterId: task.reciterId,
+                            surahId: task.surahId,
+                          );
+                    },
                   ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 InkWell(
                   onTap: () async {
                     HapticFeedback.lightImpact();
@@ -431,19 +380,15 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                         .read(audioDownloadControllerProvider.notifier)
                         .cancelDownload(task.reciterId, task.surahId);
                   },
-                  borderRadius: BorderRadius.circular(6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: context.colorScheme.error.withValues(alpha: isDark ? 0.16 : 0.08),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                     child: Text(
-                      'لغو',
+                      'حذف',
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
                         color: context.colorScheme.error,
                       ),
                     ),
@@ -462,7 +407,7 @@ class _AudioQueueTaskItem extends ConsumerWidget {
             backgroundColor: isDark
                 ? Colors.white.withValues(alpha: 0.08)
                 : const Color(0xFFF0ECE6),
-            valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+            valueColor: AlwaysStoppedAnimation<Color>(badgeColor),
           ),
         ),
       ],
@@ -582,7 +527,7 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
                 ],
               ),
             ),
-            // Cancel Download button
+            // Cancel Download button (Plain unboxed text)
             InkWell(
               onTap: () {
                 HapticFeedback.lightImpact();
@@ -590,19 +535,15 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
                     .read(translationManagerControllerProvider.notifier)
                     .cancelDownload(translationId);
               },
-              borderRadius: BorderRadius.circular(6),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: context.colorScheme.error.withValues(alpha: isDark ? 0.16 : 0.08),
-                  borderRadius: BorderRadius.circular(6),
-                ),
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Text(
-                  'لغو',
+                  'حذف',
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
                     color: context.colorScheme.error,
                   ),
                 ),

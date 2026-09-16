@@ -107,22 +107,12 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                       ),
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: context.colorScheme.primary.withValues(
-                          alpha: isDark ? 0.16 : 0.08,
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '${items.length.toPersianDigit()} فایل ذخیره',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: context.colorScheme.primary,
-                        ),
+                    Text(
+                      '${items.length.toPersianDigit()} فایل ذخیره',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11.5,
+                        color: isDark ? Colors.white60 : Colors.black54,
                       ),
                     ),
                   ],
@@ -197,9 +187,9 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                       );
                     },
                   ),
-                  // Show more / Collapse button at the bottom of the list
+                  // Show more / Collapse button at the bottom of the list (Unboxed, clean)
                   if (filteredItems.length > 3) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     Center(
                       child: InkWell(
                         onTap: () {
@@ -208,24 +198,16 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                             _isExpanded = !_isExpanded;
                           });
                         },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: context.colorScheme.primary.withValues(
-                              alpha: isDark ? 0.16 : 0.08,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           child: Text(
-                            _isExpanded
-                                ? 'بستن لیست'
-                                : 'نمایش بیشتر (${(filteredItems.length - 3).toPersianDigit()} مورد دیگر)',
+                            _isExpanded ? 'بستن لیست' : 'نمایش بیشتر',
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 11.5,
-                              fontWeight: FontWeight.bold,
-                              color: context.colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                              color: isDark ? Colors.white54 : Colors.black54,
                             ),
                           ),
                         ),
@@ -481,6 +463,13 @@ class _DownloadedItemRow extends StatelessWidget {
         break;
     }
 
+    final cleanSubtitle = item.subtitle
+        .replaceAll('قاری:', '')
+        .replaceAll('گوینده:', '')
+        .replaceAll('مترجم:', '')
+        .replaceAll('استاد', '')
+        .trim();
+
     return Row(
       children: [
         ClipRRect(
@@ -537,87 +526,57 @@ class _DownloadedItemRow extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      item.subtitle,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 10.5,
-                        color: isDark ? Colors.white60 : Colors.black54,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+              if (cleanSubtitle.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  cleanSubtitle,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : Colors.black54,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '• ${item.formattedSize}',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                  ),
-                ],
-              ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ],
           ),
         ),
 
-        // Action Text Pills (Clean, compact, no icons)
+        // Action: Play icon + Plain text Delete (no colored box)
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InkWell(
-              onTap: () {
+            IconButton(
+              tooltip: 'پخش',
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.all(4),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              icon: Icon(
+                CupertinoIcons.play_circle,
+                size: 22,
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+              onPressed: () {
                 HapticFeedback.lightImpact();
                 onOpen();
               },
-              borderRadius: BorderRadius.circular(6),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: context.colorScheme.primary.withValues(
-                    alpha: isDark ? 0.16 : 0.08,
-                  ),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'پخش',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: context.colorScheme.primary,
-                  ),
-                ),
-              ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             InkWell(
               onTap: () {
                 HapticFeedback.lightImpact();
                 onDelete();
               },
-              borderRadius: BorderRadius.circular(6),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: context.colorScheme.error.withValues(
-                    alpha: isDark ? 0.16 : 0.08,
-                  ),
-                  borderRadius: BorderRadius.circular(6),
-                ),
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Text(
                   'حذف',
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
                     color: context.colorScheme.error,
                   ),
                 ),

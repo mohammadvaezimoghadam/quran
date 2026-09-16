@@ -91,7 +91,7 @@ class _SurahDictionaryScreenState extends ConsumerState<SurahDictionaryScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(108.0),
+        preferredSize: const Size.fromHeight(118.0),
         child: Container(
           padding: EdgeInsets.only(
             top: topPadding + 4.0,
@@ -114,19 +114,18 @@ class _SurahDictionaryScreenState extends ConsumerState<SurahDictionaryScreen> {
             children: [
               // Row 1: Back Button + Surah Selector + Surah Switcher Pill
               SizedBox(
-                height: 42,
+                height: 48,
                 child: Row(
                   children: [
                     // Back Button (Apple-style chevron)
                     IconButton(
                       tooltip: 'بازگشت',
-                      visualDensity: VisualDensity.compact,
                       icon: Icon(
                         CupertinoIcons.chevron_forward,
-                        size: 22,
+                        size: 24,
                         color: colorScheme.onSurface,
                       ),
-                      splashRadius: 20,
+                      splashRadius: 22,
                       onPressed: () {
                         if (Navigator.of(context).canPop()) {
                           Navigator.of(context).pop();

@@ -47,9 +47,10 @@ class SurahAudioDownloadButton extends ConsumerWidget {
     final isDownloading = downloadTask != null &&
         downloadTask.status == DownloadTaskStatus.downloading;
 
-    // Check if partially downloaded (canceled/failed with some ayahs done)
-    final isPartiallyCanceled = downloadTask != null &&
-        (downloadTask.status == DownloadTaskStatus.canceled ||
+    // Check if partially downloaded or paused (with some ayahs done)
+    final isPausedOrPartial = downloadTask != null &&
+        (downloadTask.status == DownloadTaskStatus.paused ||
+            downloadTask.status == DownloadTaskStatus.canceled ||
             downloadTask.status == DownloadTaskStatus.failed) &&
         downloadTask.completedAyahs > 0;
 
@@ -89,8 +90,8 @@ class SurahAudioDownloadButton extends ConsumerWidget {
           );
         }
 
-        // ── STATE 3: Partially downloaded → resume icon ──
-        if (isPartiallyCanceled) {
+        // ── STATE 3: Partially downloaded or paused → resume icon ──
+        if (isPausedOrPartial) {
           return IconButton(
             icon: Icon(
               CupertinoIcons.arrow_down_circle_fill,

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../../../common/extensions/int_extension.dart';
+import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../core/routes/go_router_provider.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../audio_manager/application/controllers/audio_download_controller.dart';
+import '../../../audio_manager/domain/entities/audio_download_task.dart';
 import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
 import '../../../surah_list/presentation/widgets/surah_action_dialog.dart';
@@ -26,6 +30,9 @@ abstract class ReciterDownloadHelper {
     required WidgetRef ref,
     int? surahId,
   }) async {
+    final initialContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
+    if (initialContext == null) return false;
+
     final audioState = ref.read(quranAudioControllerProvider);
     final mode = audioState.playbackMode;
     final quranReciter = audioState.selectedReciter;
@@ -44,13 +51,14 @@ abstract class ReciterDownloadHelper {
     // ── 0. Check Audio VIP Access ──
     if (needsQuran && quranReciter != null) {
       final isVipAllowed = await AudioVipHelper.checkAndPromptVip(
-        context: context,
+        context: initialContext,
         ref: ref,
         surahId: activeSurahId,
         targetReciter: quranReciter,
         onSwitchedToDefaultReciter: () {
-          if (context.mounted) {
-            checkAndPromptForPlayback(context: context, ref: ref, surahId: activeSurahId);
+          final retryContext = rootNavigatorKey.currentContext;
+          if (retryContext != null) {
+            checkAndPromptForPlayback(context: retryContext, ref: ref, surahId: activeSurahId);
           }
         },
       );
@@ -58,13 +66,16 @@ abstract class ReciterDownloadHelper {
     }
 
     if (needsTranslation) {
-      if (!context.mounted) return false;
+      final navContext = rootNavigatorKey.currentContext ?? initialContext;
+      if (!navContext.mounted) return false;
       final isTranslationAllowed = AudioVipHelper.checkAudioTranslation(
-        context: context,
+        context: navContext,
         ref: ref,
       );
       if (!isTranslationAllowed) return false;
     }
+
+    final downloadTasks = ref.read(audioDownloadControllerProvider);
 
     // Check Quran reciter first (if needed)
     if (needsQuran && quranReciter != null) {
@@ -74,9 +85,21 @@ abstract class ReciterDownloadHelper {
         surahId: activeSurahId,
       );
       if (!isQuranReady) {
-        if (!context.mounted) return false;
+        final navContext = rootNavigatorKey.currentContext ?? initialContext;
+        if (!navContext.mounted) return false;
+
+        final quranTask = downloadTasks['r${quranReciter.id}_s$activeSurahId'];
+        if (quranTask?.status == DownloadTaskStatus.downloading) {
+          final percent = ((quranTask?.progress ?? 0) * 100).clamp(0, 100).toInt();
+          AppSnackBar.showInfo(
+            navContext,
+            'صوت تلاوت این سوره در پس‌زمینه در حال دانلود است (${percent.toPersianDigit()}٪). لطفاً تا پایان دانلود شکیبا باشید.',
+          );
+          return false;
+        }
+
         await _showDownloadDialog(
-          context: context,
+          context: navContext,
           ref: ref,
           surahId: activeSurahId,
           message: 'صوت تلاوت قاری «${quranReciter.name}» برای این سوره دانلود نشده است.',
@@ -94,9 +117,21 @@ abstract class ReciterDownloadHelper {
         surahId: activeSurahId,
       );
       if (!isTranslationReady) {
-        if (!context.mounted) return false;
+        final navContext = rootNavigatorKey.currentContext ?? initialContext;
+        if (!navContext.mounted) return false;
+
+        final transTask = downloadTasks['r${translationReciter.id}_s$activeSurahId'];
+        if (transTask?.status == DownloadTaskStatus.downloading) {
+          final percent = ((transTask?.progress ?? 0) * 100).clamp(0, 100).toInt();
+          AppSnackBar.showInfo(
+            navContext,
+            'صوت ترجمه گویای این سوره در پس‌زمینه در حال دانلود است (${percent.toPersianDigit()}٪). لطفاً تا پایان دانلود شکیبا باشید.',
+          );
+          return false;
+        }
+
         await _showDownloadDialog(
-          context: context,
+          context: navContext,
           ref: ref,
           surahId: activeSurahId,
           message: 'صوت ترجمه گویای «${translationReciter.name}» برای این سوره دانلود نشده است.',
@@ -117,6 +152,9 @@ abstract class ReciterDownloadHelper {
     required ReciterEntity reciter,
     int? surahId,
   }) async {
+    final initialContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
+    if (initialContext == null) return false;
+
     final readerSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
     final activeSurahId = surahId ??
         (readerSurahId != 0 ? readerSurahId : null) ??
@@ -126,7 +164,7 @@ abstract class ReciterDownloadHelper {
     // ── Check Audio VIP Access ──
     if (reciter.styleId != 4) {
       final isVipAllowed = await AudioVipHelper.checkAndPromptVip(
-        context: context,
+        context: initialContext,
         ref: ref,
         surahId: activeSurahId,
         targetReciter: reciter,
@@ -134,7 +172,7 @@ abstract class ReciterDownloadHelper {
       if (!isVipAllowed) return false;
     } else {
       final isTranslationAllowed = AudioVipHelper.checkAudioTranslation(
-        context: context,
+        context: initialContext,
         ref: ref,
       );
       if (!isTranslationAllowed) return false;
@@ -147,10 +185,22 @@ abstract class ReciterDownloadHelper {
     );
 
     if (!isReady) {
-      if (!context.mounted) return false;
+      final navContext = rootNavigatorKey.currentContext ?? initialContext;
+      if (!navContext.mounted) return false;
+
+      final task = ref.read(audioDownloadControllerProvider)['r${reciter.id}_s$activeSurahId'];
+      if (task?.status == DownloadTaskStatus.downloading) {
+        final percent = ((task?.progress ?? 0) * 100).clamp(0, 100).toInt();
+        AppSnackBar.showInfo(
+          navContext,
+          'صوت این سوره در پس‌زمینه در حال دانلود است (${percent.toPersianDigit()}٪). لطفاً تا پایان دانلود شکیبا باشید.',
+        );
+        return false;
+      }
+
       final isTranslation = reciter.styleId == 4;
       await _showDownloadDialog(
-        context: context,
+        context: navContext,
         ref: ref,
         surahId: activeSurahId,
         message: isTranslation
@@ -209,16 +259,17 @@ abstract class ReciterDownloadHelper {
     );
     final surahFontFamily = AppTypography.getFontFamilyByScript(fontScript);
 
-    if (!context.mounted) return;
+    final dialogContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
+    if (dialogContext == null) return;
 
     await SurahActionDialog.show(
-      context: context,
+      context: dialogContext,
       surah: surah,
       surahFontFamily: surahFontFamily,
       message: message,
       onReadSurah: () {},
       onDownloadAudio: () {
-        GoRouter.of(context).pushNamed(
+        ref.read(goRouterProvider).pushNamed(
           audioDownloadManagerRoute,
           queryParameters: {
             'surahId': surahId.toString(),

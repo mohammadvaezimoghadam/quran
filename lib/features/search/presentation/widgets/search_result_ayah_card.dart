@@ -111,29 +111,6 @@ class SearchResultAyahCard extends ConsumerWidget {
                 ),
                 10.vSpace,
 
-                // Matched in translation indicator if applicable
-                if (item.matchedInTranslation) ...[
-                  Row(
-                    children: [
-                      Icon(
-                        CupertinoIcons.text_quote,
-                        size: 13,
-                        color: colorScheme.primary,
-                      ),
-                      4.hSpace,
-                      Text(
-                        'تطابق در ترجمه',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11,
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  8.vSpace,
-                ],
 
                 // Arabic Ayah Text
                 Directionality(

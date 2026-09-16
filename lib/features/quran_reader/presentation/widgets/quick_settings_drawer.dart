@@ -676,15 +676,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     final softGreenColor = (isDark ? const Color(0xFF1B6B58) : const Color(0xFF267D69))
         .withValues(alpha: 0.70);
 
-    // Auto-fallback to onlyQuran if non-VIP was somehow in translation mode
-    if (!hasVip && playbackMode.includesTranslation) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(quranAudioControllerProvider.notifier)
-            .setPlaybackMode(AudioPlaybackMode.onlyQuran);
-      });
-    }
-
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
@@ -727,14 +718,29 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 1.5),
                   child: InkWell(
-                    onTap: () {
-                      if (isLocked) {
-                        VipRequiredDialog.show(context: context);
-                        return;
-                      }
+                    onTap: () async {
                       ref
                           .read(quranAudioControllerProvider.notifier)
                           .setPlaybackMode(mode);
+
+                      if (isLocked) {
+                        await VipRequiredDialog.show(
+                          context: context,
+                          isTranslation: true,
+                        );
+                        if (context.mounted) {
+                          final hasVipNow = ref.read(hasVipAccessProvider);
+                          if (hasVipNow) {
+                            ref
+                                .read(quranAudioControllerProvider.notifier)
+                                .setPlaybackMode(mode);
+                          } else {
+                            ref
+                                .read(quranAudioControllerProvider.notifier)
+                                .setPlaybackMode(AudioPlaybackMode.onlyQuran);
+                          }
+                        }
+                      }
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: AnimatedContainer(

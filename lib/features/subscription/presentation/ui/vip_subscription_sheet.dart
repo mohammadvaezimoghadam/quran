@@ -8,19 +8,15 @@ import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/vip_subscription_controller.dart';
 import '../widgets/subscription_plan_card.dart';
+import '../widgets/vip_required_dialog.dart';
 
 /// Bottom sheet presenting audio subscription options and checkout via Cafe Bazaar.
 class VipSubscriptionSheet extends ConsumerStatefulWidget {
   const VipSubscriptionSheet({super.key});
 
-  /// Convenient static helper to show this sheet from anywhere in the app.
+  /// Convenient static helper to show this dialog from anywhere in the app.
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const VipSubscriptionSheet(),
-    );
+    return VipRequiredDialog.show(context: context);
   }
 
   @override

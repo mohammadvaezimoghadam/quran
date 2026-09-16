@@ -10,6 +10,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../features/quran_reader/application/controllers/reciter_providers.dart';
 import '../../../features/quran_reader/domain/entities/reciter_entity.dart';
+import '../../../features/quran_reader/domain/enums/audio_playback_mode.dart';
 import '../../../features/quran_reader/presentation/utils/reciter_download_helper.dart';
 import '../../../features/subscription/domain/policy/audio_vip_policy.dart';
 import '../../../features/subscription/application/vip_subscription_controller.dart';
@@ -582,7 +583,10 @@ class _ReciterSelectionBottomSheetState
                         );
                       }
 
-                      final currentSelectedId = audioState.selectedReciter?.id;
+                      final isTranslationSection = widget.isTranslationMode || selectedStyleId == 4;
+                      final currentSelectedId = isTranslationSection
+                          ? audioState.selectedTranslationReciter?.id
+                          : audioState.selectedReciter?.id;
 
                       return GridView.builder(
                         padding: const EdgeInsets.symmetric(
@@ -611,8 +615,9 @@ class _ReciterSelectionBottomSheetState
                               orElse: () => group.variants.first,
                             );
                         final isVip = ref.watch(hasVipAccessProvider);
+                        final isTranslation = widget.isTranslationMode || activeVariant.styleId == 4;
                         final isLocked = !isVip &&
-                            (widget.isTranslationMode
+                            (isTranslation
                                 ? true
                                 : !AudioVipPolicy.isDefaultReciter(
                                     activeVariant.identifier));
@@ -624,25 +629,37 @@ class _ReciterSelectionBottomSheetState
                           child: InkWell(
                             onTap: () async {
                               if (isLocked) {
-                                VipRequiredDialog.show(
+                                await VipRequiredDialog.show(
                                   context: context,
                                   reciterName: activeVariant.name,
-                                  isTranslation: widget.isTranslationMode,
+                                  isTranslation: isTranslation,
                                 );
-                                return;
+                                if (!context.mounted) return;
+                                if (!ref.read(hasVipAccessProvider)) {
+                                  return;
+                                }
                               }
                               if (widget.isDownloadMode) {
                                 widget.onReciterSelected?.call(activeVariant);
                                 Navigator.of(context).pop();
                               } else {
-                                if (widget.isTranslationMode) {
+                                if (isTranslation) {
                                   ref
                                       .read(quranAudioControllerProvider.notifier)
                                       .selectTranslationReciter(activeVariant);
+                                  ref
+                                      .read(quranAudioControllerProvider.notifier)
+                                      .setPlaybackMode(AudioPlaybackMode.onlyTranslation);
                                 } else {
                                   ref
                                       .read(quranAudioControllerProvider.notifier)
                                       .selectReciter(activeVariant);
+                                  final currentMode = ref.read(quranAudioControllerProvider).playbackMode;
+                                  if (currentMode == AudioPlaybackMode.onlyTranslation) {
+                                    ref
+                                        .read(quranAudioControllerProvider.notifier)
+                                        .setPlaybackMode(AudioPlaybackMode.onlyQuran);
+                                  }
                                 }
                                 Navigator.of(context).pop();
                                 if (widget.checkDownloadStatus) {
@@ -765,18 +782,22 @@ class _ReciterSelectionBottomSheetState
                                       ),
                                       tooltip: 'تغییر سبک تلاوت',
                                       onSelected: (variant) async {
+                                        final isVariantTranslation = widget.isTranslationMode || variant.styleId == 4;
                                         final variantIsLocked = !isVip &&
-                                            (widget.isTranslationMode
+                                            (isVariantTranslation
                                                 ? true
                                                 : !AudioVipPolicy.isDefaultReciter(
                                                     variant.identifier));
                                         if (variantIsLocked) {
-                                          VipRequiredDialog.show(
+                                          await VipRequiredDialog.show(
                                             context: context,
                                             reciterName: variant.name,
-                                            isTranslation: widget.isTranslationMode,
+                                            isTranslation: isVariantTranslation,
                                           );
-                                          return;
+                                          if (!context.mounted) return;
+                                          if (!ref.read(hasVipAccessProvider)) {
+                                            return;
+                                          }
                                         }
                                         setState(() {
                                           _selectedVariantsMap[group.baseName] =
@@ -787,16 +808,27 @@ class _ReciterSelectionBottomSheetState
                                            widget.onReciterSelected?.call(variant);
                                            Navigator.of(context).pop();
                                          } else {
-                                           if (widget.isTranslationMode) {
+                                           if (isVariantTranslation) {
                                              ref
                                                  .read(quranAudioControllerProvider
                                                      .notifier)
                                                  .selectTranslationReciter(variant);
+                                             ref
+                                                 .read(quranAudioControllerProvider
+                                                     .notifier)
+                                                 .setPlaybackMode(AudioPlaybackMode.onlyTranslation);
                                            } else {
                                              ref
                                                  .read(quranAudioControllerProvider
                                                      .notifier)
                                                  .selectReciter(variant);
+                                             final currentMode = ref.read(quranAudioControllerProvider).playbackMode;
+                                             if (currentMode == AudioPlaybackMode.onlyTranslation) {
+                                               ref
+                                                   .read(quranAudioControllerProvider
+                                                       .notifier)
+                                                   .setPlaybackMode(AudioPlaybackMode.onlyQuran);
+                                             }
                                            }
                                            if (widget.checkDownloadStatus) {
                                              await ReciterDownloadHelper.checkAndPromptSurahDownload(
