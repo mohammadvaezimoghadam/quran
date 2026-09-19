@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,16 +9,17 @@ import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/routes/route_name.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../../../main_navigation/application/tab_navigation_controller.dart';
 import '../../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
 /// Modern Asymmetric Action Hub:
 /// Highlights "فهرست سوره‌ها" as the primary hero gateway,
 /// paired with elegant compact companions for "ترجمه‌ها" and "تنظیمات".
-class HomeQuickAccessGrid extends StatelessWidget {
+class HomeQuickAccessGrid extends ConsumerWidget {
   const HomeQuickAccessGrid({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = context.isDark;
     final colors = context.colors;
     final colorScheme = context.colorScheme;
@@ -28,7 +30,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
 
     return Row(
       children: [
-        // 1. Primary Hero Card: "فهرست سوره‌ها" (Apple Hero Card)
+        // 1. Primary Hero Gateway: "فهرست سوره‌ها"
         Expanded(
           flex: 5,
           child: Container(
@@ -56,7 +58,7 @@ class HomeQuickAccessGrid extends StatelessWidget {
               child: InkWell(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  context.pushNamed(surahListRoute);
+                  ref.read(tabNavigationControllerProvider.notifier).switchTab(1);
                 },
                 borderRadius: BorderRadius.circular(16.0),
                 child: Padding(

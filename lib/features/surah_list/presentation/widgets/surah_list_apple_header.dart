@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
@@ -8,8 +9,9 @@ import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// Clean Apple-Style Navigation Header & Search Bar for Surah List Screen.
-/// Designed for zero unnecessary rebuilds and high aesthetic clarity.
-class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidget {
+/// Fully styled to match the unified icon system across all app headers.
+class SurahListAppleHeader extends StatelessWidget
+    implements PreferredSizeWidget {
   final String title;
   final TextEditingController searchController;
   final FocusNode searchFocusNode;
@@ -19,6 +21,7 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
   final VoidCallback onToggleFavoritesTap;
   final bool isOnlyFavorites;
   final VoidCallback? onBackPressed;
+  final bool showBackButton;
 
   const SurahListAppleHeader({
     super.key,
@@ -31,10 +34,37 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
     required this.onToggleFavoritesTap,
     required this.isOnlyFavorites,
     this.onBackPressed,
+    this.showBackButton = true,
   });
 
   @override
   Size get preferredSize => const Size.fromHeight(126.0);
+
+  Widget _buildIconButton({
+    required BuildContext context,
+    required IconData icon,
+    required VoidCallback? onTap,
+    required String tooltip,
+    Color? iconColor,
+    double size = 22,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final effectiveColor = iconColor ?? colorScheme.onSurface;
+
+    return IconButton(
+      tooltip: tooltip,
+      icon: Icon(
+        icon,
+        size: size,
+        color: effectiveColor,
+      ),
+      splashRadius: 22,
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        onTap?.call();
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,27 +100,27 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Row 1: Back Button + Title + Action Icons
+          // Row 1: Back Button + Title + Standard Apple-styled Action Icons
           SizedBox(
             height: 50,
             child: Row(
               children: [
-                // Back Button (Apple-style chevron)
-                IconButton(
-                  tooltip: 'بازگشت',
-                  icon: Icon(
-                    CupertinoIcons.chevron_forward,
+                // Back Button (Apple-style chevron, conditional)
+                if (showBackButton)
+                  _buildIconButton(
+                    context: context,
+                    icon: CupertinoIcons.chevron_forward,
                     size: 24,
-                    color: colorScheme.onSurface,
-                  ),
-                  splashRadius: 22,
-                  onPressed: onBackPressed ??
-                      () {
-                        if (Navigator.of(context).canPop()) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                ),
+                    tooltip: 'بازگشت',
+                    onTap: onBackPressed ??
+                        () {
+                          if (Navigator.of(context).canPop()) {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                  )
+                else
+                  8.hSpace,
 
                 2.hSpace,
 
@@ -108,38 +138,43 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
 
                 // Reciter Selection Avatar
                 const ReciterAvatarButton(
-                  radius: 19,
+                  radius: 17,
                   showLabel: false,
                 ),
 
-                4.hSpace,
+                2.hSpace,
 
-                // Download Manager Action
-                IconButton(
+                // Download Manager Action (Unified icon button)
+                _buildIconButton(
+                  context: context,
+                  icon: CupertinoIcons.arrow_down_to_line,
+                  size: 22,
                   tooltip: 'مدیریت دانلود صوت',
+                  onTap: onAudioDownloadManagerTap,
+                ),
+
+                2.hSpace,
+
+                // Sort & Favorites Menu (Unified Apple-style PopupMenuButton)
+                PopupMenuButton<String>(
+                  tooltip: 'گزینه‌ها',
                   icon: Icon(
-                    CupertinoIcons.arrow_down_to_line,
+                    CupertinoIcons.slider_horizontal_3,
                     size: 22,
                     color: colorScheme.onSurface,
                   ),
                   splashRadius: 22,
-                  onPressed: onAudioDownloadManagerTap,
-                ),
-
-                // Sort & Favorites Menu (iOS Style Ellipsis)
-                PopupMenuButton<String>(
-                  tooltip: 'گزینه‌ها',
-                  icon: Icon(
-                    CupertinoIcons.ellipsis_circle,
-                    size: 23,
-                    color: colorScheme.onSurface,
-                  ),
-                  splashRadius: 22,
-                  elevation: 6,
+                  color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                  elevation: 8,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                    borderRadius: BorderRadius.circular(14),
+                    side: BorderSide(
+                      color: colors.cardBorder,
+                      width: 0.8,
+                    ),
                   ),
                   onSelected: (value) {
+                    HapticFeedback.lightImpact();
                     if (value == 'sort') {
                       onSortTap();
                     } else if (value == 'favorites') {
@@ -154,7 +189,7 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
                           Icon(
                             CupertinoIcons.sort_down,
                             size: 19,
-                            color: colors.goldAccent,
+                            color: colorScheme.primary,
                           ),
                           10.hSpace,
                           const Text(
@@ -177,11 +212,13 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
                                 ? CupertinoIcons.list_bullet
                                 : CupertinoIcons.star_fill,
                             size: 19,
-                            color: colors.goldAccent,
+                            color: colorScheme.primary,
                           ),
                           10.hSpace,
                           Text(
-                            isOnlyFavorites ? 'نمایش همه سوره‌ها' : 'فهرست شخصی',
+                            isOnlyFavorites
+                                ? 'نمایش همه سوره‌ها'
+                                : 'فهرست شخصی',
                             style: const TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 13.5,
@@ -199,7 +236,7 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
 
           8.vSpace,
 
-          // Row 2: Apple-style Pill Search Box
+          // Row 2: Apple-style Pill Search Box (Unified search icon with primary green)
           Container(
             height: 44,
             decoration: BoxDecoration(
@@ -212,7 +249,7 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
                 Icon(
                   CupertinoIcons.search,
                   size: 19,
-                  color: placeholderColor,
+                  color: colorScheme.primary,
                 ),
                 8.hSpace,
                 Expanded(
@@ -240,7 +277,7 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
                   ),
                 ),
 
-                // Clear Button (isolated with ListenableBuilder to avoid rebuilding parent)
+                // Clear Button
                 ListenableBuilder(
                   listenable: searchController,
                   builder: (context, _) {
@@ -249,6 +286,7 @@ class SurahListAppleHeader extends StatelessWidget implements PreferredSizeWidge
                     }
                     return GestureDetector(
                       onTap: () {
+                        HapticFeedback.lightImpact();
                         searchController.clear();
                         onSearchChanged('');
                       },

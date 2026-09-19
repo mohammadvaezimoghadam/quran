@@ -14,6 +14,7 @@ import '../../application/controllers/search_controller.dart';
 import '../../application/states/search_state.dart';
 import '../../domain/entities/search_filter_type.dart';
 import '../../domain/entities/search_result_item.dart';
+import '../../../main_navigation/application/tab_navigation_controller.dart';
 import '../widgets/search_empty_state.dart';
 import '../widgets/search_filter_chips.dart';
 import '../widgets/search_recent_history_view.dart';
@@ -21,7 +22,12 @@ import '../widgets/search_result_ayah_card.dart';
 import '../widgets/search_result_surah_card.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  final bool showBackButton;
+
+  const SearchScreen({
+    super.key,
+    this.showBackButton = true,
+  });
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -69,6 +75,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Unfocus text field and dismiss keyboard immediately when switching away from the search tab
+    ref.listen<TabNavigationState>(
+      tabNavigationControllerProvider,
+      (previous, next) {
+        if (next.currentIndex != 2 && _focusNode.hasFocus) {
+          _focusNode.unfocus();
+        }
+      },
+    );
+
     final colors = context.colors;
     final colorScheme = context.colorScheme;
     final isDark = context.isDark;
@@ -96,21 +112,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
               child: Row(
                 children: [
-                  // Back Button (Standard Apple-style chevron)
-                  IconButton(
-                    tooltip: 'بازگشت',
-                    splashRadius: 22,
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.of(context).maybePop();
-                    },
-                    icon: Icon(
-                      CupertinoIcons.chevron_forward,
-                      size: 24,
-                      color: colorScheme.onSurface,
+                  if (widget.showBackButton) ...[
+                    // Back Button (Standard Apple-style chevron)
+                    IconButton(
+                      tooltip: 'بازگشت',
+                      splashRadius: 22,
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.of(context).maybePop();
+                      },
+                      icon: Icon(
+                        CupertinoIcons.chevron_forward,
+                        size: 24,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-                  4.hSpace,
+                    4.hSpace,
+                  ],
 
                   // Integrated Apple Search Input Container
                   Expanded(
@@ -139,7 +157,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             child: TextField(
                               controller: _textController,
                               focusNode: _focusNode,
-                              autofocus: true,
+                              autofocus: false,
                               textInputAction: TextInputAction.search,
                               onSubmitted: (_) {
                                 ref
@@ -287,6 +305,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     final recentSearches = ref.watch(recentSearchesProvider);
                     return SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: SearchRecentHistoryView(
                         recentSearches: recentSearches,
                         onSearchSelected: _onSelectSearchTerm,
@@ -343,6 +363,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
                   return ListView.builder(
                     physics: const BouncingScrollPhysics(),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.only(top: 4.0, bottom: 24.0),
                     itemCount: _calculateItemCount(surahs, ayahs),
                     itemBuilder: (context, index) {

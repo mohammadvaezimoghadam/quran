@@ -205,9 +205,11 @@ class _AudioQueueTaskItem extends ConsumerWidget {
     final isDownloading = task.status == DownloadTaskStatus.downloading;
     final isPaused = task.status == DownloadTaskStatus.paused;
     final isFailed = task.status == DownloadTaskStatus.failed;
+    final percent = (task.progress * 100).toInt();
 
+    // Colorless / neutral for audio translation, primary green for Quran audio
     final badgeColor = isAudioTranslation
-        ? Colors.deepPurple
+        ? (isDark ? Colors.white60 : Colors.black54)
         : context.colorScheme.primary;
     final badgeLabel = isAudioTranslation ? 'ترجمه گویا' : 'صوت قرآن';
     final badgeIcon = isAudioTranslation
@@ -221,11 +223,35 @@ class _AudioQueueTaskItem extends ConsumerWidget {
             .trim()
         : 'قاری کد ${task.reciterId}';
 
+    final baseAvatar = (reciter?.imageUrl != null && reciter!.imageUrl!.isNotEmpty)
+        ? AppCachedNetworkImage(
+            imageUrl: reciter!.imageUrl,
+            width: 42,
+            height: 42,
+            fit: BoxFit.cover,
+            fallbackIcon: badgeIcon,
+            backgroundColor: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.05),
+          )
+        : Container(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.05),
+            alignment: Alignment.center,
+            child: Icon(
+              badgeIcon,
+              size: 20,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
+            // Reciter Avatar with circular percentage overlay
             Container(
               width: 42,
               height: 42,
@@ -233,28 +259,69 @@ class _AudioQueueTaskItem extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.12)
-                      : badgeColor.withValues(alpha: 0.20),
+                  color: (isDownloading || isPaused)
+                      ? context.colorScheme.primary.withValues(alpha: 0.45)
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : context.colors.cardBorder),
                   width: 1.0,
                 ),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(9),
-                child: (reciter?.imageUrl != null && reciter!.imageUrl!.isNotEmpty)
-                    ? AppCachedNetworkImage(
-                        imageUrl: reciter!.imageUrl,
-                        width: 42,
-                        height: 42,
-                        fit: BoxFit.cover,
-                        fallbackIcon: badgeIcon,
-                        backgroundColor: badgeColor.withValues(alpha: 0.12),
-                      )
-                    : Container(
-                        color: badgeColor.withValues(alpha: 0.12),
-                        alignment: Alignment.center,
-                        child: Icon(badgeIcon, size: 20, color: badgeColor),
+                child: Stack(
+                  fit: StackFit.expand,
+                  alignment: Alignment.center,
+                  children: [
+                    baseAvatar,
+                    if (isDownloading || isPaused) ...[
+                      // Dark scrim overlay for high contrast
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.52),
                       ),
+                      // Circular progress indicator with centered Persian percentage
+                      Center(
+                        child: SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                value: task.progress.clamp(0.0, 1.0),
+                                strokeWidth: 2.2,
+                                color: context.colorScheme.primary,
+                                backgroundColor:
+                                    Colors.white.withValues(alpha: 0.25),
+                              ),
+                              Text(
+                                '${percent.toPersianDigit()}٪',
+                                style: const TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ] else if (isFailed) ...[
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.52),
+                        child: Center(
+                          child: Icon(
+                            CupertinoIcons.exclamationmark_circle,
+                            size: 20,
+                            color: context.colorScheme.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -398,18 +465,6 @@ class _AudioQueueTaskItem extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(2),
-          child: LinearProgressIndicator(
-            value: task.progress.clamp(0.0, 1.0),
-            minHeight: 3,
-            backgroundColor: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : const Color(0xFFF0ECE6),
-            valueColor: AlwaysStoppedAnimation<Color>(badgeColor),
-          ),
-        ),
       ],
     );
   }
@@ -431,7 +486,6 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const badgeColor = Color(0xFF0277BD); // Blue shade for text translation
     final percent = (progress * 100).toInt();
 
     final title = translation != null
@@ -446,6 +500,7 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
       children: [
         Row(
           children: [
+            // Book Icon container with circular percentage overlay inside
             Container(
               width: 42,
               height: 42,
@@ -453,18 +508,49 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.12)
-                      : badgeColor.withValues(alpha: 0.20),
+                  color: context.colorScheme.primary.withValues(alpha: 0.45),
                   width: 1.0,
                 ),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : const Color(0xFFF2EFE9),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(9),
-                child: Container(
-                  color: badgeColor.withValues(alpha: 0.12),
+                child: Stack(
                   alignment: Alignment.center,
-                  child: const Icon(CupertinoIcons.book, size: 20, color: badgeColor),
+                  children: [
+                    // Muted book icon in background
+                    Icon(
+                      CupertinoIcons.book,
+                      size: 20,
+                      color: (isDark ? Colors.white : Colors.black)
+                          .withValues(alpha: 0.15),
+                    ),
+                    // Circular progress ring
+                    SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        strokeWidth: 2.2,
+                        color: context.colorScheme.primary,
+                        backgroundColor: (isDark ? Colors.white : Colors.black)
+                            .withValues(alpha: 0.08),
+                      ),
+                    ),
+                    // Centered percentage inside the book icon
+                    Text(
+                      '${percent.toPersianDigit()}٪',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.bold,
+                        color: context.colorScheme.primary,
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -487,42 +573,26 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Text(
+                      Text(
                         '• متن ترجمه',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: badgeColor,
+                          color: isDark ? Colors.white60 : Colors.black54,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${percent.toPersianDigit()}٪',
-                        style: const TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: badgeColor,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -550,18 +620,6 @@ class _TextTranslationQueueTaskItem extends ConsumerWidget {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(2),
-          child: LinearProgressIndicator(
-            value: progress.clamp(0.0, 1.0),
-            minHeight: 3,
-            backgroundColor: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : const Color(0xFFF0ECE6),
-            valueColor: const AlwaysStoppedAnimation<Color>(badgeColor),
-          ),
         ),
       ],
     );

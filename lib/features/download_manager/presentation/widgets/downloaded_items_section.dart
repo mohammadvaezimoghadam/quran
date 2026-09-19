@@ -477,23 +477,23 @@ class _DownloadedItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color badgeColor;
-    String badgeLabel;
-    IconData iconData;
+    final isQuranAudio = item.type == DownloadedItemType.quranAudio;
+    final badgeColor = isQuranAudio
+        ? context.colorScheme.primary
+        : (isDark ? Colors.white60 : Colors.black54);
+    final String badgeLabel;
+    final IconData iconData;
 
     switch (item.type) {
       case DownloadedItemType.quranAudio:
-        badgeColor = context.colorScheme.primary;
         badgeLabel = 'صوت قرآن';
         iconData = CupertinoIcons.waveform;
         break;
       case DownloadedItemType.audioTranslation:
-        badgeColor = Colors.deepPurple;
         badgeLabel = 'ترجمه گویا';
         iconData = CupertinoIcons.speaker_2;
         break;
       case DownloadedItemType.textTranslation:
-        badgeColor = const Color(0xFF0277BD);
         badgeLabel = 'متن ترجمه';
         iconData = CupertinoIcons.book;
         break;
@@ -520,12 +520,26 @@ class _DownloadedItemRow extends StatelessWidget {
                     height: 36,
                     fit: BoxFit.cover,
                     fallbackIcon: iconData,
-                    backgroundColor: badgeColor.withValues(alpha: 0.12),
+                    backgroundColor: isQuranAudio
+                        ? context.colorScheme.primary.withValues(alpha: 0.12)
+                        : (isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.black.withValues(alpha: 0.05)),
                   )
                 : Container(
-                    color: badgeColor.withValues(alpha: 0.12),
+                    color: isQuranAudio
+                        ? context.colorScheme.primary.withValues(alpha: 0.12)
+                        : (isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.black.withValues(alpha: 0.05)),
                     alignment: Alignment.center,
-                    child: Icon(iconData, size: 18, color: badgeColor),
+                    child: Icon(
+                      iconData,
+                      size: 18,
+                      color: isQuranAudio
+                          ? context.colorScheme.primary
+                          : (isDark ? Colors.white60 : Colors.black54),
+                    ),
                   ),
           ),
         ),

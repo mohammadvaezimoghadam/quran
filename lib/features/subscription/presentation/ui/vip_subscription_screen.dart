@@ -12,9 +12,10 @@ import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/vip_subscription_controller.dart';
 import '../../domain/models/vip_subscription_state.dart';
+import '../utils/bazaar_error_dialog_helper.dart';
 import '../widgets/subscription_plan_card.dart';
 
-/// Minimalist VIP Subscription Screen accessible from Settings.
+/// Minimalist VIP Subscription Screen accessible from Settings / Profile.
 class VipSubscriptionScreen extends ConsumerStatefulWidget {
   const VipSubscriptionScreen({super.key});
 
@@ -24,7 +25,7 @@ class VipSubscriptionScreen extends ConsumerStatefulWidget {
 }
 
 class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
-  PaymentProduct _selectedProduct = PaymentProduct.vipMonthly;
+  String? _purchasingProductId;
 
   @override
   void initState() {
@@ -65,6 +66,42 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
     );
   }
 
+  Future<void> _handlePurchase(
+    PaymentProduct product,
+    VipSubscriptionController controller,
+  ) async {
+    setState(() {
+      _purchasingProductId = product.id;
+    });
+
+    try {
+      final result = await controller.purchaseSubscription(product);
+      if (!mounted) return;
+
+      if (result.isSuccess) {
+        _showSnackBar('اشتراک ویژه شما با موفقیت فعال گردید!');
+      } else if (result.isCancelled) {
+        _showSnackBar('فرآیند خرید لغو شد.');
+      } else if (result.errorMessage != null) {
+        await BazaarErrorDialogHelper.show(
+          context: context,
+          ref: ref,
+          errorMessage: result.errorMessage!,
+          product: product,
+          onSuccess: () {
+            _showSnackBar('اشتراک ویژه شما با موفقیت فعال گردید!');
+          },
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _purchasingProductId = null;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -75,12 +112,7 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
     final isVip = ref.watch(hasVipAccessProvider);
     final products = state.availableProducts;
 
-    final activeSelectedProduct = products.firstWhere(
-      (p) => p.id == _selectedProduct.id,
-      orElse: () => products.isNotEmpty ? products.first : _selectedProduct,
-    );
-
-    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final bgColor = theme.scaffoldBackgroundColor;
     final cardBg = context.colors.cardBackground;
     final textColor = isDark ? Colors.white : const Color(0xFF1C1B1B);
 
@@ -131,14 +163,6 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
             ),
           ],
         ),
-        bottomNavigationBar: _buildBottomAction(
-          context: context,
-          isDark: isDark,
-          state: state,
-          isVip: isVip,
-          activeSelectedProduct: activeSelectedProduct,
-          controller: controller,
-        ),
         body: RefreshIndicator(
           color: context.colorScheme.primary,
           onRefresh: () async {
@@ -159,19 +183,20 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
                 const SizedBox(height: 18),
               ],
 
-              // Plan Cards List
+              // Borderless Plan Cards with Dedicated Action Buttons
               ...products.map((product) {
-                final isSelected = product.id == activeSelectedProduct.id;
+                final isPurchasing =
+                    state.isLoading && _purchasingProductId == product.id;
+                final isAnyPurchasing = state.isLoading;
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: SubscriptionPlanCard(
                     product: product,
-                    isSelected: isSelected,
-                    onTap: () {
-                      setState(() {
-                        _selectedProduct = product;
-                      });
-                    },
+                    isLoading: isPurchasing,
+                    isDisabled: isAnyPurchasing && !isPurchasing,
+                    isVip: isVip,
+                    onPurchase: () => _handlePurchase(product, controller),
                   ),
                 );
               }),
@@ -200,11 +225,7 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF0F766E).withValues(alpha: 0.35),
-          width: 1.2,
-        ),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +263,8 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 11.5,
-                        color: isDark ? Colors.white70 : const Color(0xFF666666),
+                        color:
+                            isDark ? Colors.white70 : const Color(0xFF666666),
                       ),
                     ),
                   ],
@@ -270,80 +292,6 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
             ),
           ],
         ],
-      ),
-    );
-  }
-
-  /// Sticky Bottom Checkout Action Bar - Clean & Minimal
-  Widget _buildBottomAction({
-    required BuildContext context,
-    required bool isDark,
-    required VipSubscriptionState state,
-    required bool isVip,
-    required PaymentProduct activeSelectedProduct,
-    required VipSubscriptionController controller,
-  }) {
-    final buttonBg = context.colorScheme.primary;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: context.colors.cardBackground,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: state.isLoading
-                ? null
-                : () async {
-                    final result = await controller
-                        .purchaseSubscription(activeSelectedProduct);
-                    if (result.isSuccess) {
-                      _showSnackBar('اشتراک ویژه شما با موفقیت فعال گردید!');
-                    } else if (!result.isCancelled &&
-                        result.errorMessage != null) {
-                      _showSnackBar(result.errorMessage!, isError: true);
-                    }
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: buttonBg,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-            ),
-            child: state.isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: Colors.white,
-                    ),
-                  )
-                : Text(
-                    isVip ? 'تمدید اشتراک ویژه' : 'خرید اشتراک ویژه',
-                    style: const TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 15.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-          ),
-        ),
       ),
     );
   }

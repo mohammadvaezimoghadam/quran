@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,20 +78,6 @@ class _BookmarksManagerBottomSheetState
                 onClose: () => Navigator.of(dialogCtx).pop(false),
                 bottomSpacing: 12,
               ),
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.redAccent.withValues(alpha: isDark ? 0.20 : 0.10),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  CupertinoIcons.trash,
-                  size: 24,
-                  color: Colors.redAccent,
-                ),
-              ),
-              12.vSpace,
               8.vSpace,
               Text(
                 'آیا مطمئن هستید که می‌خواهید تمام نشانه‌های ذخیره‌شده را حذف کنید؟ این عمل غیرقابل بازگشت است.',
@@ -207,14 +192,21 @@ class _BookmarksManagerBottomSheetState
               bottomSpacing: 12.0,
               title: 'نشانه‌های ذخیره‌شده',
               leadingAction: bookmarks.isNotEmpty
-                  ? IconButton(
-                      tooltip: 'حذف همه',
-                      icon: const Icon(
-                        CupertinoIcons.trash,
-                        size: 20,
-                        color: Colors.redAccent,
-                      ),
+                  ? TextButton(
                       onPressed: _confirmClearAll,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        foregroundColor: Colors.redAccent,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: const Text(
+                        'پاک‌سازی',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     )
                   : null,
             ),
@@ -477,14 +469,8 @@ class _BookmarksManagerBottomSheetState
                   ),
                 ),
 
-                // 3. Delete Bookmark Button
-                IconButton(
-                  tooltip: 'حذف این نشانک',
-                  icon: Icon(
-                    CupertinoIcons.delete,
-                    size: 18,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
+                // 3. Delete Bookmark Button (Text only, no icons)
+                TextButton(
                   onPressed: () async {
                     HapticFeedback.lightImpact();
                     await ref
@@ -497,6 +483,19 @@ class _BookmarksManagerBottomSheetState
                       );
                     }
                   },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: isDark ? Colors.white38 : Colors.black38,
+                  ),
+                  child: const Text(
+                    'حذف',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ],
             ),

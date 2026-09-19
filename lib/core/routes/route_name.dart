@@ -1,8 +1,10 @@
 const String splashRoute = "splash";
+const String mainNavigationRoute = "main_navigation";
 const String quranHomeRoute = "quran_home";
 const String surahListRoute = "surah_list";
 const String surahDetailRoute = "surah_detail";
 const String searchRoute = "search";
+const String bookmarksRoute = "bookmarks";
 const String settingsRoute = "settings";
 const String quranReaderRoute = "quran_reader";
 const String audioDownloadManagerRoute = "audio_download_manager";
@@ -10,3 +12,4 @@ const String downloadHubRoute = "download_hub";
 const String smartDeviceRoute = "smart_device";
 const String surahDictionaryRoute = "surah_dictionary";
 const String vipSubscriptionRoute = "vip_subscription";
+const String profileRoute = "profile";

@@ -236,103 +236,126 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     _log('🛒 [Purchase Flow] User tapped to buy: ${product.id} (${product.title}) - ${product.priceToman} Tomans');
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    final result = await _paymentService.subscribe(product.id);
+    try {
+      final result = await _paymentService.subscribe(product.id);
 
-    _log('📦 [Purchase Flow] Store response received:');
-    _log('   ↳ isSuccess: ${result.isSuccess}');
-    _log('   ↳ orderId: ${result.orderId}');
-    _log('   ↳ purchaseToken: ${result.purchaseToken != null ? (result.purchaseToken!.length > 15 ? "${result.purchaseToken!.substring(0, 15)}..." : result.purchaseToken) : "null"}');
-    _log('   ↳ errorMessage: ${result.errorMessage}');
+      _log('📦 [Purchase Flow] Store response received:');
+      _log('   ↳ isSuccess: ${result.isSuccess}');
+      _log('   ↳ orderId: ${result.orderId}');
+      _log('   ↳ purchaseToken: ${result.purchaseToken != null ? (result.purchaseToken!.length > 15 ? "${result.purchaseToken!.substring(0, 15)}..." : result.purchaseToken) : "null"}');
+      _log('   ↳ errorMessage: ${result.errorMessage}');
 
-    if (result.isSuccess) {
-      DateTime? newExpiry;
-      final now = DateTime.now();
-      final baseDate = (state.vipExpiryDate != null && state.vipExpiryDate!.isAfter(now))
-          ? state.vipExpiryDate!
-          : now;
+      if (result.isSuccess) {
+        DateTime? newExpiry;
+        final now = DateTime.now();
+        final baseDate = (state.vipExpiryDate != null && state.vipExpiryDate!.isAfter(now))
+            ? state.vipExpiryDate!
+            : now;
 
-      final durationDays = product.durationDays;
-      if (durationDays != null) {
-        newExpiry = baseDate.add(Duration(days: durationDays));
+        final durationDays = product.durationDays;
+        if (durationDays != null) {
+          newExpiry = baseDate.add(Duration(days: durationDays));
+        } else {
+          newExpiry = null; // Lifetime
+        }
+
+        _log('💾 [Local Save] Writing purchase to encrypted storage:');
+        _log('   ↳ isVip: true');
+        _log('   ↳ activePlanId: ${product.id}');
+        _log('   ↳ expiryDate: $newExpiry (Duration: ${durationDays != null ? "$durationDays days" : "Lifetime"})');
+        _log('   ↳ purchaseToken: ${result.purchaseToken}');
+
+        await _storage.setIsVip(true);
+        await _storage.setVipExpiryDate(newExpiry);
+        await _storage.setActivePlanId(product.id);
+        if (result.purchaseToken != null) {
+          await _storage.setPurchaseToken(result.purchaseToken);
+        }
+
+        // Immediate verification read from storage
+        final readVip = await _storage.getIsVip();
+        final readExpiry = await _storage.getVipExpiryDate();
+        final readPlan = await _storage.getActivePlanId();
+        _log('🔍 [Local Verification Check] Re-read from secure storage: isVip=$readVip, plan=$readPlan, expiry=$readExpiry');
+        if (readVip && readPlan == product.id) {
+          _log('✅ [Local Verification Check] VERIFIED! Purchase safely saved and readable in encrypted storage.');
+        } else {
+          _log('⚠️ [Local Verification Check] MISMATCH detected between write and read in secure storage!');
+        }
+
+        state = state.copyWith(
+          isVip: true,
+          vipExpiryDate: newExpiry,
+          activePlanId: product.id,
+          isLoading: false,
+        );
+        _scheduleExactExpiryTimer(newExpiry);
+        _log('🎉 [Purchase Complete] VIP state active for user. All features unlocked in application!');
       } else {
-        newExpiry = null; // Lifetime
+        _log('❌ [Purchase Failed/Cancelled] Error: ${result.errorMessage}');
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: result.errorMessage,
+        );
       }
 
-      _log('💾 [Local Save] Writing purchase to encrypted storage:');
-      _log('   ↳ isVip: true');
-      _log('   ↳ activePlanId: ${product.id}');
-      _log('   ↳ expiryDate: $newExpiry (Duration: ${durationDays != null ? "$durationDays days" : "Lifetime"})');
-      _log('   ↳ purchaseToken: ${result.purchaseToken}');
-
-      await _storage.setIsVip(true);
-      await _storage.setVipExpiryDate(newExpiry);
-      await _storage.setActivePlanId(product.id);
-      if (result.purchaseToken != null) {
-        await _storage.setPurchaseToken(result.purchaseToken);
-      }
-
-      // Immediate verification read from storage
-      final readVip = await _storage.getIsVip();
-      final readExpiry = await _storage.getVipExpiryDate();
-      final readPlan = await _storage.getActivePlanId();
-      _log('🔍 [Local Verification Check] Re-read from secure storage: isVip=$readVip, plan=$readPlan, expiry=$readExpiry');
-      if (readVip && readPlan == product.id) {
-        _log('✅ [Local Verification Check] VERIFIED! Purchase safely saved and readable in encrypted storage.');
-      } else {
-        _log('⚠️ [Local Verification Check] MISMATCH detected between write and read in secure storage!');
-      }
-
-      state = state.copyWith(
-        isVip: true,
-        vipExpiryDate: newExpiry,
-        activePlanId: product.id,
-        isLoading: false,
+      return result;
+    } catch (e, stack) {
+      _log('❌ [Purchase Exception] Unexpected error during purchase: $e', error: e, stackTrace: stack);
+      final errorResult = PurchaseResult.error(
+        'خطای غیرمنتظره در ارتباط با درگاه پرداخت: $e',
+        productId: product.id,
       );
-      _scheduleExactExpiryTimer(newExpiry);
-      _log('🎉 [Purchase Complete] VIP state active for user. All features unlocked in application!');
-    } else {
-      _log('❌ [Purchase Failed/Cancelled] Error: ${result.errorMessage}');
       state = state.copyWith(
         isLoading: false,
-        errorMessage: result.errorMessage,
+        errorMessage: errorResult.errorMessage,
       );
+      return errorResult;
     }
-
-    return result;
   }
 
   /// Restores previous active purchases.
   Future<bool> restorePurchases() async {
     _log('🔄 [Restore Flow] User requested to restore previous purchases...');
     state = state.copyWith(isLoading: true, errorMessage: null);
-    final results = await _paymentService.restorePurchases();
 
-    _log('📥 [Restore Response] Received ${results.length} purchases from Cafe Bazaar:');
-    for (final r in results) {
-      _log('   ↳ Product: ${r.productId}, OrderId: ${r.orderId}, Token: ${r.purchaseToken}');
-    }
+    try {
+      final results = await _paymentService.restorePurchases();
 
-    if (results.isNotEmpty) {
-      final activeProduct = results.first;
-      _log('✅ [Restore Success] Restoring subscription for product: ${activeProduct.productId}');
-      await _storage.setIsVip(true);
-      await _storage.setActivePlanId(activeProduct.productId);
-      if (activeProduct.purchaseToken != null) {
-        await _storage.setPurchaseToken(activeProduct.purchaseToken);
+      _log('📥 [Restore Response] Received ${results.length} purchases from Cafe Bazaar:');
+      for (final r in results) {
+        _log('   ↳ Product: ${r.productId}, OrderId: ${r.orderId}, Token: ${r.purchaseToken}');
       }
 
-      state = state.copyWith(
-        isVip: true,
-        activePlanId: activeProduct.productId,
-        isLoading: false,
-      );
-      _log('🎉 [Restore Complete] Local storage updated and VIP access restored!');
-      return true;
-    }
+      if (results.isNotEmpty) {
+        final activeProduct = results.first;
+        _log('✅ [Restore Success] Restoring subscription for product: ${activeProduct.productId}');
+        await _storage.setIsVip(true);
+        await _storage.setActivePlanId(activeProduct.productId);
+        if (activeProduct.purchaseToken != null) {
+          await _storage.setPurchaseToken(activeProduct.purchaseToken);
+        }
 
-    _log('ℹ️ [Restore Result] No active purchases found in Cafe Bazaar to restore.');
-    state = state.copyWith(isLoading: false);
-    return false;
+        state = state.copyWith(
+          isVip: true,
+          activePlanId: activeProduct.productId,
+          isLoading: false,
+        );
+        _log('🎉 [Restore Complete] Local storage updated and VIP access restored!');
+        return true;
+      }
+
+      _log('ℹ️ [Restore Result] No active purchases found in Cafe Bazaar to restore.');
+      state = state.copyWith(isLoading: false);
+      return false;
+    } catch (e, stack) {
+      _log('❌ [Restore Exception] Error restoring purchases: $e', error: e, stackTrace: stack);
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'خطا در بازیابی اشتراک از کافه بازار: $e',
+      );
+      return false;
+    }
   }
 
   /// Policy check: Can play the given reciter for the given surah?

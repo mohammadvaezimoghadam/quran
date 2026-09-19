@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_theme_toggle_button.dart';
-import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../main_navigation/application/tab_navigation_controller.dart';
 import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.dart';
 import '../../application/controllers/continue_reading_controller.dart';
 import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
@@ -19,7 +18,12 @@ import '../../../quick_access/presentation/ui/quick_access_row.dart';
 
 /// Clean Apple-Style Quran Home Screen with Tafakor Mint Green Theme
 class QuranHomeScreen extends ConsumerWidget {
-  const QuranHomeScreen({super.key});
+  final bool showBottomMiniPlayer;
+
+  const QuranHomeScreen({
+    super.key,
+    this.showBottomMiniPlayer = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,7 +66,7 @@ class QuranHomeScreen extends ConsumerWidget {
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
+                        color: colorScheme.primary,
                       ),
                     ),
                   ),
@@ -87,7 +91,8 @@ class QuranHomeScreen extends ConsumerWidget {
               bottom: 8.0,
             ),
             child: HomeSearchBarWidget(
-              onTap: () => context.pushNamed(searchRoute),
+              onTap: () =>
+                  ref.read(tabNavigationControllerProvider.notifier).switchTab(2),
             ),
           ),
 
@@ -135,7 +140,8 @@ class QuranHomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: const MiniAudioPlayerBar(),
+      bottomNavigationBar:
+          showBottomMiniPlayer ? const MiniAudioPlayerBar() : null,
     );
   }
 }

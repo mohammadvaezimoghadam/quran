@@ -269,44 +269,127 @@ class _QuranQuickJumpBottomSheetState
                       color: cardBorder,
                     ),
 
-                    // ROW 3: Page & Juz Interconnected Row
+                    // ROW 3: Page Stepper (Dedicated row identical to Ayah)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(14.0, 10.0, 14.0, 14.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 12.0,
+                      ),
                       child: Row(
                         children: [
-                          // Page Card
                           Expanded(
-                            child: _buildPageCard(
-                              currentPage: _currentPageNumber,
-                              isDark: isDark,
-                              primaryColor: colorScheme.primary,
-                              onTapEdit: () => _promptDirectNumber(
-                                context: context,
-                                title: 'شماره صفحه قرآن',
-                                currentVal: _currentPageNumber,
-                                minVal: 1,
-                                maxVal: 604,
-                                onSubmitted: (val) => _onPageChanged(val, surahs),
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'شماره صفحه',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 11.5,
+                                    color: isDark
+                                        ? const Color(0xFF9E9E9E)
+                                        : const Color(0xFF6E6D68),
+                                  ),
+                                ),
+                                2.vSpace,
+                                Text(
+                                  'صفحه ${_currentPageNumber.toPersianDigit()}',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1C1B1B),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          10.hSpace,
+                          _buildStepper(
+                            currentVal: _currentPageNumber,
+                            minVal: 1,
+                            maxVal: 604,
+                            isDark: isDark,
+                            primaryColor: colorScheme.primary,
+                            onChanged: (newVal) =>
+                                _onPageChanged(newVal, surahs),
+                            onTapDirectEdit: () => _promptDirectNumber(
+                              context: context,
+                              title: 'شماره صفحه قرآن',
+                              currentVal: _currentPageNumber,
+                              minVal: 1,
+                              maxVal: 604,
+                              onSubmitted: (val) =>
+                                  _onPageChanged(val, surahs),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-                          // Juz Card
+                    // Hairline Divider
+                    Divider(
+                      height: 1,
+                      thickness: 0.6,
+                      indent: 16,
+                      endIndent: 16,
+                      color: cardBorder,
+                    ),
+
+                    // ROW 4: Juz Stepper (Dedicated row identical to Ayah)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 12.0,
+                      ),
+                      child: Row(
+                        children: [
                           Expanded(
-                            child: _buildJuzCard(
-                              currentJuz: _currentJuzNumber,
-                              isDark: isDark,
-                              primaryColor: colorScheme.primary,
-                              onChanged: (newVal) => _onJuzChanged(newVal, surahs),
-                              onTapEdit: () => _promptDirectNumber(
-                                context: context,
-                                title: 'شماره جزء قرآن',
-                                currentVal: _currentJuzNumber,
-                                minVal: 1,
-                                maxVal: 30,
-                                onSubmitted: (val) => _onJuzChanged(val, surahs),
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'شماره جزء',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 11.5,
+                                    color: isDark
+                                        ? const Color(0xFF9E9E9E)
+                                        : const Color(0xFF6E6D68),
+                                  ),
+                                ),
+                                2.vSpace,
+                                Text(
+                                  'جزء ${_currentJuzNumber.toPersianDigit()}',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1C1B1B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _buildStepper(
+                            currentVal: _currentJuzNumber,
+                            minVal: 1,
+                            maxVal: 30,
+                            isDark: isDark,
+                            primaryColor: colorScheme.primary,
+                            onChanged: (newVal) =>
+                                _onJuzChanged(newVal, surahs),
+                            onTapDirectEdit: () => _promptDirectNumber(
+                              context: context,
+                              title: 'شماره جزء قرآن',
+                              currentVal: _currentJuzNumber,
+                              minVal: 1,
+                              maxVal: 30,
+                              onSubmitted: (val) =>
+                                  _onJuzChanged(val, surahs),
                             ),
                           ),
                         ],
@@ -440,187 +523,6 @@ class _QuranQuickJumpBottomSheetState
     );
   }
 
-  Widget _buildPageCard({
-    required int currentPage,
-    required bool isDark,
-    required Color primaryColor,
-    required VoidCallback onTapEdit,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE8E5DF),
-          width: 0.7,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'صفحه',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 11,
-                  color: isDark ? const Color(0xFF9E9E9E) : const Color(0xFF6E6D68),
-                ),
-              ),
-              Text(
-                'از ۶۰۴',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 10,
-                  color: isDark ? Colors.white38 : Colors.black38,
-                ),
-              ),
-            ],
-          ),
-          6.vSpace,
-          Material(
-            color: primaryColor.withValues(alpha: isDark ? 0.12 : 0.08),
-            borderRadius: BorderRadius.circular(8),
-            child: InkWell(
-              onTap: onTapEdit,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: primaryColor.withValues(alpha: isDark ? 0.40 : 0.30),
-                    width: 0.9,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  'صفحه ${currentPage.toPersianDigit()}',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1C1B1B),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildJuzCard({
-    required int currentJuz,
-    required bool isDark,
-    required Color primaryColor,
-    required ValueChanged<int> onChanged,
-    required VoidCallback onTapEdit,
-  }) {
-    final canMinus = currentJuz > 1;
-    final canPlus = currentJuz < 30;
-    final btnBg = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.05);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE8E5DF),
-          width: 0.7,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'جزء',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 11,
-                  color: isDark ? const Color(0xFF9E9E9E) : const Color(0xFF6E6D68),
-                ),
-              ),
-              Text(
-                'از ۳۰',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 10,
-                  color: isDark ? Colors.white38 : Colors.black38,
-                ),
-              ),
-            ],
-          ),
-          6.vSpace,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _miniStepperButton(
-                icon: CupertinoIcons.minus,
-                isEnabled: canMinus,
-                btnBg: btnBg,
-                isDark: isDark,
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onChanged(currentJuz - 1);
-                },
-              ),
-              Material(
-                color: primaryColor.withValues(alpha: isDark ? 0.12 : 0.08),
-                borderRadius: BorderRadius.circular(8),
-                child: InkWell(
-                  onTap: onTapEdit,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: primaryColor.withValues(alpha: isDark ? 0.40 : 0.30),
-                        width: 0.9,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'جزء ${currentJuz.toPersianDigit()}',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1C1B1B),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              _miniStepperButton(
-                icon: CupertinoIcons.plus,
-                isEnabled: canPlus,
-                btnBg: btnBg,
-                isDark: isDark,
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onChanged(currentJuz + 1);
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _stepperButton({
     required IconData icon,
     required bool isEnabled,
@@ -649,33 +551,6 @@ class _QuranQuickJumpBottomSheetState
     );
   }
 
-  Widget _miniStepperButton({
-    required IconData icon,
-    required bool isEnabled,
-    required Color btnBg,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: isEnabled ? btnBg : btnBg.withValues(alpha: 0.3),
-      borderRadius: BorderRadius.circular(6),
-      child: InkWell(
-        onTap: isEnabled ? onTap : null,
-        borderRadius: BorderRadius.circular(6),
-        child: SizedBox(
-          width: 26,
-          height: 26,
-          child: Icon(
-            icon,
-            size: 13,
-            color: isEnabled
-                ? (isDark ? Colors.white : Colors.black87)
-                : (isDark ? Colors.white24 : Colors.black26),
-          ),
-        ),
-      ),
-    );
-  }
 
   // --- Logic & Synchronization ---
 

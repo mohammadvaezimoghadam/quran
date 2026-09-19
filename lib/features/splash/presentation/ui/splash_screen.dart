@@ -83,7 +83,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Delay reduced from 2600ms to 400ms to make app start extremely fast
     await Future.delayed(const Duration(milliseconds: 400));
     if (mounted) {
-      context.goNamed(quranHomeRoute);
+      context.goNamed(mainNavigationRoute);
     }
   }
 

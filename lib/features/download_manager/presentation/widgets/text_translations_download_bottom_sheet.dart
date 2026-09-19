@@ -405,29 +405,72 @@ class _TranslationListItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Clean Icon Badge
+              // Clean Icon Badge with circular percentage overlay when downloading
               Container(
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: translation.isDownloaded
-                      ? colorScheme.primary.withValues(alpha: isDark ? 0.18 : 0.10)
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : const Color(0xFFF2EFE9)),
+                  color: isDownloading
+                      ? (isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : const Color(0xFFF2EFE9))
+                      : (translation.isDownloaded
+                          ? colorScheme.primary.withValues(alpha: isDark ? 0.18 : 0.10)
+                          : (isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : const Color(0xFFF2EFE9))),
                   borderRadius: BorderRadius.circular(8),
+                  border: isDownloading
+                      ? Border.all(
+                          color: colorScheme.primary.withValues(alpha: 0.40),
+                          width: 1.0,
+                        )
+                      : null,
                 ),
-                child: Center(
-                  child: Icon(
-                    translation.isDownloaded
-                        ? CupertinoIcons.checkmark_seal_fill
-                        : CupertinoIcons.book,
-                    color: translation.isDownloaded
-                        ? colorScheme.primary
-                        : (isDark ? Colors.white54 : Colors.black45),
-                    size: 18,
-                  ),
-                ),
+                child: isDownloading
+                    ? Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            CupertinoIcons.book,
+                            size: 16,
+                            color: (isDark ? Colors.white : Colors.black)
+                                .withValues(alpha: 0.15),
+                          ),
+                          SizedBox(
+                            width: 26,
+                            height: 26,
+                            child: CircularProgressIndicator(
+                              value: progress.clamp(0.0, 1.0),
+                              strokeWidth: 2.0,
+                              color: colorScheme.primary,
+                              backgroundColor: (isDark ? Colors.white : Colors.black)
+                                  .withValues(alpha: 0.08),
+                            ),
+                          ),
+                          Text(
+                            '${percent.toPersianDigit()}٪',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 7.5,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                              height: 1.0,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Center(
+                        child: Icon(
+                          translation.isDownloaded
+                              ? CupertinoIcons.checkmark_seal_fill
+                              : CupertinoIcons.book,
+                          color: translation.isDownloaded
+                              ? colorScheme.primary
+                              : (isDark ? Colors.white54 : Colors.black45),
+                          size: 18,
+                        ),
+                      ),
               ),
               const SizedBox(width: 10),
 
@@ -455,7 +498,7 @@ class _TranslationListItem extends StatelessWidget {
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.greenAccent : Colors.green.shade700,
+                          color: colorScheme.primary,
                         ),
                       ),
                     ],
@@ -465,39 +508,24 @@ class _TranslationListItem extends StatelessWidget {
 
               // Actions (Unboxed, clean plain text)
               if (isDownloading) ...[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${percent.toPersianDigit()}٪',
+                InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    onCancelDownload();
+                  },
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Text(
+                      'لغو',
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.error,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    InkWell(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        onCancelDownload();
-                      },
-                      borderRadius: BorderRadius.circular(4),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        child: Text(
-                          'لغو',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: colorScheme.error,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ] else if (translation.isDownloaded) ...[
                 Row(
@@ -590,22 +618,6 @@ class _TranslationListItem extends StatelessWidget {
               ],
             ],
           ),
-
-          // Progress bar when downloading
-          if (isDownloading) ...[
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                value: progress.clamp(0.0, 1.0),
-                minHeight: 2.5,
-                backgroundColor: isDark
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : const Color(0xFFF0ECE6),
-                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-              ),
-            ),
-          ],
         ],
       ),
     );

@@ -10,6 +10,7 @@ import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../audio_manager/application/controllers/audio_download_controller.dart';
+import '../../../main_navigation/application/tab_navigation_controller.dart';
 import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
@@ -30,7 +31,14 @@ import '../widgets/surah_sort_bottom_sheet.dart';
 /// Root screen – uses StatefulWidget so that the FocusNode survives rebuilds
 /// and we can explicitly control keyboard dismiss on navigation.
 class SurahListScreen extends ConsumerStatefulWidget {
-  const SurahListScreen({super.key});
+  final bool showBackButton;
+  final VoidCallback? onBackPressed;
+
+  const SurahListScreen({
+    super.key,
+    this.showBackButton = true,
+    this.onBackPressed,
+  });
 
   @override
   ConsumerState<SurahListScreen> createState() => _SurahListScreenState();
@@ -80,6 +88,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
       child: Scaffold(
         extendBody: true,
         appBar: SurahListAppleHeader(
+          showBackButton: widget.showBackButton,
           title: isOnlyFavorites ? 'فهرست شخصی' : AppConstants.surahListScreenTitle,
           searchController: _searchController,
           searchFocusNode: _searchFocusNode,
@@ -87,11 +96,18 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
             ref.read(surahListControllerProvider.notifier).searchSurahs(query);
           },
           onBackPressed: () {
+            if (isOnlyFavorites) {
+              ref.read(surahListControllerProvider.notifier).setOnlyFavorites(false);
+            }
             _dismissSearchAndNavigate(() {
-              if (context.canPop()) {
+              if (widget.onBackPressed != null) {
+                widget.onBackPressed!();
+              } else if (context.canPop()) {
                 context.pop();
               } else {
-                Navigator.of(context).maybePop();
+                ref
+                    .read(tabNavigationControllerProvider.notifier)
+                    .handleBackPress();
               }
             });
           },

@@ -2,7 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/audio_manager/presentation/ui/audio_download_manager_screen.dart';
+import '../../features/bookmarks/presentation/ui/bookmarks_screen.dart';
 import '../../features/download_manager/presentation/ui/download_hub_screen.dart';
+import '../../features/main_navigation/presentation/ui/main_navigation_screen.dart';
+import '../../features/profile/presentation/ui/profile_screen.dart';
 import '../../features/quran_home/presentation/ui/quran_home_screen.dart';
 import '../../features/quran_reader/presentation/ui/quran_reader_screen.dart';
 import '../../features/quran_reader/presentation/ui/surah_dictionary_screen.dart';
@@ -28,6 +31,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
+        path: '/main',
+        name: mainNavigationRoute,
+        builder: (context, state) => const MainNavigationScreen(),
+      ),
+      GoRoute(
+        path: '/bookmarks',
+        name: bookmarksRoute,
+        builder: (context, state) => const BookmarksScreen(showBackButton: true),
+      ),
+      GoRoute(
         path: '/quran-home',
         name: quranHomeRoute,
         builder: (context, state) => const QuranHomeScreen(),
@@ -51,6 +64,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/vip-subscription',
         name: vipSubscriptionRoute,
         builder: (context, state) => const VipSubscriptionScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        name: profileRoute,
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/smart-device',

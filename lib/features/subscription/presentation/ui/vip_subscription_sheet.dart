@@ -7,10 +7,11 @@ import '../../../../core/services/payment/models/payment_product.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/vip_subscription_controller.dart';
+import '../utils/bazaar_error_dialog_helper.dart';
 import '../widgets/subscription_plan_card.dart';
 import '../widgets/vip_required_dialog.dart';
 
-/// Bottom sheet presenting audio subscription options and checkout via Cafe Bazaar.
+/// Bottom sheet presenting audio subscription options and direct checkout.
 class VipSubscriptionSheet extends ConsumerStatefulWidget {
   const VipSubscriptionSheet({super.key});
 
@@ -20,11 +21,12 @@ class VipSubscriptionSheet extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<VipSubscriptionSheet> createState() => _VipSubscriptionSheetState();
+  ConsumerState<VipSubscriptionSheet> createState() =>
+      _VipSubscriptionSheetState();
 }
 
 class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
-  PaymentProduct _selectedProduct = PaymentProduct.vipMonthly;
+  String? _purchasingProductId;
 
   @override
   void initState() {
@@ -32,7 +34,8 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
       final state = ref.read(vipSubscriptionControllerProvider);
-      if (state.availableProducts.isEmpty || state.availableProducts.first.formattedPrice == null) {
+      if (state.availableProducts.isEmpty ||
+          state.availableProducts.first.formattedPrice == null) {
         ref.read(vipSubscriptionControllerProvider.notifier).fetchLiveProducts();
       }
     });
@@ -64,6 +67,46 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
     );
   }
 
+  Future<void> _handlePurchase(
+    PaymentProduct product,
+    VipSubscriptionController controller,
+  ) async {
+    setState(() {
+      _purchasingProductId = product.id;
+    });
+
+    try {
+      final result = await controller.purchaseSubscription(product);
+      if (!mounted) return;
+
+      if (result.isSuccess) {
+        _showSnackBar('اشتراک شما با موفقیت فعال شد!');
+        Navigator.of(context).pop();
+      } else if (result.isCancelled) {
+        _showSnackBar('فرآیند خرید لغو شد.');
+      } else if (result.errorMessage != null) {
+        await BazaarErrorDialogHelper.show(
+          context: context,
+          ref: ref,
+          errorMessage: result.errorMessage!,
+          product: product,
+          onSuccess: () {
+            if (context.mounted) {
+              _showSnackBar('اشتراک شما با موفقیت فعال شد!');
+              Navigator.of(context).pop();
+            }
+          },
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _purchasingProductId = null;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -72,15 +115,8 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
 
     final state = ref.watch(vipSubscriptionControllerProvider);
     final controller = ref.read(vipSubscriptionControllerProvider.notifier);
+    final isVip = ref.watch(hasVipAccessProvider);
     final products = state.availableProducts;
-
-    // Ensure selected product is from current available products
-    final activeSelectedProduct = products.firstWhere(
-      (p) => p.id == _selectedProduct.id,
-      orElse: () => products.first,
-    );
-
-    final buttonBg = colorScheme.primary;
 
     return Container(
       constraints: BoxConstraints(
@@ -103,14 +139,16 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.6),
+                  color: colorScheme.outlineVariant
+                      .withValues(alpha: isDark ? 0.35 : 0.6),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
 
               // Minimal Header Row without icons
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Row(
                   children: [
                     const SizedBox(width: 48),
@@ -157,112 +195,66 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
               Divider(
                 height: 1,
                 thickness: 0.8,
-                color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.15 : 0.3),
+                color: colorScheme.outlineVariant
+                    .withValues(alpha: isDark ? 0.15 : 0.3),
               ),
 
-              // Clean Subscription Plans List
+              // Clean, Borderless Subscription Plans List with Direct Buttons
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: products.map((product) {
-                      final isSelected = product.id == activeSelectedProduct.id;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: SubscriptionPlanCard(
-                          product: product,
-                          isSelected: isSelected,
-                          onTap: () {
-                            setState(() {
-                              _selectedProduct = product;
-                            });
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
+                    children: [
+                      ...products.map((product) {
+                        final isPurchasing = state.isLoading &&
+                            _purchasingProductId == product.id;
+                        final isAnyPurchasing = state.isLoading;
 
-              // Bottom Sticky Purchase & Restore Bar
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                decoration: BoxDecoration(
-                  color: isDark ? colorScheme.surface : Colors.white,
-                  border: Border(
-                    top: BorderSide(
-                      color: colorScheme.outlineVariant.withValues(alpha: isDark ? 0.15 : 0.3),
-                      width: 0.8,
-                    ),
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Clean primary purchase button without icons
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: state.isLoading
-                            ? null
-                            : () async {
-                                final result = await controller.purchaseSubscription(activeSelectedProduct);
-                                if (!context.mounted) return;
-                                if (result.isSuccess) {
-                                  _showSnackBar('اشتراک شما با موفقیت فعال شد!');
-                                  Navigator.of(context).pop();
-                                } else if (result.errorMessage != null) {
-                                  _showSnackBar(result.errorMessage!, isError: true);
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonBg,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: SubscriptionPlanCard(
+                            product: product,
+                            isLoading: isPurchasing,
+                            isDisabled: isAnyPurchasing && !isPurchasing,
+                            isVip: isVip,
+                            onPurchase: () =>
+                                _handlePurchase(product, controller),
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 8),
+                      // Restore Purchases button
+                      Center(
+                        child: TextButton(
+                          onPressed: state.isLoading
+                              ? null
+                              : () async {
+                                  final restored =
+                                      await controller.restorePurchases();
+                                  if (!context.mounted) return;
+                                  if (restored) {
+                                    _showSnackBar(
+                                        'خریدهای شما با موفقیت بازیابی شد!');
+                                    Navigator.of(context).pop();
+                                  } else {
+                                    _showSnackBar(
+                                        'خریدی برای بازیابی یافت نشد.');
+                                  }
+                                },
+                          child: Text(
+                            'بازیابی خرید قبلی',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 12.5,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                        child: state.isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'خرید اشتراک (${activeSelectedProduct.title})',
-                                  maxLines: 1,
-                                  style: const TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 14.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Security info
-                    Center(
-                      child: Text(
-                        'پرداخت امن کافه بازار',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11.5,
-                          color: colorScheme.outline,
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

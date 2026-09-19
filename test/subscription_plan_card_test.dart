@@ -37,6 +37,9 @@ void main() {
     // Verify verbose description is NOT displayed
     expect(find.text('این متن نباید نمایش داده شود'), findsNothing);
 
+    // Verify dedicated action button exists with «خرید»
+    expect(find.text('خرید'), findsOneWidget);
+
     // Verify tap works
     await tester.tap(find.byType(SubscriptionPlanCard));
     expect(tapped, isTrue);
@@ -70,6 +73,55 @@ void main() {
     expect(find.text('تخفیف ویژه'), findsOneWidget);
     expect(find.textContaining('۷۵٬۰۰۰ تومان'), findsOneWidget);
     expect(find.text('توضیحات طولانی'), findsNothing);
+  });
+
+  testWidgets('SubscriptionPlanCard shows renew text when isVip is true', (tester) async {
+    const product = PaymentProduct(
+      id: 'test_id',
+      title: 'اشتراک ۱ ماهه',
+      description: 'توضیحات',
+      priceToman: 39000,
+      subscriptionPlan: SubscriptionPlan.monthly,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SubscriptionPlanCard(
+            product: product,
+            isVip: true,
+            onPurchase: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('تمدید'), findsOneWidget);
+  });
+
+  testWidgets('SubscriptionPlanCard shows loading indicator when isLoading is true', (tester) async {
+    const product = PaymentProduct(
+      id: 'test_id',
+      title: 'اشتراک ۱ ماهه',
+      description: 'توضیحات',
+      priceToman: 39000,
+      subscriptionPlan: SubscriptionPlan.monthly,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SubscriptionPlanCard(
+            product: product,
+            isLoading: true,
+            onPurchase: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('خرید'), findsNothing);
   });
 
   testWidgets('SubscriptionPlanCard does NOT overflow on narrow screen with long Bazaar title and badge', (tester) async {

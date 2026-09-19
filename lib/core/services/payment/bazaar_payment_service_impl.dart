@@ -24,7 +24,7 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
   @override
   Future<bool> initialize() async {
     _log('🚀 Connecting to Cafe Bazaar Poolakey...');
-    
+
     if (rsaPublicKey.isEmpty || rsaPublicKey == 'YOUR_BAZAAR_RSA_PUBLIC_KEY') {
       _log('⚠️ Warning: Cafe Bazaar RSA key is not yet configured. Please set a valid RSA public key.');
       _isConnected = false;
@@ -34,30 +34,43 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
     final completer = Completer<bool>();
 
     try {
-      await FlutterPoolakey.connect(
-        rsaPublicKey,
-        onSucceed: () {
-          _log('✅ Connected to Cafe Bazaar billing service successfully.');
-          _isConnected = true;
-          if (!completer.isCompleted) completer.complete(true);
-        },
-        onFailed: () {
-          _log('❌ Failed to connect to Cafe Bazaar billing service.');
+      // NOTE: FlutterPoolakey.connect invokes native channel method 'connect'
+      // where the native Kotlin plugin forgets to call result.success(), causing
+      // the returned Future to never complete!
+      // Therefore, we must NOT await FlutterPoolakey.connect itself.
+      // Instead, we listen to the callbacks and attach a strict timeout.
+      unawaited(
+        FlutterPoolakey.connect(
+          rsaPublicKey,
+          onSucceed: () {
+            _log('✅ Connected to Cafe Bazaar billing service successfully.');
+            _isConnected = true;
+            if (!completer.isCompleted) completer.complete(true);
+          },
+          onFailed: () {
+            _log('❌ Failed to connect to Cafe Bazaar billing service (Bazaar app not installed or service unavailable).');
+            _isConnected = false;
+            if (!completer.isCompleted) completer.complete(false);
+          },
+          onDisconnected: () {
+            _log('🔌 Disconnected from Cafe Bazaar billing service.');
+            _isConnected = false;
+          },
+        ).catchError((e, stack) {
+          _log('❌ Error initializing Cafe Bazaar Poolakey: $e', error: e, stackTrace: stack);
           _isConnected = false;
           if (!completer.isCompleted) completer.complete(false);
-        },
-        onDisconnected: () {
-          _log('🔌 Disconnected from Cafe Bazaar billing service.');
-          _isConnected = false;
-        },
+        }),
       );
 
-      // Timeout fallback after 8 seconds
+      // Fast timeout: 2.5 seconds is ample time for local Android IPC service connection.
+      // If Bazaar is not installed or unreachable, it immediately falls back to false.
       return await completer.future.timeout(
-        const Duration(seconds: 8),
+        const Duration(milliseconds: 2500),
         onTimeout: () {
-          _log('⏱️ Connection to Cafe Bazaar timed out after 8s.');
-          return _isConnected;
+          _log('⏱️ Connection to Cafe Bazaar timed out after 2.5s (Cafe Bazaar app is not installed or unreachable).');
+          _isConnected = false;
+          return false;
         },
       );
     } catch (e, stack) {
@@ -74,9 +87,9 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
       _log('⚠️ [subscribe] Not connected, attempting reconnection...');
       final reconnected = await initialize();
       if (!reconnected) {
-        _log('❌ [subscribe] Reconnection to Cafe Bazaar failed.');
+        _log('❌ [subscribe] Cafe Bazaar is not reachable or not installed.');
         return PurchaseResult.error(
-          'ارتباط با کافه بازار برقرار نشد. لطفاً از نصب و به‌روز بودن کافه بازار اطمینان حاصل کنید.',
+          'برنامه کافه بازار بر روی این دستگاه یا شبیه‌ساز نصب نیست یا در دسترس نمی‌باشد. لطفاً برنامه بازار را نصب کرده و با حساب خود وارد آن شوید.',
           productId: productId,
         );
       }
@@ -84,7 +97,13 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
 
     try {
       _log('📲 [subscribe] Opening Cafe Bazaar purchase dialog for $productId...');
-      final purchaseInfo = await FlutterPoolakey.subscribe(productId);
+      final purchaseInfo = await FlutterPoolakey.subscribe(productId).timeout(
+        const Duration(seconds: 40),
+        onTimeout: () {
+          _log('⏱️ [subscribe] Purchase flow timed out after 40s.');
+          throw TimeoutException('مهلت ارتباط با کافه بازار به پایان رسید.');
+        },
+      );
 
       _log('✅ [subscribe] Purchase succeeded in Cafe Bazaar!');
       _log('   ↳ Product ID: ${purchaseInfo.productId}');
@@ -98,16 +117,32 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
       );
     } on PlatformException catch (e) {
       _log('⚠️ [subscribe] Bazaar PlatformException: code=${e.code}, message=${e.message}');
-      
-      String userFriendlyMessage;
-      if (e.message?.contains('cancel') == true || e.code.toLowerCase().contains('cancel')) {
-        userFriendlyMessage = 'فرآیند خرید توسط کاربر لغو شد.';
-        _log('ℹ️ [subscribe] User cancelled the purchase dialog.');
-      } else {
-        userFriendlyMessage = e.message ?? 'خطا در انجام تراکنش در کافه بازار';
-      }
 
-      return PurchaseResult.error(userFriendlyMessage, productId: productId);
+      final codeLower = e.code.toLowerCase();
+      final msgLower = (e.message ?? '').toLowerCase();
+
+      if (codeLower.contains('cancel') || msgLower.contains('cancel')) {
+        _log('ℹ️ [subscribe] User cancelled the purchase dialog.');
+        return PurchaseResult.userCancelled(productId: productId);
+      } else if (codeLower.contains('not_connected') ||
+          msgLower.contains('connect') ||
+          (codeLower.contains('purchase_failed') && msgLower.contains('poolakey'))) {
+        _isConnected = false;
+        return PurchaseResult.error(
+          'ارتباط با درگاه کافه بازار برقرار نشد. لطفاً از نصب و فعال بودن برنامه بازار اطمینان حاصل کنید.',
+          productId: productId,
+        );
+      } else if (msgLower.contains('already') || codeLower.contains('already')) {
+        return PurchaseResult.alreadyOwned(productId: productId);
+      } else {
+        final userFriendlyMessage = e.message ?? 'خطا در انجام تراکنش در کافه بازار';
+        return PurchaseResult.error(userFriendlyMessage, productId: productId);
+      }
+    } on TimeoutException {
+      return PurchaseResult.error(
+        'پاسخی از درگاه کافه بازار دریافت نشد (مهلت زمانی پایان یافت).',
+        productId: productId,
+      );
     } catch (e, stack) {
       _log('❌ [subscribe] Unexpected error during purchase: $e', error: e, stackTrace: stack);
       return PurchaseResult.error('خطا در خرید اشتراک: $e', productId: productId);
@@ -126,7 +161,10 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
     }
 
     try {
-      final skuDetailsList = await FlutterPoolakey.getSubscriptionSkuDetails(skuIds);
+      final skuDetailsList = await FlutterPoolakey.getSubscriptionSkuDetails(skuIds).timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => [],
+      );
       _log('📦 [getSkuDetails] Received ${skuDetailsList.length} products from Bazaar:');
       for (final sku in skuDetailsList) {
         _log('   ↳ SKU: ${sku.sku} | Title: ${sku.title} | Price: ${sku.price}');
@@ -181,7 +219,10 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
     }
 
     try {
-      final purchases = await FlutterPoolakey.getAllSubscribedProducts();
+      final purchases = await FlutterPoolakey.getAllSubscribedProducts().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => [],
+      );
       final ids = purchases.map((p) => p.productId).toList();
       _log('📦 [getPurchasedProductIds] Response from Bazaar: found ${purchases.length} active subscriptions: $ids');
       for (final p in purchases) {
@@ -206,7 +247,10 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
     }
 
     try {
-      final purchases = await FlutterPoolakey.getAllSubscribedProducts();
+      final purchases = await FlutterPoolakey.getAllSubscribedProducts().timeout(
+        const Duration(seconds: 4),
+        onTimeout: () => [],
+      );
       _log('📦 [restorePurchases] Received ${purchases.length} active purchases from Bazaar:');
       for (final p in purchases) {
         _log('   ↳ Restoring: productId=${p.productId}, orderId=${p.orderId}');

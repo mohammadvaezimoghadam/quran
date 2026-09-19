@@ -7,15 +7,24 @@ import 'package:go_router/go_router.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../main_navigation/application/tab_navigation_controller.dart';
 import '../../../quran_reader/presentation/widgets/quick_settings_drawer.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
-/// Clean Apple-Style Settings Screen with iOS Grouped Design & Tafakor Mint Green Palette
+/// Clean Apple-Style Settings Screen with Profile & Subscription Integration
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  final bool showBackButton;
+  final VoidCallback? onBackPressed;
+
+  const SettingsScreen({
+    super.key,
+    this.showBackButton = true,
+    this.onBackPressed,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,12 +34,12 @@ class SettingsScreen extends ConsumerWidget {
     final isVip = ref.watch(hasVipAccessProvider);
     final vipState = ref.watch(vipSubscriptionControllerProvider);
 
-    final vipSubtitle = isVip
+    final profileSubtitle = isVip
         ? (vipState.remainingDays > 0
-            ? 'اشتراک ویژه شما فعال است (${vipState.remainingDays} روز باقی‌مانده)'
+            ? 'اشتراک ویژه فعال است (${vipState.remainingDays} روز باقی‌مانده)'
                 .toPersianDigit()
-            : 'اشتراک ویژه فعال است (مشاهده جزییات)')
-        : 'دسترسی نامحدود به تمامی قاریان برجسته و ترجمه‌های گویا';
+            : 'اشتراک ویژه فعال است (مشاهده و تمدید)')
+        : 'کاربر عادی - خرید و ارتقا به اشتراک ویژه تفکر';
 
     return Scaffold(
       appBar: PreferredSize(
@@ -53,23 +62,30 @@ class SettingsScreen extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              IconButton(
-                tooltip: 'بازگشت',
-                icon: Icon(
-                  CupertinoIcons.chevron_forward,
-                  size: 24,
-                  color: colorScheme.onSurface,
-                ),
-                splashRadius: 22,
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  } else {
-                    context.goNamed(quranHomeRoute);
-                  }
-                },
-              ),
+              if (showBackButton)
+                IconButton(
+                  tooltip: 'بازگشت',
+                  icon: Icon(
+                    CupertinoIcons.chevron_forward,
+                    size: 24,
+                    color: colorScheme.onSurface,
+                  ),
+                  splashRadius: 22,
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    if (onBackPressed != null) {
+                      onBackPressed!();
+                    } else if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    } else {
+                      ref
+                          .read(tabNavigationControllerProvider.notifier)
+                          .handleBackPress();
+                    }
+                  },
+                )
+              else
+                const SizedBox(width: 48),
               Expanded(
                 child: Text(
                   'تنظیمات',
@@ -91,7 +107,52 @@ class SettingsScreen extends ConsumerWidget {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         children: [
-          // Section 1: Reading Experience & Content
+          // Section 1: Profile & Account (No icon, identical to other items)
+          _buildSectionHeader('پروفایل', isDark),
+          6.vSpace,
+          _buildGroupCard(
+            context: context,
+            children: [
+              _buildSettingsTile(
+                context: context,
+                title: 'پروفایل',
+                subtitle: profileSubtitle,
+                trailing: isVip
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(
+                            alpha: isDark ? 0.18 : 0.10,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(
+                              alpha: isDark ? 0.35 : 0.25,
+                            ),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          'ویژه',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      )
+                    : null,
+                onTap: () => context.pushNamed(profileRoute),
+              ),
+            ],
+          ),
+          18.vSpace,
+
+          // Section 2: Reading Experience & Content
           _buildSectionHeader('مطالعه و محتوا', isDark),
           6.vSpace,
           _buildGroupCard(
@@ -120,52 +181,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           18.vSpace,
 
-          // Section 2: Premium & VIP Account
-          _buildSectionHeader('اشتراک ویژه', isDark),
-          6.vSpace,
-          _buildGroupCard(
-            context: context,
-            children: [
-              _buildSettingsTile(
-                context: context,
-                title: 'اشتراک ویژه تفکر',
-                subtitle: vipSubtitle,
-                trailing: isVip
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(
-                            alpha: isDark ? 0.18 : 0.10,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(
-                              alpha: isDark ? 0.35 : 0.25,
-                            ),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          'فعال',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      )
-                    : null,
-                onTap: () => context.pushNamed(vipSubscriptionRoute),
-              ),
-            ],
-          ),
-          18.vSpace,
-
-          // Section 3: App Information
+          // Section 3: App Information (No icon, uniform styling)
           _buildSectionHeader('اطلاعات برنامه', isDark),
           6.vSpace,
           _buildGroupCard(
@@ -173,45 +189,99 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _buildSettingsTile(
                 context: context,
-                icon: CupertinoIcons.info_circle,
                 title: 'درباره قرآن تفکر',
                 subtitle: 'نسخه ۱.۰.۰',
-                onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: 'قرآن تفکر',
-                    applicationVersion: '۱.۰.۰',
-                    applicationIcon: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        CupertinoIcons.book,
-                        color: colorScheme.primary,
-                        size: 26,
-                      ),
-                    ),
-                    children: const [
-                      Text(
-                        'اپلیکیشن جامع قرآن تفکر با رسم‌الخط‌های استاندارد، ترجمه‌های معتبر و امکانات پیشرفته مطالعه قرآن کریم.',
-                        textAlign: TextAlign.justify,
-                        textDirection: TextDirection.rtl,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 13,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                onTap: () => _showAboutDialog(context),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: colors.dialogSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppModalHeader(
+                  title: 'درباره قرآن تفکر',
+                  onClose: () => Navigator.of(dialogCtx).pop(),
+                  bottomSpacing: 14,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'قرآن تفکر',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'نسخه ۱.۰.۰',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'اپلیکیشن جامع قرآن تفکر با رسم‌الخط‌های استاندارد، ترجمه‌های معتبر، امکانات پیشرفته مطالعه، تلاوت قاریان برجسته و جستجوی هوشمند در آیات کلام‌الله مجید.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13,
+                    height: 1.6,
+                    color: colorScheme.onSurface.withValues(alpha: 0.85),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(dialogCtx).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'بستن',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -317,7 +387,8 @@ class SettingsScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 11.5,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+                        color: colorScheme.onSurfaceVariant
+                            .withValues(alpha: 0.75),
                       ),
                     ),
                   ],
@@ -326,7 +397,7 @@ class SettingsScreen extends ConsumerWidget {
 
               8.hSpace,
 
-              // Trailing Indicator (Chevron or Custom Status)
+              // Trailing Indicator (Status Badge & Chevron)
               if (trailing != null) ...[
                 trailing,
                 6.hSpace,
