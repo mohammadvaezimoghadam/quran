@@ -74,7 +74,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -97,17 +96,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
               child: Row(
                 children: [
-                  // Back Button (Cupertino Chevron with Haptic feedback)
+                  // Back Button (Standard Apple-style chevron)
                   IconButton(
                     tooltip: 'بازگشت',
-                    visualDensity: VisualDensity.compact,
+                    splashRadius: 22,
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       Navigator.of(context).maybePop();
                     },
                     icon: Icon(
                       CupertinoIcons.chevron_forward,
-                      size: 22,
+                      size: 24,
                       color: colorScheme.onSurface,
                     ),
                   ),

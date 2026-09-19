@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
-import '../../../../core/theme/app_dimens.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/policy/translation_vip_policy.dart';
@@ -73,71 +73,35 @@ class _TextTranslationsDownloadBottomSheetState
       ),
       child: Column(
         children: [
-          const SizedBox(height: 12),
-          // Top Drag Handle
-          Center(
-            child: Container(
-              width: 38,
-              height: 4.5,
-              decoration: BoxDecoration(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Header Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
+          AppModalHeader(
+            showDragHandle: true,
+            titleWidget: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(width: 40),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'دانلود ترجمه‌های متنی',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${downloadedCount.toPersianDigit()} از ${translations.length.toPersianDigit()} دانلود شده',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'دانلود ترجمه‌های متنی',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
                 ),
-                IconButton(
-                  tooltip: 'بستن',
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(
-                    CupertinoIcons.chevron_down,
-                    size: 22,
-                    color: colorScheme.onSurfaceVariant,
+                const SizedBox(height: 2),
+                Text(
+                  '${downloadedCount.toPersianDigit()} از ${translations.length.toPersianDigit()} دانلود شده',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : Colors.black54,
                   ),
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    Navigator.of(context).pop();
-                  },
                 ),
               ],
             ),
+            bottomSpacing: 10,
           ),
-
-          const SizedBox(height: 10),
 
           // Language Filter Chips
           SingleChildScrollView(
@@ -324,24 +288,75 @@ class _TextTranslationsDownloadBottomSheetState
     BuildContext context,
     TranslationEntity translation,
   ) async {
-    final confirmed = await showCupertinoDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogCtx) => CupertinoAlertDialog(
-        title: const Text('حذف ترجمه'),
-        content: Text('آیا از حذف داده‌های ترجمه «${translation.name}» از حافظه اطمینان دارید؟'),
-        actions: [
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(dialogCtx).pop(true),
-            child: const Text('حذف'),
+      builder: (dialogCtx) {
+        final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppModalHeader(
+                  title: 'حذف ترجمه',
+                  onClose: () => Navigator.of(dialogCtx).pop(false),
+                  bottomSpacing: 12,
+                ),
+                Text(
+                  'آیا از حذف داده‌های ترجمه «${translation.name}» از حافظه اطمینان دارید؟',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13.5,
+                    height: 1.5,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(dialogCtx).pop(false),
+                        child: Text(
+                          'انصراف',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 14,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () => Navigator.of(dialogCtx).pop(true),
+                        child: const Text(
+                          'حذف',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.of(dialogCtx).pop(false),
-            child: const Text('انصراف'),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     if (confirmed == true) {

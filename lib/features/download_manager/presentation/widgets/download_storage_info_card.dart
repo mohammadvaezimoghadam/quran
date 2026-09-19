@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/download_hub_controller.dart';
@@ -17,43 +18,86 @@ class DownloadStorageInfoCard extends ConsumerWidget {
   });
 
   void _showClearCacheDialog(BuildContext context, WidgetRef ref) {
-    showCupertinoDialog(
+    showDialog(
       context: context,
-      builder: (dialogCtx) => CupertinoAlertDialog(
-        title: const Text(
-          'پاک‌سازی کل فایل‌های دانلودی',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        content: const Padding(
-          padding: EdgeInsets.only(top: 8.0),
-          child: Text(
-            'آیا از حذف تمام فایل‌های دانلود شده (صوت قرآن، ترجمه گویا و متن ترجمه‌ها) از حافظه دستگاه اطمینان دارید؟ این عملیات غیرقابل بازگشت است.',
-            style: TextStyle(fontSize: 13, height: 1.5),
+      builder: (dialogCtx) {
+        final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppModalHeader(
+                  title: 'پاک‌سازی کل فایل‌های دانلودی',
+                  onClose: () => Navigator.pop(dialogCtx),
+                  bottomSpacing: 12,
+                ),
+                Text(
+                  'آیا از حذف تمام فایل‌های دانلود شده (صوت قرآن، ترجمه گویا و متن ترجمه‌ها) از حافظه دستگاه اطمینان دارید؟ این عملیات غیرقابل بازگشت است.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13.5,
+                    height: 1.5,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(dialogCtx),
+                        child: Text(
+                          'انصراف',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 14,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(dialogCtx);
+                          await ref
+                              .read(downloadHubControllerProvider.notifier)
+                              .clearAllDownloads();
+                          if (context.mounted) {
+                            AppSnackBar.showSuccess(
+                              context,
+                              'تمامی فایل‌های دانلودی با موفقیت پاک‌سازی شدند.',
+                            );
+                          }
+                        },
+                        child: const Text(
+                          'حذف همه',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('انصراف'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () async {
-              Navigator.pop(dialogCtx);
-              await ref
-                  .read(downloadHubControllerProvider.notifier)
-                  .clearAllDownloads();
-              if (context.mounted) {
-                AppSnackBar.showSuccess(
-                  context,
-                  'تمامی فایل‌های دانلودی با موفقیت پاک‌سازی شدند.',
-                );
-              }
-            },
-            child: const Text('حذف همه'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

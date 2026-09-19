@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
@@ -63,36 +64,76 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
     if (!translation.isDownloaded) {
       final shouldDownload = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(
-            'دانلود ترجمه',
-            style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 18,
-                fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            'شما باید ترجمه «${translation.name}» را دانلود کنید. مایل به دانلود هستید؟',
-            style: TextStyle(
-                fontFamily: AppTypography.fontFamily, fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(
-                'انصراف',
-                style: TextStyle(fontFamily: AppTypography.fontFamily),
+        builder: (ctx) {
+          final isDark = Theme.of(ctx).brightness == Brightness.dark;
+          final colorScheme = Theme.of(ctx).colorScheme;
+          return Dialog(
+            backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppModalHeader(
+                    title: 'دانلود ترجمه',
+                    onClose: () => Navigator.of(ctx).pop(false),
+                    bottomSpacing: 14,
+                  ),
+                  Text(
+                    'شما باید ترجمه «${translation.name}» را دانلود کنید. مایل به دانلود هستید؟',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14,
+                      height: 1.5,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: Text(
+                            'انصراف',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 14,
+                              color: isDark ? Colors.white60 : Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: Text(
+                            'دانلود و اعمال',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(
-                'دانلود و اعمال',
-                style: TextStyle(fontFamily: AppTypography.fontFamily),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       );
 
       if (shouldDownload != true) return;

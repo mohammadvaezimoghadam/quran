@@ -19,18 +19,22 @@ abstract class AudioVipHelper {
   /// If the user clicks "پخش با صوت رایگان استاد پرهیزگار", switches reciter and executes [onSwitchedToDefaultReciter].
   static Future<bool> checkAndPromptVip({
     required BuildContext context,
-    required WidgetRef ref,
+    WidgetRef? ref,
     required int surahId,
     ReciterEntity? targetReciter,
     VoidCallback? onSwitchedToDefaultReciter,
   }) async {
-    final audioController = ref.read(quranAudioControllerProvider.notifier);
-    final audioState = ref.read(quranAudioControllerProvider);
+    final targetContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
+    if (targetContext == null) return false;
+
+    final container = ProviderScope.containerOf(targetContext, listen: false);
+    final audioController = container.read(quranAudioControllerProvider.notifier);
+    final audioState = container.read(quranAudioControllerProvider);
     final reciter = targetReciter ?? audioState.selectedReciter;
-    final isVip = ref.read(hasVipAccessProvider);
+    final isVip = container.read(hasVipAccessProvider);
     if (isVip) {
       // Opportunistic verification to catch expirations in near real-time
-      ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
+      container.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
     }
 
     final canPlay = AudioVipPolicy.canPlayReciter(
@@ -40,9 +44,6 @@ abstract class AudioVipHelper {
     );
 
     if (canPlay) return true;
-
-    final targetContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
-    if (targetContext == null) return false;
 
     // Check translation VIP access if mode requires translation
     if (audioState.playbackMode.includesTranslation && !isVip) {
@@ -61,7 +62,7 @@ abstract class AudioVipHelper {
       reciterName: reciterName,
       surahName: surahName,
       onPlayWithDefaultReciter: () async {
-        final recitersResult = await ref.read(allRecitersListProvider.future);
+        final recitersResult = await container.read(allRecitersListProvider.future);
         recitersResult.when(
           (reciters) {
             final parhizgar = reciters.firstWhere(
@@ -83,20 +84,20 @@ abstract class AudioVipHelper {
   /// If not, opens [VipRequiredDialog] and returns false.
   static bool checkAudioTranslation({
     required BuildContext context,
-    required WidgetRef ref,
+    WidgetRef? ref,
   }) {
-    final isVip = ref.read(hasVipAccessProvider);
+    final targetContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
+    if (targetContext == null) return false;
+    final container = ProviderScope.containerOf(targetContext, listen: false);
+    final isVip = container.read(hasVipAccessProvider);
     if (isVip) {
-      ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
+      container.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
     }
     if (!isVip) {
-      final targetContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
-      if (targetContext != null) {
-        VipRequiredDialog.show(
-          context: targetContext,
-          isTranslation: true,
-        );
-      }
+      VipRequiredDialog.show(
+        context: targetContext,
+        isTranslation: true,
+      );
       return false;
     }
     return true;

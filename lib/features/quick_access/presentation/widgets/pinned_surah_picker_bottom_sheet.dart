@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -116,51 +117,11 @@ class _PinnedSurahPickerBottomSheetState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag Handle
-            const SizedBox(height: 12),
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white24 : Colors.black12,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+            AppModalHeader(
+              showDragHandle: true,
+              bottomSpacing: 12.0,
+              title: widget.title ?? 'انتخاب سوره منتخب',
             ),
-            const SizedBox(height: 14),
-
-            // Header Title & Actions
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                children: [
-                  const SizedBox(width: 48),
-                  Expanded(
-                    child: Text(
-                      widget.title ?? 'انتخاب سوره منتخب',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'بستن',
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle_fill,
-                      size: 24,
-                      color: isDark ? Colors.white38 : Colors.black26,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
 
             // Search Bar
             Padding(

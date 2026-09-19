@@ -133,9 +133,10 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                         tooltip: 'بازگشت',
                         icon: Icon(
                           CupertinoIcons.chevron_forward,
-                          size: 22,
+                          size: 24,
                           color: textPrimary,
                         ),
+                        splashRadius: 22,
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           Navigator.of(context).maybePop();

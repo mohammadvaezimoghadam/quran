@@ -89,11 +89,11 @@ class AyahListItem extends ConsumerWidget {
 
     final Color defaultBgColor = isDark
         ? (ayah.ayahNumber % 2 == 0
-            ? const Color(0xFF16191C)
-            : const Color(0xFF21252A))
+            ? Colors.transparent
+            : Colors.white.withValues(alpha: 0.025))
         : (ayah.ayahNumber % 2 == 0
-            ? const Color(0xFFFAF6E4)
-            : const Color(0xFFEBE7CE));
+            ? Colors.transparent
+            : Colors.black.withValues(alpha: 0.02));
 
     final Color effectiveBgColor = isAudioActive
         ? colorScheme.primary.withValues(alpha: isDark ? 0.22 : 0.12)

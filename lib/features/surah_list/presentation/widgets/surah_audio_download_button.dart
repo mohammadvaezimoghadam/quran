@@ -126,7 +126,7 @@ class SurahAudioDownloadButton extends ConsumerWidget {
   ) {
     final progress = task.progress;
     final percent = (progress * 100).clamp(0, 100).toInt();
-    final goldAccent = context.colors.goldAccent;
+    final greenAccent = context.colorScheme.primary;
 
     return IconButton(
       tooltip:
@@ -145,17 +145,17 @@ class SurahAudioDownloadButton extends ConsumerWidget {
           children: [
             CircularProgressIndicator(
               value: progress > 0 ? progress : null,
-              strokeWidth: 2.5,
-              color: goldAccent,
-              backgroundColor: goldAccent.withValues(alpha: 0.2),
+              strokeWidth: 2.2,
+              color: greenAccent,
+              backgroundColor: greenAccent.withValues(alpha: 0.18),
             ),
             Text(
               percent > 0 ? '${percent.toPersianDigit()}٪' : '...',
               style: TextStyle(
                 fontFamily: AppTypography.fontFamily,
-                fontSize: 8,
+                fontSize: 7.0,
                 fontWeight: FontWeight.bold,
-                color: goldAccent,
+                color: greenAccent,
               ),
             ),
           ],

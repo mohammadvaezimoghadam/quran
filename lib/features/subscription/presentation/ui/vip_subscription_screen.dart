@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/payment/models/payment_product.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -77,8 +80,8 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
       orElse: () => products.isNotEmpty ? products.first : _selectedProduct,
     );
 
-    final bgColor = isDark ? const Color(0xFF0F1615) : const Color(0xFFF7F5F0);
-    final cardBg = isDark ? const Color(0xFF162220) : Colors.white;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final cardBg = context.colors.cardBackground;
     final textColor = isDark ? Colors.white : const Color(0xFF1C1B1B);
 
     return Directionality(
@@ -90,6 +93,23 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
           elevation: 0,
           centerTitle: true,
           iconTheme: IconThemeData(color: textColor),
+          leading: IconButton(
+            tooltip: 'بازگشت',
+            icon: Icon(
+              CupertinoIcons.chevron_forward,
+              size: 24,
+              color: textColor,
+            ),
+            splashRadius: 22,
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.goNamed(quranHomeRoute);
+              }
+            },
+          ),
           title: Text(
             'اشتراک ویژه',
             style: AppTypography.appBarTitle.copyWith(
@@ -102,6 +122,7 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
             IconButton(
               tooltip: 'همگام‌سازی وضعیت',
               icon: const Icon(CupertinoIcons.arrow_2_circlepath, size: 20),
+              splashRadius: 22,
               onPressed: () async {
                 await controller.syncWithStore();
                 await controller.fetchLiveProducts();

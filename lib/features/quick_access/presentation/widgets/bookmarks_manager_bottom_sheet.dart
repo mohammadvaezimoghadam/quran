@@ -8,6 +8,7 @@ import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/widgets/app_segmented_tab_bar.dart';
 import '../../../../core/routes/route_name.dart';
@@ -69,10 +70,15 @@ class _BookmarksManagerBottomSheetState
           borderRadius: BorderRadius.circular(22),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              AppModalHeader(
+                title: 'حذف همه نشانه‌ها',
+                onClose: () => Navigator.of(dialogCtx).pop(false),
+                bottomSpacing: 12,
+              ),
               Container(
                 width: 48,
                 height: 48,
@@ -86,16 +92,7 @@ class _BookmarksManagerBottomSheetState
                   color: Colors.redAccent,
                 ),
               ),
-              14.vSpace,
-              const Text(
-                'حذف همه نشانه‌ها',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16.5,
-                ),
-              ),
+              12.vSpace,
               8.vSpace,
               Text(
                 'آیا مطمئن هستید که می‌خواهید تمام نشانه‌های ذخیره‌شده را حذف کنید؟ این عمل غیرقابل بازگشت است.',
@@ -205,29 +202,12 @@ class _BookmarksManagerBottomSheetState
         child: Column(
           children: [
             // 1. Drag Handle
-            10.vSpace,
-            Center(
-              child: Container(
-                width: 44,
-                height: 4.5,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : Colors.black.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-            12.vSpace,
-
-            // 2. Luxury Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                children: [
-                  // Clear All Button or Spacer to balance Close Button
-                  if (bookmarks.isNotEmpty)
-                    IconButton(
+            AppModalHeader(
+              showDragHandle: true,
+              bottomSpacing: 12.0,
+              title: 'نشانه‌های ذخیره‌شده',
+              leadingAction: bookmarks.isNotEmpty
+                  ? IconButton(
                       tooltip: 'حذف همه',
                       icon: const Icon(
                         CupertinoIcons.trash,
@@ -236,37 +216,8 @@ class _BookmarksManagerBottomSheetState
                       ),
                       onPressed: _confirmClearAll,
                     )
-                  else
-                    const SizedBox(width: 48),
-
-                  // Title
-                  const Expanded(
-                    child: Text(
-                      'نشانه‌های ذخیره‌شده',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                      ),
-                    ),
-                  ),
-
-                  // Close Button
-                  IconButton(
-                    tooltip: 'بستن',
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle_fill,
-                      size: 24,
-                      color: isDark ? Colors.white38 : Colors.black26,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
+                  : null,
             ),
-            12.vSpace,
 
             // 3. Segmented Tab Bar for Switching between "Page Bookmarks" and "Saved Ayahs"
             Padding(

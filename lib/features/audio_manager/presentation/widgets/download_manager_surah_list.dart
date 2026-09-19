@@ -8,6 +8,7 @@ import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
@@ -469,8 +470,15 @@ class _SurahListItem extends ConsumerWidget {
     required bool isLocked,
     required bool isTranslation,
   }) {
-    // 1. Downloaded State: Transforms into "حذف" button with outlined trash can (No border)
+    // 1. Downloaded State: Transforms into "حذف" button with outlined trash can (No border, neutral)
     if (isDownloaded) {
+      final neutralBg = isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.05);
+      final neutralFg = isDark
+          ? Colors.white70
+          : Colors.black.withValues(alpha: 0.65);
+
       return InkWell(
         onTap: () {
           if (selectedReciter != null) {
@@ -487,7 +495,7 @@ class _SurahListItem extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: colorScheme.error.withValues(alpha: isDark ? 0.16 : 0.08),
+            color: neutralBg,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -496,7 +504,7 @@ class _SurahListItem extends ConsumerWidget {
               Icon(
                 CupertinoIcons.trash,
                 size: 15,
-                color: colorScheme.error,
+                color: neutralFg,
               ),
               const SizedBox(width: 5),
               Text(
@@ -504,8 +512,8 @@ class _SurahListItem extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                  color: neutralFg,
                 ),
               ),
             ],
@@ -568,10 +576,15 @@ class _SurahListItem extends ConsumerWidget {
       );
     }
 
-    // 3. Paused or Partial Download State: Shows downloaded ayahs count and resumes on tap (No border)
+    // 3. Paused or Partial Download State: Shows downloaded ayahs count and resumes on tap (No border, neutral)
     if (isPaused || hasPartialDownload) {
       final completed = downloadTask?.completedAyahs ?? downloadedAyahsCount ?? 0;
-      final orangeColor = isDark ? Colors.orangeAccent : const Color(0xFFD97706);
+      final neutralBg = isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.05);
+      final neutralFg = isDark
+          ? Colors.white70
+          : Colors.black.withValues(alpha: 0.65);
 
       return InkWell(
         onTap: () {
@@ -592,7 +605,7 @@ class _SurahListItem extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: Colors.orange.withValues(alpha: isDark ? 0.16 : 0.10),
+            color: neutralBg,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -601,7 +614,7 @@ class _SurahListItem extends ConsumerWidget {
               Icon(
                 CupertinoIcons.arrow_down,
                 size: 13,
-                color: orangeColor,
+                color: neutralFg,
               ),
               const SizedBox(width: 5),
               Text(
@@ -609,8 +622,8 @@ class _SurahListItem extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                  color: orangeColor,
+                  fontWeight: FontWeight.w600,
+                  color: neutralFg,
                 ),
               ),
             ],
@@ -774,85 +787,74 @@ class _SurahListItem extends ConsumerWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           clipBehavior: Clip.antiAlias,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
             child: SafeArea(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Drag Handle
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
+                  AppModalHeader(
+                    showDragHandle: true,
+                    showDivider: true,
+                    bottomSpacing: 12.0,
+                    title: 'سوره ${surah.nameFa}',
+                    leadingAction: Container(
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white24 : Colors.black12,
-                        borderRadius: BorderRadius.circular(2),
+                        color: colorScheme.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        surah.number.toPersianDigit(),
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Surah Info Header
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          surah.number.toPersianDigit(),
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'سوره ${surah.nameFa}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              isAudioTranslation
-                                  ? 'ترجمه گویا: ${reciter.name}'
-                                  : 'با صدای: ${reciter.name}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? Colors.white60 : Colors.black54,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                       Text(
-                        isDownloaded
-                            ? 'دانلود کامل'
-                            : '${(downloadedAyahsCount ?? 0).toPersianDigit()} از ${surah.numberOfAyahs.toPersianDigit()} آیه',
+                        isAudioTranslation
+                            ? 'ترجمه گویا: ${reciter.name}'
+                            : 'با صدای: ${reciter.name}',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isDownloaded ? Colors.green : Colors.orange,
+                          fontSize: 13,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isDownloaded
+                              ? colorScheme.primary.withValues(alpha: 0.12)
+                              : (isDark
+                                  ? Colors.white.withValues(alpha: 0.08)
+                                  : Colors.black.withValues(alpha: 0.05)),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isDownloaded
+                              ? 'دانلود کامل'
+                              : '${(downloadedAyahsCount ?? 0).toPersianDigit()} از ${surah.numberOfAyahs.toPersianDigit()} آیه',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: isDownloaded
+                                ? colorScheme.primary
+                                : (isDark ? Colors.white70 : Colors.black54),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
                   const SizedBox(height: 10),
 
                   // Action 1: Play Surah (if downloaded)
@@ -928,12 +930,12 @@ class _SurahListItem extends ConsumerWidget {
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           CupertinoIcons.cloud_download_fill,
-                          color: Colors.green,
+                          color: colorScheme.primary,
                           size: 24,
                         ),
                       ),
@@ -1056,65 +1058,95 @@ class _SurahListItem extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) {
         final colorScheme = dialogCtx.colorScheme;
-        return AlertDialog(
-          title: Text(
-          'حذف صوت سوره ${surah.nameFa}',
-          style: const TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+        final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-        ),
-        content: Text(
-          'آیا از حذف کامل فایل‌های صوتی سوره ${surah.nameFa} با صدای «${reciter.name}» از حافظه دستگاه اطمینان دارید؟',
-          style: const TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 14,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text(
-              'انصراف',
-              style: TextStyle(fontFamily: AppTypography.fontFamily),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppModalHeader(
+                  title: 'حذف صوت سوره ${surah.nameFa}',
+                  onClose: () => Navigator.pop(dialogCtx),
+                  bottomSpacing: 12,
+                ),
+                Text(
+                  'آیا از حذف کامل فایل‌های صوتی سوره ${surah.nameFa} با صدای «${reciter.name}» از حافظه دستگاه اطمینان دارید؟',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 14,
+                    height: 1.5,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(dialogCtx),
+                        child: Text(
+                          'انصراف',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 14,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colorScheme.error,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(dialogCtx);
+                          if (sheetContext != null && sheetContext.mounted) {
+                            Navigator.pop(sheetContext);
+                          }
+
+                          final storage = ref.read(audioStorageServiceProvider);
+                          await storage.deleteSurahAudio(
+                            reciterId: reciter.id,
+                            surahId: surah.number,
+                          );
+
+                          ref.invalidate(surahDownloadedAyahsCountProvider);
+                          ref.read(downloadedItemsControllerProvider.notifier).loadItems();
+                          ref.read(downloadHubControllerProvider.notifier).loadSummary();
+
+                          if (context.mounted) {
+                            AppSnackBar.showSuccess(
+                              context,
+                              'صوت سوره ${surah.nameFa} با موفقیت از حافظه پاک شد.',
+                            );
+                          }
+                        },
+                        child: const Text(
+                          'حذف',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: colorScheme.error,
-            ),
-            onPressed: () async {
-              Navigator.pop(dialogCtx);
-              if (sheetContext != null && sheetContext.mounted) {
-                Navigator.pop(sheetContext);
-              }
-
-              final storage = ref.read(audioStorageServiceProvider);
-              await storage.deleteSurahAudio(
-                reciterId: reciter.id,
-                surahId: surah.number,
-              );
-
-              ref.invalidate(surahDownloadedAyahsCountProvider);
-              ref.read(downloadedItemsControllerProvider.notifier).loadItems();
-              ref.read(downloadHubControllerProvider.notifier).loadSummary();
-
-              if (context.mounted) {
-                AppSnackBar.showSuccess(
-                  context,
-                  'صوت سوره ${surah.nameFa} با موفقیت از حافظه پاک شد.',
-                );
-              }
-            },
-            child: const Text(
-              'حذف',
-              style: TextStyle(fontFamily: AppTypography.fontFamily),
-            ),
-          ),
-        ],
-      );
+        );
     },
     );
   }

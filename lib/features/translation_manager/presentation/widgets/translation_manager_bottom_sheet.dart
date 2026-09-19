@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
@@ -72,36 +73,76 @@ class _TranslationManagerBottomSheetState
     if (!translation.isDownloaded) {
       final shouldDownload = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(
-            'دانلود ترجمه',
-            style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 18,
-                fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            'شما باید ترجمه «${translation.name}» را دانلود کنید. مایل به دانلود هستید؟',
-            style: TextStyle(
-                fontFamily: AppTypography.fontFamily, fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(
-                'انصراف',
-                style: TextStyle(fontFamily: AppTypography.fontFamily),
+        builder: (ctx) {
+          final isDark = Theme.of(ctx).brightness == Brightness.dark;
+          final colorScheme = Theme.of(ctx).colorScheme;
+          return Dialog(
+            backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppModalHeader(
+                    title: 'دانلود ترجمه',
+                    onClose: () => Navigator.of(ctx).pop(false),
+                    bottomSpacing: 14,
+                  ),
+                  Text(
+                    'شما باید ترجمه «${translation.name}» را دانلود کنید. مایل به دانلود هستید؟',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14,
+                      height: 1.5,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: Text(
+                            'انصراف',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 14,
+                              color: isDark ? Colors.white60 : Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: Text(
+                            'دانلود',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(
-                'دانلود',
-                style: TextStyle(fontFamily: AppTypography.fontFamily),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       );
 
       if (shouldDownload != true) return;
@@ -171,25 +212,11 @@ class _TranslationManagerBottomSheetState
                 ),
         child: Column(
           children: [
-            // Top Drag Handle
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
+            AppModalHeader(
+              showDragHandle: true,
+              title: AppConstants.selectSurahAndTranslatorTitle,
+              bottomSpacing: 14,
             ),
-
-            Text(
-              AppConstants.selectSurahAndTranslatorTitle,
-              textAlign: TextAlign.center,
-              style: AppTypography.sectionHeader.copyWith(
-                color: colorScheme.onSurface,
-              ),
-            ),
-            16.vSpace,
 
             if (surahState.isLoading || translationState.isLoading || translations.isEmpty)
               const Expanded(child: Center(child: CircularProgressIndicator()))

@@ -1,42 +1,42 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import '../../core/theme/app_typography.dart';
 
 class AppSnackBar {
   static void _show(
     BuildContext context,
-    String message,
-    Color backgroundColor,
-    IconData icon, {
+    String message, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 3),
   }) {
+    // Soft elegant slate capsule (identical calm tone in both light and dark mode)
+    const backgroundColor = Color(0xFF2C2C2E);
+    const borderColor = Color(0xFF3E3E42);
+
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
+        content: Text(
+          message,
+          textDirection: TextDirection.rtl,
+          style: const TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+            fontSize: 13.5,
+            height: 1.4,
+          ),
         ),
         action: action,
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
+        elevation: 4.0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: borderColor, width: 0.8),
         ),
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         duration: duration,
       ),
     );
@@ -48,11 +48,11 @@ class AppSnackBar {
   }
 
   static void showSuccess(BuildContext context, String message) {
-    _show(context, message, Colors.green.shade600, CupertinoIcons.checkmark_circle);
+    _show(context, message);
   }
 
   static void showError(BuildContext context, String message) {
-    _show(context, message, Colors.red.shade600, CupertinoIcons.exclamationmark_circle);
+    _show(context, message);
   }
 
   static void showWarning(
@@ -64,8 +64,6 @@ class AppSnackBar {
     _show(
       context,
       message,
-      Colors.orange.shade800,
-      CupertinoIcons.exclamationmark_triangle,
       action: action,
       duration: duration,
     );
@@ -80,8 +78,6 @@ class AppSnackBar {
     _show(
       context,
       message,
-      Colors.blue.shade600,
-      CupertinoIcons.info_circle,
       action: action,
       duration: duration,
     );

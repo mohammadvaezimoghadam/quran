@@ -16,6 +16,7 @@ import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -223,32 +224,10 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            const SizedBox(width: 40),
-            Expanded(
-              child: Text(
-                AppConstants.pageNavigationTitle,
-                style: AppTypography.sectionHeader.copyWith(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            IconButton(
-              tooltip: 'بستن',
-              onPressed: () => Navigator.of(context).maybePop(),
-              icon: Icon(
-                CupertinoIcons.xmark_circle_fill,
-                size: 22,
-                color: isDark ? Colors.white30 : Colors.black26,
-              ),
-            ),
-          ],
+        const AppModalHeader(
+          title: AppConstants.pageNavigationTitle,
+          bottomSpacing: 16.0,
         ),
-        16.vSpace,
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -459,30 +438,11 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'اسکن کد صفحه',
-              style: AppTypography.sectionHeader.copyWith(
-                fontSize: 18,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            IconButton(
-              tooltip: 'بستن',
-              icon: Icon(
-                CupertinoIcons.xmark_circle_fill,
-                size: 24,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white38
-                    : Colors.black26,
-              ),
-              onPressed: () => setState(() => _showScanner = false),
-            ),
-          ],
+        AppModalHeader(
+          title: 'اسکن کد صفحه',
+          bottomSpacing: 16.0,
+          onClose: () => setState(() => _showScanner = false),
         ),
-        16.vSpace,
         SizedBox(
           height: 300,
           child: ClipRRect(

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../extensions/int_extension.dart';
+import 'app_modal_header.dart';
 import '../extensions/string_extension.dart';
 import '../extensions/surah_name_extension.dart';
 import '../../core/theme/app_typography.dart';
@@ -48,12 +49,42 @@ class SurahPickerDialog extends ConsumerStatefulWidget {
 
 class _SurahPickerDialogState extends ConsumerState<SurahPickerDialog> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
+  bool _hasAutoScrolled = false;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToActiveSurah(List<SurahEntity> allSurahs) {
+    if (!mounted || !_scrollController.hasClients) return;
+    if (!_scrollController.position.hasContentDimensions) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToActiveSurah(allSurahs);
+      });
+      return;
+    }
+    final active = widget.activeSurah;
+    if (active == null) return;
+
+    final targetIndex = allSurahs.indexWhere((s) => s.number == active.number);
+    if (targetIndex == -1) return;
+
+    const double itemHeight = 50.0;
+    const double itemExtent = 51.0; // 50.0 item + 1.0 divider
+    const double listPaddingTop = 6.0;
+
+    final itemCenter = listPaddingTop + (targetIndex * itemExtent) + (itemHeight / 2);
+    final viewportHeight = _scrollController.position.viewportDimension;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+
+    final targetOffset = (itemCenter - (viewportHeight / 2)).clamp(0.0, maxScroll);
+
+    _scrollController.jumpTo(targetOffset);
   }
 
   @override
@@ -65,6 +96,13 @@ class _SurahPickerDialogState extends ConsumerState<SurahPickerDialog> {
     final allSurahs = widget.surahs ??
         ref.watch(surahListControllerProvider.select((s) => s.surahs)) ??
         <SurahEntity>[];
+
+    if (!_hasAutoScrolled && widget.activeSurah != null && allSurahs.isNotEmpty) {
+      _hasAutoScrolled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToActiveSurah(allSurahs);
+      });
+    }
 
     final normalized = _searchQuery.normalizeForSearch();
     final filtered = allSurahs.where((s) {
@@ -91,37 +129,9 @@ class _SurahPickerDialogState extends ConsumerState<SurahPickerDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF1C1B1B),
-                    ),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () => Navigator.pop(context),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Icon(
-                          CupertinoIcons.xmark_circle_fill,
-                          size: 22,
-                          color: isDark ? Colors.white38 : Colors.black26,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            AppModalHeader(
+              title: widget.title,
+              bottomSpacing: 8,
             ),
 
             // Search Field
@@ -171,10 +181,12 @@ class _SurahPickerDialogState extends ConsumerState<SurahPickerDialog> {
                       ),
                     )
                   : RawScrollbar(
+                      controller: _scrollController,
                       thumbColor: colorScheme.primary.withValues(alpha: 0.4),
                       radius: const Radius.circular(4),
                       thickness: 3,
                       child: ListView.separated(
+                        controller: _scrollController,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 6,
@@ -206,84 +218,86 @@ class _SurahPickerDialogState extends ConsumerState<SurahPickerDialog> {
                                 Navigator.pop(context, s);
                               },
                               borderRadius: BorderRadius.circular(10),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 10,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 30,
-                                      height: 30,
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? colorScheme.primary
-                                            : (isDark
-                                                ? Colors.white.withValues(
-                                                    alpha: 0.07,
-                                                  )
-                                                : Colors.black.withValues(
-                                                    alpha: 0.05,
-                                                  )),
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        s.number.toPersianDigit(),
-                                        style: TextStyle(
-                                          fontFamily:
-                                              AppTypography.fontFamily,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: isSelected
-                                              ? Colors.white
-                                              : (isDark
-                                                  ? Colors.white70
-                                                  : Colors.black87),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'سوره ${s.nameFa}',
-                                        style: TextStyle(
-                                          fontFamily:
-                                              AppTypography.fontFamily,
-                                          fontSize: 14,
-                                          fontWeight: isSelected
-                                              ? FontWeight.bold
-                                              : FontWeight.w500,
+                              child: SizedBox(
+                                height: 50,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 30,
+                                        height: 30,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
                                           color: isSelected
                                               ? colorScheme.primary
                                               : (isDark
-                                                  ? Colors.white
-                                                  : const Color(0xFF1C1B1B)),
+                                                  ? Colors.white.withValues(
+                                                      alpha: 0.07,
+                                                    )
+                                                  : Colors.black.withValues(
+                                                      alpha: 0.05,
+                                                    )),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          s.number.toPersianDigit(),
+                                          style: TextStyle(
+                                            fontFamily:
+                                                AppTypography.fontFamily,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : (isDark
+                                                    ? Colors.white70
+                                                    : Colors.black87),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    Text(
-                                      '${s.numberOfAyahs.toPersianDigit()} آیه • ص ${s.startPage.toPersianDigit()}',
-                                      style: TextStyle(
-                                        fontFamily:
-                                            AppTypography.fontFamily,
-                                        fontSize: 11.5,
-                                        color: isDark
-                                            ? Colors.white38
-                                            : Colors.black45,
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'سوره ${s.nameFa}',
+                                          style: TextStyle(
+                                            fontFamily:
+                                                AppTypography.fontFamily,
+                                            fontSize: 14,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
+                                            color: isSelected
+                                                ? colorScheme.primary
+                                                : (isDark
+                                                    ? Colors.white
+                                                    : const Color(0xFF1C1B1B)),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    if (isSelected) ...[
-                                      const SizedBox(width: 8),
-                                      Icon(
-                                        CupertinoIcons.checkmark_alt,
-                                        color: colorScheme.primary,
-                                        size: 17,
+                                      Text(
+                                        '${s.numberOfAyahs.toPersianDigit()} آیه • ص ${s.startPage.toPersianDigit()}',
+                                        style: TextStyle(
+                                          fontFamily:
+                                              AppTypography.fontFamily,
+                                          fontSize: 11.5,
+                                          color: isDark
+                                              ? Colors.white38
+                                              : Colors.black45,
+                                        ),
                                       ),
+                                      if (isSelected) ...[
+                                        const SizedBox(width: 8),
+                                        Icon(
+                                          CupertinoIcons.checkmark_alt,
+                                          color: colorScheme.primary,
+                                          size: 17,
+                                        ),
+                                      ],
                                     ],
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),

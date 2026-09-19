@@ -26,7 +26,6 @@ class DownloadHubScreen extends ConsumerWidget {
     final state = ref.watch(downloadHubControllerProvider);
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(62.0),
         child: Container(

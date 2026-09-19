@@ -322,8 +322,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     final double infoBarHeight = 40.0;
     final double headerHeight = appBarHeight + infoBarHeight;
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBgColor = isDark ? const Color(0xFF16191C) : const Color(0xFFEBE7CE);
+    final scaffoldBgColor = Theme.of(context).scaffoldBackgroundColor;
 
     return PopScope(
       canPop: !isSelectionMode,

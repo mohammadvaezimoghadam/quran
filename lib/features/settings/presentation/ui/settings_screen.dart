@@ -33,7 +33,6 @@ class SettingsScreen extends ConsumerWidget {
         : 'دسترسی نامحدود به تمامی قاریان برجسته و ترجمه‌های گویا';
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(62.0),
         child: Container(

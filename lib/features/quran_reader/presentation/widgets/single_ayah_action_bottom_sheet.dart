@@ -8,6 +8,7 @@ import '../../../../common/extensions/ayah_extension.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/go_router_provider.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -114,80 +115,53 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Pull Bar Indicator
-              Center(
-                child: Container(
-                  width: 42,
-                  height: 4.5,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.black12,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-              14.vSpace,
-
-              // 2. Centered Surah & Ayah Pill Header
-              Row(
-                children: [
-                  48.hSpace,
-                  Expanded(
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? primaryColor.withValues(alpha: 0.12)
-                              : primaryColor.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                          border: Border.all(
-                            color: isDark
-                                ? primaryColor.withValues(alpha: 0.25)
-                                : primaryColor.withValues(alpha: 0.20),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'سوره $cleanSurahName',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: primaryColor,
-                              ),
-                            ),
-                            6.hSpace,
-                            Text(
-                              '• آیه ${ayah.ayahNumber.toPersianDigit()}',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: primaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
+              AppModalHeader(
+                showDragHandle: true,
+                titleWidget: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? primaryColor.withValues(alpha: 0.12)
+                          : primaryColor.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                      border: Border.all(
+                        color: isDark
+                            ? primaryColor.withValues(alpha: 0.25)
+                            : primaryColor.withValues(alpha: 0.20),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: 'بستن',
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle,
-                      color: isDark ? Colors.white38 : Colors.black26,
-                      size: 24,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'سوره $cleanSurahName',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                        6.hSpace,
+                        Text(
+                          '• آیه ${ayah.ayahNumber.toPersianDigit()}',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                ],
+                ),
+                bottomSpacing: 14,
               ),
-              14.vSpace,
 
               // 3. Grid of 5 Standard Ayah Actions
               Row(
@@ -206,17 +180,18 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       label: isAudioPlayingNow ? 'توقف' : 'پخش',
                       onTap: () async {
                         HapticFeedback.lightImpact();
-                        Navigator.of(context).pop();
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        final navContext = rootNavigatorKey.currentContext ?? context;
+                        final container = ProviderScope.containerOf(navContext, listen: false);
 
-                        final controller = ref.read(quranAudioControllerProvider.notifier);
+                        Navigator.of(context).pop();
+                        container.read(selectedAyahActionProvider.notifier).clearSelection();
+
+                        final controller = container.read(quranAudioControllerProvider.notifier);
                         if (isAudioPlayingNow) {
                           controller.pause();
                         } else {
-                          final navContext = rootNavigatorKey.currentContext ?? context;
                           final isReady = await ReciterDownloadHelper.checkAndPromptForPlayback(
                             context: navContext,
-                            ref: ref,
                             surahId: ayah.surahId,
                           );
                           if (isReady) {
@@ -247,9 +222,12 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       label: isBookmarked ? 'نشان‌شده' : 'نشانه‌گذاری',
                       onTap: () async {
                         HapticFeedback.lightImpact();
+                        final navContext = rootNavigatorKey.currentContext ?? context;
+                        final container = ProviderScope.containerOf(navContext, listen: false);
+
                         Navigator.of(context).pop();
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
-                        final isAdded = await ref
+                        container.read(selectedAyahActionProvider.notifier).clearSelection();
+                        final isAdded = await container
                             .read(bookmarksControllerProvider.notifier)
                             .toggleBookmark(
                               surahId: ayah.surahId,
@@ -290,11 +268,12 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       iconColor: isDark ? Colors.white70 : Colors.black87,
                       label: 'لغت‌نامه',
                       onTap: () {
+                        final navContext = rootNavigatorKey.currentContext ?? context;
+                        final container = ProviderScope.containerOf(navContext, listen: false);
                         Navigator.of(context).pop();
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
-                        final targetContext = rootNavigatorKey.currentContext ?? context;
+                        container.read(selectedAyahActionProvider.notifier).clearSelection();
                         WordByWordBottomSheet.show(
-                          targetContext,
+                          navContext,
                           surahId: ayah.surahId,
                           surahName: cleanSurahName,
                           ayahNumber: ayah.ayahNumber,
@@ -315,10 +294,12 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       iconColor: isDark ? Colors.white70 : Colors.black87,
                       label: 'کپی آیه',
                       onTap: () async {
+                        final navContext = rootNavigatorKey.currentContext ?? context;
+                        final container = ProviderScope.containerOf(navContext, listen: false);
                         Navigator.of(context).pop();
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        container.read(selectedAyahActionProvider.notifier).clearSelection();
 
-                        final removeBrackets = ref
+                        final removeBrackets = container
                             .read(quranDisplaySettingsControllerProvider)
                             .removeTranslationBrackets;
 
@@ -351,10 +332,12 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       iconColor: isDark ? Colors.white70 : Colors.black87,
                       label: 'اشتراک',
                       onTap: () async {
+                        final navContext = rootNavigatorKey.currentContext ?? context;
+                        final container = ProviderScope.containerOf(navContext, listen: false);
                         Navigator.of(context).pop();
-                        ref.read(selectedAyahActionProvider.notifier).clearSelection();
+                        container.read(selectedAyahActionProvider.notifier).clearSelection();
 
-                        final removeBrackets = ref
+                        final removeBrackets = container
                             .read(quranDisplaySettingsControllerProvider)
                             .removeTranslationBrackets;
 

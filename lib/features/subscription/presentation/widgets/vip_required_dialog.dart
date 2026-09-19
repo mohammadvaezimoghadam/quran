@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -79,23 +80,14 @@ class VipRequiredDialog extends StatelessWidget {
         backgroundColor: colorScheme.surface,
         elevation: 8,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          padding: const EdgeInsets.only(top: 12, bottom: 18, left: 16, right: 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Title (Clean & Simple, No icon)
-              Text(
-                titleText,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
+              AppModalHeader(
+                title: titleText,
+                bottomSpacing: 8,
               ),
-
-              const SizedBox(height: 12),
 
               // Body Message (Short & Concise)
               Text(

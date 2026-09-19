@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_segmented_tab_bar.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -42,7 +43,6 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     final colors = context.colors;
     final colorScheme = context.colorScheme;
 
@@ -56,54 +56,17 @@ class _SurahSortBottomSheetState extends ConsumerState<SurahSortBottomSheet> {
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
-        top: 12,
         bottom: context.screenPadding.bottom + 20,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 38,
-              height: 4.5,
-              margin: const EdgeInsets.only(bottom: 14),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.black12,
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
+          const AppModalHeader(
+            showDragHandle: true,
+            bottomSpacing: 16.0,
+            title: 'مرتب‌سازی سوره‌ها',
           ),
-
-          // Header - Centered with balanced spacer
-          Row(
-            children: [
-              48.hSpace,
-              const Expanded(
-                child: Text(
-                  'مرتب‌سازی سوره‌ها',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: 'بستن',
-                icon: Icon(
-                  CupertinoIcons.xmark_circle_fill,
-                  size: 24,
-                  color: isDark ? Colors.white38 : Colors.black26,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-
-          16.vSpace,
 
           // 1. Hayat/Tafakor Style Segmented Control for Sort Order
           AppSegmentedTabBar(

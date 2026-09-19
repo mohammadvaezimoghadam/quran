@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -48,39 +49,56 @@ class SurahActionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text.rich(
-        TextSpan(
-          style: const TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 12, left: 16, right: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const TextSpan(text: 'صوت سوره '),
-            TextSpan(
-              text: surah.nameFa,
-              style: const TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 17,
-                color: AppColors.goldAccent,
-                fontWeight: FontWeight.bold,
+            AppModalHeader(
+              titleWidget: Text.rich(
+                TextSpan(
+                  style: const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  children: [
+                    const TextSpan(text: 'صوت سوره '),
+                    TextSpan(
+                      text: surah.nameFa,
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 17,
+                        color: AppColors.goldAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              bottomSpacing: 8,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                message ??
+                    'صوت این سوره به‌طور کامل موجود نیست. می‌توانید سوره را بخوانید و تا آیه دانلودشده گوش دهید.',
+                style: const TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 13.5,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
-          ],
-        ),
-        textAlign: TextAlign.center,
-      ),
-      content: Text(
-        message ?? 'صوت این سوره به‌طور کامل موجود نیست. می‌توانید سوره را بخوانید و تا آیه دانلودشده گوش دهید.',
-        style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 14),
-      ),
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      actions: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -172,6 +190,8 @@ class SurahActionDialog extends StatelessWidget {
           ],
         ),
       ],
-    );
+    ),
+  ),
+);
   }
 }

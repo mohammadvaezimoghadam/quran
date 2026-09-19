@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -51,50 +52,28 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     required VoidCallback? onTap,
     required String tooltip,
     Color? iconColor,
+    double size = 22,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveColor =
-        iconColor ?? (isDark ? Colors.white70 : Colors.black87);
+    final colorScheme = Theme.of(context).colorScheme;
+    final effectiveColor = iconColor ?? colorScheme.onSurface;
 
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(21),
-          child: Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : const Color(0xFFF2F2F7),
-              border: Border.all(
-                color: isDark
-                  ? Colors.white.withValues(alpha: 0.10)
-                  : const Color(0xFFE5E5EA),
-                width: 0.8,
-              ),
-            ),
-            child: Center(
-              child: Icon(
-                icon,
-                size: 21,
-                color: effectiveColor,
-              ),
-            ),
-          ),
-        ),
+    return IconButton(
+      tooltip: tooltip,
+      icon: Icon(
+        icon,
+        size: size,
+        color: effectiveColor,
       ),
+      splashRadius: 22,
+      onPressed: onTap,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = context.isDark;
     final colorScheme = Theme.of(context).colorScheme;
+    final colors = context.colors;
     final topPadding = MediaQuery.paddingOf(context).top;
 
     return Container(
@@ -106,12 +85,10 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         bottom: 2.0,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF16191C) : Colors.white,
+        color: colors.cardBackground,
         border: Border(
           bottom: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.07)
-                : const Color(0xFFE5E5EA),
+            color: colors.cardBorder,
             width: 0.8,
           ),
         ),
@@ -135,10 +112,11 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     return Row(
       key: const ValueKey('reader_app_bar_normal'),
       children: [
-        // 1. Back Button (Leading in RTL is on the Right)
+        // 1. Back Button (Standard Apple-style chevron across all screens)
         _buildIconButton(
           context: context,
           icon: CupertinoIcons.chevron_forward,
+          size: 24,
           onTap: onBackPressed ?? () => Navigator.of(context).maybePop(),
           tooltip: 'بازگشت',
         ),
@@ -234,54 +212,28 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
           tooltip: isBookmarked ? 'حذف نشانه' : 'نشانه‌گذاری',
         ),
 
-        const SizedBox(width: 6),
+        const SizedBox(width: 4),
 
-        // 4. Settings Popup Menu
-        Theme(
-          data: Theme.of(context).copyWith(
-            hoverColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
+        // 4. Settings Popup Menu (Standard icon button with no artificial circle wrapper)
+        PopupMenuButton<String>(
+          tooltip: 'تنظیمات و گزینه‌ها',
+          icon: Icon(
+            CupertinoIcons.slider_horizontal_3,
+            size: 22,
+            color: colorScheme.onSurface,
           ),
-          child: PopupMenuButton<String>(
-            tooltip: 'تنظیمات و گزینه‌ها',
-            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.12)
-                    : Colors.black.withValues(alpha: 0.08),
-                width: 0.8,
-              ),
-            ),
-            onSelected: onMenuSelected,
-            itemBuilder: menuItemBuilder ?? (_) => const [],
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : const Color(0xFFF2F2F7),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.10)
-                      : const Color(0xFFE5E5EA),
-                  width: 0.8,
-                ),
-              ),
-              child: Center(
-                child: Icon(
-                  CupertinoIcons.slider_horizontal_3,
-                  size: 19,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
+          splashRadius: 22,
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(
+              color: context.colors.cardBorder,
+              width: 0.8,
             ),
           ),
+          onSelected: onMenuSelected,
+          itemBuilder: menuItemBuilder ?? (_) => const [],
         ),
       ],
     );

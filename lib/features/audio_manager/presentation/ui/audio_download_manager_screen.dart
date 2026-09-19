@@ -91,7 +91,6 @@ class _AudioDownloadManagerScreenState
         }
       },
       child: Scaffold(
-        backgroundColor: colorScheme.surface,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(116.0),
           child: Container(

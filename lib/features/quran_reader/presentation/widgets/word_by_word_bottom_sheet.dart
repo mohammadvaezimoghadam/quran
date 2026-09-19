@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
@@ -63,36 +64,12 @@ class WordByWordBottomSheet extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              // Drag Handle
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: AppDimens.stackMd),
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                ),
+              AppModalHeader(
+                showDragHandle: true,
+                showDivider: true,
+                bottomSpacing: 0,
+                title: 'لغت‌نامه آیه ${ayahNumber.toPersianDigit()} سوره ${surahId.surahNameFa}',
               ),
-              
-              // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppDimens.stackLg),
-                child: Text(
-                  'لغت‌نامه آیه ${ayahNumber.toPersianDigit()} سوره ${surahId.surahNameFa}',
-                  textAlign: TextAlign.center,
-                  textDirection: TextDirection.rtl,
-                  style: TextStyle(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: AppTypography.fontFamily,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppDimens.stackMd),
-              
-              // Divider
-              Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
               
               // Content
               Expanded(

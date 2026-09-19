@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-import '../../../../common/widgets/islamic_katibah_app_bar.dart';
+import '../../../../common/widgets/app_modal_header.dart';
+import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// Commercial Wi-Fi AP Device Model for IoT connection
@@ -133,121 +135,126 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
           builder: (context, setDialogState) {
             return Directionality(
               textDirection: TextDirection.rtl,
-              child: AlertDialog(
+              child: Dialog(
                 backgroundColor: Colors.white,
-                surfaceTintColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                title: Text(
-                  'اتصال به ${device.ssid}',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'لطفاً رمز عبور اکسس‌پوینت این دستگاه را وارد کنید:',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12,
-                        color: Colors.black87,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppModalHeader(
+                        title: 'اتصال به ${device.ssid}',
+                        onClose: () => Navigator.pop(dialogCtx),
+                        bottomSpacing: 10,
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: passController,
-                      obscureText: obscurePassword,
-                      autofocus: false,
-                      style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 14),
-                      decoration: InputDecoration(
-                        labelText: 'رمز عبور (تست: 1234)',
-                        prefixIcon: Icon(CupertinoIcons.lock_fill, color: primaryColor, size: 18),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            obscurePassword
-                                ? CupertinoIcons.eye_fill
-                                : CupertinoIcons.eye_slash_fill,
-                            color: Colors.grey,
-                            size: 18,
+                      const Text(
+                        'لطفاً رمز عبور اکسس‌پوینت این دستگاه را وارد کنید:',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 12,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: passController,
+                        obscureText: obscurePassword,
+                        autofocus: false,
+                        style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 14),
+                        decoration: InputDecoration(
+                          labelText: 'رمز عبور (تست: 1234)',
+                          prefixIcon: Icon(CupertinoIcons.lock_fill, color: primaryColor, size: 18),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscurePassword
+                                  ? CupertinoIcons.eye_fill
+                                  : CupertinoIcons.eye_slash_fill,
+                              color: Colors.grey,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              setDialogState(() {
+                                obscurePassword = !obscurePassword;
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            setDialogState(() {
-                              obscurePassword = !obscurePassword;
-                            });
-                          },
+                          errorText: errorMessage,
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: primaryColor.withValues(alpha: 0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: primaryColor, width: 1.8),
+                          ),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         ),
-                        errorText: errorMessage,
-                        filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: primaryColor.withValues(alpha: 0.3)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: primaryColor, width: 1.8),
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(dialogCtx),
+                              child: const Text(
+                                'انصراف',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (passController.text.trim() == '1234') {
+                                  Navigator.pop(dialogCtx);
+                                  _connectToWifiDevice(
+                                      device, passController.text.trim());
+                                } else {
+                                  setDialogState(() {
+                                    errorMessage = 'رمز عبور اشتباه است! (1234)';
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                elevation: 1,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'اتصال و ورود',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogCtx),
-                    child: const Text(
-                      'انصراف',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (passController.text.trim() == '1234') {
-                        Navigator.pop(dialogCtx);
-                        _connectToWifiDevice(
-                            device, passController.text.trim());
-                      } else {
-                        setDialogState(() {
-                          errorMessage = 'رمز عبور اشتباه است! (1234)';
-                        });
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      elevation: 1,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      'اتصال و ورود',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             );
           },
@@ -295,28 +302,9 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
         _appStep = 1; // Move to Dashboard
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(CupertinoIcons.checkmark_circle_fill,
-                  color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'ارتباط با وای‌فای ${device.ssid} برقرار شد (IP: ${device.defaultIp})',
-                  style: const TextStyle(fontFamily: AppTypography.fontFamily),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: primaryColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 3),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        'ارتباط با وای‌فای ${device.ssid} برقرار شد (IP: ${device.defaultIp})',
       );
     } else {
       // Show Wi-Fi Connection Warning Dialog with detailed guidance & bypass button
@@ -324,58 +312,66 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
         context: context,
         builder: (ctx) => Directionality(
           textDirection: TextDirection.rtl,
-          child: AlertDialog(
+          child: Dialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text(
-              'ارتباط با 192.168.4.1 برقرار نشد',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppModalHeader(
+                    title: 'عدم برقراری ارتباط با دستگاه',
+                    onClose: () => Navigator.pop(ctx),
+                    bottomSpacing: 10,
+                  ),
+                  const Text(
+                    'دلایل متداول عدم برقراری ارتباط با NodeMCU:',
+                    style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '۱. وای‌فای گوشی به شبکه Quran_Smart_NodeMCU متصل نیست (رمز: 1234).\n'
+                    '۲. دیتا (اینترنت همراه 4G/5G) روشن است و اندروید ترافیک را به اینترنت همراه می‌فرستد. (لطفاً دیتای همراه را موقتا خاموش کنید).\n'
+                    '۳. پیام اندروید مبنی بر «وای‌فای اینترنت ندارد، آیا متصل بمانید؟» را تأیید نکرده‌اید.',
+                    style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 12, height: 1.6, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            setState(() {
+                              _isConnected = true;
+                              _appStep = 1; // Direct test mode
+                            });
+                          },
+                          child: const Text(
+                            'ورود به داشبورد (تست UI)',
+                            style: TextStyle(fontFamily: AppTypography.fontFamily, color: Colors.grey, fontSize: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text('تلاش مجدد', style: TextStyle(fontFamily: AppTypography.fontFamily)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            content: const Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'دلایل متداول عدم برقراری ارتباط با NodeMCU:',
-                  style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  '۱. وای‌فای گوشی به شبکه Quran_Smart_NodeMCU متصل نیست (رمز: 1234).\n'
-                  '۲. دیتا (اینترنت همراه 4G/5G) روشن است و اندروید ترافیک را به اینترنت همراه می‌فرستد. (لطفاً دیتای همراه را موقتا خاموش کنید).\n'
-                  '۳. پیام اندروید مبنی بر «وای‌فای اینترنت ندارد، آیا متصل بمانید؟» را تأیید نکرده‌اید.',
-                  style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 12, height: 1.6, color: Colors.black87),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  setState(() {
-                    _isConnected = true;
-                    _appStep = 1; // Direct test mode
-                  });
-                },
-                child: const Text(
-                  'ورود به داشبورد (تست UI)',
-                  style: TextStyle(fontFamily: AppTypography.fontFamily, color: Colors.grey, fontSize: 12),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: const Text('تلاش مجدد', style: TextStyle(fontFamily: AppTypography.fontFamily)),
-              ),
-            ],
           ),
         ),
       );
@@ -412,34 +408,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(CupertinoIcons.paperplane_fill,
-                color: Colors.white, size: 16),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'بروزرسانی صفحه OLED: $url',
-                style: const TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: primaryColor,
-        duration: const Duration(milliseconds: 1400),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    AppSnackBar.showSuccess(context, 'بروزرسانی صفحه OLED: $url');
   }
 
   void _setPageNumber(int page) {
@@ -464,15 +433,66 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-        scaffoldBackgroundColor: const Color(0xFFF8FAFC), // Pure light background
+        scaffoldBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
       ),
       child: Scaffold(
-        appBar: IslamicKatibahAppBar(
-          surahName: _appStep == 0
-              ? 'جستجوی دستگاه (SoftAP)'
-              : 'مدیریت دستگاه NodeMCU',
-          fontFamily: AppTypography.fontFamily,
-          showSearchField: false,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60.0),
+          child: Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.paddingOf(context).top + 4.0,
+              left: 12.0,
+              right: 6.0,
+              bottom: 8.0,
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF16191C)
+                  : Colors.white,
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : const Color(0xFFE5E5EA),
+                  width: 0.8,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: 'بازگشت',
+                  icon: Icon(
+                    CupertinoIcons.chevron_forward,
+                    size: 24,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  splashRadius: 22,
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+                Expanded(
+                  child: Text(
+                    _appStep == 0
+                        ? 'جستجوی دستگاه (SoftAP)'
+                        : 'مدیریت دستگاه NodeMCU',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 48),
+              ],
+            ),
+          ),
         ),
         body: Directionality(
           textDirection: TextDirection.rtl,
@@ -1427,34 +1447,53 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                   context: context,
                   builder: (ctx) => Directionality(
                     textDirection: TextDirection.rtl,
-                    child: AlertDialog(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      title: const Text(
-                        'راه‌اندازی مجدد NodeMCU',
-                        style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                      content: const Text(
-                        'آیا از ریست و راه‌اندازی مجدد نرم‌افزاری برد NodeMCU مطمئن هستید؟',
-                        style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 12),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('انصراف', style: TextStyle(fontFamily: AppTypography.fontFamily, color: Colors.grey)),
+                    child: Dialog(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppModalHeader(
+                              title: 'راه‌اندازی مجدد NodeMCU',
+                              onClose: () => Navigator.pop(ctx),
+                              bottomSpacing: 12,
+                            ),
+                            const Text(
+                              'آیا از ریست و راه‌اندازی مجدد نرم‌افزاری برد NodeMCU مطمئن هستید؟',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 13, height: 1.5),
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('انصراف', style: TextStyle(fontFamily: AppTypography.fontFamily, color: Colors.grey)),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      _sendApiCommand('reboot', '');
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange.shade700,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    ),
+                                    child: const Text('ریست برد', style: TextStyle(fontFamily: AppTypography.fontFamily)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            _sendApiCommand('reboot', '');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange.shade700,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: const Text('ریست برد', style: TextStyle(fontFamily: AppTypography.fontFamily)),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 );

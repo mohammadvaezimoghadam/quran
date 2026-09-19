@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_cached_network_image.dart';
-import '../../../../core/theme/app_dimens.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../features/quran_reader/application/controllers/reciter_providers.dart';
@@ -295,55 +295,13 @@ class _ReciterSelectionBottomSheetState
           padding: EdgeInsets.only(bottom: keyboardHeight),
           child: Column(
             children: [
-              12.vSpace,
-              // Drag Handle
-              Center(
-                child: Container(
-                  width: 38.0,
-                  height: 4.5,
-                  decoration: BoxDecoration(
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                  ),
-                ),
+              AppModalHeader(
+                showDragHandle: true,
+                bottomSpacing: 12.0,
+                title: widget.isTranslationMode
+                    ? 'انتخاب گوینده ترجمه'
+                    : AppConstants.selectReciterTitle,
               ),
-              14.vSpace,
-
-              // Header Section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 48),
-                    Expanded(
-                      child: Text(
-                        widget.isTranslationMode
-                            ? 'انتخاب گوینده ترجمه'
-                            : AppConstants.selectReciterTitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'بستن',
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(
-                        CupertinoIcons.xmark_circle_fill,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white38
-                            : Colors.black26,
-                        size: 24.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              12.vSpace,
 
               // Search Bar
               Padding(

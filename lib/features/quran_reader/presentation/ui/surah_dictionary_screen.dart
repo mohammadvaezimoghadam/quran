@@ -89,7 +89,6 @@ class _SurahDictionaryScreenState extends ConsumerState<SurahDictionaryScreen> {
     final surahDisplayName = currentSurah?.nameFa ?? _currentSurahId.surahNameFa;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(118.0),
         child: Container(

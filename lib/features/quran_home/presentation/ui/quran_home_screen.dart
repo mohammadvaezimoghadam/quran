@@ -28,7 +28,6 @@ class QuranHomeScreen extends ConsumerWidget {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       extendBody: true,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight + 8),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../application/controllers/quick_access_controller.dart';
 import '../../domain/entities/quick_access_tool_entity.dart';
@@ -40,52 +41,18 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
         color: colors.dialogSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimens.radiusLg)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 16.0),
       child: SafeArea(
         top: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Drag Handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white24 : Colors.black12,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+            const AppModalHeader(
+              showDragHandle: true,
+              bottomSpacing: 12.0,
+              title: 'انتخاب ابزار برای این جایگاه',
             ),
-            16.vSpace,
-
-            // Sheet Title
-            Row(
-              children: [
-                48.hSpace,
-                const Expanded(
-                  child: Text(
-                    'انتخاب ابزار برای این جایگاه',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'بستن',
-                  icon: Icon(
-                    CupertinoIcons.xmark_circle_fill,
-                    size: 24,
-                    color: isDark ? Colors.white38 : Colors.black26,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            12.vSpace,
 
             if (availableTools.isEmpty)
               const Padding(

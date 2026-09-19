@@ -8,6 +8,7 @@ import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/widgets/surah_picker_dialog.dart';
 import '../../../../core/data/local/sqflite/sqflite_service_provider.dart';
@@ -117,48 +118,11 @@ class _QuranQuickJumpBottomSheetState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-              // 1. Drag Handle
-              10.vSpace,
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.black12,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+              const AppModalHeader(
+                showDragHandle: true,
+                bottomSpacing: 14.0,
+                title: 'پرش سریع در قرآن',
               ),
-              12.vSpace,
-
-              // 2. Header Bar
-              Row(
-                children: [
-                  const SizedBox(width: 44),
-                  Expanded(
-                    child: Text(
-                      'پرش سریع در قرآن',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1C1B1B),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'بستن',
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle_fill,
-                      size: 24,
-                      color: isDark ? Colors.white38 : Colors.black26,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              14.vSpace,
 
               // 3. The Live Interconnected Trio Card
               Container(
@@ -953,208 +917,203 @@ class _QuranQuickJumpBottomSheetState
               onSubmitted(val);
             }
 
-            return AlertDialog(
+            return Dialog(
               backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              surfaceTintColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              title: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF1C1B1B),
-                    ),
-                  ),
-                  8.vSpace,
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: isDark ? 0.15 : 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.22),
-                        width: 0.8,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AppModalHeader(
+                        title: title,
+                        onClose: () => Navigator.pop(ctx),
+                        bottomSpacing: 6,
                       ),
-                    ),
-                    child: Text(
-                      'محدوده مجاز: از ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()}',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: primaryColor,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.22),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          'محدوده مجاز: از ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()}',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: primaryColor,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    10.vSpace,
-                    TextField(
-                      controller: textController,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.done,
-                      autofocus: true,
-                      textAlign: TextAlign.center,
-                      inputFormatters: [
-                        TextInputFormatter.withFunction((oldValue, newValue) {
-                          final converted = newValue.text.toPersianDigit();
-                          return newValue.copyWith(
-                            text: converted,
-                            selection: newValue.selection,
-                          );
-                        }),
-                      ],
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1C1B1B),
-                      ),
-                      onChanged: (text) {
-                        final clean = text.trim().toEnglishDigit();
-                        if (clean.isEmpty) {
-                          if (errorMessage != null) {
+                      12.vSpace,
+                      TextField(
+                        controller: textController,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        autofocus: true,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          TextInputFormatter.withFunction((oldValue, newValue) {
+                            final converted = newValue.text.toPersianDigit();
+                            return newValue.copyWith(
+                              text: converted,
+                              selection: newValue.selection,
+                            );
+                          }),
+                        ],
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF1C1B1B),
+                        ),
+                        onChanged: (text) {
+                          final clean = text.trim().toEnglishDigit();
+                          if (clean.isEmpty) {
+                            if (errorMessage != null) {
+                              setDialogState(() {
+                                errorMessage = null;
+                              });
+                            }
+                            return;
+                          }
+                          final val = int.tryParse(clean);
+                          String? newError;
+                          if (val == null) {
+                            newError = 'لطفاً یک عدد معتبر وارد کنید';
+                          } else if (val < minVal || val > maxVal) {
+                            newError =
+                                'عدد باید بین ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()} باشد.';
+                          }
+
+                          if (newError != errorMessage) {
                             setDialogState(() {
-                              errorMessage = null;
+                              errorMessage = newError;
                             });
                           }
-                          return;
-                        }
-                        final val = int.tryParse(clean);
-                        String? newError;
-                        if (val == null) {
-                          newError = 'لطفاً یک عدد معتبر وارد کنید';
-                        } else if (val < minVal || val > maxVal) {
-                          newError =
-                              'عدد باید بین ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()} باشد.';
-                        }
-
-                        if (newError != errorMessage) {
-                          setDialogState(() {
-                            errorMessage = newError;
-                          });
-                        }
-                      },
-                      onSubmitted: (_) => submit(),
-                      decoration: InputDecoration(
-                        hintText: '${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()}',
-                        helperText: errorMessage == null
-                            ? 'عدد بین ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()} را وارد کنید'
-                            : null,
-                        helperStyle: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 12,
-                          color: isDark ? Colors.white54 : Colors.black54,
-                        ),
-                        errorText: errorMessage,
-                        errorMaxLines: 2,
-                        errorStyle: const TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.redAccent,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        filled: true,
-                        fillColor: isDark
-                            ? Colors.white.withValues(alpha: 0.07)
-                            : const Color(0xFFF5F3EE),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: isDark ? Colors.white12 : Colors.black12,
+                        },
+                        onSubmitted: (_) => submit(),
+                        decoration: InputDecoration(
+                          hintText: '${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()}',
+                          helperText: errorMessage == null
+                              ? 'عدد بین ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()} را وارد کنید'
+                              : null,
+                          helperStyle: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 12,
+                            color: isDark ? Colors.white54 : Colors.black54,
                           ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: errorMessage != null
-                                ? Colors.redAccent
-                                : (isDark ? Colors.white12 : Colors.black12),
-                            width: 1,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: errorMessage != null
-                                ? Colors.redAccent
-                                : primaryColor,
-                            width: 1.8,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
+                          errorText: errorMessage,
+                          errorMaxLines: 2,
+                          errorStyle: const TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                             color: Colors.redAccent,
-                            width: 1.5,
                           ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Colors.redAccent,
-                            width: 2,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          filled: true,
+                          fillColor: isDark
+                              ? Colors.white.withValues(alpha: 0.07)
+                              : const Color(0xFFF5F3EE),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: isDark ? Colors.white12 : Colors.black12,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: errorMessage != null
+                                  ? Colors.redAccent
+                                  : (isDark ? Colors.white12 : Colors.black12),
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: errorMessage != null
+                                  ? Colors.redAccent
+                                  : primaryColor,
+                              width: 1.8,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Colors.redAccent,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Colors.redAccent,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      16.vSpace,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(
+                                'انصراف',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 14,
+                                  color: isDark ? Colors.white60 : Colors.black54,
+                                ),
+                              ),
+                            ),
+                          ),
+                          12.hSpace,
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 11,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                'تأیید',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    'انصراف',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 14,
-                      color: isDark ? Colors.white60 : Colors.black54,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'تأیید',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
             );
           },
         );

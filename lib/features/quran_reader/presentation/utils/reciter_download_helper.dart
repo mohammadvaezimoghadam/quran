@@ -20,6 +20,18 @@ import '../../domain/enums/audio_playback_mode.dart';
 import '../../../subscription/presentation/utils/audio_vip_helper.dart';
 
 abstract class ReciterDownloadHelper {
+  static ProviderContainer _getContainer(BuildContext context) {
+    final navContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
+    if (navContext != null) {
+      return ProviderScope.containerOf(navContext, listen: false);
+    }
+    final rootContext = rootNavigatorKey.currentContext;
+    if (rootContext != null) {
+      return ProviderScope.containerOf(rootContext, listen: false);
+    }
+    throw StateError('No active BuildContext or ProviderContainer found.');
+  }
+
   /// Mode-aware download check.
   /// Based on the current [AudioPlaybackMode], checks whether all required
   /// audio sources (quran reciter and/or translation reader) are downloaded.
@@ -27,18 +39,19 @@ abstract class ReciterDownloadHelper {
   /// Returns `true` only if ALL required sources are downloaded.
   static Future<bool> checkAndPromptForPlayback({
     required BuildContext context,
-    required WidgetRef ref,
+    WidgetRef? ref,
     int? surahId,
   }) async {
     final initialContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
     if (initialContext == null) return false;
 
-    final audioState = ref.read(quranAudioControllerProvider);
+    final container = _getContainer(initialContext);
+    final audioState = container.read(quranAudioControllerProvider);
     final mode = audioState.playbackMode;
     final quranReciter = audioState.selectedReciter;
     final translationReciter = audioState.selectedTranslationReciter;
 
-    final readerSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
+    final readerSurahId = container.read(quranReaderControllerProvider).currentSurahId;
     final activeSurahId = surahId ??
         (readerSurahId != 0 ? readerSurahId : null) ??
         audioState.currentSurahId ??
@@ -75,12 +88,12 @@ abstract class ReciterDownloadHelper {
       if (!isTranslationAllowed) return false;
     }
 
-    final downloadTasks = ref.read(audioDownloadControllerProvider);
+    final downloadTasks = container.read(audioDownloadControllerProvider);
 
     // Check Quran reciter first (if needed)
     if (needsQuran && quranReciter != null) {
       final isQuranReady = await _isReciterSurahDownloaded(
-        ref: ref,
+        container: container,
         reciterId: quranReciter.id,
         surahId: activeSurahId,
       );
@@ -100,7 +113,7 @@ abstract class ReciterDownloadHelper {
 
         await _showDownloadDialog(
           context: navContext,
-          ref: ref,
+          container: container,
           surahId: activeSurahId,
           message: 'صوت تلاوت قاری «${quranReciter.name}» برای این سوره دانلود نشده است.',
           isTranslation: false,
@@ -112,7 +125,7 @@ abstract class ReciterDownloadHelper {
     // Check Translation reader (if needed)
     if (needsTranslation && translationReciter != null) {
       final isTranslationReady = await _isReciterSurahDownloaded(
-        ref: ref,
+        container: container,
         reciterId: translationReciter.id,
         surahId: activeSurahId,
       );
@@ -132,7 +145,7 @@ abstract class ReciterDownloadHelper {
 
         await _showDownloadDialog(
           context: navContext,
-          ref: ref,
+          container: container,
           surahId: activeSurahId,
           message: 'صوت ترجمه گویای «${translationReciter.name}» برای این سوره دانلود نشده است.',
           isTranslation: true,
@@ -148,17 +161,18 @@ abstract class ReciterDownloadHelper {
   /// Does NOT consider playback mode — just checks one specific reciter.
   static Future<bool> checkAndPromptSurahDownload({
     required BuildContext context,
-    required WidgetRef ref,
+    WidgetRef? ref,
     required ReciterEntity reciter,
     int? surahId,
   }) async {
     final initialContext = (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
     if (initialContext == null) return false;
 
-    final readerSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
+    final container = _getContainer(initialContext);
+    final readerSurahId = container.read(quranReaderControllerProvider).currentSurahId;
     final activeSurahId = surahId ??
         (readerSurahId != 0 ? readerSurahId : null) ??
-        ref.read(quranAudioControllerProvider).currentSurahId ??
+        container.read(quranAudioControllerProvider).currentSurahId ??
         1;
 
     // ── Check Audio VIP Access ──
@@ -179,7 +193,7 @@ abstract class ReciterDownloadHelper {
     }
 
     final isReady = await _isReciterSurahDownloaded(
-      ref: ref,
+      container: container,
       reciterId: reciter.id,
       surahId: activeSurahId,
     );
@@ -188,7 +202,7 @@ abstract class ReciterDownloadHelper {
       final navContext = rootNavigatorKey.currentContext ?? initialContext;
       if (!navContext.mounted) return false;
 
-      final task = ref.read(audioDownloadControllerProvider)['r${reciter.id}_s$activeSurahId'];
+      final task = container.read(audioDownloadControllerProvider)['r${reciter.id}_s$activeSurahId'];
       if (task?.status == DownloadTaskStatus.downloading) {
         final percent = ((task?.progress ?? 0) * 100).clamp(0, 100).toInt();
         AppSnackBar.showInfo(
@@ -201,7 +215,7 @@ abstract class ReciterDownloadHelper {
       final isTranslation = reciter.styleId == 4;
       await _showDownloadDialog(
         context: navContext,
-        ref: ref,
+        container: container,
         surahId: activeSurahId,
         message: isTranslation
             ? 'صوت ترجمه گویای «${reciter.name}» برای این سوره دانلود نشده است.'
@@ -216,11 +230,11 @@ abstract class ReciterDownloadHelper {
   // ── Private helpers ──
 
   static Future<bool> _isReciterSurahDownloaded({
-    required WidgetRef ref,
+    required ProviderContainer container,
     required int reciterId,
     required int surahId,
   }) async {
-    final storageService = ref.read(audioStorageServiceProvider);
+    final storageService = container.read(audioStorageServiceProvider);
     final isSurahMarked = storageService.isSurahDownloaded(reciterId, surahId);
     if (isSurahMarked) return true;
 
@@ -234,12 +248,12 @@ abstract class ReciterDownloadHelper {
 
   static Future<void> _showDownloadDialog({
     required BuildContext context,
-    required WidgetRef ref,
+    required ProviderContainer container,
     required int surahId,
     required String message,
     required bool isTranslation,
   }) async {
-    final surahList = ref.read(surahListControllerProvider).surahs;
+    final surahList = container.read(surahListControllerProvider).surahs;
     final surah = surahList.firstWhere(
       (s) => s.number == surahId,
       orElse: () => SurahEntity(
@@ -254,7 +268,7 @@ abstract class ReciterDownloadHelper {
       ),
     );
 
-    final fontScript = ref.read(
+    final fontScript = container.read(
       quranDisplaySettingsControllerProvider.select((s) => s.fontScript),
     );
     final surahFontFamily = AppTypography.getFontFamilyByScript(fontScript);
@@ -269,7 +283,7 @@ abstract class ReciterDownloadHelper {
       message: message,
       onReadSurah: () {},
       onDownloadAudio: () {
-        ref.read(goRouterProvider).pushNamed(
+        container.read(goRouterProvider).pushNamed(
           audioDownloadManagerRoute,
           queryParameters: {
             'surahId': surahId.toString(),

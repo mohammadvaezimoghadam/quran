@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/widgets/quran_markdown_view.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -196,99 +197,67 @@ class _QuranAiBottomSheetState extends ConsumerState<QuranAiBottomSheet> {
         child: Column(
           children: [
             // 1. Drag Handle
-            10.vSpace,
-            Center(
-              child: Container(
-                width: 44,
-                height: 4.5,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : Colors.black.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-            12.vSpace,
-
-            // 2. Luxury Header with Quran Coordinates
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              child: Row(
+            AppModalHeader(
+              showDragHandle: true,
+              showDivider: true,
+              dividerColor: borderColor,
+              bottomSpacing: 0,
+              titleWidget: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(width: 48),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              isWord ? 'تدبر هوشمند در واژه' : 'تدبر هوشمند در آیه',
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                            6.hSpace,
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.08)
-                                    : const Color(0xFFEDE9E2),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '${widget.request.surahName} • آیه ${widget.request.ayahNumber.toPersianDigit()}',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 11,
-                                  color: isDark ? Colors.white70 : Colors.black54,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        isWord ? 'تدبر هوشمند در واژه' : 'تدبر هوشمند در آیه',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
-                        2.vSpace,
-                        Text(
-                          '«${widget.request.selectedText.trim()}»',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
+                      ),
+                      6.hSpace,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : const Color(0xFFEDE9E2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${widget.request.surahName} • آیه ${widget.request.ayahNumber.toPersianDigit()}',
                           style: TextStyle(
-                            fontFamily: arabicFontFamily,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: goldColor,
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-
-                  // Close Button
-                  IconButton(
-                    tooltip: 'بستن',
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle_fill,
-                      color: isDark ? Colors.white38 : Colors.black26,
-                      size: 24,
+                  2.vSpace,
+                  Text(
+                    '«${widget.request.selectedText.trim()}»',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: arabicFontFamily,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: goldColor,
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
             ),
-            10.vSpace,
-            Divider(height: 1, color: borderColor),
 
             // 3. Horizontal Suggestion Chips (تنها زمانی که چت آغاز شده در بالا نمایش داده می‌شوند)
             if (hasStartedChat)
