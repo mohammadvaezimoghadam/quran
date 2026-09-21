@@ -42,12 +42,13 @@ class SubscriptionPlanCard extends StatelessWidget {
     final isDark = context.isDark;
     final primaryColor = colorScheme.primary;
 
-    final handleAction = onPurchase ?? onTap;
+    final isEffectivelyDisabled = isVip || isDisabled;
+    final handleAction = isEffectivelyDisabled ? null : (onPurchase ?? onTap);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: (isLoading || isDisabled) ? null : () => handleAction?.call(),
+        onTap: (isLoading || isEffectivelyDisabled) ? null : () => handleAction?.call(),
         borderRadius: BorderRadius.circular(AppDimens.radiusMd),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
@@ -66,47 +67,18 @@ class SubscriptionPlanCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          product.title,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14.0,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        if (product.discountBadge != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: primaryColor.withValues(
-                                alpha: isDark ? 0.22 : 0.12,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              product.discountBadge!,
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.bold,
-                                color: primaryColor,
-                              ),
-                            ),
-                          ),
-                      ],
+                    Text(
+                      product.title,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.0,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      _formatPrice(product.priceToman),
+                      product.formattedPrice ?? _formatPrice(product.priceToman),
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontWeight: FontWeight.w600,
@@ -123,7 +95,7 @@ class SubscriptionPlanCard extends StatelessWidget {
               SizedBox(
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: (isLoading || isDisabled)
+                  onPressed: (isLoading || isEffectivelyDisabled)
                       ? null
                       : () => handleAction?.call(),
                   style: ElevatedButton.styleFrom(
@@ -149,7 +121,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                           ),
                         )
                       : Text(
-                          buttonText ?? (isVip ? 'تمدید' : 'خرید'),
+                          buttonText ?? (isVip ? 'فعال' : 'خرید'),
                           style: const TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 12.5,

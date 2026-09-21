@@ -43,6 +43,12 @@ class AppColors {
   static const Color onSurface = Color(0xFF1C1B1B);
   static const Color onSurfaceVariant = Color(0xFF3E4947);
   static const Color outline = Color(0xFF6E7977);
+
+  // Hablul Matin Alternating Ayah Backgrounds
+  static const Color ayahBackgroundOddLight = Color(0xFFE6F0DF); // Soft sage/olive parchment (Hablul Matin style)
+  static const Color ayahBackgroundEvenLight = Color(0xFFFAF2DD); // Warm cream parchment (Hablul Matin style)
+  static const Color ayahBackgroundOddDark = Color(0xFF141F1C); // Deep muted olive-slate
+  static const Color ayahBackgroundEvenDark = Color(0xFF0B100F); // Deep obsidian charcoal
   static const Color outlineVariant = Color(0xFFBDC9C6);
 
   // Error Colors

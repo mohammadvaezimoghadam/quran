@@ -4,10 +4,11 @@ import 'package:flutter/services.dart';
 
 import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
+import '../../../../../core/theme/app_dimens.dart';
 import '../../../../../core/theme/app_typography.dart';
 
-/// Modern Minimalist Quran Search Bar Widget
-/// Placed at the top of the Quran Home screen.
+/// Modern Apple-Style Quran Search Bar Widget
+/// Designed to be integrated directly as Row 2 of the Home Screen Header.
 class HomeSearchBarWidget extends StatelessWidget {
   final VoidCallback? onTap;
   final ValueChanged<String>? onChanged;
@@ -23,50 +24,38 @@ class HomeSearchBarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final colors = context.colors;
     final colorScheme = context.colorScheme;
 
+    final searchBgColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFF1EEE8);
+    final placeholderColor = isDark ? Colors.white38 : Colors.black38;
+
     return Container(
-      height: 50,
+      height: 44,
       decoration: BoxDecoration(
-        color: colors.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: colors.cardBorder,
-          width: 0.8,
-        ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8.0,
-                  offset: const Offset(0, 2.0),
-                ),
-              ],
+        color: searchBgColor,
+        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
         child: InkWell(
           onTap: () {
             HapticFeedback.selectionClick();
             onTap?.call();
           },
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Row(
               children: [
-                // Search Icon in Tafakor Mint Green
                 Icon(
                   CupertinoIcons.search,
                   size: 19,
                   color: colorScheme.primary,
                 ),
-                10.hSpace,
-
-                // Search Input Field or Placeholder
+                8.hSpace,
                 Expanded(
                   child: TextField(
                     controller: controller,
@@ -85,11 +74,11 @@ class HomeSearchBarWidget extends StatelessWidget {
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 13,
                         fontWeight: FontWeight.normal,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        color: placeholderColor,
                       ),
                       border: InputBorder.none,
                       isDense: true,
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
                     ),
                   ),
                 ),
@@ -101,3 +90,4 @@ class HomeSearchBarWidget extends StatelessWidget {
     );
   }
 }
+

@@ -9,7 +9,6 @@ import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_modal_header.dart';
-import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../common/widgets/surah_picker_dialog.dart';
 import '../../../../core/data/local/sqflite/sqflite_service_provider.dart';
 import '../../../../core/services/quran_navigation/domain/entities/ayah_target.dart';
@@ -59,7 +58,6 @@ class QuranQuickJumpBottomSheet extends ConsumerStatefulWidget {
 class _QuranQuickJumpBottomSheetState
     extends ConsumerState<QuranQuickJumpBottomSheet> {
   bool _isInitialized = false;
-  bool _isCalculating = false;
 
   // Interconnected Live State
   SurahEntity? _selectedSurah;
@@ -74,14 +72,41 @@ class _QuranQuickJumpBottomSheetState
     final colorScheme = context.colorScheme;
     final surahs = ref.watch(surahListControllerProvider.select((s) => s.surahs));
 
-    // Initialize from currently visible Ayah in reader or first surah
-    if (!_isInitialized && surahs.isNotEmpty) {
-      _isInitialized = true;
-      _initFromReader(surahs);
+    // Initialize from currently visible Ayah in reader or current surah
+    if (!_isInitialized) {
+      if (surahs.isNotEmpty) {
+        _isInitialized = true;
+        _initFromReader(surahs);
+      } else {
+        final currentSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
+        if (currentSurahId >= 1 && currentSurahId <= 114) {
+          _isInitialized = true;
+          _initFallback(currentSurahId);
+        }
+      }
+    } else if (surahs.isNotEmpty && _selectedSurah != null && _selectedSurah!.numberOfAyahs <= 7 && _selectedSurah!.englishName.isEmpty) {
+      // Upgrade fallback entity with full SQLite entity when surahs arrive
+      final found = surahs.where((s) => s.number == _selectedSurah!.number).firstOrNull;
+      if (found != null) {
+        _selectedSurah = found;
+      }
     }
 
-    final activeSurah = _selectedSurah ?? (surahs.isNotEmpty ? surahs.first : null);
-    final maxAyahs = activeSurah?.numberOfAyahs ?? 7;
+    final readerSurahId = ref.watch(quranReaderControllerProvider.select((s) => s.currentSurahId));
+    final activeSurah = _selectedSurah ??
+        (surahs.isNotEmpty
+            ? (surahs.where((s) => s.number == readerSurahId).firstOrNull ?? surahs.first)
+            : SurahEntity(
+                number: readerSurahId,
+                name: readerSurahId.surahNameFa,
+                englishName: '',
+                englishNameTranslation: '',
+                numberOfAyahs: 286,
+                revelationType: '',
+                startPage: 1,
+                startJuz: 1,
+              ));
+    final maxAyahs = activeSurah.numberOfAyahs;
 
     // Card styling inspired by Hayat/Tafakor modular system
     final cardBg = isDark
@@ -168,9 +193,7 @@ class _QuranQuickJumpBottomSheetState
                                     ),
                                     2.vSpace,
                                     Text(
-                                      activeSurah != null
-                                          ? '${activeSurah.number.toPersianDigit()}. سوره ${activeSurah.nameFa}'
-                                          : 'انتخاب سوره...',
+                                      '${activeSurah.number.toPersianDigit()}. سوره ${activeSurah.nameFa}',
                                       style: TextStyle(
                                         fontFamily: AppTypography.fontFamily,
                                         fontSize: 15.5,
@@ -249,7 +272,7 @@ class _QuranQuickJumpBottomSheetState
                             onChanged: (newVal) => _updateAyah(newVal),
                             onTapDirectEdit: () => _promptDirectNumber(
                               context: context,
-                              title: 'شماره آیه سوره ${activeSurah?.nameFa ?? ""}',
+                              title: 'شماره آیه سوره ${activeSurah.nameFa}',
                               currentVal: _currentAyahNumber,
                               minVal: 1,
                               maxVal: maxAyahs,
@@ -406,9 +429,7 @@ class _QuranQuickJumpBottomSheetState
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton.icon(
-                  onPressed: _isCalculating || activeSurah == null
-                      ? null
-                      : () => _handleConfirm(activeSurah),
+                  onPressed: () => _handleConfirm(activeSurah),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: Colors.white,
@@ -417,20 +438,9 @@ class _QuranQuickJumpBottomSheetState
                     ),
                     elevation: 0,
                   ),
-                  icon: _isCalculating
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(CupertinoIcons.paperplane_fill, size: 17),
+                  icon: const Icon(CupertinoIcons.paperplane_fill, size: 17),
                   label: Text(
-                    _isCalculating
-                        ? 'در حال انتقال...'
-                        : 'انتقال به سوره ${activeSurah?.nameFa ?? ""}، آیه ${_currentAyahNumber.toPersianDigit()}',
+                    'انتقال به سوره ${activeSurah.nameFa}، آیه ${_currentAyahNumber.toPersianDigit()}',
                     style: const TextStyle(
                       fontFamily: AppTypography.fontFamily,
                       fontWeight: FontWeight.bold,
@@ -481,7 +491,7 @@ class _QuranQuickJumpBottomSheetState
         ),
         8.hSpace,
         Material(
-          color: primaryColor.withValues(alpha: isDark ? 0.12 : 0.08),
+          color: btnBg,
           borderRadius: BorderRadius.circular(8),
           child: InkWell(
             onTap: onTapDirectEdit,
@@ -491,8 +501,8 @@ class _QuranQuickJumpBottomSheetState
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: primaryColor.withValues(alpha: isDark ? 0.40 : 0.30),
-                  width: 0.9,
+                  color: isDark ? Colors.white12 : Colors.black12,
+                  width: 0.8,
                 ),
               ),
               alignment: Alignment.center,
@@ -502,7 +512,7 @@ class _QuranQuickJumpBottomSheetState
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: primaryColor,
+                  color: isDark ? Colors.white : const Color(0xFF1C1B1B),
                 ),
               ),
             ),
@@ -554,8 +564,30 @@ class _QuranQuickJumpBottomSheetState
 
   // --- Logic & Synchronization ---
 
+  void _initFallback(int surahId) {
+    final ayahs = ref.read(quranReaderControllerProvider).ayahs;
+    final firstAyah = ayahs.isNotEmpty ? ayahs.first : null;
+    final page = firstAyah?.page ?? 1;
+    final juz = firstAyah?.juz ?? 1;
+
+    _selectedSurah = SurahEntity(
+      number: surahId,
+      name: surahId.surahNameFa,
+      englishName: '',
+      englishNameTranslation: '',
+      numberOfAyahs: ayahs.isNotEmpty ? ayahs.length : 7,
+      revelationType: '',
+      startPage: page,
+      startJuz: juz,
+    );
+    _currentAyahNumber = firstAyah?.ayahNumber ?? 1;
+    _currentPageNumber = page;
+    _currentJuzNumber = juz;
+  }
+
   void _initFromReader(List<SurahEntity> surahs) {
-    final ayahs = ref.read(quranReaderControllerProvider.select((s) => s.ayahs));
+    final ayahs = ref.read(quranReaderControllerProvider).ayahs;
+    final currentSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
     final itemPositionsListener = ref.read(activeItemPositionsListenerProvider);
 
     AyahEntity? currentAyah;
@@ -577,21 +609,14 @@ class _QuranQuickJumpBottomSheetState
       }
     }
 
-    if (currentAyah != null) {
-      final surahId = currentAyah.surahId;
-      _selectedSurah = surahs.firstWhere(
-        (s) => s.number == surahId,
-        orElse: () => surahs.first,
-      );
-      _currentAyahNumber = currentAyah.ayahNumber;
-      _currentPageNumber = currentAyah.page ?? _selectedSurah!.startPage;
-      _currentJuzNumber = currentAyah.juz ?? _selectedSurah!.startJuz;
-    } else {
-      _selectedSurah = surahs.first;
-      _currentAyahNumber = 1;
-      _currentPageNumber = _selectedSurah!.startPage;
-      _currentJuzNumber = _selectedSurah!.startJuz;
-    }
+    final targetSurahId = currentAyah?.surahId ?? currentSurahId;
+    _selectedSurah = surahs.firstWhere(
+      (s) => s.number == targetSurahId,
+      orElse: () => surahs.first,
+    );
+    _currentAyahNumber = currentAyah?.ayahNumber ?? 1;
+    _currentPageNumber = currentAyah?.page ?? _selectedSurah!.startPage;
+    _currentJuzNumber = currentAyah?.juz ?? _selectedSurah!.startJuz;
   }
 
   Future<void> _updateAyah(int newAyah) async {
@@ -698,25 +723,13 @@ class _QuranQuickJumpBottomSheetState
     }
   }
 
-  Future<void> _handleConfirm(SurahEntity surah) async {
-    final navService = ref.read(quranNavigationServiceProvider);
-    setState(() => _isCalculating = true);
-
-    try {
-      final target = await navService.getTargetBySurah(
-        surah.number,
-        ayahNumber: _currentAyahNumber,
-      );
-
-      if (mounted && target != null) {
-        Navigator.pop(context, target);
-      } else if (mounted) {
-        AppSnackBar.showError(context, 'موقعیت مورد نظر یافت نشد.');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isCalculating = false);
-      }
+  void _handleConfirm(SurahEntity surah) {
+    final target = AyahTarget(
+      surahId: surah.number,
+      ayahNumber: _currentAyahNumber,
+    );
+    if (mounted) {
+      Navigator.of(context).pop(target);
     }
   }
 
@@ -806,29 +819,8 @@ class _QuranQuickJumpBottomSheetState
                       AppModalHeader(
                         title: title,
                         onClose: () => Navigator.pop(ctx),
-                        bottomSpacing: 6,
+                        bottomSpacing: 12,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: isDark ? 0.15 : 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.22),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          'محدوده مجاز: از ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()}',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                      12.vSpace,
                       TextField(
                         controller: textController,
                         keyboardType: TextInputType.number,

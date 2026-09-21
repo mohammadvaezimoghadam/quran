@@ -64,6 +64,11 @@ class NavigationTargetNotifier extends Notifier<AyahTarget?> {
   void setTarget(AyahTarget? target) {
     state = target;
   }
+
+  void forceTarget(AyahTarget target) {
+    state = null;
+    state = target;
+  }
 }
 
 final navigationTargetProvider =
@@ -129,6 +134,22 @@ class ReaderControlsNotifier extends Notifier<ReaderControlsState> {
     );
   }
 
+  void enterFullScreen() {
+    state = const ReaderControlsState(
+      isFullScreen: true,
+      isControlsVisible: false,
+      isAudioBarCollapsed: true,
+    );
+  }
+
+  void exitFullScreen() {
+    state = const ReaderControlsState(
+      isFullScreen: false,
+      isControlsVisible: true,
+      isAudioBarCollapsed: false,
+    );
+  }
+
   void revealControls() {
     if (state.isFullScreen) {
       state = state.copyWith(
@@ -139,13 +160,14 @@ class ReaderControlsNotifier extends Notifier<ReaderControlsState> {
   }
 
   void toggleControls() {
-    if (state.isFullScreen) {
-      final nextVisible = !state.isControlsVisible;
-      state = state.copyWith(
-        isControlsVisible: nextVisible,
-        isAudioBarCollapsed: !nextVisible,
-      );
+    if (!state.isFullScreen) {
+      return;
     }
+    final nextVisible = !state.isControlsVisible;
+    state = state.copyWith(
+      isControlsVisible: nextVisible,
+      isAudioBarCollapsed: !nextVisible,
+    );
   }
 
   void reset() {

@@ -48,7 +48,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/surah-list',
         name: surahListRoute,
-        builder: (context, state) => const SurahListScreen(),
+        builder: (context, state) => const SurahListScreen(showBottomMiniPlayer: true),
       ),
       GoRoute(
         path: '/search',
@@ -97,11 +97,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: audioDownloadManagerRoute,
         builder: (context, state) {
           final surahIdStr = state.uri.queryParameters['surahId'];
+          final reciterIdStr = state.uri.queryParameters['reciterId'];
           final isTranslationStr = state.uri.queryParameters['isTranslation'];
           final surahId = surahIdStr != null ? int.tryParse(surahIdStr) : null;
+          final reciterId = reciterIdStr != null ? int.tryParse(reciterIdStr) : null;
           final isTranslationMode = isTranslationStr == 'true';
           return AudioDownloadManagerScreen(
             initialSurahId: surahId,
+            initialReciterId: reciterId,
             isTranslationMode: isTranslationMode,
           );
         },

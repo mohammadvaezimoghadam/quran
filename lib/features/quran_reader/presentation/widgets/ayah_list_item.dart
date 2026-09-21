@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/int_extension.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../translation_manager/presentation/widgets/ayah_translation_text.dart';
@@ -88,17 +89,23 @@ class AyahListItem extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final Color defaultBgColor = isDark
-        ? (ayah.ayahNumber % 2 == 0
-            ? Colors.transparent
-            : Colors.white.withValues(alpha: 0.025))
-        : (ayah.ayahNumber % 2 == 0
-            ? Colors.transparent
-            : Colors.black.withValues(alpha: 0.02));
+        ? (ayah.ayahNumber % 2 != 0
+            ? AppColors.ayahBackgroundOddDark
+            : AppColors.ayahBackgroundEvenDark)
+        : (ayah.ayahNumber % 2 != 0
+            ? AppColors.ayahBackgroundOddLight
+            : AppColors.ayahBackgroundEvenLight);
 
     final Color effectiveBgColor = isAudioActive
-        ? colorScheme.primary.withValues(alpha: isDark ? 0.22 : 0.12)
+        ? Color.alphaBlend(
+            colorScheme.primary.withValues(alpha: isDark ? 0.36 : 0.22),
+            defaultBgColor,
+          )
         : (isSelectedForAction
-            ? colorScheme.primary.withValues(alpha: 0.16)
+            ? Color.alphaBlend(
+                colorScheme.primary.withValues(alpha: isDark ? 0.28 : 0.14),
+                defaultBgColor,
+              )
             : defaultBgColor);
 
     final hasHeader = isPageStart ||
@@ -114,19 +121,22 @@ class AyahListItem extends ConsumerWidget {
         return;
       }
 
-      final controlsState = ref.read(readerControlsProvider);
-      if (controlsState.isControlsHidden) {
-        ref.read(readerControlsProvider.notifier).revealControls();
-        return;
-      }
-
       final currentSelected = ref.read(selectedAyahActionProvider);
       if (currentSelected.isNotEmpty) {
         // Tap toggles selection when selection mode is active
         ref
             .read(selectedAyahActionProvider.notifier)
             .toggleAyah(ayah.ayahNumber);
+        return;
       }
+
+      final controlsState = ref.read(readerControlsProvider);
+      if (controlsState.isFullScreen) {
+        // Tap on ayah toggles between full-screen controls hidden and visible
+        ref.read(readerControlsProvider.notifier).toggleControls();
+        return;
+      }
+      return;
     }
 
     return RepaintBoundary(

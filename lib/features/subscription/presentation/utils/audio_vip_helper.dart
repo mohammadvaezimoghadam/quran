@@ -37,6 +37,16 @@ abstract class AudioVipHelper {
       container.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
     }
 
+    // If playbackMode requires translation and user is non-VIP, immediately revert to onlyQuran
+    if (audioState.playbackMode.includesTranslation && !isVip) {
+      audioController.setPlaybackMode(AudioPlaybackMode.onlyQuran);
+      VipRequiredDialog.show(
+        context: targetContext,
+        isTranslation: true,
+      );
+      return false;
+    }
+
     final canPlay = AudioVipPolicy.canPlayReciter(
       reciterIdentifier: reciter?.identifier,
       surahId: surahId,
@@ -44,15 +54,6 @@ abstract class AudioVipHelper {
     );
 
     if (canPlay) return true;
-
-    // Check translation VIP access if mode requires translation
-    if (audioState.playbackMode.includesTranslation && !isVip) {
-      VipRequiredDialog.show(
-        context: targetContext,
-        isTranslation: true,
-      );
-      return false;
-    }
 
     final surahName = SurahConstants.getSurahName(surahId);
     final reciterName = reciter?.name ?? 'قاری منتخب';
@@ -94,6 +95,9 @@ abstract class AudioVipHelper {
       container.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
     }
     if (!isVip) {
+      container
+          .read(quranAudioControllerProvider.notifier)
+          .setPlaybackMode(AudioPlaybackMode.onlyQuran);
       VipRequiredDialog.show(
         context: targetContext,
         isTranslation: true,

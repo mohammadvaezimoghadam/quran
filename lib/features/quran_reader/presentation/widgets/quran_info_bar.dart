@@ -132,7 +132,7 @@ class QuranInfoBar extends ConsumerWidget {
             context,
             initialTab: tab,
           );
-          if (target != null) {
+          if (target != null && context.mounted) {
             onTargetSelected?.call(target);
           }
         },

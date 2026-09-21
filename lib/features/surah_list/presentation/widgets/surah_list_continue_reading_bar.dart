@@ -54,12 +54,12 @@ class SurahListContinueReadingBar extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF0D2522).withValues(alpha: 0.72)
+                  ? Colors.white.withValues(alpha: 0.08)
                   : Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(AppDimens.radiusFull),
               border: Border.all(
                 color: isDark
-                    ? Colors.white.withValues(alpha: 0.14)
+                    ? Colors.white.withValues(alpha: 0.08)
                     : Colors.white.withValues(alpha: 0.75),
                 width: 0.8,
               ),

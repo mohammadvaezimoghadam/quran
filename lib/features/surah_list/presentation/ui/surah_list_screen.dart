@@ -33,11 +33,13 @@ import '../widgets/surah_sort_bottom_sheet.dart';
 class SurahListScreen extends ConsumerStatefulWidget {
   final bool showBackButton;
   final VoidCallback? onBackPressed;
+  final bool showBottomMiniPlayer;
 
   const SurahListScreen({
     super.key,
     this.showBackButton = true,
     this.onBackPressed,
+    this.showBottomMiniPlayer = false,
   });
 
   @override
@@ -132,19 +134,23 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
           onDownloadTap: _handleSurahDownloadTap,
           onBeforeNavigation: () => _dismissSearchAndNavigate(() {}),
         ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!isSearching)
-                SurahListContinueReadingBar(
-                  onBeforeNavigation: () => _dismissSearchAndNavigate(() {}),
+        bottomNavigationBar: (!isSearching || widget.showBottomMiniPlayer)
+            ? SafeArea(
+                top: false,
+                bottom: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!isSearching)
+                      SurahListContinueReadingBar(
+                        onBeforeNavigation: () => _dismissSearchAndNavigate(() {}),
+                      ),
+                    if (widget.showBottomMiniPlayer)
+                      const MiniAudioPlayerBar(includeBottomInset: true),
+                  ],
                 ),
-              const MiniAudioPlayerBar(),
-            ],
-          ),
-        ),
+              )
+            : null,
       ),
     );
   }
@@ -206,6 +212,8 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
       surah: surah,
       surahFontFamily: surahFontFamily,
       message: 'برای دانلود صوت سوره ${surah.nameFa} می‌توانید از «دانلود سریع» استفاده کنید یا وارد «مدیریت دانلود» شوید.',
+      reciter: reciter,
+      isTranslation: reciter?.styleId == 4,
       onReadSurah: () => _openReader(surah),
       onQuickDownload: reciter != null
           ? () {

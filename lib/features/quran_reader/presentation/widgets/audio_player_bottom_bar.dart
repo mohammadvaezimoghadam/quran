@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -264,7 +265,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                               ),
                               border: Border(
                                 top: BorderSide(
-                                  color: colorScheme.primary.withValues(alpha: 0.22),
+                                  color: context.colors.cardBorder,
                                   width: 1.0,
                                 ),
                               ),
@@ -331,7 +332,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                             Icon(
                                                               CupertinoIcons.arrow_down_circle_fill,
                                                               size: 13,
-                                                              color: colorScheme.primary,
+                                                              color: colorScheme.onSurfaceVariant,
                                                             ),
                                                             const SizedBox(width: 5),
                                                           ],
@@ -344,7 +345,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                               overflow: TextOverflow.ellipsis,
                                                               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                                                     fontWeight: FontWeight.bold,
-                                                                    color: colorScheme.primary,
+                                                                    color: colorScheme.onSurface,
                                                                     fontSize: 12.0,
                                                                     fontFamily: AppTypography.fontFamily,
                                                                   ),
@@ -357,7 +358,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                               style: TextStyle(
                                                                 fontSize: 9.5,
                                                                 fontWeight: FontWeight.w600,
-                                                                color: colorScheme.primary,
+                                                                color: colorScheme.onSurfaceVariant,
                                                                 fontFamily: AppTypography.fontFamily,
                                                               ),
                                                             ),
@@ -368,7 +369,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                                 ? CupertinoIcons.chevron_back
                                                                 : CupertinoIcons.chevron_down,
                                                             size: 11,
-                                                            color: colorScheme.primary.withValues(alpha: 0.7),
+                                                            color: colorScheme.onSurfaceVariant,
                                                           ),
                                                         ],
                                                       ),
@@ -383,7 +384,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                     size: 23,
                                                     width: 40,
                                                     height: 32,
-                                                    color: colorScheme.primary,
+                                                    color: colorScheme.onSurfaceVariant,
                                                     tooltip: 'تنظیمات نمایش',
                                                     onPressed: () => QuickSettingsDrawer.show(context),
                                                   ),
@@ -407,7 +408,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                           icon: Icons.forward_5_rounded,
                                                           size: 22,
                                                           color: isSessionActive
-                                                              ? colorScheme.primary
+                                                              ? colorScheme.onSurface
                                                               : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                                                           tooltip: '۵ ثانیه جلو',
                                                           onPressed: isSessionActive ? () => audioController.seekForward() : null,
@@ -448,7 +449,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                           icon: Icons.replay_5_rounded,
                                                           size: 22,
                                                           color: isSessionActive
-                                                              ? colorScheme.primary
+                                                              ? colorScheme.onSurface
                                                               : colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                                                           tooltip: '۵ ثانیه عقب',
                                                           onPressed: isSessionActive ? () => audioController.seekBackward() : null,
@@ -478,7 +479,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                           shape: RoundedRectangleBorder(
                                                             borderRadius: BorderRadius.circular(14),
                                                             side: BorderSide(
-                                                              color: colorScheme.primary.withValues(alpha: 0.25),
+                                                              color: context.colors.cardBorder,
                                                               width: 1,
                                                             ),
                                                           ),
@@ -503,14 +504,14 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                                         fontFamily: AppTypography.fontFamily,
                                                                         fontSize: 13,
                                                                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                                                        color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+                                                                        color: colorScheme.onSurface,
                                                                       ),
                                                                     ),
                                                                     if (isSelected)
                                                                       Icon(
                                                                         Icons.check_rounded,
                                                                         size: 16,
-                                                                        color: colorScheme.primary,
+                                                                        color: colorScheme.onSurface,
                                                                       ),
                                                                   ],
                                                                 ),
@@ -522,10 +523,10 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                             alignment: Alignment.center,
                                                             padding: const EdgeInsets.symmetric(horizontal: 4),
                                                             decoration: BoxDecoration(
-                                                              color: colorScheme.primary.withValues(alpha: 0.12),
+                                                              color: Colors.transparent,
                                                               borderRadius: BorderRadius.circular(8),
                                                               border: Border.all(
-                                                                color: colorScheme.primary.withValues(alpha: 0.32),
+                                                                color: context.colors.cardBorder,
                                                                 width: 0.9,
                                                               ),
                                                             ),
@@ -536,7 +537,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                                 fontFamily: AppTypography.fontFamily,
                                                                 fontSize: 11.5,
                                                                 fontWeight: FontWeight.bold,
-                                                                color: colorScheme.primary,
+                                                                color: colorScheme.onSurface,
                                                                 height: 1.0,
                                                               ),
                                                             ),

@@ -11,7 +11,6 @@ import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/go_router_provider.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
@@ -117,49 +116,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
             children: [
               AppModalHeader(
                 showDragHandle: true,
-                titleWidget: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? primaryColor.withValues(alpha: 0.12)
-                          : primaryColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                      border: Border.all(
-                        color: isDark
-                            ? primaryColor.withValues(alpha: 0.25)
-                            : primaryColor.withValues(alpha: 0.20),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'سوره $cleanSurahName',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                          ),
-                        ),
-                        6.hSpace,
-                        Text(
-                          '• آیه ${ayah.ayahNumber.toPersianDigit()}',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                title: 'سوره $cleanSurahName • آیه ${ayah.ayahNumber.toPersianDigit()}',
                 bottomSpacing: 14,
               ),
 

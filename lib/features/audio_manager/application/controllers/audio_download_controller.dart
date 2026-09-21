@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/data/local/preferences/preferences_service_provider.dart';
@@ -313,9 +314,16 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
     }
 
     final totalAyahs = ayahs.length;
+    final storage = ref.read(audioStorageServiceProvider);
+    final diskAyahsCount = await storage.getDownloadedAyahsCount(
+      reciterId: reciter.id,
+      surahId: surahId,
+      totalAyahs: totalAyahs,
+    );
+
     final existingTask = state[key];
-    final initialCompleted = existingTask?.completedAyahs ?? 0;
-    final initialProgress = totalAyahs > 0 ? (initialCompleted / totalAyahs).clamp(0.0, 1.0) : 0.0;
+    final actualCompleted = math.max(existingTask?.completedAyahs ?? 0, diskAyahsCount);
+    final initialProgress = totalAyahs > 0 ? (actualCompleted / totalAyahs).clamp(0.0, 1.0) : 0.0;
 
     state = {
       ...state,
@@ -324,8 +332,8 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
         reciterId: reciter.id,
         status: DownloadTaskStatus.downloading,
         totalAyahs: totalAyahs,
-        currentAyah: existingTask?.currentAyah ?? 1,
-        completedAyahs: initialCompleted,
+        currentAyah: actualCompleted > 0 ? actualCompleted : (existingTask?.currentAyah ?? 1),
+        completedAyahs: actualCompleted,
         progress: initialProgress,
       ),
     };
@@ -335,14 +343,13 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
     _cancelTokens[key] = cancelToken;
 
     final downloader = ref.read(fileDownloadServiceProvider);
-    final storage = ref.read(audioStorageServiceProvider);
 
     final dirPath = await storage.getSurahSaveDirectory(
       reciterId: reciter.id,
       surahId: surahId,
     );
 
-    int completedAyahs = 0;
+    int completedAyahs = actualCompleted;
     bool isCanceled = false;
 
     for (final ayah in ayahs) {
@@ -354,18 +361,27 @@ class AudioDownloadController extends Notifier<DownloadTaskMap> {
       final savePath = '$dirPath/ayah_${ayah.ayahNumber}.mp3';
       final file = File(savePath);
 
-      // Skip already downloaded Ayah files
+      // Fast-skip already downloaded Ayahs without resetting or emitting intermediate 0% states
+      if (ayah.ayahNumber <= actualCompleted) {
+        if (await file.exists() && await file.length() > 0) {
+          continue;
+        }
+      }
+
+      // Check if file already exists on disk
       if (await file.exists() && await file.length() > 0) {
-        completedAyahs++;
-        final initialProgress = completedAyahs / totalAyahs;
-        state = {
-          ...state,
-          key: state[key]!.copyWith(
-            progress: initialProgress,
-            completedAyahs: completedAyahs,
-            currentAyah: ayah.ayahNumber,
-          ),
-        };
+        if (ayah.ayahNumber > completedAyahs) {
+          completedAyahs = ayah.ayahNumber;
+          final currentProgress = completedAyahs / totalAyahs;
+          state = {
+            ...state,
+            key: state[key]!.copyWith(
+              progress: currentProgress,
+              completedAyahs: completedAyahs,
+              currentAyah: ayah.ayahNumber,
+            ),
+          };
+        }
         continue;
       }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
 import 'app_typography.dart';
@@ -8,6 +9,16 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFFFFFFF),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Color(0xFFFFFFFF),
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+      ),
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: AppColors.primary,
@@ -69,6 +80,16 @@ class AppTheme {
 
     return ThemeData(
       brightness: Brightness.dark,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: darkSurface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: darkSurface,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+      ),
       colorScheme: const ColorScheme(
         brightness: Brightness.dark,
         primary: Color(0xFF52C498),

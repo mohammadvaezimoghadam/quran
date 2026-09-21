@@ -70,12 +70,12 @@ void main() {
     );
 
     expect(find.text('اشتراک ۶ ماهه'), findsOneWidget);
-    expect(find.text('تخفیف ویژه'), findsOneWidget);
+    expect(find.text('تخفیف ویژه'), findsNothing);
     expect(find.textContaining('۷۵٬۰۰۰ تومان'), findsOneWidget);
     expect(find.text('توضیحات طولانی'), findsNothing);
   });
 
-  testWidgets('SubscriptionPlanCard shows renew text when isVip is true', (tester) async {
+  testWidgets('SubscriptionPlanCard shows active text and is disabled when isVip is true', (tester) async {
     const product = PaymentProduct(
       id: 'test_id',
       title: 'اشتراک ۱ ماهه',
@@ -84,19 +84,26 @@ void main() {
       subscriptionPlan: SubscriptionPlan.monthly,
     );
 
+    bool purchased = false;
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: SubscriptionPlanCard(
             product: product,
             isVip: true,
-            onPurchase: () {},
+            onPurchase: () => purchased = true,
           ),
         ),
       ),
     );
 
-    expect(find.text('تمدید'), findsOneWidget);
+    expect(find.text('فعال'), findsOneWidget);
+
+    // Verify button is disabled and cannot be tapped
+    await tester.tap(find.byType(ElevatedButton));
+    await tester.pumpAndSettle();
+    expect(purchased, isFalse);
   });
 
   testWidgets('SubscriptionPlanCard shows loading indicator when isLoading is true', (tester) async {
@@ -158,6 +165,6 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.text('۴۰٪ تخفیف ویژه'), findsOneWidget);
+    expect(find.text('۴۰٪ تخفیف ویژه'), findsNothing);
   });
 }

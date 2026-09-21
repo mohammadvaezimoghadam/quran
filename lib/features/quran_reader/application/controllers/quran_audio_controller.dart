@@ -15,6 +15,7 @@ import '../../../../core/data/local/preferences/preferences_service_provider.dar
 import '../states/quran_audio_state.dart';
 import 'quran_reader_controller.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/models/vip_subscription_state.dart';
 import '../../../subscription/domain/policy/audio_vip_policy.dart';
 
 final quranAudioControllerProvider =
@@ -35,6 +36,18 @@ class QuranAudioController extends Notifier<QuranAudioState> {
   @override
   QuranAudioState build() {
     _initDefaultReciterAndListeners();
+
+    // Real-time listener: When VIP expires or user has no active VIP, automatically
+    // revert playbackMode to onlyQuran and selectedReciter to Parhizgar (100% free reciter).
+    ref.listen<VipSubscriptionState>(
+      vipSubscriptionControllerProvider,
+      (previous, next) {
+        if (!next.isLoading && !next.hasVipAccess) {
+          _enforceFreePlaybackDefaults();
+        }
+      },
+    );
+
     ref.onDispose(() {
       _audioStateSubscription?.cancel();
     });
@@ -97,6 +110,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
             playbackMode: initialMode,
             speed: savedSpeed,
           );
+          _enforceFreePlaybackDefaults();
         }
       },
       (error) {},
@@ -467,6 +481,60 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     }
   }
 
+  /// Ensures that non-VIP users fall back to free defaults:
+  /// 1. Playback mode falls back to [AudioPlaybackMode.onlyQuran] (since translation requires VIP).
+  /// 2. Reciter falls back to Ostad Parhizgar (100% free for all 114 surahs) if a non-free reciter was active.
+  /// 3. If currently playing a locked track, safely stops playback.
+  Future<void> _enforceFreePlaybackDefaults() async {
+    final vipState = ref.read(vipSubscriptionControllerProvider);
+    if (vipState.isLoading || vipState.hasVipAccess) return;
+
+    final prefs = ref.read(preferencesServiceProvider);
+    bool stateChanged = false;
+    AudioPlaybackMode newMode = state.playbackMode;
+    ReciterEntity? newReciter = state.selectedReciter;
+
+    // 1. Enforce onlyQuran if translation mode is set
+    if (state.playbackMode.includesTranslation) {
+      newMode = AudioPlaybackMode.onlyQuran;
+      await prefs.setInt('audio_playback_mode', AudioPlaybackMode.onlyQuran.index);
+      stateChanged = true;
+    }
+
+    // 2. Enforce Ostad Parhizgar if current reciter is not the default free reciter
+    if (state.selectedReciter != null &&
+        !AudioVipPolicy.isDefaultReciter(state.selectedReciter!.identifier)) {
+      final parhizgar = await _getFallbackReciter(isTranslation: false);
+      newReciter = parhizgar;
+      await prefs.setInt('selected_reciter_id', parhizgar.id);
+      stateChanged = true;
+    }
+
+    if (stateChanged) {
+      state = state.copyWith(
+        playbackMode: newMode,
+        selectedReciter: newReciter,
+      );
+    }
+
+    // 3. Stop playback if actively playing VIP content
+    final isPlayingOrLoading =
+        state.status == AudioStatus.playing || state.status == AudioStatus.loading;
+    if (isPlayingOrLoading) {
+      final isPlayingTranslation = state.currentTrackType == CurrentTrackType.translation;
+      final isPlayingLockedReciter = state.currentSurahId != null &&
+          !AudioVipPolicy.canPlayReciter(
+            reciterIdentifier: state.selectedReciter?.identifier,
+            surahId: state.currentSurahId!,
+            isVip: false,
+          );
+
+      if (isPlayingTranslation || isPlayingLockedReciter) {
+        await stop();
+      }
+    }
+  }
+
   Future<ReciterEntity> _getFallbackReciter({required bool isTranslation}) async {
     final repo = ref.read(reciterRepositoryProvider);
     final result = await repo.getAllReciters();
@@ -475,13 +543,11 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       (reciters) {
         if (reciters.isNotEmpty) {
           if (isTranslation) {
-            found = reciters.firstWhere(
-              (r) => r.styleId == 4,
-              orElse: () => reciters.first,
-            );
+            final transReciters = reciters.where((r) => r.styleId == 4).toList();
+            found = transReciters.isNotEmpty ? transReciters.first : reciters.first;
           } else {
             found = reciters.firstWhere(
-              (r) => r.identifier.contains('parhizgar'),
+              (r) => AudioVipPolicy.isDefaultReciter(r.identifier),
               orElse: () => reciters.first,
             );
           }
@@ -491,15 +557,16 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     );
     return found ??
         const ReciterEntity(
-          id: 1,
-          name: 'شهریار پرهیزگار',
+          id: 91,
+          name: 'شهریار پرهیزگار (48kbps)',
           englishName: 'Parhizgar',
-          arabicName: 'شهريار پرهيزگار',
+          arabicName: 'شهریار پرهیزگار',
           subfolder: 'Parhizgar_48kbps',
           bitrate: '48kbps',
-          identifier: 'ar.parhizgar',
+          identifier: 'parhizgar_48kbps',
           styleId: 1,
-          styleName: 'مرتل',
+          styleName: 'ترتیل',
+          imageUrl: 'assets/images/reciters/shahriar_parhizgar.jpg',
         );
   }
 

@@ -12,6 +12,10 @@ import '../../../audio_manager/application/controllers/audio_download_controller
 import '../../../audio_manager/domain/entities/audio_download_task.dart';
 import '../../../quran_reader/application/controllers/reciter_providers.dart';
 import '../../../quran_reader/domain/entities/reciter_entity.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/domain/policy/audio_vip_policy.dart';
+import '../../../subscription/presentation/utils/audio_vip_helper.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 import '../../../translation_manager/application/controllers/translation_manager_controller.dart';
 import '../../../translation_manager/domain/entities/translation_entity.dart';
 
@@ -117,7 +121,11 @@ class _DownloadActiveQueueSectionState
                 itemCount: _isExpanded
                     ? totalCount
                     : (totalCount > 3 ? 3 : totalCount),
-                separatorBuilder: (context, index) => const Divider(height: 18),
+                separatorBuilder: (context, index) => Divider(
+                  height: 18,
+                  thickness: 0.6,
+                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.07),
+                ),
                 itemBuilder: (context, index) {
                   // Display audio tasks first, then text translation tasks
                   if (index < audioQueueTasks.length) {
@@ -207,10 +215,8 @@ class _AudioQueueTaskItem extends ConsumerWidget {
     final isFailed = task.status == DownloadTaskStatus.failed;
     final percent = (task.progress * 100).toInt();
 
-    // Colorless / neutral for audio translation, primary green for Quran audio
-    final badgeColor = isAudioTranslation
-        ? (isDark ? Colors.white60 : Colors.black54)
-        : context.colorScheme.primary;
+    // All badge labels are uniform and colorless/neutral
+    final badgeColor = isDark ? Colors.white60 : Colors.black54;
     final badgeLabel = isAudioTranslation ? 'ترجمه گویا' : 'صوت قرآن';
     final badgeIcon = isAudioTranslation
         ? CupertinoIcons.speaker_2
@@ -311,11 +317,11 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                     ] else if (isFailed) ...[
                       Container(
                         color: Colors.black.withValues(alpha: 0.52),
-                        child: Center(
+                        child: const Center(
                           child: Icon(
-                            CupertinoIcons.exclamationmark_circle,
-                            size: 20,
-                            color: context.colorScheme.error,
+                            CupertinoIcons.arrow_counterclockwise,
+                            size: 18,
+                            color: Colors.white70,
                           ),
                         ),
                       ),
@@ -380,19 +386,6 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  if (isFailed && task.errorMessage != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      task.errorMessage!,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: context.colorScheme.error,
-                        height: 1.3,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -431,6 +424,34 @@ class _AudioQueueTaskItem extends ConsumerWidget {
                     ),
                     onPressed: () async {
                       HapticFeedback.lightImpact();
+                      if (reciter != null) {
+                        final isVip = ref.read(hasVipAccessProvider);
+                        final isAudioTranslation = reciter!.styleId == 4;
+                        final canDownload = isAudioTranslation
+                            ? AudioVipPolicy.canPlayAudioTranslation(isVip: isVip)
+                            : AudioVipPolicy.canPlayReciter(
+                                reciterIdentifier: reciter!.identifier,
+                                surahId: task.surahId,
+                                isVip: isVip,
+                              );
+                        if (!canDownload) {
+                          if (isAudioTranslation) {
+                            await VipRequiredDialog.show(
+                              context: context,
+                              reciterName: reciter!.name,
+                              isTranslation: true,
+                            );
+                          } else {
+                            await AudioVipHelper.checkAndPromptVip(
+                              context: context,
+                              ref: ref,
+                              surahId: task.surahId,
+                              targetReciter: reciter!,
+                            );
+                          }
+                          return;
+                        }
+                      }
                       await ref
                           .read(audioDownloadControllerProvider.notifier)
                           .resumeDownloadById(

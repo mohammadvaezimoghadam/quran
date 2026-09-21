@@ -191,20 +191,26 @@ class _BookmarksManagerBottomSheetState
               showDragHandle: true,
               bottomSpacing: 12.0,
               title: 'نشانه‌های ذخیره‌شده',
+              leadingActionWidth: 72.0,
               leadingAction: bookmarks.isNotEmpty
                   ? TextButton(
                       onPressed: _confirmClearAll,
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        foregroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        foregroundColor: colorScheme.onSurfaceVariant,
                         visualDensity: VisualDensity.compact,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: const Text(
+                      child: Text(
                         'پاک‌سازی',
+                        maxLines: 1,
+                        softWrap: false,
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
                         ),
                       ),
                     )

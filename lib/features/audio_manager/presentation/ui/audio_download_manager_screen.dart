@@ -15,11 +15,13 @@ import '../widgets/download_manager_surah_list.dart';
 
 class AudioDownloadManagerScreen extends ConsumerStatefulWidget {
   final int? initialSurahId;
+  final int? initialReciterId;
   final bool isTranslationMode;
 
   const AudioDownloadManagerScreen({
     super.key,
     this.initialSurahId,
+    this.initialReciterId,
     this.isTranslationMode = false,
   });
 
@@ -37,8 +39,28 @@ class _AudioDownloadManagerScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       // Ensure search query starts clean
       ref.read(surahListControllerProvider.notifier).searchSurahs('');
+
+      if (widget.initialReciterId != null) {
+        final recitersList = ref
+            .read(widget.isTranslationMode
+                ? translationRecitersListProvider
+                : recitersListProvider)
+            .asData
+            ?.value
+            .tryGetSuccess();
+        final matched = recitersList
+            ?.where((r) => r.id == widget.initialReciterId)
+            .firstOrNull;
+        if (matched != null) {
+          ref
+              .read(downloadManagerSelectedReciterProvider.notifier)
+              .setReciter(matched);
+          return;
+        }
+      }
 
       final audioState = ref.read(quranAudioControllerProvider);
       if (widget.isTranslationMode) {

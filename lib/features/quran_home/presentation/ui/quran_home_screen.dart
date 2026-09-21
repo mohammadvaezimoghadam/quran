@@ -29,15 +29,21 @@ class QuranHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
-    final isDark = context.isDark;
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       extendBody: true,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 8),
+        preferredSize: const Size.fromHeight(116.0),
         child: Container(
+          padding: EdgeInsets.only(
+            top: topPadding + 4.0,
+            left: 14.0,
+            right: 14.0,
+            bottom: 8.0,
+          ),
           decoration: BoxDecoration(
-            color: colors.cardBackground.withValues(alpha: isDark ? 0.90 : 0.98),
+            color: colors.cardBackground,
             border: Border(
               bottom: BorderSide(
                 color: colors.cardBorder,
@@ -45,100 +51,87 @@ class QuranHomeScreen extends ConsumerWidget {
               ),
             ),
           ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8.0,
-                vertical: 2.0,
-              ),
-              child: Row(
-                children: [
-                  // Theme Toggle Button (Apple circular pill on Left)
-                  const AppThemeToggleButton(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Row 1: Top Bar with theme toggle & title
+              SizedBox(
+                height: 48,
+                child: Row(
+                  children: [
+                    // Theme Toggle Button (Apple circular pill on Left)
+                    const AppThemeToggleButton(),
 
-                  // Centered Clean Title "قرآن تفکر"
-                  Expanded(
-                    child: Text(
-                      AppConstants.appTitle.replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), ''),
-                      textAlign: TextAlign.center,
-                      style: AppTypography.appBarTitle.copyWith(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
+                    // Centered Clean Title "قرآن تفکر"
+                    Expanded(
+                      child: Text(
+                        AppConstants.appTitle.replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), ''),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.appBarTitle.copyWith(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
                       ),
                     ),
-                  ),
 
-                  // Balance spacer so title remains perfectly centered
-                  const SizedBox(width: 48),
-                ],
+                    // Balance spacer so title remains perfectly centered
+                    const SizedBox(width: 48),
+                  ],
+                ),
               ),
-            ),
+
+              6.vSpace,
+
+              // Row 2: Search Bar as part of Header (identical to Surah List Header)
+              HomeSearchBarWidget(
+                onTap: () =>
+                    ref.read(tabNavigationControllerProvider.notifier).switchTab(2),
+              ),
+            ],
           ),
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Pinned Top Quran Search Bar Widget (همیشه در بالا ثابت است)
-          Padding(
-            padding: const EdgeInsets.only(
-              top: 4.0,
-              left: AppDimens.marginPage,
-              right: AppDimens.marginPage,
-              bottom: 8.0,
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(
+          top: 10.0,
+          left: AppDimens.marginPage,
+          right: AppDimens.marginPage,
+          bottom: AppDimens.marginPage + 60.0,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 1. Primary Navigation Action Buttons (سوره‌ها، ترجمه، تنظیمات)
+            const HomeQuickAccessGrid(),
+            AppDimens.stackLg.vSpace,
+
+            // 2. Customizable 4-Slot Toolbox Row (جعبه ابزار شخصی‌سازی‌شده)
+            const QuickAccessRow(),
+            AppDimens.stackLg.vSpace,
+
+            // 4. Continue Reading Card (در پایین صفحه)
+            Consumer(
+              builder: (context, ref, child) {
+                final continueReadingState =
+                    ref.watch(continueReadingControllerProvider);
+                final bookmarks = ref.watch(bookmarksControllerProvider);
+                final bookmarkState = bookmarks.isNotEmpty
+                    ? bookmarks.first.toContinueReadingState()
+                    : null;
+
+                return ContinueReadingCard(
+                  autoState: continueReadingState,
+                  bookmarkState: bookmarkState,
+                );
+              },
             ),
-            child: HomeSearchBarWidget(
-              onTap: () =>
-                  ref.read(tabNavigationControllerProvider.notifier).switchTab(2),
-            ),
-          ),
-
-          // Scrollable Content Beneath Pinned Search Bar
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.only(
-                top: 4.0,
-                left: AppDimens.marginPage,
-                right: AppDimens.marginPage,
-                bottom: AppDimens.marginPage + 60.0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 1. Primary Navigation Action Buttons (سوره‌ها، ترجمه، تنظیمات)
-                  const HomeQuickAccessGrid(),
-                  AppDimens.stackLg.vSpace,
-
-                  // 2. Customizable 4-Slot Toolbox Row (جعبه ابزار شخصی‌سازی‌شده)
-                  const QuickAccessRow(),
-                  AppDimens.stackLg.vSpace,
-
-                  // 4. Continue Reading Card (در پایین صفحه)
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final continueReadingState =
-                          ref.watch(continueReadingControllerProvider);
-                      final bookmarks = ref.watch(bookmarksControllerProvider);
-                      final bookmarkState = bookmarks.isNotEmpty
-                          ? bookmarks.first.toContinueReadingState()
-                          : null;
-
-                      return ContinueReadingCard(
-                        autoState: continueReadingState,
-                        bookmarkState: bookmarkState,
-                      );
-                    },
-                  ),
-                  AppDimens.stackLg.vSpace,
-                ],
-              ),
-            ),
-          ),
-        ],
+            AppDimens.stackLg.vSpace,
+          ],
+        ),
       ),
       bottomNavigationBar:
           showBottomMiniPlayer ? const MiniAudioPlayerBar() : null,

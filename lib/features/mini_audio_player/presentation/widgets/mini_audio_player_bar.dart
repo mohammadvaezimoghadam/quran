@@ -16,7 +16,12 @@ import '../../application/controllers/mini_audio_player_controller.dart';
 /// Masterpiece Telegram-style dark gold floating micro-capsule mini audio player.
 /// Designed for 0 rebuild spillover to parent screens (e.g. HomeScreen).
 class MiniAudioPlayerBar extends ConsumerWidget {
-  const MiniAudioPlayerBar({super.key});
+  final bool includeBottomInset;
+
+  const MiniAudioPlayerBar({
+    super.key,
+    this.includeBottomInset = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,16 +54,17 @@ class MiniAudioPlayerBar extends ConsumerWidget {
         AppTypography.getFontFamilyByScript(displaySettings.fontScript);
 
     final surahName = SurahConstants.getSurahName(currentSurahId);
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final bottomInset = includeBottomInset ? MediaQuery.paddingOf(context).bottom : 0.0;
 
     return Container(
-      height: 54 + bottomInset,
-      alignment: Alignment.topRight,
+      height: 48.0 + bottomInset,
+      alignment: Alignment.center,
       color: Colors.transparent,
       padding: EdgeInsets.only(
         left: AppDimens.marginPage,
         right: AppDimens.marginPage,
-        bottom: bottomInset > 0 ? bottomInset : AppDimens.stackSm,
+        top: 2.0,
+        bottom: bottomInset > 0 ? bottomInset : 2.0,
       ),
       child: Material(
         color: Colors.transparent,

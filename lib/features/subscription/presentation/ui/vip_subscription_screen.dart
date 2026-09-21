@@ -5,13 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/context_extension.dart';
-import '../../../../common/extensions/string_extension.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/payment/models/payment_product.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/vip_subscription_controller.dart';
-import '../../domain/models/vip_subscription_state.dart';
 import '../utils/bazaar_error_dialog_helper.dart';
 import '../widgets/subscription_plan_card.dart';
 
@@ -31,6 +29,7 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
       final state = ref.read(vipSubscriptionControllerProvider);
       if (state.availableProducts.isEmpty ||
@@ -172,126 +171,30 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
             children: [
-              // Active Subscription Status (only if user is already VIP)
-              if (isVip) ...[
-                _buildActiveStatusCard(
-                  context: context,
-                  state: state,
-                  isDark: isDark,
-                  cardBg: cardBg,
-                ),
-                const SizedBox(height: 18),
-              ],
-
               // Borderless Plan Cards with Dedicated Action Buttons
               ...products.map((product) {
                 final isPurchasing =
                     state.isLoading && _purchasingProductId == product.id;
                 final isAnyPurchasing = state.isLoading;
+                final isCurrentActivePlan = isVip && state.activePlanId == product.id;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: SubscriptionPlanCard(
                     product: product,
                     isLoading: isPurchasing,
-                    isDisabled: isAnyPurchasing && !isPurchasing,
+                    isDisabled: isVip || (isAnyPurchasing && !isPurchasing),
                     isVip: isVip,
-                    onPurchase: () => _handlePurchase(product, controller),
+                    buttonText: isVip
+                        ? (isCurrentActivePlan ? 'پلن فعال' : 'فعال')
+                        : null,
+                    onPurchase: isVip ? null : () => _handlePurchase(product, controller),
                   ),
                 );
               }),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// Active status card showing expiry date and plan name
-  Widget _buildActiveStatusCard({
-    required BuildContext context,
-    required VipSubscriptionState state,
-    required bool isDark,
-    required Color cardBg,
-  }) {
-    final expiryDate = state.vipExpiryDate;
-    final remainingDays = expiryDate?.difference(DateTime.now()).inDays;
-
-    final remainingText = remainingDays != null && remainingDays > 0
-        ? '$remainingDays روز دیگر'.toPersianDigit()
-        : 'امروز'.toPersianDigit();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0F766E).withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle_rounded,
-                  color: Color(0xFF0F766E),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'اشتراک ویژه شما فعال است',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'اعتبار باقی‌مانده: $remainingText',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11.5,
-                        color:
-                            isDark ? Colors.white70 : const Color(0xFF666666),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (expiryDate != null) ...[
-            const SizedBox(height: 10),
-            Divider(
-              height: 1,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : const Color(0xFFEAE7E3),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'تاریخ اتمام: ${expiryDate.year}/${expiryDate.month.toString().padLeft(2, '0')}/${expiryDate.day.toString().padLeft(2, '0')}'
-                  .toPersianDigit(),
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 11,
-                color: isDark ? Colors.white60 : const Color(0xFF888888),
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }

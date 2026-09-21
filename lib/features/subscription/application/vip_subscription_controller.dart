@@ -99,7 +99,7 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     try {
       _log('📱 [App Startup] Reading subscription state from local secure storage...');
       final isVip = await _storage.getIsVip();
-      final vipExpiry = await _storage.getVipExpiryDate();
+      var vipExpiry = await _storage.getVipExpiryDate();
       final activePlanId = await _storage.getActivePlanId();
       final purchaseToken = await _storage.getPurchaseToken();
 
@@ -112,8 +112,20 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       final now = DateTime.now();
       bool isVipActive = isVip;
 
-      // Check if subscription has expired
+      // Check if subscription has expired or has abnormal accumulated duration
       if (vipExpiry != null) {
+        // Clamp if accumulated beyond plan duration
+        final matchedProduct = activePlanId != null
+            ? PaymentProduct.allSubscriptions.where((p) => p.id == activePlanId).firstOrNull
+            : null;
+        final allowedDays = matchedProduct?.durationDays ?? 30;
+        final maxAllowed = now.add(Duration(days: allowedDays));
+        if (vipExpiry.isAfter(maxAllowed)) {
+          _log('✂️ [Expiry Clamp] Clamping abnormal accumulated expiry ($vipExpiry) to plan duration ($allowedDays days).');
+          vipExpiry = maxAllowed;
+          await _storage.setVipExpiryDate(vipExpiry);
+        }
+
         final diff = vipExpiry.difference(now);
         if (diff.isNegative) {
           final minsAgo = (-diff.inSeconds / 60).toStringAsFixed(1);
@@ -134,16 +146,22 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
         _log('ℹ️ [Expiry Calculation] No active VIP subscription in local storage.');
       }
 
+      final cachedProducts = await _storage.getCachedProducts();
+      final productsToDisplay = (cachedProducts != null && cachedProducts.isNotEmpty)
+          ? cachedProducts
+          : PaymentProduct.allSubscriptions;
+
       state = state.copyWith(
         isVip: isVipActive,
         vipExpiryDate: vipExpiry,
         activePlanId: activePlanId,
+        availableProducts: productsToDisplay,
         isLoading: false,
       );
       if (isVipActive && vipExpiry != null) {
         _scheduleExactExpiryTimer(vipExpiry);
       }
-      _log('🎯 [Local State Ready] Controller initialized with isVip=$isVipActive (Plan: $activePlanId). UI unlocked accordingly.');
+      _log('🎯 [Local State Ready] Controller initialized with isVip=$isVipActive (Plan: $activePlanId, Products: ${productsToDisplay.length}). UI unlocked accordingly.');
     } catch (e, stack) {
       _log('❌ Error loading persisted subscription state: $e', error: e, stackTrace: stack);
       state = state.copyWith(
@@ -166,6 +184,7 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       final liveProducts = await _paymentService.getSubscriptionProducts(skuIds);
       if (liveProducts.isNotEmpty) {
         _log('📦 [Live Products] Updated available products list with ${liveProducts.length} items from Bazaar.');
+        await _storage.setCachedProducts(liveProducts);
         state = state.copyWith(availableProducts: liveProducts);
       }
     } catch (e, stack) {
@@ -192,11 +211,26 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
         final activeId = purchasedIds.first;
         _log('✅ [Bazaar Sync] Active subscription confirmed by Cafe Bazaar: $purchasedIds');
 
-        if (!state.isVip || state.activePlanId != activeId) {
-          _log('🔄 [Bazaar Sync] Local was not VIP or plan differed. Updating local storage with Bazaar subscription: $activeId');
+        final matchedProduct = PaymentProduct.allSubscriptions
+            .where((p) => p.id == activeId)
+            .firstOrNull;
+        final planDays = matchedProduct?.durationDays ?? 30;
+
+        DateTime? targetExpiry = state.vipExpiryDate;
+        if (targetExpiry == null || targetExpiry.difference(now).inDays > planDays) {
+          targetExpiry = now.add(Duration(days: planDays));
+          await _storage.setVipExpiryDate(targetExpiry);
+        }
+
+        if (!state.isVip || state.activePlanId != activeId || state.vipExpiryDate != targetExpiry) {
+          _log('🔄 [Bazaar Sync] Updating local storage with Bazaar subscription: $activeId (Expiry: $targetExpiry)');
           await _storage.setIsVip(true);
           await _storage.setActivePlanId(activeId);
-          state = state.copyWith(isVip: true, activePlanId: activeId);
+          state = state.copyWith(
+            isVip: true,
+            activePlanId: activeId,
+            vipExpiryDate: targetExpiry,
+          );
           _log('💾 [Bazaar Sync] Local storage updated successfully to active VIP.');
         } else {
           _log('✨ [Bazaar Sync] Local subscription is already in sync with Cafe Bazaar.');
@@ -246,18 +280,11 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       _log('   ↳ errorMessage: ${result.errorMessage}');
 
       if (result.isSuccess) {
-        DateTime? newExpiry;
         final now = DateTime.now();
-        final baseDate = (state.vipExpiryDate != null && state.vipExpiryDate!.isAfter(now))
-            ? state.vipExpiryDate!
-            : now;
-
         final durationDays = product.durationDays;
-        if (durationDays != null) {
-          newExpiry = baseDate.add(Duration(days: durationDays));
-        } else {
-          newExpiry = null; // Lifetime
-        }
+        final newExpiry = durationDays != null
+            ? now.add(Duration(days: durationDays))
+            : null; // Lifetime
 
         _log('💾 [Local Save] Writing purchase to encrypted storage:');
         _log('   ↳ isVip: true');

@@ -117,6 +117,7 @@ abstract class ReciterDownloadHelper {
           surahId: activeSurahId,
           message: 'صوت تلاوت قاری «${quranReciter.name}» برای این سوره دانلود نشده است.',
           isTranslation: false,
+          reciter: quranReciter,
         );
         return false;
       }
@@ -149,6 +150,39 @@ abstract class ReciterDownloadHelper {
           surahId: activeSurahId,
           message: 'صوت ترجمه گویای «${translationReciter.name}» برای این سوره دانلود نشده است.',
           isTranslation: true,
+          reciter: translationReciter,
+          onPlayOnlyQuran: () async {
+            final audioCtrl = container.read(quranAudioControllerProvider.notifier);
+            audioCtrl.setPlaybackMode(AudioPlaybackMode.onlyQuran);
+
+            final targetReciter = container.read(quranAudioControllerProvider).selectedReciter;
+            if (targetReciter != null) {
+              final isReady = await _isReciterSurahDownloaded(
+                container: container,
+                reciterId: targetReciter.id,
+                surahId: activeSurahId,
+              );
+              if (isReady) {
+                final lastAttempted = container.read(quranAudioControllerProvider).lastAttemptedAyahNumber;
+                final ayahs = container.read(quranReaderControllerProvider).ayahs;
+                final startAyah = lastAttempted ?? (ayahs.isNotEmpty ? ayahs.first.ayahNumber : 1);
+                audioCtrl.resumeAutoScrollAndSync();
+                audioCtrl.playAyah(
+                  surahId: activeSurahId,
+                  ayahNumber: startAyah,
+                  totalAyahsInSurah: ayahs.isNotEmpty ? ayahs.length : 1,
+                );
+              } else {
+                final retryContext = rootNavigatorKey.currentContext ?? navContext;
+                if (retryContext.mounted) {
+                  await checkAndPromptForPlayback(
+                    context: retryContext,
+                    surahId: activeSurahId,
+                  );
+                }
+              }
+            }
+          },
         );
         return false;
       }
@@ -221,6 +255,13 @@ abstract class ReciterDownloadHelper {
             ? 'صوت ترجمه گویای «${reciter.name}» برای این سوره دانلود نشده است.'
             : 'صوت تلاوت قاری «${reciter.name}» برای این سوره دانلود نشده است.',
         isTranslation: isTranslation,
+        reciter: reciter,
+        onPlayOnlyQuran: isTranslation
+            ? () {
+                final audioCtrl = container.read(quranAudioControllerProvider.notifier);
+                audioCtrl.setPlaybackMode(AudioPlaybackMode.onlyQuran);
+              }
+            : null,
       );
       return false;
     }
@@ -252,6 +293,8 @@ abstract class ReciterDownloadHelper {
     required int surahId,
     required String message,
     required bool isTranslation,
+    ReciterEntity? reciter,
+    VoidCallback? onPlayOnlyQuran,
   }) async {
     final surahList = container.read(surahListControllerProvider).surahs;
     final surah = surahList.firstWhere(
@@ -281,6 +324,9 @@ abstract class ReciterDownloadHelper {
       surah: surah,
       surahFontFamily: surahFontFamily,
       message: message,
+      reciter: reciter,
+      isTranslation: isTranslation,
+      onPlayOnlyQuran: onPlayOnlyQuran,
       onReadSurah: () {},
       onDownloadAudio: () {
         container.read(goRouterProvider).pushNamed(

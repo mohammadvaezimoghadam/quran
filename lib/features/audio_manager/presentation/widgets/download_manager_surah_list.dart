@@ -48,13 +48,34 @@ class DownloadManagerSurahList extends ConsumerStatefulWidget {
 class _DownloadManagerSurahListState
     extends ConsumerState<DownloadManagerSurahList> {
   late ScrollController _scrollController;
-  bool _hasScrolled = false;
+  final GlobalKey _targetKey = GlobalKey();
+  bool _hasCentered = false;
   bool _highlightTarget = false;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
+    final initialId = widget.initialSurahId;
+    double initialOffset = 0.0;
+    if (initialId != null && initialId > 1) {
+      // Each surah item is ~61.5px + 1px divider = 62.5px
+      const itemExtent = 62.5;
+      // Centering places the target item near the middle of the viewport (~240px offset)
+      const estimatedCenterOffset = 240.0;
+      initialOffset = (10.0 + ((initialId - 1) * itemExtent) - estimatedCenterOffset)
+          .clamp(0.0, double.infinity);
+    }
+    _scrollController = ScrollController(initialScrollOffset: initialOffset);
+  }
+
+  @override
+  void didUpdateWidget(covariant DownloadManagerSurahList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialSurahId != null &&
+        widget.initialSurahId != oldWidget.initialSurahId) {
+      _hasCentered = false;
+      _highlightTarget = false;
+    }
   }
 
   @override
@@ -63,34 +84,49 @@ class _DownloadManagerSurahListState
     super.dispose();
   }
 
-  void _scrollToInitialSurah(int initialSurahId, int totalSurahs) {
-    if (_hasScrolled || totalSurahs == 0) return;
-    _hasScrolled = true;
+  void _centerTargetSurah(List<SurahEntity> surahs) {
+    if (_hasCentered || widget.initialSurahId == null || surahs.isEmpty) return;
+
+    final targetIndex = surahs.indexWhere((s) => s.number == widget.initialSurahId);
+    if (targetIndex < 0) return;
+
+    _hasCentered = true;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 150), () async {
-        if (!mounted) return;
-        if (initialSurahId > 1 && _scrollController.hasClients) {
-          // Each surah item is ~61px + 1px divider = 62.0px
-          const itemExtent = 62.0;
-          // Offset by 18px so the target surah sits comfortably down in full view without being clipped at the top
-          final targetOffset = ((initialSurahId - 1) * itemExtent - 18.0);
-          final maxScroll = _scrollController.position.maxScrollExtent;
-          await _scrollController.animateTo(
-            targetOffset.clamp(0.0, maxScroll),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCubic,
-          );
-        }
+      if (!mounted) return;
+
+      void triggerHighlight() {
         if (mounted) {
           setState(() {
             _highlightTarget = true;
           });
         }
-      });
+      }
+
+      // 1. If target item's BuildContext is ready, use Scrollable.ensureVisible for pixel-perfect centering
+      if (_targetKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          _targetKey.currentContext!,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOutCubic,
+        ).then((_) => triggerHighlight());
+      } else if (_scrollController.hasClients) {
+        // 2. Fallback: exact math centering based on measured viewport
+        const itemExtent = 62.5;
+        final viewportHeight = _scrollController.position.viewportDimension;
+        final maxScroll = _scrollController.position.maxScrollExtent;
+        final targetOffset = (10.0 + (targetIndex * itemExtent) - ((viewportHeight - itemExtent) / 2))
+            .clamp(0.0, maxScroll);
+
+        _scrollController.animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOutCubic,
+        ).then((_) => triggerHighlight());
+      }
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +148,7 @@ class _DownloadManagerSurahListState
 
     final surahs = surahState.filteredSurahs;
     if (widget.initialSurahId != null) {
-      _scrollToInitialSurah(widget.initialSurahId!, surahs.length);
+      _centerTargetSurah(surahs);
     }
 
     final theme = Theme.of(context);
@@ -162,7 +198,7 @@ class _DownloadManagerSurahListState
             child: ListView.separated(
               controller: _scrollController,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 24),
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 260),
               itemCount: surahs.length,
               separatorBuilder: (context, index) => Divider(
                 height: 1,
@@ -171,12 +207,16 @@ class _DownloadManagerSurahListState
               ),
               itemBuilder: (context, index) {
                 final surah = surahs[index];
-                return _SurahListItem(
-                  key: ValueKey('surah_${surah.number}'),
-                  surah: surah,
-                  fontFamily: fontFamily,
-                  selectedReciter: selectedReciter,
-                  isTargeted: _highlightTarget && widget.initialSurahId == surah.number,
+                final isCurrentTarget = widget.initialSurahId == surah.number;
+                return KeyedSubtree(
+                  key: isCurrentTarget ? _targetKey : ValueKey('surah_${surah.number}'),
+                  child: _SurahListItem(
+                    key: ValueKey('surah_item_${surah.number}'),
+                    surah: surah,
+                    fontFamily: fontFamily,
+                    selectedReciter: selectedReciter,
+                    isTargeted: _highlightTarget && isCurrentTarget,
+                  ),
                 );
               },
             ),
@@ -239,8 +279,8 @@ class _SurahListItem extends ConsumerWidget {
           );
           downloadedAyahsCount = countAsync.when(
             data: (count) => count,
-            loading: () => null,
-            error: (_, _) => null,
+            loading: () => downloadTask?.completedAyahs,
+            error: (_, _) => downloadTask?.completedAyahs,
           );
         } else if (isDownloading || isPaused) {
           downloadedAyahsCount = downloadTask.completedAyahs;
@@ -579,6 +619,9 @@ class _SurahListItem extends ConsumerWidget {
     // 3. Paused or Partial Download State: Shows downloaded ayahs count and resumes on tap (No border, neutral)
     if (isPaused || hasPartialDownload) {
       final completed = downloadTask?.completedAyahs ?? downloadedAyahsCount ?? 0;
+      final percent = surah.numberOfAyahs > 0
+          ? ((completed / surah.numberOfAyahs) * 100).clamp(0, 100).toInt()
+          : 0;
       final neutralBg = isDark
           ? Colors.white.withValues(alpha: 0.08)
           : Colors.black.withValues(alpha: 0.05);
@@ -618,7 +661,7 @@ class _SurahListItem extends ConsumerWidget {
               ),
               const SizedBox(width: 5),
               Text(
-                'ادامه (${completed.toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()})',
+                'ادامه (${percent.toPersianDigit()}٪ • ${completed.toPersianDigit()}/${surah.numberOfAyahs.toPersianDigit()})',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 11.5,

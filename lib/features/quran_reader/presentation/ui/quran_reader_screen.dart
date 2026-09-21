@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dart:async';
 import 'dart:ui';
 
 import '../../../../common/widgets/app_snackbar.dart';
@@ -51,20 +52,32 @@ class QuranReaderScreen extends ConsumerStatefulWidget {
 class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with WidgetsBindingObserver {
   late PageController _pageController;
   late final ContinueReadingController _continueReadingNotifier;
+  late final ReaderControlsNotifier _readerControlsNotifier;
 
   // Full-screen mode state
   bool _isFullScreen = false;
   bool _isControlsVisible = true;
   bool _isAudioBarCollapsed = false;
+  bool _isExitButtonVisible = false;
+  Timer? _exitButtonFadeTimer;
+
+  // Quick jump tracking
+  int? _targetSurahId;
+  int? _targetAyahNumber;
+
+  static const Duration _exitButtonFadeDelay = Duration(milliseconds: 3500);
 
   @override
   void initState() {
     super.initState();
     _continueReadingNotifier = ref.read(continueReadingControllerProvider.notifier);
+    _readerControlsNotifier = ref.read(readerControlsProvider.notifier);
     _pageController = PageController(initialPage: widget.surahId - 1);
 
-    // Fetch ayahs when screen loads
+    // Fetch ayahs when screen loads & ensure clean normal controls state
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _readerControlsNotifier.reset();
       ref.read(quranReaderControllerProvider.notifier).fetchAyahs(widget.surahId);
     });
     WidgetsBinding.instance.addObserver(this);
@@ -72,11 +85,13 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
 
   @override
   void dispose() {
+    _exitButtonFadeTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
-    if (_isFullScreen) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    }
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
     // Save reading progress when leaving screen
     _continueReadingNotifier.saveStateToStorage();
     super.dispose();
@@ -87,6 +102,17 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       _continueReadingNotifier.saveStateToStorage();
     }
+  }
+
+  void _startExitButtonFadeTimer() {
+    _exitButtonFadeTimer?.cancel();
+    _exitButtonFadeTimer = Timer(_exitButtonFadeDelay, () {
+      if (mounted && _isFullScreen) {
+        setState(() {
+          _isExitButtonVisible = false;
+        });
+      }
+    });
   }
 
   void _syncProviderState() {
@@ -103,28 +129,46 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
       _isFullScreen = true;
       _isControlsVisible = false;
       _isAudioBarCollapsed = true;
+      _isExitButtonVisible = true;
     });
-    _syncProviderState();
+    ref.read(readerControlsProvider.notifier).enterFullScreen();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    _startExitButtonFadeTimer();
   }
 
   void _exitFullScreen() {
+    _exitButtonFadeTimer?.cancel();
     setState(() {
       _isFullScreen = false;
       _isControlsVisible = true;
       _isAudioBarCollapsed = false;
+      _isExitButtonVisible = false;
     });
-    _syncProviderState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    ref.read(readerControlsProvider.notifier).exitFullScreen();
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
   }
 
   void _toggleControls() {
     if (!_isFullScreen) return;
+    final nextVisible = !_isControlsVisible;
     setState(() {
-      _isControlsVisible = !_isControlsVisible;
-      _isAudioBarCollapsed = !_isControlsVisible;
+      _isControlsVisible = nextVisible;
+      _isAudioBarCollapsed = !nextVisible;
+      _isExitButtonVisible = true;
     });
+    if (!nextVisible) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.manual,
+        overlays: SystemUiOverlay.values,
+      );
+    }
     _syncProviderState();
+    _startExitButtonFadeTimer();
   }
 
   void _onPageChanged(int pageIndex) {
@@ -137,12 +181,20 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
   }
 
   void _handleTargetSelected(AyahTarget target) {
-    ref.read(navigationTargetProvider.notifier).setTarget(target);
+    setState(() {
+      _targetSurahId = target.surahId;
+      _targetAyahNumber = target.ayahNumber;
+    });
 
     final currentSurahId = ref.read(quranReaderControllerProvider).currentSurahId;
-    if (_pageController.hasClients && target.surahId != currentSurahId) {
-      _pageController.jumpToPage(target.surahId - 1);
+    if (target.surahId != currentSurahId) {
+      ref.read(quranReaderControllerProvider.notifier).fetchAyahs(target.surahId);
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(target.surahId - 1);
+      }
     }
+
+    ref.read(navigationTargetProvider.notifier).forceTarget(target);
   }
 
   String _getSurahName(WidgetRef ref, int surahId) {
@@ -223,13 +275,28 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
   Widget build(BuildContext context) {
     // Listen to readerControlsProvider so taps on AyahItems correctly toggle screen controls
     ref.listen<ReaderControlsState>(readerControlsProvider, (previous, next) {
-      if (next.isFullScreen &&
-          (next.isControlsVisible != _isControlsVisible ||
-              next.isAudioBarCollapsed != _isAudioBarCollapsed)) {
+      if (next.isControlsVisible != _isControlsVisible ||
+          next.isAudioBarCollapsed != _isAudioBarCollapsed ||
+          next.isFullScreen != _isFullScreen) {
         setState(() {
+          _isFullScreen = next.isFullScreen;
           _isControlsVisible = next.isControlsVisible;
           _isAudioBarCollapsed = next.isAudioBarCollapsed;
+          _isExitButtonVisible = next.isFullScreen;
         });
+        if (!next.isControlsVisible) {
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        } else if (!next.isFullScreen) {
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.manual,
+            overlays: SystemUiOverlay.values,
+          );
+        }
+        if (next.isFullScreen) {
+          _startExitButtonFadeTimer();
+        } else {
+          _exitButtonFadeTimer?.cancel();
+        }
       }
     });
 
@@ -331,9 +398,15 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
           ref.read(selectedAyahActionProvider.notifier).clearSelection();
           return;
         }
-        if (didPop && _isFullScreen) {
+        if (didPop) {
+          _exitButtonFadeTimer?.cancel();
           _isFullScreen = false;
-          SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+          _isExitButtonVisible = false;
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.manual,
+            overlays: SystemUiOverlay.values,
+          );
+          ref.read(readerControlsProvider.notifier).reset();
         }
       },
       child: Scaffold(
@@ -388,10 +461,14 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                 selectedCount: selectedCount,
                                 isBookmarked: isAyahBookmarked,
                                 onBackPressed: () {
-                                  if (_isFullScreen) {
-                                    _isFullScreen = false;
-                                    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-                                  }
+                                  _exitButtonFadeTimer?.cancel();
+                                  _isFullScreen = false;
+                                  _isExitButtonVisible = false;
+                                  SystemChrome.setEnabledSystemUIMode(
+                                    SystemUiMode.manual,
+                                    overlays: SystemUiOverlay.values,
+                                  );
+                                  ref.read(readerControlsProvider.notifier).reset();
                                   Navigator.of(context).maybePop();
                                 },
                                 onSurahTap: () async {
@@ -477,7 +554,11 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                              },
                              onMenuSelected: (value) {
                                if (value == 'fullscreen') {
-                                 _enterFullScreen();
+                                 if (_isFullScreen) {
+                                   _exitFullScreen();
+                                 } else {
+                                   _enterFullScreen();
+                                 }
                                } else if (value == 'settings') {
                                  QuickSettingsDrawer.show(context);
                                } else if (value == 'toggle_brackets') {
@@ -528,16 +609,19 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                      ],
                                    ),
                                  ),
-                                 const PopupMenuItem<String>(
+                                 PopupMenuItem<String>(
                                    value: 'fullscreen',
                                    child: Row(
                                      mainAxisSize: MainAxisSize.min,
                                      children: [
-                                       Icon(CupertinoIcons.fullscreen, size: 18),
-                                       SizedBox(width: 8),
+                                       Icon(
+                                         _isFullScreen ? CupertinoIcons.fullscreen_exit : CupertinoIcons.fullscreen,
+                                         size: 18,
+                                       ),
+                                       const SizedBox(width: 8),
                                        Text(
-                                         'حالت تمام صفحه',
-                                         style: TextStyle(
+                                         _isFullScreen ? 'خروج از تمام‌صفحه' : 'حالت تمام صفحه',
+                                         style: const TextStyle(
                                            fontFamily: AppTypography.fontFamily,
                                            fontSize: 13,
                                          ),
@@ -583,14 +667,18 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                         itemBuilder: (context, pageIndex) {
                           final pageSurahId = pageIndex + 1;
                           final isTargetPage = pageSurahId == currentSurahId ||
+                              pageSurahId == _targetSurahId ||
                               (currentSurahId != widget.surahId &&
                                   pageSurahId == widget.surahId);
+                          final initialAyahForPage = (pageSurahId == _targetSurahId)
+                              ? _targetAyahNumber
+                              : (pageSurahId == widget.surahId ? widget.initialAyahNumber : null);
                           return SurahAyahPageView(
                             key: ValueKey('surah_page_$pageSurahId'),
                             surahId: pageSurahId,
                             surahName: _getSurahName(ref, pageSurahId),
                             isCurrentPage: isTargetPage,
-                            initialAyahNumber: pageSurahId == widget.surahId ? widget.initialAyahNumber : null,
+                            initialAyahNumber: initialAyahForPage,
                             translationId: widget.translationId,
                           );
                         },
@@ -609,47 +697,58 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
             bottom: 0,
             child: RepaintBoundary(
               child: isAudioPlayingOtherSurah
-                  ? const MiniAudioPlayerBar()
+                  ? const MiniAudioPlayerBar(includeBottomInset: true)
                   : AudioPlayerBottomBar(
                       surahId: currentSurahId,
                       isFullScreen: _isFullScreen,
                       isCollapsed: _isAudioBarCollapsed,
                       onToggleCollapse: () {
-                        _toggleControls();
+                        if (_isFullScreen) {
+                          _toggleControls();
+                        } else {
+                          setState(() {
+                            _isAudioBarCollapsed = !_isAudioBarCollapsed;
+                          });
+                          ref.read(readerControlsProvider.notifier).updateState(
+                            isAudioBarCollapsed: _isAudioBarCollapsed,
+                          );
+                        }
                       },
                     ),
             ),
           ),
 
-          // 4. Exit Full-Screen & Hide Controls Buttons – Visible in fullscreen mode!
+          // 4. Exit Full-Screen Button – Visible in fullscreen mode, auto-fades after delay
           if (_isFullScreen)
             AnimatedPositioned(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOutCubic,
               top: controlsHidden
-                  ? topPadding + 10
-                  : appBarHeight + 44,
+                  ? (topPadding > 0 ? topPadding + 10 : 16)
+                  : headerHeight + 8,
               left: 12,
-              child: RepaintBoundary(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Exit Full-Screen Button (Apple Frosted Glass Blur Pill)
-                    ClipRRect(
+              child: IgnorePointer(
+                ignoring: !_isExitButtonVisible,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                  opacity: _isExitButtonVisible ? 1.0 : 0.0,
+                  child: RepaintBoundary(
+                    child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                         child: Material(
-                          color: Colors.black.withValues(alpha: 0.55),
+                          color: Colors.black.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(20),
                           child: InkWell(
                             onTap: _exitFullScreen,
                             borderRadius: BorderRadius.circular(20),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.18),
+                                  color: Colors.white.withValues(alpha: 0.22),
                                   width: 0.8,
                                 ),
                                 borderRadius: BorderRadius.circular(20),
@@ -662,12 +761,12 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                                     color: Colors.white,
                                     size: 18,
                                   ),
-                                  SizedBox(width: 4),
+                                  SizedBox(width: 5),
                                   Text(
                                     'خروج از تمام‌صفحه',
                                     style: TextStyle(
                                       fontFamily: AppTypography.fontFamily,
-                                      fontSize: 11,
+                                      fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
@@ -679,56 +778,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                         ),
                       ),
                     ),
-
-                    // Hide Controls Button (Shown when controls are expanded)
-                    if (_isControlsVisible) ...[
-                      const SizedBox(width: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                          child: Material(
-                            color: Colors.black.withValues(alpha: 0.55),
-                            borderRadius: BorderRadius.circular(20),
-                            child: InkWell(
-                              onTap: _toggleControls,
-                              borderRadius: BorderRadius.circular(20),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.18),
-                                    width: 0.8,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      CupertinoIcons.eye_slash,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'پنهان‌سازی',
-                                      style: TextStyle(
-                                        fontFamily: AppTypography.fontFamily,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),

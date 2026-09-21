@@ -17,6 +17,7 @@ import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/word_by_word_provider.dart';
 import '../../domain/entities/word_entity.dart';
+import '../widgets/surah_header_title_capsule.dart';
 import 'surah_dictionary_screen.dart';
 
 /// Full-screen view displaying the word-by-word vocabulary of a specific Ayah,
@@ -148,13 +149,14 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                 },
               ),
 
-              4.hSpace,
+              const SizedBox(width: 8),
 
-              // Surah & Ayah Switcher Pill
+              // Interactive Surah Title Capsule (Unified with QuranReaderAppBar)
               Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
+                child: Center(
+                  child: SurahHeaderTitleCapsule(
+                    surahNumber: _currentSurahId,
+                    surahName: 'سوره $surahDisplayName',
                     onTap: () async {
                       final selected = await SurahPickerDialog.show(
                         context,
@@ -169,45 +171,18 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                         });
                       }
                     },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6.0,
-                        vertical: 4.0,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              'لغت‌نامه آیه ${_currentAyahNumber.toPersianDigit()} $surahDisplayName',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontFamily,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          4.hSpace,
-                          Icon(
-                            CupertinoIcons.chevron_down,
-                            size: 13,
-                            color: colorScheme.primary,
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ),
+
+              const SizedBox(width: 8),
 
               // Button to jump to full Surah Dictionary
               Tooltip(
                 message: 'لغت‌نامه کامل سوره',
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
+                  splashRadius: 22,
                   icon: Icon(
                     CupertinoIcons.book,
                     size: 21,
@@ -496,29 +471,8 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                       AppModalHeader(
                         title: title,
                         onClose: () => Navigator.pop(ctx),
-                        bottomSpacing: 6,
+                        bottomSpacing: 12,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: isDark ? 0.15 : 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.22),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          'محدوده مجاز: از ${minVal.toPersianDigit()} تا ${maxVal.toPersianDigit()}',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                      12.vSpace,
                       TextField(
                         controller: textController,
                         keyboardType: TextInputType.number,

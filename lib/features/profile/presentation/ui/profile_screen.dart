@@ -5,13 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/utils/jalali_date.dart';
 import '../../../../core/routes/route_name.dart';
-import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
-import '../../../subscription/domain/models/vip_subscription_state.dart';
 
 /// Dedicated Profile Screen featuring user status, subscription details card,
 /// and direct navigation to VIP Subscription checkout.
@@ -126,27 +126,53 @@ class ProfileScreen extends ConsumerWidget {
         ),
         body: ListView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           children: [
-            // User Header
-            _buildUserHeader(
-              context: context,
-              isVip: isVip,
-              isDark: isDark,
-              primaryColor: primaryColor,
-            ),
-            20.vSpace,
+            // Clean User Header without decorative icons
+            _buildUserHeader(context: context),
+            16.vSpace,
 
-            // Subscription Status Card
+            // Account Status Grouped Section
             _buildSectionHeader('وضعیت حساب', isDark),
             8.vSpace,
-            _buildSubscriptionStatusCard(
+            _buildGroupCard(
               context: context,
-              isVip: isVip,
-              vipState: vipState,
-              isDark: isDark,
-              colors: colors,
-              primaryColor: primaryColor,
+              children: [
+                _buildInfoRow(
+                  context: context,
+                  label: 'نوع عضویت',
+                  valueWidget: Text(
+                    isVip ? 'عضویت ویژه تفکر' : 'کاربر عادی',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: isVip
+                          ? primaryColor
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                if (isVip) ...[
+                  _buildDivider(isDark),
+                  _buildInfoRow(
+                    context: context,
+                    label: 'اعتبار اشتراک',
+                    valueWidget: Text(
+                      vipState.vipExpiryDate != null
+                          ? '${vipState.remainingDays.toPersianDigit()} روز باقی‌مانده'
+                              ' (${JalaliDate.fromDateTime(vipState.vipExpiryDate!).format().toPersianDigit()})'
+                          : 'دائمی و نامحدود',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
             20.vSpace,
 
@@ -172,150 +198,60 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  /// Top User Header Avatar and Badge
-  Widget _buildUserHeader({
-    required BuildContext context,
-    required bool isVip,
-    required bool isDark,
-    required Color primaryColor,
-  }) {
+  /// Clean, typography-driven user header without decorative icons
+  Widget _buildUserHeader({required BuildContext context}) {
     final colorScheme = context.colorScheme;
 
-    return Center(
-      child: Column(
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: isDark ? 0.20 : 0.12),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              CupertinoIcons.person_solid,
-              size: 38,
-              color: primaryColor,
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Center(
+        child: Text(
+          'کاربر قرآن تفکر',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
           ),
-          12.vSpace,
-          Text(
-            'کاربر قرآن تفکر',
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          6.vSpace,
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-            decoration: BoxDecoration(
-              color: isVip
-                  ? primaryColor.withValues(alpha: isDark ? 0.22 : 0.12)
-                  : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06)),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isVip
-                      ? CupertinoIcons.checkmark_seal_fill
-                      : CupertinoIcons.person,
-                  size: 13,
-                  color: isVip
-                      ? primaryColor
-                      : (isDark ? Colors.white60 : Colors.black54),
-                ),
-                5.hSpace,
-                Text(
-                  isVip ? 'عضویت ویژه تفکر' : 'کاربر عادی',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.bold,
-                    color: isVip
-                        ? primaryColor
-                        : (isDark ? Colors.white70 : Colors.black54),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  /// Dedicated Subscription Status Card
-  Widget _buildSubscriptionStatusCard({
-    required BuildContext context,
-    required bool isVip,
-    required VipSubscriptionState vipState,
-    required bool isDark,
-    required dynamic colors,
-    required Color primaryColor,
-  }) {
-    final expiryDate = vipState.vipExpiryDate;
+  Widget _buildDivider(bool isDark) {
+    return Divider(
+      height: 1,
+      thickness: 0.8,
+      indent: 16,
+      endIndent: 16,
+      color: isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : const Color(0xFFEAE7E3),
+    );
+  }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isVip
-            ? primaryColor.withValues(alpha: isDark ? 0.12 : 0.08)
-            : colors.cardBackground,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildInfoRow({
+    required BuildContext context,
+    required String label,
+    required Widget valueWidget,
+  }) {
+    final colorScheme = context.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            isVip
-                ? 'اشتراک ویژه شما فعال است'
-                : 'وضعیت اشتراک: کاربر عادی',
-            style: const TextStyle(
+            label,
+            style: TextStyle(
               fontFamily: AppTypography.fontFamily,
-              fontSize: 14.5,
-              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: colorScheme.onSurface,
             ),
           ),
-          if (isVip && expiryDate != null) ...[
-            12.vSpace,
-            Divider(
-              height: 1,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : const Color(0xFFEAE7E3),
-            ),
-            10.vSpace,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'تاریخ پایان اعتبار:',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 12,
-                    color: isDark ? Colors.white60 : const Color(0xFF888888),
-                  ),
-                ),
-                Text(
-                  '${expiryDate.year}/${expiryDate.month.toString().padLeft(2, '0')}/${expiryDate.day.toString().padLeft(2, '0')}'
-                      .toPersianDigit(),
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.90)
-                        : const Color(0xFF333333),
-                  ),
-                ),
-              ],
-            ),
-          ],
+          valueWidget,
         ],
       ),
     );

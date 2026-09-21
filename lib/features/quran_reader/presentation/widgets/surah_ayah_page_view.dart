@@ -46,11 +46,56 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
         widget.initialAyahNumber != oldWidget.initialAyahNumber) {
       _hasScrolledToInitialAyah = false;
       _hasCompletedInitialScroll = false;
-      final ayahs = ref.read(quranReaderControllerProvider).ayahs;
-      if (ayahs.isNotEmpty) {
-        _scrollToInitialAyahIfNeeded(ayahs);
+      _scrollToAyah(widget.initialAyahNumber!);
+    }
+  }
+
+  void _scrollToAyah(int ayahNumber, {bool highlight = true}) {
+    void attemptScroll([int attempt = 0]) {
+      if (!mounted) return;
+      final state = ref.read(quranReaderControllerProvider);
+      final ayahs = state.ayahs;
+
+      // If ayahs are loading or not yet available for this surah, retry
+      if (state.isLoading || ayahs.isEmpty || state.currentSurahId != widget.surahId) {
+        if (attempt < 25) {
+          Future.delayed(Duration(milliseconds: 50 + (attempt * 20)), () {
+            attemptScroll(attempt + 1);
+          });
+        }
+        return;
+      }
+
+      final targetIndex = ayahs.indexWhere((a) => a.ayahNumber == ayahNumber);
+      if (targetIndex == -1) return;
+
+      if (highlight) {
+        ref.read(activeAyahProvider.notifier).setActiveAyah(ayahNumber);
+      }
+
+      final hasPositions = _itemPositionsListener.itemPositions.value.isNotEmpty;
+      if (_itemScrollController.isAttached && hasPositions) {
+        try {
+          _itemScrollController.scrollTo(
+            index: targetIndex,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutCubic,
+            alignment: 0.04,
+          );
+          return;
+        } catch (_) {}
+      }
+
+      if (attempt < 25) {
+        Future.delayed(Duration(milliseconds: 50 + (attempt * 20)), () {
+          attemptScroll(attempt + 1);
+        });
       }
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      attemptScroll();
+    });
   }
 
   void _scrollToInitialAyahIfNeeded(List<AyahEntity> ayahs) {
@@ -105,6 +150,10 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
 
   int _getInitialScrollIndex(List<dynamic> ayahs) {
     int? targetAyah = widget.initialAyahNumber;
+    final navTarget = ref.read(navigationTargetProvider);
+    if (navTarget != null && navTarget.surahId == widget.surahId) {
+      targetAyah = navTarget.ayahNumber;
+    }
     if (targetAyah == null) {
       final audioState = ref.read(quranAudioControllerProvider);
       if (audioState.currentSurahId == widget.surahId) {
@@ -128,6 +177,7 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
 
     // Register active ItemPositionsListener for QuranInfoBar
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       if (ref.read(activeItemPositionsListenerProvider) != _itemPositionsListener) {
         ref.read(activeItemPositionsListenerProvider.notifier).setListener(_itemPositionsListener);
       }
@@ -173,27 +223,23 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
       return const Center(child: Text(AppConstants.noAyahFound));
     }
 
-    // Perform initial scroll and highlight to target ayah if requested
-    if (widget.initialAyahNumber != null && !_hasScrolledToInitialAyah) {
+    // Check if there is a pending navigation target for this surah
+    final pendingTarget = ref.read(navigationTargetProvider);
+    if (pendingTarget != null && pendingTarget.surahId == widget.surahId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _scrollToAyah(pendingTarget.ayahNumber);
+          ref.read(navigationTargetProvider.notifier).setTarget(null);
+        }
+      });
+    } else if (widget.initialAyahNumber != null && !_hasScrolledToInitialAyah) {
       _scrollToInitialAyahIfNeeded(state.ayahs);
     }
 
-    // Target navigation listener (e.g. QuickJump)
+    // Target navigation listener (e.g. QuickJump triggered while already viewing this surah)
     ref.listen<AyahTarget?>(navigationTargetProvider, (previous, target) {
       if (target != null && target.surahId == widget.surahId) {
-        final targetIndex = state.ayahs.indexWhere((a) => a.ayahNumber == target.ayahNumber);
-        if (targetIndex != -1 && _itemScrollController.isAttached) {
-          try {
-            if (_itemPositionsListener.itemPositions.value.isNotEmpty) {
-              _itemScrollController.scrollTo(
-                index: targetIndex,
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOutCubic,
-                alignment: 0.0,
-              );
-            }
-          } catch (_) {}
-        }
+        _scrollToAyah(target.ayahNumber);
       }
     });
 
@@ -276,6 +322,7 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
             final alignment = firstVisible.itemLeadingEdge > 0 ? 0.0 : firstVisible.itemLeadingEdge;
             
             WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
               if (_itemScrollController.isAttached) {
                 try {
                   if (_itemPositionsListener.itemPositions.value.isNotEmpty) {

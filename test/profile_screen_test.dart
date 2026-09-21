@@ -101,8 +101,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('اشتراک ویژه شما فعال است'), findsOneWidget);
     expect(find.text('عضویت ویژه تفکر'), findsOneWidget);
+    expect(find.text('اعتبار اشتراک'), findsOneWidget);
     expect(find.byIcon(Icons.verified_rounded), findsNothing);
     expect(find.text('اشتراک ویژه'), findsNWidgets(2)); // Section header & tile title
   });

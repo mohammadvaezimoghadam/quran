@@ -68,6 +68,33 @@ class PaymentProduct {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'priceToman': priceToman,
+    'formattedPrice': formattedPrice,
+    'subscriptionPlan': subscriptionPlan.name,
+    'discountBadge': discountBadge,
+    'isRecommended': isRecommended,
+  };
+
+  factory PaymentProduct.fromJson(Map<String, dynamic> json) {
+    return PaymentProduct(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      priceToman: json['priceToman'] as int,
+      formattedPrice: json['formattedPrice'] as String?,
+      subscriptionPlan: SubscriptionPlan.values.firstWhere(
+        (e) => e.name == json['subscriptionPlan'],
+        orElse: () => SubscriptionPlan.monthly,
+      ),
+      discountBadge: json['discountBadge'] as String?,
+      isRecommended: json['isRecommended'] as bool? ?? false,
+    );
+  }
+
   /// 1 Month Subscription (۳۹,۰۰۰ تومان)
   static const PaymentProduct vipMonthly = PaymentProduct(
     id: 'sub_vip_1m',

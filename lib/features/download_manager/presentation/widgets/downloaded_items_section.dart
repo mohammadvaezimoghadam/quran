@@ -17,6 +17,7 @@ import '../../../quran_reader/application/controllers/quran_audio_controller.dar
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../quran_reader/application/controllers/reciter_providers.dart';
 import '../../../quran_reader/domain/enums/audio_playback_mode.dart';
+import '../../../subscription/presentation/utils/audio_vip_helper.dart';
 import '../../../translation_manager/application/controllers/translation_manager_controller.dart';
 import '../../application/controllers/downloaded_items_controller.dart';
 import '../../domain/entities/downloaded_item_entity.dart';
@@ -177,7 +178,11 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
                     itemCount: _isExpanded
                         ? filteredItems.length
                         : (filteredItems.length > 3 ? 3 : filteredItems.length),
-                    separatorBuilder: (context, index) => const Divider(height: 18),
+                    separatorBuilder: (context, index) => Divider(
+                      height: 18,
+                      thickness: 0.6,
+                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.07),
+                    ),
                     itemBuilder: (context, index) {
                       final item = filteredItems[index];
                       return _DownloadedItemRow(
@@ -301,7 +306,16 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
               .tryGetSuccess()
               ?.where((r) => r.id == item.reciterId)
               .firstOrNull;
-          if (reciter != null) {
+          if (reciter != null && item.surahId != null) {
+            if (!mounted) return;
+            final isAllowed = await AudioVipHelper.checkAndPromptVip(
+              context: context,
+              ref: ref,
+              surahId: item.surahId!,
+              targetReciter: reciter,
+            );
+            if (!isAllowed || !mounted) return;
+
             await ref
                 .read(quranAudioControllerProvider.notifier)
                 .selectReciter(reciter);
@@ -321,6 +335,12 @@ class _DownloadedItemsSectionState extends ConsumerState<DownloadedItemsSection>
         break;
 
       case DownloadedItemType.audioTranslation:
+        final isAllowed = AudioVipHelper.checkAudioTranslation(
+          context: context,
+          ref: ref,
+        );
+        if (!isAllowed) return;
+
         if (item.reciterId != null) {
           final allReciters = await ref.read(allRecitersListProvider.future);
           final reciter = allReciters
@@ -477,10 +497,8 @@ class _DownloadedItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isQuranAudio = item.type == DownloadedItemType.quranAudio;
-    final badgeColor = isQuranAudio
-        ? context.colorScheme.primary
-        : (isDark ? Colors.white60 : Colors.black54);
+    // All badges are uniform and neutral/colorless
+    final badgeColor = isDark ? Colors.white60 : Colors.black54;
     final String badgeLabel;
     final IconData iconData;
 
@@ -506,6 +524,11 @@ class _DownloadedItemRow extends StatelessWidget {
         .replaceAll('استاد', '')
         .trim();
 
+    final fallbackBg = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.05);
+    final fallbackIconColor = isDark ? Colors.white60 : Colors.black54;
+
     return Row(
       children: [
         ClipRRect(
@@ -520,25 +543,15 @@ class _DownloadedItemRow extends StatelessWidget {
                     height: 36,
                     fit: BoxFit.cover,
                     fallbackIcon: iconData,
-                    backgroundColor: isQuranAudio
-                        ? context.colorScheme.primary.withValues(alpha: 0.12)
-                        : (isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.black.withValues(alpha: 0.05)),
+                    backgroundColor: fallbackBg,
                   )
                 : Container(
-                    color: isQuranAudio
-                        ? context.colorScheme.primary.withValues(alpha: 0.12)
-                        : (isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.black.withValues(alpha: 0.05)),
+                    color: fallbackBg,
                     alignment: Alignment.center,
                     child: Icon(
                       iconData,
                       size: 18,
-                      color: isQuranAudio
-                          ? context.colorScheme.primary
-                          : (isDark ? Colors.white60 : Colors.black54),
+                      color: fallbackIconColor,
                     ),
                   ),
           ),

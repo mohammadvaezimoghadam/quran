@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/theme/app_typography.dart';
+import 'surah_header_title_capsule.dart';
 
 /// Modern Apple-styled AppBar for QuranReaderScreen.
 /// Preserves 100% of functional callbacks while providing an authentic iOS Reader appearance.
@@ -126,75 +127,10 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         // 2. Interactive Surah Title Capsule
         Expanded(
           child: Center(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onSurahTap,
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.06)
-                        : const Color(0xFFF2F2F7),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.28),
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          surahNumber.toPersianDigit(),
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 7),
-                      Flexible(
-                        child: Text(
-                          surahName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? Colors.white
-                                : const Color(0xFF1D1D1F),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Icon(
-                        CupertinoIcons.chevron_down,
-                        size: 11,
-                        color: colorScheme.primary.withValues(alpha: 0.75),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            child: SurahHeaderTitleCapsule(
+              surahNumber: surahNumber,
+              surahName: surahName,
+              onTap: onSurahTap,
             ),
           ),
         ),
@@ -257,27 +193,16 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
 
         const SizedBox(width: 8),
 
-        // 2. Selected Count Badge
+        // 2. Selected Count Text (Clean & simple, no green box)
         Expanded(
           child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: colorScheme.primary.withValues(alpha: 0.25),
-                  width: 0.8,
-                ),
-              ),
-              child: Text(
-                '${selectedCount.toPersianDigit()} آیه انتخاب شد',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                ),
+            child: Text(
+              '${selectedCount.toPersianDigit()} آیه انتخاب شد',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 14.5,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
               ),
             ),
           ),

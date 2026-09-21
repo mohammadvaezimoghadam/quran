@@ -134,7 +134,10 @@ class DownloadHubScreen extends ConsumerWidget {
                         onTap: () async {
                           await context.pushNamed(
                             audioDownloadManagerRoute,
-                            queryParameters: {'isTranslation': 'false'},
+                            queryParameters: {
+                              'isTranslation': 'false',
+                              'reciterId': state.activeReciterId.toString(),
+                            },
                           );
                           ref.read(downloadHubControllerProvider.notifier).loadSummary();
                           ref.read(downloadedItemsControllerProvider.notifier).loadItems();
@@ -155,7 +158,10 @@ class DownloadHubScreen extends ConsumerWidget {
                         onTap: () async {
                           await context.pushNamed(
                             audioDownloadManagerRoute,
-                            queryParameters: {'isTranslation': 'true'},
+                            queryParameters: {
+                              'isTranslation': 'true',
+                              'reciterId': state.activeTranslationReciterId.toString(),
+                            },
                           );
                           ref.read(downloadHubControllerProvider.notifier).loadSummary();
                           ref.read(downloadedItemsControllerProvider.notifier).loadItems();

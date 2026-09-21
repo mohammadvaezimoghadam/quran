@@ -68,13 +68,14 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
         ? (currentTrackType == CurrentTrackType.translation)
         : (playbackMode == AudioPlaybackMode.onlyTranslation || playbackMode == AudioPlaybackMode.translationThenQuran);
 
-    // Show the correct reciter based on what's currently playing or configured
-    final displayReciter = isTranslationTrack
-        ? audioState.selectedTranslationReciter
-        : audioState.selectedReciter;
+    // In play button mode (Reader), track active audio; in avatar selection mode (Header), represent the primary Quran reciter
+    final displayReciter = widget.isPlayButton
+        ? (isTranslationTrack
+            ? (audioState.selectedTranslationReciter ?? audioState.selectedReciter)
+            : audioState.selectedReciter)
+        : (audioState.selectedReciter ?? audioState.selectedTranslationReciter);
     final reciterName = displayReciter?.name ?? '';
     final imageUrl = displayReciter?.imageUrl;
-
 
     // Start or stop rotation animation based on audio status
     if (isPlaying && !_animController.isAnimating) {
@@ -103,13 +104,12 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
         tooltipMessage = isTranslationTrack ? 'پخش ترجمه' : 'پخش تلاوت';
       }
     } else {
-      final defaultName = isTranslationTrack ? 'مترجم گویا' : 'استاد پرهیزگار';
+      final defaultName = 'استاد پرهیزگار';
       final nameStr = reciterName.isEmpty ? defaultName : reciterName;
-      final roleTitle = isTranslationTrack ? 'گوینده ترجمه' : 'قاری';
-      if (hasVip || (isParhizgar && !isTranslationTrack)) {
-        tooltipMessage = 'انتخاب $roleTitle ($nameStr)';
+      if (hasVip || isParhizgar) {
+        tooltipMessage = 'انتخاب قاری ($nameStr)';
       } else {
-        tooltipMessage = 'انتخاب $roleTitle ($nameStr - نیازمند اشتراک)';
+        tooltipMessage = 'انتخاب قاری ($nameStr - نیازمند اشتراک)';
       }
     }
 
@@ -119,7 +119,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
         onTap: widget.onTap ?? () {
           ReciterSelectionBottomSheet.show(
             context,
-            isTranslationMode: isTranslationTrack,
+            isTranslationMode: false,
           );
         },
         child: SizedBox(
@@ -139,7 +139,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                   border: Border.all(
                     color: isPlaying
                         ? colorScheme.primary.withValues(alpha: 0.30)
-                        : colorScheme.primary.withValues(alpha: 0.12),
+                        : colorScheme.outlineVariant.withValues(alpha: 0.4),
                     width: 1.2,
                   ),
                   boxShadow: [

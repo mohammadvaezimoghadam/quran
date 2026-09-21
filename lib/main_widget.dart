@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'common/constants/app_constants.dart';
@@ -22,9 +23,29 @@ class MainWidget extends ConsumerWidget {
       themeMode: themeMode,
       routerConfig: router,
       builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: child ?? const SizedBox.shrink(),
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final overlayStyle = isDark
+            ? const SystemUiOverlayStyle(
+                statusBarColor: Color(0xFF1C1C1E),
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+                systemNavigationBarColor: Color(0xFF1C1C1E),
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : const SystemUiOverlayStyle(
+                statusBarColor: Color(0xFFFFFFFF),
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.light,
+                systemNavigationBarColor: Color(0xFFFFFFFF),
+                systemNavigationBarIconBrightness: Brightness.dark,
+              );
+
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: overlayStyle,
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

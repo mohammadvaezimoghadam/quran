@@ -17,6 +17,7 @@ import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/word_by_word_provider.dart';
 import '../../domain/entities/word_entity.dart';
+import '../widgets/surah_header_title_capsule.dart';
 
 /// Clean Apple-style screen displaying the entire word-by-word vocabulary of a Surah.
 /// Features real-time search, instant Surah switching, and high-contrast typography.
@@ -132,13 +133,14 @@ class _SurahDictionaryScreenState extends ConsumerState<SurahDictionaryScreen> {
                       },
                     ),
 
-                    4.hSpace,
+                    const SizedBox(width: 8),
 
-                    // Surah Title & Switcher Pill
+                    // Interactive Surah Title Capsule (Unified with QuranReaderAppBar)
                     Expanded(
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
+                      child: Center(
+                        child: SurahHeaderTitleCapsule(
+                          surahNumber: _currentSurahId,
+                          surahName: 'سوره $surahDisplayName',
                           onTap: () async {
                             final selected = await SurahPickerDialog.show(
                               context,
@@ -154,70 +156,12 @@ class _SurahDictionaryScreenState extends ConsumerState<SurahDictionaryScreen> {
                               });
                             }
                           },
-                          borderRadius: BorderRadius.circular(10),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6.0,
-                              vertical: 4.0,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    'لغت‌نامه سوره $surahDisplayName',
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: AppTypography.fontFamily,
-                                      fontSize: 16.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ),
-                                6.hSpace,
-                                Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Icon(
-                                    CupertinoIcons.chevron_down,
-                                    size: 13,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       ),
                     ),
 
-                    // Surah Number Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.black.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: colors.cardBorder,
-                          width: 0.6,
-                        ),
-                      ),
-                      child: Text(
-                        'سوره ${_currentSurahId.toPersianDigit()}',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                    ),
+                    // Balance spacer so capsule is centered (48px like back button)
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),

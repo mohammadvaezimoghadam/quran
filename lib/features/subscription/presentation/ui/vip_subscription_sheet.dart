@@ -32,6 +32,7 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
       final state = ref.read(vipSubscriptionControllerProvider);
       if (state.availableProducts.isEmpty ||
@@ -211,16 +212,22 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
                         final isPurchasing = state.isLoading &&
                             _purchasingProductId == product.id;
                         final isAnyPurchasing = state.isLoading;
+                        final isCurrentActivePlan = isVip && state.activePlanId == product.id;
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: SubscriptionPlanCard(
                             product: product,
                             isLoading: isPurchasing,
-                            isDisabled: isAnyPurchasing && !isPurchasing,
+                            isDisabled: isVip || (isAnyPurchasing && !isPurchasing),
                             isVip: isVip,
-                            onPurchase: () =>
-                                _handlePurchase(product, controller),
+                            buttonText: isVip
+                                ? (isCurrentActivePlan ? 'پلن فعال' : 'فعال')
+                                : null,
+                            onPurchase: isVip
+                                ? null
+                                : () =>
+                                    _handlePurchase(product, controller),
                           ),
                         );
                       }),

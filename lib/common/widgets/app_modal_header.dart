@@ -14,6 +14,7 @@ class AppModalHeader extends StatelessWidget {
   final Widget? titleWidget;
   final VoidCallback? onClose;
   final Widget? leadingAction;
+  final double? leadingActionWidth;
   final bool showDragHandle;
   final double bottomSpacing;
   final bool showDivider;
@@ -25,6 +26,7 @@ class AppModalHeader extends StatelessWidget {
     this.titleWidget,
     this.onClose,
     this.leadingAction,
+    this.leadingActionWidth,
     this.showDragHandle = false,
     this.bottomSpacing = 12.0,
     this.showDivider = false,
@@ -37,6 +39,8 @@ class AppModalHeader extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     const actionSize = 44.0;
+    final leadingWidth = leadingActionWidth ?? actionSize;
+    final trailingWidth = leadingActionWidth != null ? leadingWidth : actionSize;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -61,10 +65,13 @@ class AppModalHeader extends StatelessWidget {
             children: [
               // 1. Right side (in RTL): Leading action or balanced spacer for 100% centering
               SizedBox(
-                width: actionSize,
+                width: leadingWidth,
                 height: actionSize,
                 child: leadingAction != null
-                    ? Center(child: leadingAction)
+                    ? Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: leadingAction,
+                      )
                     : null,
               ),
 
@@ -87,18 +94,21 @@ class AppModalHeader extends StatelessWidget {
 
               // 3. Left side (in RTL): Uniform close button (ضربدر)
               SizedBox(
-                width: actionSize,
+                width: trailingWidth,
                 height: actionSize,
-                child: IconButton(
-                  tooltip: 'بستن',
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(
-                    CupertinoIcons.xmark_circle_fill,
-                    size: 24,
-                    color: isDark ? Colors.white38 : Colors.black26,
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: IconButton(
+                    tooltip: 'بستن',
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(
+                      CupertinoIcons.xmark_circle_fill,
+                      size: 24,
+                      color: isDark ? Colors.white38 : Colors.black26,
+                    ),
+                    onPressed: onClose ?? () => Navigator.of(context).pop(),
                   ),
-                  onPressed: onClose ?? () => Navigator.of(context).pop(),
                 ),
               ),
             ],
