@@ -30,3 +30,14 @@
 -keepclassmembers class * extends androidx.media3.decoder.CryptoConfig {
     public <init>(...);
 }
+
+# Sqflite
+-keep class com.tekartik.sqflite.** { *; }
+
+# Poolakey (Cafe Bazaar In-App Billing)
+-keep class ir.cafebazaar.poolakey.** { *; }
+-dontwarn ir.cafebazaar.poolakey.**
+
+# Firebase
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**

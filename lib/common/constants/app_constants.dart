@@ -6,9 +6,6 @@ abstract class AppConstants {
 
   // Assets Paths
   static const String ayahCardBgAsset = 'assets/images/ayah_card_bg.png';
-  static const String surahStarAsset = 'assets/images/surah_star.png';
-  static const String quranTafakorLogoAsset = 'assets/images/quran_tafakor_logo.png';
-  static const String adhanTafakorLogoAsset = 'assets/images/adhan_tafakor_logo.jpg';
 
   // Network Error Messages - Connection Types
   static const String connectionTimeoutError =
