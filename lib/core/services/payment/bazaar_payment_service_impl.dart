@@ -25,6 +25,12 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
   Future<bool> initialize() async {
     _log('🚀 Connecting to Cafe Bazaar Poolakey...');
 
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      _log('ℹ️ Cafe Bazaar billing is not supported on Web/non-Android.');
+      _isConnected = false;
+      return false;
+    }
+
     if (rsaPublicKey.isEmpty || rsaPublicKey == 'YOUR_BAZAAR_RSA_PUBLIC_KEY') {
       _log('⚠️ Warning: Cafe Bazaar RSA key is not yet configured. Please set a valid RSA public key.');
       _isConnected = false;

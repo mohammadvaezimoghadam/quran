@@ -9,6 +9,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
+
 import 'core/data/local/preferences/preferences_service_provider.dart';
 import 'core/services/audio/audio_player_providers.dart';
 import 'core/services/audio/quran_audio_handler.dart';
@@ -31,21 +34,27 @@ Future<void> _loadCustomFonts() async {
 /// Configure audio session for proper interaction with other apps, phone calls,
 /// and headphone events on real Android/iOS devices.
 Future<void> _initAudioSession() async {
-  final session = await AudioSession.instance;
-  await session.configure(const AudioSessionConfiguration(
-    avAudioSessionCategory: AVAudioSessionCategory.playback,
-    avAudioSessionMode: AVAudioSessionMode.defaultMode,
-    androidAudioAttributes: AndroidAudioAttributes(
-      contentType: AndroidAudioContentType.music,
-      usage: AndroidAudioUsage.media,
-    ),
-    androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-    androidWillPauseWhenDucked: true,
-  ));
+  if (kIsWeb) return;
+  try {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionMode: AVAudioSessionMode.defaultMode,
+      androidAudioAttributes: AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.music,
+        usage: AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+      androidWillPauseWhenDucked: true,
+    ));
+  } catch (_) {}
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    usePathUrlStrategy();
+  }
 
   // Initialize critical local services concurrently for fast startup
   final initFutures = Future.wait([

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,11 +41,23 @@ class MainWidget extends ConsumerWidget {
                 systemNavigationBarIconBrightness: Brightness.dark,
               );
 
+        Widget content = child ?? const SizedBox.shrink();
+        if (kIsWeb) {
+          content = Container(
+            color: isDark ? const Color(0xFF101716) : const Color(0xFFF0EAE1),
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 768),
+              child: content,
+            ),
+          );
+        }
+
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: overlayStyle,
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: child ?? const SizedBox.shrink(),
+            child: content,
           ),
         );
       },

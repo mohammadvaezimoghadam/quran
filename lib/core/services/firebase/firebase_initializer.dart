@@ -14,9 +14,16 @@ abstract class FirebaseInitializer {
   static Future<void> init() async {
     if (_isInitialized) return;
 
-    // Check if platform is configured in DefaultFirebaseOptions
-    final isSupported = kIsWeb ||
-        defaultTargetPlatform == TargetPlatform.android ||
+    // Skip on web or desktop to prevent UnsupportedError crash
+    if (kIsWeb) {
+      developer.log(
+        'Firebase options are not configured for Web. Skipping initialization.',
+        name: 'FirebaseInitializer',
+      );
+      return;
+    }
+
+    final isSupported = defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS;
 
     if (!isSupported) {

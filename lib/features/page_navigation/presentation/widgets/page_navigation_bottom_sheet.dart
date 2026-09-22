@@ -1,6 +1,5 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,6 +58,11 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
   }
 
   Future<void> _requestCameraPermission() async {
+    if (kIsWeb) {
+      await _scannerController.start();
+      if (mounted) setState(() {});
+      return;
+    }
     final status = await Permission.camera.request();
     if (status.isGranted) {
       await _scannerController.start();
@@ -90,7 +94,7 @@ class _PageNavigationBottomSheetState extends ConsumerState<PageNavigationBottom
       // Fallback to ZXing2 if MobileScanner's analyzeImage failed (which is common on Android)
       if (rawValue == null) {
         try {
-          final bytes = await File(image.path).readAsBytes();
+          final bytes = await image.readAsBytes();
           final decodedImage = img.decodeImage(bytes);
           if (decodedImage != null) {
             final pixels = Int32List(decodedImage.width * decodedImage.height);

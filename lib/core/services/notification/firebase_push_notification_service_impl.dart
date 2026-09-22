@@ -42,12 +42,12 @@ final class FirebasePushNotificationServiceImpl implements IPushNotificationServ
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // Firebase Messaging is supported primarily on mobile (Android/iOS) and Web
-    if (!kIsWeb &&
-        defaultTargetPlatform != TargetPlatform.android &&
-        defaultTargetPlatform != TargetPlatform.iOS) {
+    // Push notifications are supported primarily on mobile (Android/iOS)
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+         defaultTargetPlatform != TargetPlatform.iOS)) {
       developer.log(
-        'Push notifications are not supported on current platform: $defaultTargetPlatform',
+        'Push notifications are not supported on current platform: ${kIsWeb ? "Web" : defaultTargetPlatform}',
         name: 'PushNotificationService',
       );
       return;

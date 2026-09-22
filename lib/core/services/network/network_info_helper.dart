@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 /// Utility to detect network interface types using native [NetworkInterface.list]
 /// without requiring extra platform plugins.
 class NetworkInfoHelper {
   /// Checks if the device has an active Wi-Fi connection.
   static Future<bool> isWifiConnected() async {
+    if (kIsWeb) return true;
     try {
       final interfaces = await NetworkInterface.list(
         includeLoopback: false,
