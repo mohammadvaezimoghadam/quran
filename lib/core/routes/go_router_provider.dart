@@ -26,6 +26,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     routes: [
       GoRoute(
+        path: '/',
+        redirect: (context, state) => '/main',
+      ),
+      GoRoute(
         path: '/splash',
         name: splashRoute,
         builder: (context, state) => const SplashScreen(),
