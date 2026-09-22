@@ -58,32 +58,45 @@ void main() async {
 
   // Initialize critical local services concurrently for fast startup
   final initFutures = Future.wait([
-    _loadCustomFonts(),
-    _initAudioSession(),
+    _loadCustomFonts().catchError((e) {
+      debugPrint('Custom fonts load error: $e');
+    }),
+    _initAudioSession().catchError((e) {
+      debugPrint('Audio session error: $e');
+    }),
     Hive.initFlutter().then((_) => Future.wait([
       Hive.openBox(TranslationLocalDataSource.boxName),
       Hive.openBox(AudioStorageServiceImpl.boxName),
       Hive.openBox(BookmarkLocalDataSource.boxName),
-    ])),
+    ])).catchError((e) {
+      debugPrint('Hive init error: $e');
+      return [];
+    }),
     SharedPreferences.getInstance(),
-    FirebaseInitializer.init(),
+    FirebaseInitializer.init().catchError((e) {
+      debugPrint('Firebase init error: $e');
+    }),
   ]);
 
   final rawPlayer = AudioPlayer();
-  final audioHandlerFuture = AudioService.init(
-    builder: () => QuranAudioHandler(rawPlayer),
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.qurantafakor.app.audio',
-      androidNotificationChannelName: 'پخش صوت قرآن',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-      androidNotificationIcon: 'mipmap/ic_launcher',
-    ),
-  );
+  final QuranAudioHandler audioHandler;
+  if (kIsWeb) {
+    audioHandler = QuranAudioHandler(rawPlayer);
+  } else {
+    audioHandler = await AudioService.init(
+      builder: () => QuranAudioHandler(rawPlayer),
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'com.qurantafakor.app.audio',
+        androidNotificationChannelName: 'پخش صوت قرآن',
+        androidNotificationOngoing: true,
+        androidStopForegroundOnPause: true,
+        androidNotificationIcon: 'mipmap/ic_launcher',
+      ),
+    );
+  }
 
   final results = await initFutures;
   final sharedPreferences = results[3] as SharedPreferences;
-  final audioHandler = await audioHandlerFuture;
 
   // Initialize Push Notification Service in background without blocking app launch
   final pushNotificationService = FirebasePushNotificationServiceImpl();
