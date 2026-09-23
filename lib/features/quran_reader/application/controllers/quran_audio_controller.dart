@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/constants/surah_constants.dart';
 import '../../../../core/services/audio/audio_error_parser.dart';
 import '../../../../core/services/audio/audio_player_providers.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
+import '../../../../core/services/audio/audio_url_helper.dart';
 import '../../../../core/services/audio_storage/audio_storage_providers.dart';
 import '../../domain/entities/reciter_entity.dart';
 import '../../domain/enums/audio_playback_mode.dart';
@@ -453,7 +455,16 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       ayahNumber: ayahNumber,
     );
 
-    if (localPath == null) {
+    final String audioSourceToPlay;
+    if (localPath != null) {
+      audioSourceToPlay = localPath;
+    } else if (kIsWeb) {
+      audioSourceToPlay = AudioUrlHelper.buildAyahUrl(
+        subfolder: activeReciter.subfolder,
+        surahNumber: surahId,
+        ayahNumber: ayahNumber,
+      );
+    } else {
       _isTransitioningTrack = false;
       await stop();
       final errorPrefix = trackType == CurrentTrackType.translation
@@ -468,7 +479,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
     try {
       final audioService = ref.read(audioPlayerServiceProvider);
-      await audioService.play(localPath);
+      await audioService.play(audioSourceToPlay);
       if (state.speed != 1.0) {
         await audioService.setSpeed(state.speed);
       }

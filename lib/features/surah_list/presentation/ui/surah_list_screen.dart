@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -170,7 +171,7 @@ class _SurahListScreenState extends ConsumerState<SurahListScreen> {
       isDownloaded = isMarked || firstAyahPath != null;
     }
 
-    if (isDownloaded) {
+    if (isDownloaded || kIsWeb) {
       _openReader(surah);
       return;
     }

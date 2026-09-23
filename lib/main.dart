@@ -18,6 +18,7 @@ import 'core/services/audio/quran_audio_handler.dart';
 import 'core/services/audio_storage/audio_storage_service_impl.dart';
 import 'core/services/firebase/firebase_initializer.dart';
 import 'core/services/notification/firebase_push_notification_service_impl.dart';
+import 'core/services/notification/i_push_notification_service.dart';
 import 'core/services/notification/push_notification_providers.dart';
 import 'features/bookmarks/infrastructure/datasources/bookmark_local_datasource.dart';
 import 'features/translation_manager/infrastructure/datasources/translation_local_datasource.dart';
@@ -52,6 +53,13 @@ Future<void> _initAudioSession() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('🛑 [FlutterError] ${details.exceptionAsString()}');
+    debugPrint('${details.stack}');
+  };
+  debugPrint('🚀 [App Startup] main() started (kIsWeb: $kIsWeb)');
+
   if (kIsWeb) {
     usePathUrlStrategy();
   }
@@ -70,7 +78,7 @@ void main() async {
       Hive.openBox(BookmarkLocalDataSource.boxName),
     ])).catchError((e) {
       debugPrint('Hive init error: $e');
-      return [];
+      return <Box<dynamic>>[];
     }),
     SharedPreferences.getInstance(),
     FirebaseInitializer.init().catchError((e) {
@@ -99,8 +107,13 @@ void main() async {
   final sharedPreferences = results[3] as SharedPreferences;
 
   // Initialize Push Notification Service in background without blocking app launch
-  final pushNotificationService = FirebasePushNotificationServiceImpl();
-  unawaited(pushNotificationService.initialize());
+  final IPushNotificationService pushNotificationService;
+  if (kIsWeb) {
+    pushNotificationService = const WebPushNotificationServiceImpl();
+  } else {
+    pushNotificationService = FirebasePushNotificationServiceImpl();
+    unawaited(pushNotificationService.initialize());
+  }
 
   runApp(
     ProviderScope(

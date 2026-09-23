@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:multiple_result/multiple_result.dart';
 
@@ -6,8 +7,13 @@ import '../../domain/entities/ayah_entity.dart';
 import '../../domain/entities/word_entity.dart';
 import '../../domain/repositories/i_ayah_repository.dart';
 import '../datasources/ayah_local_data_source.dart';
+import '../datasources/ayah_remote_data_source.dart';
 
 final ayahRepositoryProvider = Provider<IAyahRepository>((ref) {
+  if (kIsWeb) {
+    final remoteDataSource = ref.watch(ayahRemoteDataSourceProvider);
+    return AyahRemoteRepository(remoteDataSource);
+  }
   final localDataSource = ref.watch(ayahLocalDataSourceProvider);
   return AyahRepository(localDataSource);
 });
@@ -67,5 +73,38 @@ class AyahRepository implements IAyahRepository {
         stackTrace: s,
       ));
     }
+  }
+}
+
+class AyahRemoteRepository implements IAyahRepository {
+  final IAyahRemoteDataSource _remoteDataSource;
+
+  AyahRemoteRepository(this._remoteDataSource);
+
+  @override
+  Future<Result<List<AyahEntity>, Failure>> getAyahsBySurah(int surahId) async {
+    try {
+      final entities = await _remoteDataSource.getAyahsBySurah(surahId);
+      if (entities.isEmpty) {
+        return const Error(Failure(message: 'هیچ آیه‌ای برای این سوره یافت نشد.'));
+      }
+      return Success(entities);
+    } catch (e, s) {
+      return Error(Failure(
+        message: 'خطا در دریافت آیات از سرور: $e',
+        exception: e is Exception ? e : Exception(e.toString()),
+        stackTrace: s,
+      ));
+    }
+  }
+
+  @override
+  Future<Result<List<WordEntity>, Failure>> getAyahWords(int surahId, int ayahNumber) async {
+    return const Success([]);
+  }
+
+  @override
+  Future<Result<List<WordEntity>, Failure>> getSurahWords(int surahId) async {
+    return const Success([]);
   }
 }

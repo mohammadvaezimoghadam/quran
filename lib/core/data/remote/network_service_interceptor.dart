@@ -9,7 +9,9 @@ class NetworkServiceInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     options.headers['Accept'] = 'application/json';
-    options.headers['Content-Type'] = 'application/json';
+    if (options.method.toUpperCase() != 'GET' && options.method.toUpperCase() != 'HEAD') {
+      options.headers['Content-Type'] = 'application/json';
+    }
     super.onRequest(options, handler);
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
@@ -7,9 +8,24 @@ import '../../domain/entities/search_filter_type.dart';
 import '../../domain/entities/search_result_item.dart';
 
 final searchLocalDataSourceProvider = Provider<ISearchLocalDataSource>((ref) {
+  if (kIsWeb) {
+    return const SearchWebDataSource();
+  }
   final sqfliteService = ref.watch(sqfliteServiceProvider);
   return SearchLocalDataSource(sqfliteService);
 });
+
+class SearchWebDataSource implements ISearchLocalDataSource {
+  const SearchWebDataSource();
+
+  @override
+  Future<List<SearchResultItem>> search({
+    required String query,
+    SearchFilterType filter = SearchFilterType.all,
+  }) async {
+    return const [];
+  }
+}
 
 abstract class ISearchLocalDataSource {
   Future<List<SearchResultItem>> search({

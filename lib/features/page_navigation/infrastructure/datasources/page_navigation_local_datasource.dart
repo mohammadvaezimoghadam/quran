@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/data/local/sqflite/i_sqflite_service.dart';
 import '../../../../core/data/local/sqflite/sqflite_service_provider.dart';
 import '../dtos/page_navigation_dto.dart';
 
 final pageNavigationLocalDataSourceProvider = Provider<IPageNavigationLocalDataSource>((ref) {
+  if (kIsWeb) {
+    return const PageNavigationWebDataSource();
+  }
   final sqfliteService = ref.watch(sqfliteServiceProvider);
   return PageNavigationLocalDataSourceImpl(sqfliteService);
 });
@@ -43,6 +47,19 @@ class PageNavigationLocalDataSourceImpl implements IPageNavigationLocalDataSourc
       return PageNavigationDto.fromSqlite(maps.first);
     }
     return null;
+  }
+}
+
+class PageNavigationWebDataSource implements IPageNavigationLocalDataSource {
+  const PageNavigationWebDataSource();
+
+  @override
+  Future<PageNavigationDto?> getSurahInfoByPage(int pageNumber) async {
+    return PageNavigationDto(
+      surahId: 1,
+      ayahNumber: 1,
+      surahName: 'الفاتحة',
+    );
   }
 }
 

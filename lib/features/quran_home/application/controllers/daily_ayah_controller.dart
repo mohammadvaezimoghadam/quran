@@ -1,8 +1,10 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/data/local/sqflite/i_sqflite_service.dart';
 import '../../../../core/data/local/sqflite/sqflite_service_provider.dart';
+import '../../infrastructure/data_sources/remote/home_remote_data_source.dart';
 
 class DailyAyahItem {
   final int surahNumber;
@@ -36,11 +38,13 @@ final dailyAyahControllerProvider =
 );
 
 class DailyAyahController extends AsyncNotifier<DailyAyahItem> {
-  late final ISqfliteService _sqfliteService;
+  ISqfliteService? _sqfliteService;
 
   @override
   Future<DailyAyahItem> build() async {
-    _sqfliteService = ref.watch(sqfliteServiceProvider);
+    if (!kIsWeb) {
+      _sqfliteService = ref.watch(sqfliteServiceProvider);
+    }
     final now = DateTime.now();
     // Deterministic daily seed: changes every day at midnight
     final dailySeed = now.year * 372 + now.month * 31 + now.day;
@@ -48,6 +52,44 @@ class DailyAyahController extends AsyncNotifier<DailyAyahItem> {
   }
 
   Future<DailyAyahItem> _fetchAyah(int seed) async {
+    if (kIsWeb) {
+      try {
+        final homeRemote = ref.read(homeRemoteDataSourceProvider);
+        final ayahNumber = ((seed.abs() * 107) % 6236) + 1;
+        final res = await homeRemote.getAyahEditions(ayahNumber);
+        final list = res.data;
+        if (list.isNotEmpty) {
+          final arabic = list[0];
+          final translation = list.length > 1 ? list[1].text : '';
+          return DailyAyahItem(
+            surahNumber: arabic.surah?.number ?? 1,
+            surahName: arabic.surah?.name ?? '',
+            ayahNumber: arabic.numberInSurah,
+            arabicText: arabic.text,
+            translation: translation,
+          );
+        }
+      } catch (e) {
+        debugPrint('⚠️ [DailyAyah] API load failed, using fallback: $e');
+      }
+      return const DailyAyahItem(
+        surahNumber: 2,
+        surahName: 'البقرة',
+        ayahNumber: 255,
+        arabicText: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ',
+        translation: 'خداوند است که جز او هیچ معبودی نیست؛ زنده و برپادارنده است.',
+      );
+    }
+
+    if (_sqfliteService == null) {
+      return const DailyAyahItem(
+        surahNumber: 2,
+        surahName: 'البقرة',
+        ayahNumber: 255,
+        arabicText: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ',
+        translation: 'خداوند است که جز او هیچ معبودی نیست؛ زنده و برپادارنده است.',
+      );
+    }
     // Select well-proportioned, inspiring Ayahs for the home banner
     final sql = '''
       SELECT 
@@ -65,7 +107,7 @@ class DailyAyahController extends AsyncNotifier<DailyAyahItem> {
       LIMIT 1
     ''';
 
-    final List<Map<String, dynamic>> maps = await _sqfliteService.rawQuery(sql);
+    final List<Map<String, dynamic>> maps = await _sqfliteService!.rawQuery(sql);
 
     if (maps.isNotEmpty) {
       return DailyAyahItem.fromMap(maps.first);

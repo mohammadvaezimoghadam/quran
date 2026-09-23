@@ -25,8 +25,33 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   );
 }
 
+final class WebPushNotificationServiceImpl implements IPushNotificationService {
+  const WebPushNotificationServiceImpl();
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<String?> getDeviceToken() async => null;
+
+  @override
+  Stream<String> get onTokenRefresh => const Stream.empty();
+
+  @override
+  Future<void> subscribeToTopic(String topic) async {}
+
+  @override
+  Future<void> unsubscribeFromTopic(String topic) async {}
+
+  @override
+  void onMessageReceived(void Function(NotificationPayload payload) onData) {}
+
+  @override
+  void onNotificationOpenedApp(void Function(NotificationPayload payload) onData) {}
+}
+
 final class FirebasePushNotificationServiceImpl implements IPushNotificationService {
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  FirebaseMessaging get _firebaseMessaging => FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   static const String channelId = 'quran_notifications';

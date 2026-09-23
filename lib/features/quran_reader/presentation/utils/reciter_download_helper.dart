@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -86,6 +87,11 @@ abstract class ReciterDownloadHelper {
         ref: ref,
       );
       if (!isTranslationAllowed) return false;
+    }
+
+    // On Web, audio is streamed online on-demand; no local file downloading needed
+    if (kIsWeb) {
+      return true;
     }
 
     final downloadTasks = container.read(audioDownloadControllerProvider);

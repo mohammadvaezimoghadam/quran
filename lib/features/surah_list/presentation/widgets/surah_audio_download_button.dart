@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -70,8 +71,8 @@ class SurahAudioDownloadButton extends ConsumerWidget {
           );
         }
 
-        // ── STATE 2: Fully downloaded → play icon ──
-        if (isDownloaded) {
+        // ── STATE 2: Fully downloaded or Web → play icon ──
+        if (isDownloaded || kIsWeb) {
           return IconButton(
             icon: Icon(
               CupertinoIcons.play_arrow_solid,

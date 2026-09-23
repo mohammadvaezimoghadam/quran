@@ -20,6 +20,8 @@ abstract class AudioErrorParser {
       return 'در حال بارگذاری صوت جدید...';
     } else if (errorStr.contains('format') || errorStr.contains('codec')) {
       return 'فرمت این فایل صوتی قابل پخش نمی‌باشد.';
+    } else if (errorStr.contains('notallowed') || errorStr.contains('interact')) {
+      return 'لطفاً روی صفحه کلیک کنید تا دسترسی پخش صدا فعال شود.';
     }
 
     return 'خطا در پخش فایل صوتی. لطفاً مجدداً تلاش کنید.';

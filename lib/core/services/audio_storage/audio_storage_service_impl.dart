@@ -57,6 +57,7 @@ class AudioStorageServiceImpl implements IAudioStorageService {
     required int reciterId,
     required int surahId,
   }) async {
+    if (kIsWeb) return '';
     final appDir = await getApplicationDocumentsDirectory();
     final dir = Directory('${appDir.path}/audio_cache/reciter_$reciterId/surah_$surahId');
     if (!await dir.exists()) {
@@ -71,6 +72,7 @@ class AudioStorageServiceImpl implements IAudioStorageService {
     required int surahId,
     required int ayahNumber,
   }) async {
+    if (kIsWeb) return null;
     final dirPath = await getSurahSaveDirectory(
       reciterId: reciterId,
       surahId: surahId,
@@ -90,6 +92,7 @@ class AudioStorageServiceImpl implements IAudioStorageService {
     required int surahId,
     required int totalAyahs,
   }) async {
+    if (kIsWeb) return 0;
     final dirPath = await getSurahSaveDirectory(
       reciterId: reciterId,
       surahId: surahId,
@@ -108,6 +111,7 @@ class AudioStorageServiceImpl implements IAudioStorageService {
 
   @override
   Future<String> getRootAudioStorageDirectory() async {
+    if (kIsWeb) return '';
     final appDir = await getApplicationDocumentsDirectory();
     final dir = Directory('${appDir.path}/audio_cache');
     if (!await dir.exists()) {
@@ -118,6 +122,7 @@ class AudioStorageServiceImpl implements IAudioStorageService {
 
   @override
   Future<int> getTotalAudioStorageSizeInBytes() async {
+    if (kIsWeb) return 0;
     final rootPath = await getRootAudioStorageDirectory();
     final dir = Directory(rootPath);
     if (!await dir.exists()) return 0;
@@ -134,6 +139,7 @@ class AudioStorageServiceImpl implements IAudioStorageService {
 
   @override
   Future<void> clearAllAudioCache() async {
+    if (kIsWeb) return;
     final rootPath = await getRootAudioStorageDirectory();
     final dir = Directory(rootPath);
     if (await dir.exists()) {
