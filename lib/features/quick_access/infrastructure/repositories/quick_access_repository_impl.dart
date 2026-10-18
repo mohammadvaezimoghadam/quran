@@ -61,13 +61,14 @@ class QuickAccessRepositoryImpl implements IQuickAccessRepository {
         iconData: CupertinoIcons.square_list,
         isReady: true,
       ),
-      // QuickAccessToolEntity(
-      //   type: QuickAccessToolType.topicStudio,
-      //   title: 'دفتر تفکر',
-      //   description: 'ثبت تأملات و تدوین یادداشت‌های موضوعی',
-      //   iconData: CupertinoIcons.square_pencil,
-      //   isReady: true,
-      // ),
+      QuickAccessToolEntity(
+        type: QuickAccessToolType.topicStudio,
+        title: 'تفکر',
+        description: 'ثبت تأملات و تدوین یادداشت‌های موضوعی',
+        iconData: CupertinoIcons.square_pencil,
+        isReady: true,
+        routeName: tafakorTopicsRoute,
+      ),
     ];
   }
 

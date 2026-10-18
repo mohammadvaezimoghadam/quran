@@ -1,4 +1,4 @@
-﻿import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +21,7 @@ import 'widgets/home_quick_access_grid.dart';
 import 'widgets/home_search_bar_widget.dart';
 import 'web_quran_home_view.dart';
 import '../../../quick_access/presentation/ui/quick_access_row.dart';
-import '../../../study_plan/presentation/widgets/study_plan_home_card.dart';
+import '../../../khatm/presentation/widgets/shared/khatm_home_section.dart';
 
 /// Clean Apple-Style Quran Home Screen with Tafakor Mint Green Theme
 class QuranHomeScreen extends ConsumerWidget {
@@ -144,8 +144,8 @@ class QuranHomeScreen extends ConsumerWidget {
           const QuickAccessRow(),
           AppDimens.stackLg.vSpace,
 
-          // 3. Quran Study / Khatm Plan Card (کارت برنامه مطالعه و ختم)
-          const StudyPlanHomeCard(),
+          // 3. Quran Khatm & Study Plan Card (کارت برنامه ختم و مطالعه قرآن)
+          const KhatmHomeSection(),
           AppDimens.stackLg.vSpace,
 
           // 4. Continue Reading Card (در پایین صفحه)

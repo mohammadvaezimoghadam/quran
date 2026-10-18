@@ -18,4 +18,9 @@ const String studyPlansRoute = "study_plans";
 const String createStudyPlanRoute = "create_study_plan";
 
 const String tafakorLoginRoute = "tafakor_login";
+const String tafakorTopicsRoute = "tafakor_topics";
+const String tafakorTopicFeedRoute = "tafakor_topic_feed";
 const String audioSleepTimerRoute = "audio_sleep_timer";
+const String khatmListRoute = "khatm_list";
+const String createKhatmWizardRoute = "create_khatm_wizard";
+const String khatmDetailRoute = "khatm_detail";

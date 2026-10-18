@@ -20,9 +20,7 @@ import '../widgets/bookmarks_manager_bottom_sheet.dart';
 import '../widgets/pinned_surah_picker_bottom_sheet.dart';
 import '../widgets/quick_access_picker_bottom_sheet.dart';
 import '../widgets/quick_access_slot_card.dart';
-// import '../../../tafakor/application/controllers/tafakor_auth_controller.dart';
-// import '../../../tafakor/presentation/ui/tafakor_login_screen.dart';
-// import '../../../topic_studio/presentation/ui/topic_studio_screen.dart';
+import '../../../topic_studio/presentation/ui/tafakor_topics_screen.dart';
 
 class QuickAccessRow extends ConsumerWidget {
   const QuickAccessRow({super.key});
@@ -32,6 +30,15 @@ class QuickAccessRow extends ConsumerWidget {
     WidgetRef ref,
     QuickAccessToolEntity tool,
   ) async {
+    if (tool.type == QuickAccessToolType.topicStudio) {
+      try {
+        context.pushNamed(tafakorTopicsRoute);
+      } catch (_) {
+        TafakorTopicsScreen.push(context);
+      }
+      return;
+    }
+
     if (tool.routeName != null) {
       context.pushNamed(tool.routeName!);
       return;
@@ -98,7 +105,7 @@ class QuickAccessRow extends ConsumerWidget {
         break;
 
       case QuickAccessToolType.topicStudio:
-        // Temporarily commented out
+        context.pushNamed(tafakorTopicsRoute);
         break;
     }
   }

@@ -19,9 +19,16 @@ import '../../domain/entities/tafakor_auth_state.dart';
 class TafakorLoginScreen extends ConsumerStatefulWidget {
   const TafakorLoginScreen({super.key});
 
+  static Future<void> push(BuildContext context) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const TafakorLoginScreen()),
+    );
+  }
+
   @override
   ConsumerState<TafakorLoginScreen> createState() => _TafakorLoginScreenState();
 }
+
 
 class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
   final TextEditingController _phoneController = TextEditingController();

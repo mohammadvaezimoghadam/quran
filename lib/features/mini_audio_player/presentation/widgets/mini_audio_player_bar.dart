@@ -17,10 +17,12 @@ import '../../application/controllers/mini_audio_player_controller.dart';
 /// Designed for 0 rebuild spillover to parent screens (e.g. HomeScreen).
 class MiniAudioPlayerBar extends ConsumerWidget {
   final bool includeBottomInset;
+  final VoidCallback? onTap;
 
   const MiniAudioPlayerBar({
     super.key,
     this.includeBottomInset = false,
+    this.onTap,
   });
 
   @override
@@ -101,16 +103,18 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                       // 2. Middle Interactive Zone: Surah Name + Ayah Badge (Expanded pushes close button to far end)
                       Expanded(
                         child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => QuranReaderScreen(
-                                  surahId: currentSurahId,
-                                  surahName: 'سوره $surahName',
-                                ),
-                              ),
-                            );
-                          },
+                          onTap: onTap ??
+                              () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => QuranReaderScreen(
+                                      surahId: currentSurahId,
+                                      surahName: 'سوره $surahName',
+                                      initialAyahNumber: currentAyahNumber,
+                                    ),
+                                  ),
+                                );
+                              },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4.0),
                             child: Row(

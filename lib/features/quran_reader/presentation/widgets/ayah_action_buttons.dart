@@ -173,24 +173,21 @@ class _AyahActionButtonsState extends State<AyahActionButtons>
     required double buttonSize,
     bool isPrimary = false,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: isPrimary ? colorScheme.primary : colorScheme.surfaceContainerHigh,
-        shape: const CircleBorder(),
-        elevation: isPrimary ? 3 : 1,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: SizedBox(
-            width: buttonSize,
-            height: buttonSize,
-            child: Icon(
-              icon,
-              size: AppDimens.iconSm,
-              color: isPrimary ? Colors.white : colorScheme.primary,
-            ),
+    return Material(
+      color: isPrimary ? colorScheme.primary : colorScheme.surfaceContainerHigh,
+      shape: const CircleBorder(),
+      elevation: isPrimary ? 3 : 1,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: buttonSize,
+          height: buttonSize,
+          child: Icon(
+            icon,
+            size: AppDimens.iconSm,
+            color: isPrimary ? Colors.white : colorScheme.primary,
           ),
         ),
       ),

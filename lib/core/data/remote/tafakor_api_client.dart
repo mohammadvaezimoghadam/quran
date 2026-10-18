@@ -10,6 +10,8 @@ import '../../../common/constants/app_constants.dart';
 
 import '../../../features/tafakor/application/controllers/tafakor_auth_controller.dart';
 
+import '../../../features/tafakor/infrastructure/dtos/tafakor_paginated_posts_dto.dart';
+
 part 'tafakor_api_client.g.dart';
 
 @RestApi()
@@ -33,8 +35,23 @@ abstract class TafakorApiClient {
   @GET('notes/topics/')
   Future<List<TafakorTopicDto>> getTopics();
 
+  @GET('notes/')
+  Future<TafakorPaginatedPostsDto> getPosts(
+    @Query('topic_id') int topicId,
+    @Query('page') int page,
+  );
+
   @POST('notes/')
   Future<HttpResponse<dynamic>> createPost(@Body() Map<String, dynamic> body);
+
+  @DELETE('notes/{id}/')
+  Future<HttpResponse<dynamic>> deletePost(@Path('id') int id);
+
+  @POST('notes/{id}/react/')
+  Future<HttpResponse<dynamic>> reactToPost(
+    @Path('id') int id,
+    @Body() Map<String, dynamic> body,
+  );
 }
 
 final tafakorDioProvider = Provider<Dio>((ref) {

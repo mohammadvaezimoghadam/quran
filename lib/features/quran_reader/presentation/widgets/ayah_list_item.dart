@@ -166,18 +166,14 @@ class AyahListItem extends ConsumerWidget {
         return;
       }
 
-      final controlsState = ref.read(readerControlsProvider);
-      if (controlsState.isFullScreen) {
-        // Tap on ayah toggles between full-screen controls hidden and visible
-        ref.read(readerControlsProvider.notifier).toggleControls();
-        return;
-      }
-
       // On Web/Desktop, single-click directly plays/pauses this Ayah
       if (kIsWeb) {
         handleDoubleTap();
         return;
       }
+
+      // On Mobile: single tap toggles between full-screen distraction-free mode and normal controls
+      ref.read(readerControlsProvider.notifier).toggleFullScreenOrControls();
     }
 
     final ayahWidget = RepaintBoundary(
@@ -206,7 +202,11 @@ class AyahListItem extends ConsumerWidget {
               ayah: ayah,
               surahName: surahName,
               totalAyahsInSurah: totalAyahsInSurah,
-            );
+            ).then((keepSelection) {
+              if (context.mounted && keepSelection != true) {
+                ref.read(selectedAyahActionProvider.notifier).clearSelection();
+              }
+            });
           }
         },
         child: Stack(
@@ -289,7 +289,9 @@ class AyahListItem extends ConsumerWidget {
                                             fontFamily: AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: activeTheme.headerTextColor,
+                                            color: (isDark || activeTheme.isDark)
+                                                ? const Color(0xFFFF5252)
+                                                : const Color(0xFFD32F2F),
                                           ),
                                           textDirection: TextDirection.rtl,
                                         )

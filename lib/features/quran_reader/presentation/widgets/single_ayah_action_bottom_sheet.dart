@@ -46,14 +46,14 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
     required this.totalAyahsInSurah,
   });
 
-  static Future<void> show(
+  static Future<bool?> show(
     BuildContext context, {
     required AyahEntity ayah,
     required String surahName,
     required int totalAyahsInSurah,
   }) {
     if (context.isWideScreen) {
-      return showDialog(
+      return showDialog<bool>(
         context: context,
         builder: (context) => Center(
           child: ConstrainedBox(
@@ -73,7 +73,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
         ),
       );
     }
-    return showModalBottomSheet(
+    return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -254,6 +254,24 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                       },
                     ),
                   ),
+                  8.hSpace,
+
+                  // Action 4: Multi-select (موارد بیشتر)
+                  Expanded(
+                    child: _buildActionButton(
+                      context: context,
+                      isDark: isDark,
+                      cardBg: cardBg,
+                      borderColor: borderColor,
+                      icon: CupertinoIcons.checkmark_circle,
+                      iconColor: isDark ? Colors.white70 : Colors.black87,
+                      label: 'موارد بیشتر',
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.of(context).pop(true);
+                      },
+                    ),
+                  ),
                 ],
               ),
               8.vSpace,
@@ -417,7 +435,6 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                   ),
                 ],
               ),
-
               6.vSpace,
             ],
           ),

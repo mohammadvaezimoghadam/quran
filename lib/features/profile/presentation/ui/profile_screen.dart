@@ -204,6 +204,22 @@ class ProfileScreen extends ConsumerWidget {
             20.vSpace,
             */
 
+            // Khatm Plans Section
+            _buildSectionHeader('برنامه و ختم قرآن', isDark),
+            8.vSpace,
+            _buildGroupCard(
+              context: context,
+              children: [
+                _buildProfileTile(
+                  context: context,
+                  title: 'ختم‌های قرآن من',
+                  subtitle: 'مدیریت و پیگیری برنامه‌های شخصی ختم قرآن کریم',
+                  onTap: () => context.pushNamed(khatmListRoute),
+                ),
+              ],
+            ),
+            20.vSpace,
+
             // Settings Navigation Item
             _buildSectionHeader('تنظیمات', isDark),
             8.vSpace,

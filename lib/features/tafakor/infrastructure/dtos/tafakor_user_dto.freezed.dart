@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TafakorUserDto {
 
- String get phone;@JsonKey(name: 'is_telegram_connected') bool get isTelegramConnected;@JsonKey(name: 'is_bale_connected') bool get isBaleConnected;
+ String get phone;@JsonKey(readValue: _readTelegramConnected) bool get isTelegramConnected;@JsonKey(readValue: _readBaleConnected) bool get isBaleConnected;
 /// Create a copy of TafakorUserDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $TafakorUserDtoCopyWith<$Res>  {
   factory $TafakorUserDtoCopyWith(TafakorUserDto value, $Res Function(TafakorUserDto) _then) = _$TafakorUserDtoCopyWithImpl;
 @useResult
 $Res call({
- String phone,@JsonKey(name: 'is_telegram_connected') bool isTelegramConnected,@JsonKey(name: 'is_bale_connected') bool isBaleConnected
+ String phone,@JsonKey(readValue: _readTelegramConnected) bool isTelegramConnected,@JsonKey(readValue: _readBaleConnected) bool isBaleConnected
 });
 
 
@@ -155,7 +155,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String phone, @JsonKey(name: 'is_telegram_connected')  bool isTelegramConnected, @JsonKey(name: 'is_bale_connected')  bool isBaleConnected)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String phone, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TafakorUserDto() when $default != null:
 return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);case _:
@@ -176,7 +176,7 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String phone, @JsonKey(name: 'is_telegram_connected')  bool isTelegramConnected, @JsonKey(name: 'is_bale_connected')  bool isBaleConnected)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String phone, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)  $default,) {final _that = this;
 switch (_that) {
 case _TafakorUserDto():
 return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);case _:
@@ -196,7 +196,7 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String phone, @JsonKey(name: 'is_telegram_connected')  bool isTelegramConnected, @JsonKey(name: 'is_bale_connected')  bool isBaleConnected)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String phone, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)?  $default,) {final _that = this;
 switch (_that) {
 case _TafakorUserDto() when $default != null:
 return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);case _:
@@ -211,12 +211,12 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);cas
 @JsonSerializable()
 
 class _TafakorUserDto extends TafakorUserDto {
-  const _TafakorUserDto({required this.phone, @JsonKey(name: 'is_telegram_connected') this.isTelegramConnected = false, @JsonKey(name: 'is_bale_connected') this.isBaleConnected = false}): super._();
+  const _TafakorUserDto({required this.phone, @JsonKey(readValue: _readTelegramConnected) this.isTelegramConnected = false, @JsonKey(readValue: _readBaleConnected) this.isBaleConnected = false}): super._();
   factory _TafakorUserDto.fromJson(Map<String, dynamic> json) => _$TafakorUserDtoFromJson(json);
 
 @override final  String phone;
-@override@JsonKey(name: 'is_telegram_connected') final  bool isTelegramConnected;
-@override@JsonKey(name: 'is_bale_connected') final  bool isBaleConnected;
+@override@JsonKey(readValue: _readTelegramConnected) final  bool isTelegramConnected;
+@override@JsonKey(readValue: _readBaleConnected) final  bool isBaleConnected;
 
 /// Create a copy of TafakorUserDto
 /// with the given fields replaced by the non-null parameter values.
@@ -251,7 +251,7 @@ abstract mixin class _$TafakorUserDtoCopyWith<$Res> implements $TafakorUserDtoCo
   factory _$TafakorUserDtoCopyWith(_TafakorUserDto value, $Res Function(_TafakorUserDto) _then) = __$TafakorUserDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String phone,@JsonKey(name: 'is_telegram_connected') bool isTelegramConnected,@JsonKey(name: 'is_bale_connected') bool isBaleConnected
+ String phone,@JsonKey(readValue: _readTelegramConnected) bool isTelegramConnected,@JsonKey(readValue: _readBaleConnected) bool isBaleConnected
 });
 
 

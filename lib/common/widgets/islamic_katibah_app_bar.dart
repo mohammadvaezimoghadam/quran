@@ -351,7 +351,7 @@ class _IslamicKatibahAppBarState extends State<IslamicKatibahAppBar> {
                           const SizedBox(width: 8),
                           _buildTextSlideSwitcher(
                             child: Text(
-                              '${widget.selectedCount.toPersianDigit()} آیه انتخاب شده',
+                              '${widget.selectedCount.toPersianDigit()} آیه',
                               key: ValueKey(
                                 'selection_count_${widget.selectedCount}',
                               ),

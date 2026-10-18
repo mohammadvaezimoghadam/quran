@@ -1,4 +1,7 @@
 import '../../features/tafakor/presentation/ui/tafakor_login_screen.dart';
+import '../../features/topic_studio/presentation/ui/tafakor_topics_screen.dart';
+import '../../features/tafakor/presentation/ui/tafakor_topic_feed_screen.dart';
+import '../../features/tafakor/domain/entities/tafakor_topic.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +22,9 @@ import '../../features/smart_device/presentation/ui/smart_device_settings_screen
 import '../../features/splash/presentation/ui/splash_screen.dart';
 import '../../features/subscription/presentation/ui/vip_subscription_screen.dart';
 import '../../features/surah_list/presentation/ui/surah_list_screen.dart';
+import '../../features/khatm/presentation/ui/create_khatm_wizard_screen.dart';
+import '../../features/khatm/presentation/ui/khatm_detail_report_screen.dart';
+import '../../features/khatm/presentation/ui/khatm_list_screen.dart';
 import '../../features/study_plan/presentation/ui/create_study_plan_screen.dart';
 import '../../features/study_plan/presentation/ui/study_plans_screen.dart';
 import '../../features/tafsir_manager/presentation/ui/tafsir_reader_screen.dart';
@@ -81,6 +87,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TafakorLoginScreen(),
       ),
       GoRoute(
+        path: '/tafakor-topics',
+        name: tafakorTopicsRoute,
+        builder: (context, state) => const TafakorTopicsScreen(),
+      ),
+      GoRoute(
+        path: '/tafakor-topic-feed',
+        name: tafakorTopicFeedRoute,
+        builder: (context, state) {
+          final topic = state.extra as TafakorTopic;
+          return TafakorTopicFeedScreen(topic: topic);
+        },
+      ),
+      GoRoute(
         path: '/sleep-timer',
         name: audioSleepTimerRoute,
         builder: (context, state) => const SleepTimerScreen(),
@@ -106,6 +125,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final initialAyah = ayahString != null ? int.tryParse(ayahString) : null;
           final autoPlay = state.uri.queryParameters['autoPlay'] == 'true';
           final isStudyPlan = state.uri.queryParameters['isStudyPlan'] == 'true';
+          final khatmId = state.uri.queryParameters['khatmId'];
+          final khatmSession =
+              int.tryParse(state.uri.queryParameters['khatmSession'] ?? '');
           return QuranReaderScreen(
             surahId: surahId,
             surahName: surahName,
@@ -113,6 +135,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             translationId: translationId,
             autoPlayAudio: autoPlay,
             isStudyPlan: isStudyPlan,
+            khatmId: khatmId,
+            khatmSession: khatmSession,
           );
         },
       ),
@@ -176,6 +200,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/create-study-plan',
         name: createStudyPlanRoute,
         builder: (context, state) => const CreateStudyPlanScreen(),
+      ),
+      GoRoute(
+        path: '/khatm-list',
+        name: khatmListRoute,
+        builder: (context, state) => const KhatmListScreen(),
+      ),
+      GoRoute(
+        path: '/create-khatm-wizard',
+        name: createKhatmWizardRoute,
+        builder: (context, state) => const CreateKhatmWizardScreen(),
+      ),
+      GoRoute(
+        path: '/khatm-detail/:id',
+        name: khatmDetailRoute,
+        builder: (context, state) {
+          final planId = state.pathParameters['id'] ?? '';
+          return KhatmDetailReportScreen(planId: planId);
+        },
       ),
     ],
   );

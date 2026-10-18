@@ -24,6 +24,7 @@ import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/domain/models/vip_subscription_state.dart';
 import '../../../subscription/domain/policy/audio_vip_policy.dart';
 import '../../../surah_list/infrastructure/datasources/static_surahs_data.dart';
+import '../../../khatm/application/controllers/khatm_detail_controller.dart';
 import '../../../study_plan/application/controllers/study_plan_controller.dart';
 import '../../../study_plan/domain/entities/study_plan.dart';
 
@@ -403,6 +404,27 @@ class QuranAudioController extends Notifier<QuranAudioState> {
         await stop();
         return;
       }
+
+      final activeKhatm = ref.read(activeKhatmSessionProvider);
+      if (activeKhatm != null) {
+        final completed = await ref
+            .read(khatmDetailControllerProvider(activeKhatm.khatmId).notifier)
+            .recordReadingProgress(
+              sessionIndex: activeKhatm.sessionIndex,
+              surahId: surahId,
+              ayahNumber: currentAyah,
+              page: page,
+              juz: juz,
+              hizb: hizb,
+              isEndOfPage: isEndOfPage,
+            );
+        if (completed) {
+          debugPrint('🎯 [QuranAudioController] Today\'s Khatm session completed! Stopping audio.');
+          _isTransitioningTrack = false;
+          await stop();
+          return;
+        }
+      }
     }
 
     if (!state.isAutoPlayNext || state.isSingleAyahMode) {
@@ -413,12 +435,12 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
     // Check if reached end of current Surah
     if (currentAyah >= totalAyahs) {
-      // If in study plan session and goal not reached yet, advance to next surah!
-      if (isPlanActive && surahId < 114) {
+      // Advance to next surah if not at the end of the Quran (Surah 114)
+      if (surahId < 114) {
         final nextSurahId = surahId + 1;
         final nextTotalAyahs = kStaticQuranSurahs[nextSurahId - 1].numberOfAyahs;
         debugPrint(
-          '📖 [QuranAudioController] Study plan continues into next Surah: $nextSurahId',
+          '📖 [QuranAudioController] AutoPlay advancing into next Surah: $nextSurahId',
         );
 
         state = state.copyWith(status: AudioStatus.loading);
@@ -434,7 +456,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
         return;
       }
 
-      // Normal reading or last surah of Quran: stop!
+      // Last surah of Quran (Surah An-Nas): stop!
       _isTransitioningTrack = false;
       await stop();
       return;

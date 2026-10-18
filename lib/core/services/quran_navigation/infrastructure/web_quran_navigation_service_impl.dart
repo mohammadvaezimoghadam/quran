@@ -42,8 +42,8 @@ class WebQuranNavigationServiceImpl implements IQuranNavigationService {
 
   @override
   Future<AyahTarget?> getTargetByHizb(int hizb) async {
-    if (hizb < 1 || hizb > 60) return null;
-    final juz = ((hizb - 1) ~/ 2) + 1;
+    if (hizb < 1 || hizb > 120) return null;
+    final juz = ((hizb - 1) ~/ 4) + 1;
     return getTargetByJuz(juz);
   }
 

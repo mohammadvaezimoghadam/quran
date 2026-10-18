@@ -8,7 +8,7 @@ enum QuickAccessToolType {
   dictionary('dictionary', 'لغت‌نامه'),
   pinnedSurah('pinned_surah', 'سوره منتخب'),
   personalList('personal_list', 'فهرست من'),
-  topicStudio('topic_studio', 'دفتر تفکر');
+  topicStudio('topic_studio', 'تفکر');
 
   final String id;
   final String title;

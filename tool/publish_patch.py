@@ -85,6 +85,12 @@ class ProgressFile:
             self._last_print = now
         return chunk
 
+    def seek(self, offset, whence=0):
+        return self._f.seek(offset, whence)
+
+    def tell(self):
+        return self._f.tell()
+
     def len(self):
         return self._total
 
@@ -92,7 +98,7 @@ class ProgressFile:
         self._f.close()
 
 
-def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, channel='stable'):
+def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, channel='stable', base_release='1.0.1+2'):
     """
     Deploys the patch to both OTA endpoints on the server:
     1. /api/patches/upload (Admin dashboard & legacy client check)
@@ -104,6 +110,39 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
     session = requests.Session()
     session.trust_env = False  # Avoid proxy hanging on Windows
 
+    # Bypass TUN adapters (VPNs/Proxies) by binding to physical network interface if available
+    try:
+        from requests.adapters import HTTPAdapter
+        class SourceAddressAdapter(HTTPAdapter):
+            def __init__(self, source_ip, *args, **kwargs):
+                self.source_ip = source_ip
+                super().__init__(*args, **kwargs)
+
+            def init_poolmanager(self, *args, **kwargs):
+                kwargs['source_address'] = (self.source_ip, 0)
+                return super().init_poolmanager(*args, **kwargs)
+
+        import socket
+        for probe_ip in ['10.254.65.253']:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.bind((probe_ip, 0))
+                s.close()
+                session.mount("http://", SourceAddressAdapter(probe_ip))
+                session.mount("https://", SourceAddressAdapter(probe_ip))
+                break
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    base_build_num = 1
+    if '+' in base_release:
+        try:
+            base_build_num = int(base_release.split('+')[1])
+        except ValueError:
+            pass
+
     # 1. Upload to /api/patches/upload
     if os.path.exists(patch_path):
         url1 = f"{server_base}/api/patches/upload"
@@ -112,7 +151,7 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
         data1 = {
             'app_id': 'quran_tafakor',
             'version': patch_version,
-            'target_version_code': '1',
+            'target_version_code': str(base_build_num),
             'target_abi': 'multi',
             'is_force': '0',
             'activate': '1',
@@ -124,8 +163,8 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
             start_t = time.time()
             resp1 = session.post(url1, data=data1, files={'file': ('patch.zip', pf1, 'application/zip')}, timeout=900)
             elapsed = time.time() - start_t
-            if resp1.status_code == 200:
-                print(f"   ✅ Legacy/Admin Deploy Succeeded in {elapsed:.1f}s (HTTP 200): {resp1.json()}", flush=True)
+            if resp1.status_code in (200, 201):
+                print(f"   ✅ Legacy/Admin Deploy Succeeded in {elapsed:.1f}s (HTTP {resp1.status_code}): {resp1.json()}", flush=True)
             else:
                 print(f"   ⚠️ Legacy/Admin Deploy status {resp1.status_code}: {resp1.text[:200]}", flush=True)
         except Exception as e:
@@ -144,8 +183,8 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
             start_t = time.time()
             resp2 = session.post(url2, data=data2, files={'bundle': (os.path.basename(bundle_path), pf2, 'application/zip')}, timeout=900)
             elapsed = time.time() - start_t
-            if resp2.status_code == 200:
-                print(f"   ✅ Shorebird OTA Deploy Succeeded in {elapsed:.1f}s (HTTP 200): {resp2.json()}", flush=True)
+            if resp2.status_code in (200, 201):
+                print(f"   ✅ Shorebird OTA Deploy Succeeded in {elapsed:.1f}s (HTTP {resp2.status_code}): {resp2.json()}", flush=True)
             else:
                 print(f"   ⚠️ Shorebird OTA Deploy status {resp2.status_code}: {resp2.text[:200]}", flush=True)
         except Exception as e:
@@ -296,7 +335,8 @@ def main():
             server_url=args.server,
             patch_version=patch_version,
             notes=notes,
-            channel=channel
+            channel=channel,
+            base_release=base_release
         )
 
 

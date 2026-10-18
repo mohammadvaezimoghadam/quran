@@ -509,9 +509,7 @@ class SleepTimerPlayerButton extends ConsumerWidget {
     return Semantics(
       label: isTimerActive ? 'تایمر خواب فعال است' : 'تنظیم تایمر خواب تلاوت',
       button: true,
-      child: Tooltip(
-        message: isTimerActive ? 'تایمر خواب فعال است' : 'تنظیم تایمر خواب',
-        child: SizedBox(
+      child: SizedBox(
           width: width,
           height: height,
           child: Material(
@@ -543,7 +541,6 @@ class SleepTimerPlayerButton extends ConsumerWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }

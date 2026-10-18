@@ -66,6 +66,7 @@ class _QuranQuickJumpBottomSheetState
   int _currentAyahNumber = 1;
   int _currentPageNumber = 1;
   int _currentJuzNumber = 1;
+  int _currentHizbNumber = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -420,6 +421,74 @@ class _QuranQuickJumpBottomSheetState
                         ],
                       ),
                     ),
+
+                    // Hairline Divider
+                    Divider(
+                      height: 1,
+                      thickness: 0.6,
+                      indent: 16,
+                      endIndent: 16,
+                      color: cardBorder,
+                    ),
+
+                    // ROW 5: Hizb Stepper (Dedicated row for Hizb navigation)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 12.0,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'شماره حزب',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 11.5,
+                                    color: isDark
+                                        ? const Color(0xFF9E9E9E)
+                                        : const Color(0xFF6E6D68),
+                                  ),
+                                ),
+                                2.vSpace,
+                                Text(
+                                  'حزب ${_currentHizbNumber.toPersianDigit()}',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1C1B1B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _buildStepper(
+                            currentVal: _currentHizbNumber,
+                            minVal: 1,
+                            maxVal: 120,
+                            isDark: isDark,
+                            primaryColor: colorScheme.primary,
+                            onChanged: (newVal) =>
+                                _onHizbChanged(newVal, surahs),
+                            onTapDirectEdit: () => _promptDirectNumber(
+                              context: context,
+                              title: 'شماره حزب قرآن (۱ تا ۱۲۰)',
+                              currentVal: _currentHizbNumber,
+                              minVal: 1,
+                              maxVal: 120,
+                              onSubmitted: (val) =>
+                                  _onHizbChanged(val, surahs),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -571,6 +640,7 @@ class _QuranQuickJumpBottomSheetState
     final firstAyah = ayahs.isNotEmpty ? ayahs.first : null;
     final page = firstAyah?.page ?? 1;
     final juz = firstAyah?.juz ?? 1;
+    final hizb = firstAyah?.hizb ?? (((juz - 1) * 4) + 1).clamp(1, 120);
 
     _selectedSurah = SurahEntity(
       number: surahId,
@@ -585,6 +655,7 @@ class _QuranQuickJumpBottomSheetState
     _currentAyahNumber = firstAyah?.ayahNumber ?? 1;
     _currentPageNumber = page;
     _currentJuzNumber = juz;
+    _currentHizbNumber = hizb;
   }
 
   void _initFromReader(List<SurahEntity> surahs) {
@@ -631,6 +702,7 @@ class _QuranQuickJumpBottomSheetState
     _currentAyahNumber = currentAyah?.ayahNumber ?? 1;
     _currentPageNumber = currentAyah?.page ?? _selectedSurah!.startPage;
     _currentJuzNumber = currentAyah?.juz ?? _selectedSurah!.startJuz;
+    _currentHizbNumber = currentAyah?.hizb ?? (((_currentJuzNumber - 1) * 4) + 1).clamp(1, 120);
   }
 
   Future<void> _updateAyah(int newAyah) async {
@@ -647,10 +719,12 @@ class _QuranQuickJumpBottomSheetState
     if (match != null && match.page != null) {
       final page = match.page!;
       final calculatedJuz = page <= 1 ? 1 : (((page - 2) ~/ 20) + 1).clamp(1, 30);
+      final calculatedHizb = match.hizb ?? (((calculatedJuz - 1) * 4) + 1).clamp(1, 120);
       if (mounted) {
         setState(() {
           _currentPageNumber = page;
           _currentJuzNumber = match.juz ?? calculatedJuz;
+          _currentHizbNumber = calculatedHizb;
         });
       }
       return;
@@ -661,17 +735,22 @@ class _QuranQuickJumpBottomSheetState
     try {
       final sqflite = ref.read(sqfliteServiceProvider);
       final res = await sqflite.rawQuery(
-        'SELECT page, juz FROM ayahs WHERE surah_number = ? AND number_in_surah = ? LIMIT 1',
+        'SELECT page, juz, hizb_quarter FROM ayahs WHERE surah_number = ? AND number_in_surah = ? LIMIT 1',
         [surah.number, newAyah],
       );
       if (res.isNotEmpty && mounted) {
         final page = res.first['page'] as int?;
         final juz = res.first['juz'] as int?;
+        final hizbQuarter = res.first['hizb_quarter'] as int?;
         if (page != null) {
           final calculatedJuz = page <= 1 ? 1 : (((page - 2) ~/ 20) + 1).clamp(1, 30);
+          final calculatedHizb = hizbQuarter != null
+              ? ((hizbQuarter + 1) ~/ 2).clamp(1, 120)
+              : (((calculatedJuz - 1) * 4) + 1).clamp(1, 120);
           setState(() {
             _currentPageNumber = page;
             _currentJuzNumber = juz ?? calculatedJuz;
+            _currentHizbNumber = calculatedHizb;
           });
         }
       }
@@ -682,34 +761,78 @@ class _QuranQuickJumpBottomSheetState
     final calculatedJuz = newSurah.startPage <= 1
         ? 1
         : (((newSurah.startPage - 2) ~/ 20) + 1).clamp(1, 30);
+    final juz = newSurah.startJuz > 0 ? newSurah.startJuz : calculatedJuz;
+    final defaultHizb = (((juz - 1) * 4) + 1).clamp(1, 120);
+
     setState(() {
       _selectedSurah = newSurah;
       _currentAyahNumber = 1;
       _currentPageNumber = newSurah.startPage;
-      _currentJuzNumber = newSurah.startJuz > 0 ? newSurah.startJuz : calculatedJuz;
+      _currentJuzNumber = juz;
+      _currentHizbNumber = defaultHizb;
     });
+
+    if (!kIsWeb) {
+      ref.read(sqfliteServiceProvider).rawQuery(
+        'SELECT hizb_quarter FROM ayahs WHERE surah_number = ? AND number_in_surah = 1 LIMIT 1',
+        [newSurah.number],
+      ).then((res) {
+        if (res.isNotEmpty && mounted) {
+          final hq = res.first['hizb_quarter'] as int?;
+          if (hq != null) {
+            setState(() {
+              _currentHizbNumber = ((hq + 1) ~/ 2).clamp(1, 120);
+            });
+          }
+        }
+      }).catchError((_) {});
+    }
   }
 
   Future<void> _onPageChanged(int page, List<SurahEntity> surahs) async {
     final navService = ref.read(quranNavigationServiceProvider);
     final target = await navService.getTargetByPage(page);
     final calculatedJuz = page <= 1 ? 1 : (((page - 2) ~/ 20) + 1).clamp(1, 30);
+    int calculatedHizb = (((calculatedJuz - 1) * 4) + 1).clamp(1, 120);
 
     if (target != null && mounted) {
       final matchedSurah = surahs.firstWhere(
         (s) => s.number == target.surahId,
         orElse: () => _selectedSurah ?? surahs.first,
       );
+
+      final ayahs = ref.read(quranReaderControllerProvider).ayahs;
+      final match = ayahs.where((a) => a.surahId == target.surahId && a.ayahNumber == target.ayahNumber).firstOrNull;
+      if (match?.hizb != null) {
+        calculatedHizb = match!.hizb!;
+      } else if (!kIsWeb) {
+        try {
+          final sqflite = ref.read(sqfliteServiceProvider);
+          final res = await sqflite.rawQuery(
+            'SELECT hizb_quarter FROM ayahs WHERE surah_number = ? AND number_in_surah = ? LIMIT 1',
+            [target.surahId, target.ayahNumber],
+          );
+          if (res.isNotEmpty) {
+            final hq = res.first['hizb_quarter'] as int?;
+            if (hq != null) {
+              calculatedHizb = ((hq + 1) ~/ 2).clamp(1, 120);
+            }
+          }
+        } catch (_) {}
+      }
+
       setState(() {
         _currentPageNumber = page;
         _selectedSurah = matchedSurah;
         _currentAyahNumber = target.ayahNumber;
         _currentJuzNumber = calculatedJuz;
+        _currentHizbNumber = calculatedHizb;
       });
     } else if (mounted) {
       setState(() {
         _currentPageNumber = page;
         _currentJuzNumber = calculatedJuz;
+        _currentHizbNumber = calculatedHizb;
       });
     }
   }
@@ -718,6 +841,7 @@ class _QuranQuickJumpBottomSheetState
     final navService = ref.read(quranNavigationServiceProvider);
     final target = await navService.getTargetByJuz(juz);
     final juzStartPage = juz <= 1 ? 1 : (juz - 1) * 20 + 2;
+    final hizbStart = (((juz - 1) * 4) + 1).clamp(1, 120);
 
     if (target != null && mounted) {
       final matchedSurah = surahs.firstWhere(
@@ -729,11 +853,61 @@ class _QuranQuickJumpBottomSheetState
         _selectedSurah = matchedSurah;
         _currentAyahNumber = target.ayahNumber;
         _currentPageNumber = juzStartPage;
+        _currentHizbNumber = hizbStart;
       });
     } else if (mounted) {
       setState(() {
         _currentJuzNumber = juz;
         _currentPageNumber = juzStartPage;
+        _currentHizbNumber = hizbStart;
+      });
+    }
+  }
+
+  Future<void> _onHizbChanged(int hizb, List<SurahEntity> surahs) async {
+    final clampedHizb = hizb.clamp(1, 120);
+    final navService = ref.read(quranNavigationServiceProvider);
+    final target = await navService.getTargetByHizb(clampedHizb);
+
+    int calculatedJuz = (((clampedHizb - 1) ~/ 4) + 1).clamp(1, 30);
+    int page = clampedHizb <= 1 ? 1 : (calculatedJuz - 1) * 20 + 2;
+
+    if (target != null && mounted) {
+      final matchedSurah = surahs.firstWhere(
+        (s) => s.number == target.surahId,
+        orElse: () => _selectedSurah ?? surahs.first,
+      );
+
+      final ayahs = ref.read(quranReaderControllerProvider).ayahs;
+      final match = ayahs.where((a) => a.surahId == target.surahId && a.ayahNumber == target.ayahNumber).firstOrNull;
+      if (match != null && match.page != null) {
+        page = match.page!;
+        calculatedJuz = match.juz ?? calculatedJuz;
+      } else if (!kIsWeb) {
+        try {
+          final sqflite = ref.read(sqfliteServiceProvider);
+          final res = await sqflite.rawQuery(
+            'SELECT page, juz FROM ayahs WHERE surah_number = ? AND number_in_surah = ? LIMIT 1',
+            [target.surahId, target.ayahNumber],
+          );
+          if (res.isNotEmpty) {
+            page = (res.first['page'] as int?) ?? page;
+            calculatedJuz = (res.first['juz'] as int?) ?? calculatedJuz;
+          }
+        } catch (_) {}
+      }
+
+      setState(() {
+        _currentHizbNumber = clampedHizb;
+        _selectedSurah = matchedSurah;
+        _currentAyahNumber = target.ayahNumber;
+        _currentPageNumber = page;
+        _currentJuzNumber = calculatedJuz;
+      });
+    } else if (mounted) {
+      setState(() {
+        _currentHizbNumber = clampedHizb;
+        _currentJuzNumber = calculatedJuz;
       });
     }
   }

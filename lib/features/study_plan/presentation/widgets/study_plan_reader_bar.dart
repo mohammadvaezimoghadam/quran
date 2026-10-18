@@ -169,7 +169,7 @@ class StudyPlanReaderBar extends ConsumerWidget {
         },
         child: Container(
           width: double.infinity,
-          height: 32.0,
+          height: 36.0,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: bgColor,
@@ -179,14 +179,6 @@ class StudyPlanReaderBar extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                isCompleted
-                    ? CupertinoIcons.check_mark_circled_solid
-                    : CupertinoIcons.book_fill,
-                size: 14,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   isCompleted

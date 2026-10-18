@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -12,6 +13,8 @@ import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../domain/entities/ayah_entity.dart';
 import '../../domain/entities/ayah_theme_entity.dart';
+import '../../../khatm/application/controllers/khatm_detail_controller.dart';
+import '../../../khatm/presentation/widgets/reader/khatm_reader_bar.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 import '../../../study_plan/application/controllers/study_plan_controller.dart';
 import '../../../surah_list/infrastructure/datasources/static_surahs_data.dart';
@@ -42,6 +45,7 @@ class SurahAyahPageView extends ConsumerStatefulWidget {
 class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
+  ActiveItemPositionsListenerNotifier? _listenerNotifier;
   bool _hasScrolledToInitialAyah = false;
   bool _hasCompletedInitialScroll = false;
   bool _hasUserScrolled = false;
@@ -49,6 +53,12 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
 
   int? _lastRecordedTopIndex;
   DateTime? _lastProgressUpdateTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _listenerNotifier = ref.read(activeItemPositionsListenerProvider.notifier);
+  }
 
   void _updateReadingAndPlanProgress({bool force = false}) {
     if (!mounted || !widget.isCurrentPage) return;
@@ -72,7 +82,12 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
       if (positions.isEmpty) return;
 
       final screenHeight = MediaQuery.sizeOf(context).height;
-      final effectiveTopPadding = widget.topPadding ?? 140.0;
+      final activeKhatmSession = ref.read(activeKhatmSessionProvider);
+      final isKhatmCollapsed = ref.read(isKhatmReaderBarCollapsedProvider);
+      final double effectiveTopPadding = (widget.topPadding ?? 140.0) -
+          (activeKhatmSession != null && isKhatmCollapsed
+              ? (KhatmReaderBar.barHeight - KhatmReaderBar.collapsedHeight)
+              : 0.0);
       final topCutoff = screenHeight > 0 ? (effectiveTopPadding / screenHeight) : 0.18;
       final readingBaseline = topCutoff + (18.0 / (screenHeight > 0 ? screenHeight : 800.0));
 
@@ -120,6 +135,19 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
           totalAyahs: state.ayahs.length,
         );
 
+        // Detect visible items on screen to know if end of page has been scrolled to
+        int maxVisibleIndex = effectiveReadingIndex;
+        for (final p in positions) {
+          if (p.itemTrailingEdge > topCutoff && p.itemLeadingEdge < 0.95) {
+            if (p.index > maxVisibleIndex) {
+              maxVisibleIndex = p.index;
+            }
+          }
+        }
+        final maxVisibleAyah = (maxVisibleIndex >= 0 && maxVisibleIndex < state.ayahs.length)
+            ? state.ayahs[maxVisibleIndex]
+            : readingAyah;
+
         // Check if the reading position has actually reached the end of this page/surah
         final isNextAyahOnNextPage = effectiveReadingIndex + 1 < state.ayahs.length &&
             state.ayahs[effectiveReadingIndex + 1].page != readingAyah.page;
@@ -130,12 +158,18 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                     readingAyah.page != null &&
                     kStaticQuranSurahs[widget.surahId].startPage > readingAyah.page!));
 
-        final isLastAyahOfPage = isNextAyahOnNextPage || isSurahEndingPage;
-        final isEndOfPage = _hasUserScrolled && isLastAyahOfPage;
+        final isNextPageVisible = maxVisibleAyah.page != null &&
+            readingAyah.page != null &&
+            maxVisibleAyah.page! > readingAyah.page!;
+
+        final isLastAyahOfPage = isNextAyahOnNextPage || isSurahEndingPage || isNextPageVisible;
+        final isEndOfPage = (_hasUserScrolled && isLastAyahOfPage) || isNextPageVisible;
 
         // Calculate live ayah-level fraction on this page
         final ayahsOnThisPage = state.ayahs.where((a) => a.page == readingAyah.page).toList();
-        final ayahsReadOnThisPage = ayahsOnThisPage.where((a) => a.ayahNumber <= readingAyah.ayahNumber).length;
+        final ayahsReadOnThisPage = isNextPageVisible
+            ? ayahsOnThisPage.length
+            : ayahsOnThisPage.where((a) => a.ayahNumber <= readingAyah.ayahNumber).length;
         final pageFraction = ayahsOnThisPage.isNotEmpty
             ? (ayahsReadOnThisPage / ayahsOnThisPage.length).clamp(0.0, 1.0)
             : 0.0;
@@ -152,8 +186,34 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
             pageFraction: pageFraction,
           );
         }
+
+        final activeKhatm = ref.read(activeKhatmSessionProvider);
+        if (activeKhatm != null) {
+          ref
+              .read(khatmDetailControllerProvider(activeKhatm.khatmId).notifier)
+              .recordReadingProgress(
+                sessionIndex: activeKhatm.sessionIndex,
+                surahId: widget.surahId,
+                ayahNumber: readingAyah.ayahNumber,
+                page: readingAyah.page,
+                juz: readingAyah.juz,
+                hizb: readingAyah.hizb,
+                isEndOfPage: isEndOfPage,
+                pageFraction: pageFraction,
+              );
+        }
       }
     } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    final listener = _itemPositionsListener;
+    final notifier = _listenerNotifier;
+    if (notifier != null) {
+      Future.microtask(() => notifier.clearIfMatches(listener));
+    }
+    super.dispose();
   }
 
   @override
@@ -252,6 +312,11 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                 alignment: alignTarget,
               );
             }
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && widget.isCurrentPage) {
+                _updateReadingAndPlanProgress(force: true);
+              }
+            });
           } catch (_) {}
         } else if (attempt < 15) {
           Future.delayed(Duration(milliseconds: 60 + (attempt * 25)), () {
@@ -309,7 +374,13 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
     );
     final activeTheme = AyahThemePresets.getById(ayahThemeId);
 
-    if (state.isLoading) {
+    if (state.isLoading || state.currentSurahId != widget.surahId) {
+      if (!state.isLoading && state.currentSurahId != widget.surahId) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !widget.isCurrentPage) return;
+          ref.read(quranReaderControllerProvider.notifier).fetchAyahs(widget.surahId);
+        });
+      }
       return ColoredBox(
         color: activeTheme.evenColor,
         child: const Center(child: CircularProgressIndicator()),
@@ -421,6 +492,22 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
             );
           }
 
+          final activeKhatm = ref.read(activeKhatmSessionProvider);
+          if (activeKhatm != null) {
+            ref
+                .read(khatmDetailControllerProvider(activeKhatm.khatmId).notifier)
+                .recordReadingProgress(
+                  sessionIndex: activeKhatm.sessionIndex,
+                  surahId: widget.surahId,
+                  ayahNumber: currentPlayingAyah.ayahNumber,
+                  page: currentPlayingAyah.page,
+                  juz: currentPlayingAyah.juz,
+                  hizb: currentPlayingAyah.hizb,
+                  isEndOfPage: false,
+                  pageFraction: pageFraction,
+                );
+          }
+
           if (_itemScrollController.isAttached) {
             final isAudioPlaying = audioState.status == AudioStatus.playing;
             final isSuspended = audioState.isAutoScrollSuspended;
@@ -473,10 +560,14 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
     );
 
     // Maintain scroll offset when display settings change (e.g. font size, brackets)
-    // because height changes cause ListView to jump
+    // because height changes cause ListView to jump.
+    // Skip jumping during interactive pinch-to-zoom to prevent violent stuttering!
     ref.listen(
       quranDisplaySettingsControllerProvider,
       (previous, next) {
+        if (ref.read(isInteractivePinchZoomingProvider)) {
+          return;
+        }
         if (previous != next && _itemScrollController.isAttached) {
           final positions = _itemPositionsListener.itemPositions.value;
           if (positions.isNotEmpty) {
@@ -528,6 +619,32 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                     if (!mounted) return;
                     ref.read(quranAudioControllerProvider.notifier).suspendAutoScroll();
                   });
+                }
+              }
+
+              // Scroll-based collapse/expand for active Khatm bar
+              final activeKhatm = ref.read(activeKhatmSessionProvider);
+              if (activeKhatm != null) {
+                if (notification is UserScrollNotification) {
+                  if (notification.direction == ScrollDirection.reverse &&
+                      notification.metrics.pixels > 35) {
+                    ref.read(isKhatmReaderBarCollapsedProvider.notifier).setCollapsed(true);
+                  } else if (notification.direction == ScrollDirection.forward) {
+                    ref.read(isKhatmReaderBarCollapsedProvider.notifier).setCollapsed(false);
+                  }
+                } else if (notification is ScrollUpdateNotification &&
+                    notification.dragDetails != null) {
+                  final delta = notification.scrollDelta;
+                  if (delta != null) {
+                    if (delta > 3.0 && notification.metrics.pixels > 35) {
+                      ref.read(isKhatmReaderBarCollapsedProvider.notifier).setCollapsed(true);
+                    } else if (delta < -3.0) {
+                      ref.read(isKhatmReaderBarCollapsedProvider.notifier).setCollapsed(false);
+                    }
+                  }
+                }
+                if (notification.metrics.pixels <= 15) {
+                  ref.read(isKhatmReaderBarCollapsedProvider.notifier).setCollapsed(false);
                 }
               }
               

@@ -283,15 +283,15 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                         ] else if (isTopicStudio) ...[
                           // Topic Studio: Soft feathered glow fading seamlessly into transparency (like splash screen)
                           SizedBox(
-                            height: 24,
+                            height: 28,
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
                                 ImageFiltered(
                                   imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 6),
                                   child: Container(
-                                    width: 48,
-                                    height: 20,
+                                    width: 54,
+                                    height: 22,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
                                       color: Colors.white.withValues(alpha: 0.92),
@@ -305,37 +305,17 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                                     ),
                                   ),
                                 ),
-                                Text(
+                                const Text(
                                   'تفکر',
                                   textAlign: TextAlign.center,
                                   maxLines: 1,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: AppTypography.fontFamily,
-                                    fontSize: 12.5,
+                                    fontSize: 13.5,
                                     fontWeight: FontWeight.w900,
                                     color: AppColors.primary,
                                     letterSpacing: 0.2,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          6.vSpace,
-                          Text(
-                            widget.tool!.title,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.95)
-                                  : const Color(0xFF2C2A29),
-                              shadows: [
-                                Shadow(
-                                  color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.8),
-                                  blurRadius: 4,
                                 ),
                               ],
                             ),
@@ -400,31 +380,38 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
           // Clean Overlaid Delete Badge (×) Placed Directly On The Card Corner
           if (!isEmpty)
             Positioned(
-              top: 6,
-              right: 6,
-              child: ScaleTransition(
-                scale: _badgeScale,
-                child: GestureDetector(
-                  onTap: widget.onDelete,
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE53935),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.18),
-                          blurRadius: 3,
-                          offset: const Offset(0, 1),
+              top: 0,
+              right: 0,
+              child: IgnorePointer(
+                ignoring: !widget.isEditMode,
+                child: ScaleTransition(
+                  scale: _badgeScale,
+                  child: GestureDetector(
+                    onTap: widget.onDelete,
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.all(6.0),
+                      color: Colors.transparent,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE53935),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.close_rounded,
-                      color: Colors.white,
-                      size: 13,
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                          size: 13,
+                        ),
+                      ),
                     ),
                   ),
                 ),

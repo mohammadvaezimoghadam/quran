@@ -84,6 +84,16 @@ class ActiveItemPositionsListenerNotifier
   void setListener(ItemPositionsListener? listener) {
     state = listener;
   }
+
+  void clearIfMatches(ItemPositionsListener listener) {
+    if (state == listener) {
+      Future.microtask(() {
+        if (state == listener) {
+          state = null;
+        }
+      });
+    }
+  }
 }
 
 final activeItemPositionsListenerProvider = NotifierProvider<
@@ -168,6 +178,14 @@ class ReaderControlsNotifier extends Notifier<ReaderControlsState> {
       isControlsVisible: nextVisible,
       isAudioBarCollapsed: !nextVisible,
     );
+  }
+
+  void toggleFullScreenOrControls() {
+    if (state.isFullScreen && !state.isControlsVisible) {
+      exitFullScreen();
+    } else {
+      enterFullScreen();
+    }
   }
 
   void reset() {

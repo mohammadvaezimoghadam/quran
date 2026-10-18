@@ -251,4 +251,46 @@ class AppTypography {
     fontSize: 13,
     fontWeight: FontWeight.normal,
   );
+
+  /// Standard Title Medium
+  static const TextStyle titleMedium = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+  );
+
+  /// Standard Title Small
+  static const TextStyle titleSmall = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+  );
+
+  /// Standard Body Regular
+  static const TextStyle bodyRegular = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+  );
+
+  /// Standard Body Medium
+  static const TextStyle bodyMedium = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+  );
+
+  /// Standard Body Small
+  static const TextStyle bodySmall = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+  );
+
+  /// Standard Caption
+  static const TextStyle caption = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+  );
 }

@@ -154,7 +154,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                   child: Row(
                     children: [
                       IconButton(
-                        tooltip: 'بازگشت',
                         icon: Icon(
                           CupertinoIcons.chevron_forward,
                           size: 24,
@@ -179,7 +178,6 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                         ),
                       ),
                       IconButton(
-                        tooltip: 'نشانه‌های ذخیره‌شده',
                         icon: Icon(
                           CupertinoIcons.bookmark,
                           size: 22,

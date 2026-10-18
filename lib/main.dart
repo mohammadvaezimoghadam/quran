@@ -23,6 +23,7 @@ import 'core/services/notification/i_push_notification_service.dart';
 import 'core/services/notification/push_notification_providers.dart';
 import 'features/bookmarks/infrastructure/datasources/bookmark_local_datasource.dart';
 import 'features/bookmarks/infrastructure/datasources/bookmark_label_local_datasource.dart';
+import 'features/khatm/infrastructure/datasources/khatm_local_datasource.dart';
 import 'features/study_plan/infrastructure/datasources/study_plan_local_datasource.dart';
 import 'features/tafsir_manager/infrastructure/datasources/tafsir_local_datasource.dart';
 import 'features/topic_studio/infrastructure/datasources/topic_local_datasource.dart';
@@ -67,6 +68,7 @@ Future<void> _initHiveBoxes() async {
       Hive.openBox(BookmarkLabelLocalDataSource.boxName),
       Hive.openBox(TopicLocalDataSource.boxName),
       Hive.openBox(StudyPlanLocalDataSource.boxName),
+      Hive.openBox(KhatmLocalDataSource.boxName),
     ]).timeout(const Duration(seconds: 3));
     debugPrint('✅ [Hive] initialized successfully');
   } catch (e) {

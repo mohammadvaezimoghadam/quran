@@ -117,6 +117,13 @@ class QuranDisplaySettingsController
     state = state.copyWith(translationFontSize: size);
   }
 
+  void updateFontSizes({required double arabicFontSize, required double translationFontSize}) {
+    state = state.copyWith(
+      arabicFontSize: arabicFontSize,
+      translationFontSize: translationFontSize,
+    );
+  }
+
   void updateTranslationFontFamily(String family) {
     state = state.copyWith(translationFontFamily: family);
   }
@@ -181,3 +188,15 @@ final quranDisplaySettingsControllerProvider =
     NotifierProvider<QuranDisplaySettingsController, QuranDisplaySettingsState>(
       QuranDisplaySettingsController.new,
     );
+
+class IsInteractivePinchZoomingNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setZooming(bool isZooming) => state = isZooming;
+}
+
+final isInteractivePinchZoomingProvider =
+    NotifierProvider<IsInteractivePinchZoomingNotifier, bool>(
+  IsInteractivePinchZoomingNotifier.new,
+);

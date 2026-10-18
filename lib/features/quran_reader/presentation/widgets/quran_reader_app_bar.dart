@@ -56,7 +56,7 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     required BuildContext context,
     required IconData icon,
     required VoidCallback? onTap,
-    required String tooltip,
+    String? tooltip,
     Color? iconColor,
     double size = 22,
   }) {
@@ -64,7 +64,6 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     final effectiveColor = iconColor ?? colorScheme.onSurface;
 
     return IconButton(
-      tooltip: tooltip,
       icon: Icon(
         icon,
         size: size,
@@ -157,7 +156,7 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
 
         // 4. Settings Popup Menu (Standard icon button with no artificial circle wrapper)
         PopupMenuButton<String>(
-          tooltip: 'تنظیمات و گزینه‌ها',
+          tooltip: '',
           icon: Icon(
             CupertinoIcons.slider_horizontal_3,
             size: 22,
@@ -202,7 +201,7 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         Expanded(
           child: Center(
             child: Text(
-              '${selectedCount.toPersianDigit()} آیه انتخاب شد',
+              '${selectedCount.toPersianDigit()} آیه',
               style: TextStyle(
                 fontFamily: AppTypography.fontFamily,
                 fontSize: 14.5,
@@ -243,6 +242,13 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
               icon: CupertinoIcons.doc_on_doc,
               onTap: onCopySelected,
               tooltip: 'کپی آیات',
+            ),
+            const SizedBox(width: 4),
+            _buildIconButton(
+              context: context,
+              icon: CupertinoIcons.share,
+              onTap: onShareSelected,
+              tooltip: 'اشتراک‌گذاری',
             ),
           ],
         ),

@@ -190,7 +190,9 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
         },
         child: Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
+          appBar: _isExpanded
+              ? null
+              : AppBar(
             backgroundColor: colors.cardBackground,
             elevation: 0,
             leading: IconButton(
@@ -239,23 +241,26 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
             ),
           ),
         ),
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: blocks.isEmpty
-                    ? _buildEmptyState(context, isDark, colorScheme, colors)
-                    : _buildEditorCanvas(
-                        context, isDark, colorScheme, colors, blocks),
-              ),
+        body: _isExpanded
+            ? _buildFullScreenComposer(
+                context, isDark, colorScheme, colors, editorState)
+            : SafeArea(
+                bottom: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: blocks.isEmpty
+                          ? _buildEmptyState(context, isDark, colorScheme, colors)
+                          : _buildEditorCanvas(
+                              context, isDark, colorScheme, colors, blocks),
+                    ),
 
-              // Expanding Input Bar
-              _buildChatInputBar(context, isDark, colorScheme, colors, editorState),
-            ],
-          ),
-        ),
+                    // Expanding Input Bar
+                    _buildChatInputBar(context, isDark, colorScheme, colors, editorState),
+                  ],
+                ),
+              ),
       ),
       ),
     );
@@ -635,7 +640,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     );
   }
 
-  /// Expandable floating text field container with 80% inline expansion
+  /// Compact floating chat input bar
   Widget _buildChatInputBar(
     BuildContext context,
     bool isDark,
@@ -675,67 +680,47 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
             }
           }
         }
-        final bool showExpandIcon = isMultiLine || _isExpanded;
-
-        // Calculate 80% fixed screen height safely avoiding keyboard overflow
-        final screenHeight = MediaQuery.sizeOf(context).height;
-        final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-        final topPadding = MediaQuery.paddingOf(context).top;
-        final maxAvailableHeight =
-            screenHeight - bottomInset - topPadding - kToolbarHeight - 16;
-        final target80 = screenHeight * 0.80;
-        final double expandedHeight = (target80 > maxAvailableHeight)
-            ? (maxAvailableHeight > 260 ? maxAvailableHeight : 260.0)
-            : target80;
+        final bool showExpandIcon = isMultiLine || hasText;
 
         return SafeArea(
           top: false,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 4, 16, _isExpanded ? 8 : 12),
-            child: AnimatedSize(
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                height: _isExpanded ? expandedHeight : null,
-                padding: EdgeInsets.symmetric(
-                  horizontal: _isExpanded ? 14 : 10,
-                  vertical: _isExpanded ? 10 : 8,
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF222226) : Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.18)
+                      : const Color(0xFFE5E5EA),
+                  width: 1.3,
                 ),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF222226) : Colors.white,
-                  borderRadius: BorderRadius.circular(
-                    _isExpanded ? 22 : 18,
-                  ),
-                  border: Border.all(
+                boxShadow: [
+                  BoxShadow(
                     color: isDark
-                        ? Colors.white.withValues(alpha: _isExpanded ? 0.22 : 0.18)
-                        : const Color(0xFFE5E5EA),
-                    width: 1.3,
+                        ? Colors.black.withValues(alpha: 0.50)
+                        : const Color(0xFF000000).withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 4),
                   ),
-                  boxShadow: [
+                  if (!isDark)
                     BoxShadow(
-                      color: isDark
-                          ? Colors.black.withValues(alpha: 0.50)
-                          : const Color(0xFF000000)
-                              .withValues(alpha: _isExpanded ? 0.12 : 0.08),
-                      blurRadius: _isExpanded ? 24 : 16,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 4),
+                      color: const Color(0xFF000000).withValues(alpha: 0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
                     ),
-                    if (!isDark)
-                      BoxShadow(
-                        color: const Color(0xFF000000).withValues(alpha: 0.03),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                  ],
-                ),
-                child: _isExpanded
-                    ? _buildExpandedContent(
-                        context, isDark, colorScheme, canSend, editorState)
-                    : _buildCompactContent(
-                        context, isDark, colorScheme, canSend, showExpandIcon, editorState),
+                ],
+              ),
+              child: _buildCompactContent(
+                context,
+                isDark,
+                colorScheme,
+                canSend,
+                showExpandIcon,
+                editorState,
               ),
             ),
           ),
@@ -818,7 +803,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
 
         4.vSpace,
 
-        // 2. Action row UNDERNEATH the text field (دکمه‌های انتخاب عکس و ارسال)
+        // 3. Action row UNDERNEATH the text field (دکمه‌های انتخاب عکس و ارسال)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -834,102 +819,140 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     );
   }
 
-  /// 80% Expanded mode with full scrollable text field and collapse button
-  Widget _buildExpandedContent(
+  /// Fullscreen ChatGPT-style Composer above the keyboard (no pixel overflow, pinned send button)
+  /// Expanded mode preserving the exact text field card style, positioned above keyboard
+  Widget _buildFullScreenComposer(
     BuildContext context,
     bool isDark,
     ColorScheme colorScheme,
-    bool canSend,
+    dynamic colors,
     InDrawerEditorState editorState,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Top row: Collapse button at top right
-        Align(
-          alignment: AlignmentDirectional.topStart,
-          child: _buildExpandCollapseButton(
-            isDark: isDark,
-            colorScheme: colorScheme,
-            isExpanded: true,
-          ),
-        ),
+    final text = _inputController.text;
+    final hasText = text.trim().isNotEmpty;
+    final canSend = hasText || editorState.isNotEmpty;
 
-        4.vSpace,
-
-        // Topmost row inside expanded text field: 1:1 minimal image preview if attached
-        if (editorState.hasAttachedImage) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 2, 4, 8),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: _buildMinimal1x1ImagePreview(editorState, isDark),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF222226) : Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.22)
+                  : const Color(0xFFE5E5EA),
+              width: 1.3,
             ),
-          ),
-        ],
-
-        // Large scrollable multiline TextField
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: TextField(
-              controller: _inputController,
-              focusNode: _inputFocusNode,
-              maxLines: null,
-              expands: true,
-              textAlignVertical: TextAlignVertical.top,
-              keyboardType: TextInputType.multiline,
-              textInputAction: TextInputAction.newline,
-              textDirection: TextDirection.rtl,
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 16.0,
-                fontWeight: FontWeight.w600,
-                height: 1.7,
-                color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.50)
+                    : const Color(0xFF000000).withValues(alpha: 0.12),
+                blurRadius: 24,
+                spreadRadius: 1,
+                offset: const Offset(0, 4),
               ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                hintText:
-                    'متن، تأملات و یادداشت‌های خود را با خیال راحت بنویسید...',
-                hintTextDirection: TextDirection.rtl,
-                hintStyle: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 15.0,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white38 : const Color(0xFF8E8E93),
+              if (!isDark)
+                BoxShadow(
+                  color: const Color(0xFF000000).withValues(alpha: 0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Top row: Collapse button at top right (preserving exact button style)
+              Align(
+                alignment: AlignmentDirectional.topStart,
+                child: _buildExpandCollapseButton(
+                  isDark: isDark,
+                  colorScheme: colorScheme,
+                  isExpanded: true,
                 ),
               ),
-            ),
+
+              4.vSpace,
+
+              // Topmost row inside expanded text field: 1:1 minimal image preview if attached
+              if (editorState.hasAttachedImage) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 2, 4, 8),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: _buildMinimal1x1ImagePreview(editorState, isDark),
+                  ),
+                ),
+              ],
+
+              // Large scrollable multiline TextField filling remaining flex space
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: TextField(
+                    controller: _inputController,
+                    focusNode: _inputFocusNode,
+                    maxLines: null,
+                    expands: true,
+                    textAlignVertical: TextAlignVertical.top,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w600,
+                      height: 1.7,
+                      color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                      hintText:
+                          'متن، تأملات و یادداشت‌های خود را با خیال راحت بنویسید...',
+                      hintTextDirection: TextDirection.rtl,
+                      hintStyle: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white38 : const Color(0xFF8E8E93),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              4.vSpace,
+
+              // Bottom Action Row in Expanded Mode: Photo Button & Send Button (Always pinned & visible!)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildPhotoPickerButton(isDark, colorScheme),
+                  _buildSendButton(
+                    canSend,
+                    isDark,
+                    colorScheme,
+                    onPressedOverride: () {
+                      setState(() => _isExpanded = false);
+                      _handleSend();
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-
-        4.vSpace,
-
-        // Bottom Action Row in Expanded Mode: Photo Button & Send Button
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildPhotoPickerButton(isDark, colorScheme),
-            _buildSendButton(
-              canSend,
-              isDark,
-              colorScheme,
-              onPressedOverride: () {
-                setState(() => _isExpanded = false);
-                _handleSend();
-              },
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 
-  /// Circular media attachment button (+ icon) opening ChatGPT-style popup
   Widget _buildPhotoPickerButton(
     bool isDark,
     ColorScheme colorScheme,
@@ -1081,6 +1104,9 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
         onTap: () {
           HapticFeedback.lightImpact();
           setState(() => _isExpanded = !_isExpanded);
+          if (_isExpanded) {
+            _inputFocusNode.requestFocus();
+          }
         },
         child: Tooltip(
           message: isExpanded ? 'کوچک‌نمایی' : 'بزرگ‌نمایی',

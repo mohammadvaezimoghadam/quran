@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../../common/constants/app_constants.dart';
+import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/utils/jalali_date.dart';
 
 part 'tafakor_topic.freezed.dart';
 
@@ -20,6 +22,17 @@ abstract class TafakorTopic with _$TafakorTopic {
     @Default(false) bool baleBotActive,
     @Default(0) int postCount,
   }) = _TafakorTopic;
+
+  String? get formattedJalaliDate {
+    if (createdAt == null || createdAt!.trim().isEmpty) return null;
+    try {
+      final dt = DateTime.parse(createdAt!).toLocal();
+      final j = JalaliDate.fromDateTime(dt);
+      return '${j.year}/${j.month}/${j.day}'.toPersianDigit();
+    } catch (_) {
+      return null;
+    }
+  }
 
   String? get fullImageUrl {
     if (image == null || image!.trim().isEmpty) return null;

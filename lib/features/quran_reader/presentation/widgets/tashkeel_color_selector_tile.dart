@@ -66,26 +66,23 @@ class _TashkeelColorSelectorTileState extends State<TashkeelColorSelectorTile> {
                   });
                 },
                 behavior: HitTestBehavior.opaque,
-                child: Tooltip(
-                  message: 'انتخاب طیف رنگی اعراب',
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: currentColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        _isDropdownOpen
-                            ? CupertinoIcons.chevron_up
-                            : CupertinoIcons.paintbrush,
-                        size: 16,
-                        color: currentColor.computeLuminance() > 0.5
-                            ? Colors.black87
-                            : Colors.white,
-                      ),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: currentColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      _isDropdownOpen
+                          ? CupertinoIcons.chevron_up
+                          : CupertinoIcons.paintbrush,
+                      size: 16,
+                      color: currentColor.computeLuminance() > 0.5
+                          ? Colors.black87
+                          : Colors.white,
                     ),
                   ),
                 ),

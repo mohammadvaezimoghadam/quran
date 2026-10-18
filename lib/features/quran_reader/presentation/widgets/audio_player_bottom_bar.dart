@@ -59,24 +59,21 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     required IconData icon,
     required double size,
     required Color color,
-    required String tooltip,
+    String? tooltip,
     required VoidCallback? onPressed,
     double width = 34,
     double height = 32,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkResponse(
-          onTap: onPressed,
-          radius: 17,
-          child: SizedBox(
-            width: width,
-            height: height,
-            child: Center(
-              child: Icon(icon, size: size, color: color),
-            ),
+    return Material(
+      color: Colors.transparent,
+      child: InkResponse(
+        onTap: onPressed,
+        radius: 17,
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: Center(
+            child: Icon(icon, size: size, color: color),
           ),
         ),
       ),
@@ -526,7 +523,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                         ),
                                                         child: PopupMenuButton<double>(
                                                           initialValue: playbackSpeed,
-                                                          tooltip: 'تنظیم سرعت پخش',
+                                                          tooltip: '',
                                                           color: colorScheme.surfaceContainerHigh,
                                                           elevation: 8,
                                                           shape: RoundedRectangleBorder(

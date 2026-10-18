@@ -113,8 +113,9 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
       }
     }
 
-    return Tooltip(
-      message: tooltipMessage,
+    return Semantics(
+      label: tooltipMessage,
+      button: true,
       child: GestureDetector(
         onTap: widget.onTap ?? () {
           ReciterSelectionBottomSheet.show(

@@ -15,6 +15,8 @@ import '../../domain/entities/ayah_entity.dart';
 import 'quran_quick_jump_bottom_sheet.dart';
 import '../../../study_plan/application/controllers/study_plan_controller.dart';
 import '../../../study_plan/domain/entities/study_plan.dart';
+import '../../../khatm/application/controllers/khatm_detail_controller.dart';
+import '../../../khatm/presentation/widgets/reader/khatm_reader_bar.dart';
 
 /// A sticky info bar displayed below the AppBar that shows the current
 /// Total Ayahs, Ayah, Juz, Hizb, and Page with interactive chips for Quick Jump.
@@ -33,17 +35,19 @@ class QuranInfoBar extends ConsumerWidget {
 
     final surahs = ref.watch(surahListControllerProvider.select((s) => s.surahs));
 
-    // 1. Audio is the Single Source of Truth if currently playing, paused, or loading for this surah!
+    // 1. Audio is the Single Source of Truth ONLY if actively reciting this surah AND auto-scroll is not suspended!
+    // If audio is paused or user manually scrolls (isAutoScrollSuspended == true),
+    // the info bar must follow the user's viewport so it doesn't freeze.
     final audioState = ref.watch(quranAudioControllerProvider);
-    final isAudioActiveForThisSurah = (audioState.status == AudioStatus.playing ||
-            audioState.status == AudioStatus.paused ||
+    final isAudioRecitingThisSurah = (audioState.status == AudioStatus.playing ||
             audioState.status == AudioStatus.loading) &&
+        !audioState.isAutoScrollSuspended &&
         audioState.currentSurahId != null &&
         ayahs.isNotEmpty &&
         audioState.currentSurahId == ayahs.first.surahId &&
         audioState.currentAyahNumber != null;
 
-    if (isAudioActiveForThisSurah) {
+    if (isAudioRecitingThisSurah) {
       final playingAyah = ayahs.firstWhere(
         (a) => a.ayahNumber == audioState.currentAyahNumber,
         orElse: () => ayahs.first,
@@ -54,7 +58,11 @@ class QuranInfoBar extends ConsumerWidget {
     final itemPositionsListener = ref.watch(activeItemPositionsListenerProvider);
 
     if (itemPositionsListener == null) {
-      return _buildContent(context, ref, ayahs.first, surahs);
+      final fallbackAyahNum = audioState.currentAyahNumber ?? ref.read(activeAyahProvider);
+      final fallbackAyah = fallbackAyahNum != null
+          ? ayahs.firstWhere((a) => a.ayahNumber == fallbackAyahNum, orElse: () => ayahs.first)
+          : ayahs.first;
+      return _buildContent(context, ref, fallbackAyah, surahs);
     }
 
     final screenHeight = MediaQuery.sizeOf(context).height;
@@ -62,9 +70,19 @@ class QuranInfoBar extends ConsumerWidget {
     final isSessionActive = ref.watch(isStudyPlanSessionActiveProvider);
     final activePlan = ref.watch(studyPlanControllerProvider.select((s) => s.activePlan));
     final hasStudyBar = isSessionActive && activePlan != null && activePlan.status == StudyPlanStatus.active;
+    final hasKhatmBar = ref.watch(activeKhatmSessionProvider) != null;
+    final isKhatmCollapsed = ref.watch(isKhatmReaderBarCollapsedProvider);
+    final double khatmBarHeight = hasKhatmBar
+        ? (isKhatmCollapsed ? KhatmReaderBar.collapsedHeight : KhatmReaderBar.barHeight)
+        : 0.0;
     
-    // Header bottom: safeTop + AppBar (60) + InfoBar (40) + StudyBar (32 if active)
-    final headerBottom = safeTop + 60.0 + 40.0 + (hasStudyBar ? 32.0 : 0.0);
+    // Header bottom: safeTop + AppBar (60) + InfoBar (40) + StudyBar (36 if active and no khatm) + KhatmBar + topPadding offset (8)
+    final headerBottom = safeTop +
+        60.0 +
+        40.0 +
+        (!hasKhatmBar && hasStudyBar ? 36.0 : 0.0) +
+        khatmBarHeight +
+        8.0;
     final topCutoff = screenHeight > 0 ? (headerBottom / screenHeight) : 0.18;
     final readingBaseline = topCutoff + (18.0 / (screenHeight > 0 ? screenHeight : 800.0));
 
@@ -96,6 +114,15 @@ class QuranInfoBar extends ConsumerWidget {
               targetPosition = positions.reduce((min, cur) => cur.index < min.index ? cur : min);
             }
             currentIndex = targetPosition.index;
+          }
+        } else {
+          // If positions are temporarily empty, prioritize active/audio ayah instead of defaulting to 0
+          final fallbackAyahNum = audioState.currentAyahNumber ?? ref.read(activeAyahProvider);
+          if (fallbackAyahNum != null) {
+            final foundIndex = ayahs.indexWhere((a) => a.ayahNumber == fallbackAyahNum);
+            if (foundIndex != -1) {
+              currentIndex = foundIndex;
+            }
           }
         }
 
