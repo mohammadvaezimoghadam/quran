@@ -5,10 +5,12 @@ import 'package:just_audio/just_audio.dart';
 
 import 'audio_error_parser.dart';
 import 'audio_player_state.dart';
+import 'echo/echo_service.dart';
 import 'i_audio_player_service.dart';
 
 class JustAudioPlayerService implements IAudioPlayerService {
   final AudioPlayer _audioPlayer;
+  final IEchoService? _echoService;
   final StreamController<AudioPlayerState> _stateController =
       StreamController<AudioPlayerState>.broadcast();
   AudioPlayerState _state = AudioPlayerState.initial();
@@ -28,8 +30,12 @@ class JustAudioPlayerService implements IAudioPlayerService {
   /// Maximum number of retry attempts for transient network failures.
   static const int _maxRetries = 2;
 
-  JustAudioPlayerService({AudioPlayer? audioPlayer})
-      : _audioPlayer = audioPlayer ?? AudioPlayer() {
+  JustAudioPlayerService({
+    AudioPlayer? audioPlayer,
+    IEchoService? echoService,
+  })  : _audioPlayer = audioPlayer ?? AudioPlayer(),
+        // ignore: prefer_initializing_formals
+        _echoService = echoService {
     _initListeners();
   }
 
@@ -127,6 +133,8 @@ class JustAudioPlayerService implements IAudioPlayerService {
       ),
     );
 
+    unawaited(_echoService?.prepareSource(url, speed: _state.speed) ?? Future.value());
+
     _isInternalTransition = true;
     try {
       if (kIsWeb) {
@@ -156,6 +164,7 @@ class JustAudioPlayerService implements IAudioPlayerService {
 
             // Proactively emit playing status on web
             _updateState(_state.copyWith(status: AudioStatus.playing));
+            _echoService?.onPlaybackStarted();
 
             unawaited(_audioPlayer.play().catchError((e) {
               debugPrint('🛑 [Web Audio Play Error] $e');
@@ -242,6 +251,8 @@ class JustAudioPlayerService implements IAudioPlayerService {
           // block the entire call-chain (including QuranAudioController's
           // _onTrackCompleted), preventing the completion handler from ever
           // firing for the *next* track.
+          _echoService?.setAudioSessionId(_audioPlayer.androidAudioSessionId);
+          _echoService?.onPlaybackStarted();
           unawaited(_audioPlayer.play().catchError((e) {
             debugPrint('🛑 [Native Audio Play Error] $e');
             if (_playGeneration == generation) {
@@ -308,11 +319,13 @@ class JustAudioPlayerService implements IAudioPlayerService {
 
   @override
   Future<void> pause() async {
+    _echoService?.onPlaybackPaused();
     await _audioPlayer.pause();
   }
 
   @override
   Future<void> resume() async {
+    _echoService?.onPlaybackResumed(_audioPlayer.position);
     if (kIsWeb) {
       unawaited(_audioPlayer.play().catchError((e) {
         debugPrint('🛑 [Web Audio Resume Error] $e');
@@ -336,27 +349,32 @@ class JustAudioPlayerService implements IAudioPlayerService {
 
   @override
   Future<void> stop() async {
+    _echoService?.onPlaybackStopped();
     await _audioPlayer.stop();
   }
 
   @override
   Future<void> seek(Duration position) async {
+    _echoService?.onSeek(position);
     await _audioPlayer.seek(position);
   }
 
   @override
   Future<void> setSpeed(double speed) async {
+    _echoService?.onSpeedChanged(speed);
     await _audioPlayer.setSpeed(speed);
     _updateState(_state.copyWith(speed: speed));
   }
 
   @override
   Future<void> setVolume(double volume) async {
+    _echoService?.onMainVolumeChanged(volume);
     await _audioPlayer.setVolume(volume.clamp(0.0, 1.0));
   }
 
   @override
   void dispose() {
+    _echoService?.release();
     _playerStateSubscription?.cancel();
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();

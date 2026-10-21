@@ -163,4 +163,5 @@ curl "http://5.22.203.61/api/patches?app_id=quran_tafakor"
 ---
 
 ## ۶. اسناد مرتبط و نقشه راه بازطراحی آینده
+- جهت راهنمای ساخت App Bundle و امضای آفلاین با فایل `.bin` برای کافه بازار، به سند [docs/bazaar_appbundle_and_bin_guide.md](file:///d:/flutterProjects/quran/docs/bazaar_appbundle_and_bin_guide.md) مراجعه کنید.
 - جهت مشاهده نقشه راه بازطراحی یکپارچه سرور و اتوماسیون کامل نسخه توسط بک‌اند، به سند [docs/ota_refactor_backend_and_cli.md](file:///d:/flutterProjects/quran/docs/ota_refactor_backend_and_cli.md) مراجعه کنید.

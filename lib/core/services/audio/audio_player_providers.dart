@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+import 'echo/echo_service.dart';
 import 'i_audio_player_service.dart';
 import 'just_audio_player_service.dart';
 import 'quran_audio_handler.dart';
@@ -21,7 +22,11 @@ final quranAudioHandlerProvider = Provider<QuranAudioHandler>((ref) {
 
 final audioPlayerServiceProvider = Provider<IAudioPlayerService>((ref) {
   final rawPlayer = ref.watch(rawAudioPlayerProvider);
-  final service = JustAudioPlayerService(audioPlayer: rawPlayer);
+  final echoService = ref.watch(echoServiceProvider);
+  final service = JustAudioPlayerService(
+    audioPlayer: rawPlayer,
+    echoService: echoService,
+  );
   ref.onDispose(() {
     service.dispose();
   });

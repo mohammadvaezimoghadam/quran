@@ -103,44 +103,49 @@ class _TextTranslationsDownloadBottomSheetState
             bottomSpacing: 10,
           ),
 
-          // Language Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                _buildFilterChip('all', 'همه زبان‌ها', translations.length),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  'fa',
-                  'فارسی',
-                  translations.where((t) => t.languageCode == 'fa').length,
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  'en',
-                  'English',
-                  translations.where((t) => t.languageCode == 'en').length,
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  'other',
-                  'سایر زبان‌ها',
-                  translations
-                      .where((t) =>
-                          t.languageCode != 'fa' && t.languageCode != 'en')
-                      .length,
-                ),
-              ],
+          // Language Filter Chips (Only shown if multiple languages exist)
+          if (translations.any((t) => t.languageCode != 'fa')) ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  _buildFilterChip('all', 'همه زبان‌ها', translations.length),
+                  const SizedBox(width: 8),
+                  _buildFilterChip(
+                    'fa',
+                    'فارسی',
+                    translations.where((t) => t.languageCode == 'fa').length,
+                  ),
+                  if (translations.any((t) => t.languageCode == 'en')) ...[
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      'en',
+                      'English',
+                      translations.where((t) => t.languageCode == 'en').length,
+                    ),
+                  ],
+                  if (translations.any((t) => t.languageCode != 'fa' && t.languageCode != 'en')) ...[
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      'other',
+                      'سایر زبان‌ها',
+                      translations
+                          .where((t) =>
+                              t.languageCode != 'fa' && t.languageCode != 'en')
+                          .length,
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-
-          const SizedBox(height: 8),
-          Divider(
-            height: 1,
-            thickness: 0.6,
-            color: colors.cardBorder,
-          ),
+            const SizedBox(height: 8),
+            Divider(
+              height: 1,
+              thickness: 0.6,
+              color: colors.cardBorder,
+            ),
+          ],
 
           // Translations List
           Expanded(
@@ -336,6 +341,7 @@ class _TextTranslationsDownloadBottomSheetState
                       child: FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -346,6 +352,7 @@ class _TextTranslationsDownloadBottomSheetState
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),

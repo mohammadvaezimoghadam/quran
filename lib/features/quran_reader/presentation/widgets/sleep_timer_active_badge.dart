@@ -478,6 +478,7 @@ class SleepTimerPlayerButton extends ConsumerWidget {
                         child: const Text(
                           'فعال‌سازی تایمر',
                           style: TextStyle(
+                            color: Colors.white,
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 13,
                             fontWeight: FontWeight.bold,

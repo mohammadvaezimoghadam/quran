@@ -128,6 +128,7 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
 
     final isEmpty = widget.tool == null;
     final isTopicStudio = widget.tool?.type == QuickAccessToolType.topicStudio;
+    final greenColor = isDark ? const Color(0xFF52C498) : AppColors.primary;
 
     final cardBgColor = isDark
         ? (isEmpty ? Colors.white.withValues(alpha: 0.025) : colors.cardBackground)
@@ -156,37 +157,33 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
             height: 84,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: cardBgColor,
+              color: isTopicStudio ? null : cardBgColor,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isTopicStudio
-                    ? (isDark
-                        ? Colors.white.withValues(alpha: 0.20)
-                        : colorScheme.primary.withValues(alpha: 0.35))
+                    ? greenColor.withValues(alpha: isDark ? 0.35 : 0.22)
                     : cardBorderColor,
-                width: 0.8,
+                width: 0.9,
               ),
-              image: isTopicStudio
-                  ? DecorationImage(
-                      image: const AssetImage(AppConstants.splashBgAsset),
-                      fit: BoxFit.cover,
-                      colorFilter: isDark
-                          ? ColorFilter.mode(
-                              Colors.black.withValues(alpha: 0.50),
-                              BlendMode.darken,
-                            )
-                          : null,
-                    )
-                  : null,
-              boxShadow: (!isDark && !isEmpty)
+              boxShadow: isTopicStudio
                   ? [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10.0,
-                        offset: const Offset(0, 2.0),
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.20)
+                            : greenColor.withValues(alpha: 0.08),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
                     ]
-                  : null,
+                  : ((!isDark && !isEmpty)
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 10.0,
+                            offset: const Offset(0, 2.0),
+                          ),
+                        ]
+                      : null),
             ),
             child: Material(
               color: Colors.transparent,
@@ -195,132 +192,136 @@ class _QuickAccessSlotCardState extends ConsumerState<QuickAccessSlotCard>
                 onTap: widget.isEditMode ? null : widget.onTap,
                 onLongPress: widget.onLongPress,
                 borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (isEmpty) ...[
-                          Icon(
-                            CupertinoIcons.plus,
-                            color: isDark
-                                ? Colors.white38
-                                : const Color(0xFF9E998F),
-                            size: 24,
+                child: isTopicStudio
+                    ? Stack(
+                        fit: StackFit.expand,
+                        alignment: Alignment.center,
+                        children: [
+                          Positioned.fill(
+                            child: ImageFiltered(
+                              imageFilter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                              child: Image.asset(
+                                AppConstants.splashBgAsset,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'افزودن',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                          Positioned.fill(
+                            child: Container(
                               color: isDark
-                                  ? Colors.white38
-                                  : const Color(0xFF9E998F),
+                                  ? Colors.black.withValues(alpha: 0.35)
+                                  : Colors.white.withValues(alpha: 0.30),
                             ),
                           ),
-                        ] else if (widget.tool!.isSurah) ...[
-                          // Clean Surah-Only Card: NO ICON, beautiful Surah typography
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6.0,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(
-                                alpha: isDark ? 0.16 : 0.09,
-                              ),
-                              borderRadius: BorderRadius.circular(6.0),
-                            ),
+                          Center(
                             child: Text(
-                              'سوره ${widget.tool!.surahId.toString().toPersianDigit()}',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          4.vSpace,
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                widget.tool!.surahId != null
-                                    ? widget.tool!.surahId!.surahNameFa
-                                    : (widget.tool!.surahName ?? widget.tool!.title)
-                                        .replaceAll('سورة', '')
-                                        .replaceAll('سوره', '')
-                                        .trim(),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF2C2A29),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (widget.tool!.ayahCount != null) ...[
-                            2.vSpace,
-                            Text(
-                              '${widget.tool!.ayahCount.toString().toPersianDigit()} آیه',
+                              'تفکر',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 9.5,
-                                color: isDark ? Colors.white54 : Colors.black45,
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                color: isDark ? Colors.white : AppColors.primary,
+                                letterSpacing: 0.5,
+                                shadows: [
+                                  Shadow(
+                                    color: (isDark ? Colors.black : Colors.white)
+                                        .withValues(alpha: 0.95),
+                                    blurRadius: 3,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ] else if (isTopicStudio) ...[
-                          // Topic Studio: Soft feathered glow fading seamlessly into transparency (like splash screen)
-                          SizedBox(
-                            height: 28,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                ImageFiltered(
-                                  imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 6),
-                                  child: Container(
-                                    width: 54,
-                                    height: 22,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.white.withValues(alpha: 0.92),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.white.withValues(alpha: 0.90),
-                                          blurRadius: 10,
-                                          spreadRadius: 3,
-                                        ),
-                                      ],
+                          ),
+                        ],
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (isEmpty) ...[
+                                Icon(
+                                  CupertinoIcons.plus,
+                                  color: isDark
+                                      ? Colors.white38
+                                      : const Color(0xFF9E998F),
+                                  size: 24,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'افزودن',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark
+                                        ? Colors.white38
+                                        : const Color(0xFF9E998F),
+                                  ),
+                                ),
+                              ] else if (widget.tool!.isSurah) ...[
+                                // Clean Surah-Only Card: NO ICON, beautiful Surah typography
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6.0,
+                                    vertical: 1.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary.withValues(
+                                      alpha: isDark ? 0.16 : 0.09,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6.0),
+                                  ),
+                                  child: Text(
+                                    'سوره ${widget.tool!.surahId.toString().toPersianDigit()}',
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.primary,
                                     ),
                                   ),
                                 ),
-                                const Text(
-                                  'تفکر',
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.primary,
-                                    letterSpacing: 0.2,
+                                4.vSpace,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      widget.tool!.surahId != null
+                                          ? widget.tool!.surahId!.surahNameFa
+                                          : (widget.tool!.surahName ?? widget.tool!.title)
+                                              .replaceAll('سورة', '')
+                                              .replaceAll('سوره', '')
+                                              .trim(),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontFamily,
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF2C2A29),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ] else ...[
+                                if (widget.tool!.ayahCount != null) ...[
+                                  2.vSpace,
+                                  Text(
+                                    '${widget.tool!.ayahCount.toString().toPersianDigit()} آیه',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      color: isDark ? Colors.white54 : Colors.black45,
+                                    ),
+                                  ),
+                                ],
+                              ] else ...[
                           Icon(
                             widget.tool!.iconData ?? CupertinoIcons.star,
                             color: colorScheme.primary,

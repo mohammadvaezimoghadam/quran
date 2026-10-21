@@ -620,6 +620,7 @@ class _AyahDictionaryScreenState extends ConsumerState<AyahDictionaryScreen> {
                               child: const Text(
                                 'تأیید',
                                 style: TextStyle(
+                                  color: Colors.white,
                                   fontFamily: AppTypography.fontFamily,
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,

@@ -79,6 +79,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/vip-subscription',
         name: vipSubscriptionRoute,
+        redirect: (context, state) => '/',
         builder: (context, state) => const VipSubscriptionScreen(),
       ),
       GoRoute(
@@ -178,6 +179,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/tafsir-reader/:id',
         name: tafsirReaderRoute,
+        redirect: (context, state) => '/',
         builder: (context, state) {
           final surahId = int.tryParse(state.pathParameters['id'] ?? '1') ?? 1;
           final surahName = state.uri.queryParameters['name'] ?? 'سوره';

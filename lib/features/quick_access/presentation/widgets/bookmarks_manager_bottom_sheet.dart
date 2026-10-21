@@ -125,6 +125,7 @@ class _BookmarksManagerBottomSheetState
                   child: const Text(
                     'حذف تمام نشانه‌ها',
                     style: TextStyle(
+                      color: Colors.white,
                       fontFamily: AppTypography.fontFamily,
                       fontWeight: FontWeight.bold,
                       fontSize: 13.5,

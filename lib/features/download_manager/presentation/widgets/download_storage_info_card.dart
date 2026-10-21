@@ -66,6 +66,7 @@ class DownloadStorageInfoCard extends ConsumerWidget {
                       child: FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -87,6 +88,7 @@ class DownloadStorageInfoCard extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),

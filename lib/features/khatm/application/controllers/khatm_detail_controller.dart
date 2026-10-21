@@ -357,9 +357,11 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
             (resolvedPage - session.fromUnit) + fractionOnPage;
         final rawProgress = (pagesRead / session.unitCount).clamp(0.0, 1.0);
         // If reached the target page and substantially progressed (or end of page reached), mark 100%
-        if (resolvedPage == session.toUnit &&
-            (isEndOfPage || pageFraction >= 0.70 || rawProgress >= 0.96)) {
-          return 1.0;
+        if (resolvedPage == session.toUnit) {
+          if (isEndOfPage) return 1.0;
+          if (session.unitCount > 1 && (pageFraction >= 0.75 || rawProgress >= 0.96)) {
+            return 1.0;
+          }
         }
         return rawProgress;
 
@@ -383,7 +385,8 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
             : 0.0;
         if (surahId == session.toUnit &&
             ayahNumber >= kStaticQuranSurahs[surahId - 1].numberOfAyahs) {
-          return 1.0;
+          if (isEndOfPage) return 1.0;
+          if (session.unitCount > 1) return 1.0;
         }
         return rawProgress;
 
@@ -402,9 +405,11 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
             isEndOfPage ? 1.0 : (pageFraction > 0 ? pageFraction : 0.0);
         final pagesRead = (resolvedPage - targetStartPage) + fractionOnPage;
         final rawProgress = (pagesRead / totalPages).clamp(0.0, 1.0);
-        if (resolvedPage == targetEndPage &&
-            (isEndOfPage || pageFraction >= 0.70 || rawProgress >= 0.96)) {
-          return 1.0;
+        if (resolvedPage == targetEndPage) {
+          if (isEndOfPage) return 1.0;
+          if (session.unitCount > 1 && (pageFraction >= 0.75 || rawProgress >= 0.96)) {
+            return 1.0;
+          }
         }
         return rawProgress;
 
@@ -423,9 +428,11 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
             isEndOfPage ? 1.0 : (pageFraction > 0 ? pageFraction : 0.0);
         final pagesRead = (resolvedPage - targetStartPage) + fractionOnPage;
         final rawProgress = (pagesRead / totalPages).clamp(0.0, 1.0);
-        if (resolvedPage == targetEndPage &&
-            (isEndOfPage || pageFraction >= 0.70 || rawProgress >= 0.96)) {
-          return 1.0;
+        if (resolvedPage == targetEndPage) {
+          if (isEndOfPage) return 1.0;
+          if (session.unitCount > 1 && (pageFraction >= 0.75 || rawProgress >= 0.96)) {
+            return 1.0;
+          }
         }
         return rawProgress;
 
@@ -462,15 +469,19 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
     final currentGlobalAyah = getGlobalAyahIndex(surahId, ayahNumber);
 
     if (computedProgress != null && computedProgress >= 0.985) {
-      if (isPositionInSession(
-        plan: plan,
-        session: session,
-        surahId: surahId,
-        ayahNumber: ayahNumber,
-        page: page,
-        juz: juz,
-        hizb: hizb,
-      ) || (plan.unitType == KhatmUnitType.page && resolvedPage == session.toUnit + 1)) {
+      if (session.unitCount > 1 &&
+          isPositionInSession(
+            plan: plan,
+            session: session,
+            surahId: surahId,
+            ayahNumber: ayahNumber,
+            page: page,
+            juz: juz,
+            hizb: hizb,
+          )) {
+        return true;
+      }
+      if (plan.unitType == KhatmUnitType.page && resolvedPage == session.toUnit + 1) {
         return true;
       }
     }
@@ -484,9 +495,12 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
         // Flipped to the immediate next page after session:
         if (resolvedPage == session.toUnit + 1) return true;
         // Reached end of the target page:
-        if (resolvedPage == session.toUnit &&
-            (isEndOfPage || pageFraction >= 0.70 || (computedProgress != null && computedProgress >= 0.95))) {
-          return true;
+        if (resolvedPage == session.toUnit) {
+          if (isEndOfPage) return true;
+          if (session.unitCount > 1 &&
+              (pageFraction >= 0.75 || (computedProgress != null && computedProgress >= 0.95))) {
+            return true;
+          }
         }
         return false;
 
@@ -498,7 +512,8 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
         if (surahId == session.toUnit) {
           final totalAyahs = kStaticQuranSurahs[surahId - 1].numberOfAyahs;
           if (ayahNumber >= totalAyahs) {
-            return true;
+            if (isEndOfPage) return true;
+            if (session.unitCount > 1) return true;
           }
         }
         return false;
@@ -513,9 +528,12 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
           return false;
         }
         if (resolvedPage == targetEndPage + 1) return true;
-        if (resolvedPage == targetEndPage &&
-            (isEndOfPage || pageFraction >= 0.70 || (computedProgress != null && computedProgress >= 0.95))) {
-          return true;
+        if (resolvedPage == targetEndPage) {
+          if (isEndOfPage) return true;
+          if (session.unitCount > 1 &&
+              (pageFraction >= 0.75 || (computedProgress != null && computedProgress >= 0.95))) {
+            return true;
+          }
         }
         return false;
 
@@ -529,9 +547,12 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
           return false;
         }
         if (resolvedPage == targetEndPage + 1) return true;
-        if (resolvedPage == targetEndPage &&
-            (isEndOfPage || pageFraction >= 0.70 || (computedProgress != null && computedProgress >= 0.95))) {
-          return true;
+        if (resolvedPage == targetEndPage) {
+          if (isEndOfPage) return true;
+          if (session.unitCount > 1 &&
+              (pageFraction >= 0.75 || (computedProgress != null && computedProgress >= 0.95))) {
+            return true;
+          }
         }
         return false;
 

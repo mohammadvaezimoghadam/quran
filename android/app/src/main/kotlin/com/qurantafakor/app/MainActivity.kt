@@ -11,11 +11,15 @@ import io.flutter.plugin.common.MethodChannel
  * background Quran audio playback).
  */
 class MainActivity : AudioServiceActivity() {
-    private val channelName = "com.qurantafakor.app/app_control"
+    private val appControlChannelName = "com.qurantafakor.app/app_control"
+    private val audioEffectsChannelName = "com.qurantafakor.app/audio_effects"
+    private val audioEffectsManager = AudioEffectsManager()
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName).setMethodCallHandler { call, result ->
+
+        // App Control Channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, appControlChannelName).setMethodCallHandler { call, result ->
             if (call.method == "restartApp") {
                 result.success(true)
                 RestartActivity.restartApp(this)
@@ -23,5 +27,39 @@ class MainActivity : AudioServiceActivity() {
                 result.notImplemented()
             }
         }
+
+        // Native Audio Effects (Reverb / Echo) Channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, audioEffectsChannelName).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "applyReverb" -> {
+                    val sessionId = call.argument<Int>("sessionId") ?: 0
+                    val preset = (call.argument<Int>("preset") ?: 5).toShort()
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    val success = audioEffectsManager.applyReverb(sessionId, preset, enabled)
+                    result.success(success)
+                }
+                "applyRadioFilter" -> {
+                    val sessionId = call.argument<Int>("sessionId") ?: 0
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    val success = audioEffectsManager.applyRadioFilter(sessionId, enabled)
+                    result.success(success)
+                }
+                "setEnabled" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    val success = audioEffectsManager.setEnabled(enabled)
+                    result.success(success)
+                }
+                "release" -> {
+                    audioEffectsManager.release()
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        audioEffectsManager.release()
+        super.onDestroy()
     }
 }

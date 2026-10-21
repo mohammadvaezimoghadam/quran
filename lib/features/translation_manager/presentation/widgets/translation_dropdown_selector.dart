@@ -111,18 +111,19 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           onPressed: () => Navigator.of(ctx).pop(true),
-                          child: Text(
+                          child: const Text(
                             'دانلود و اعمال',
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -195,9 +196,13 @@ class _TranslationDropdownSelectorState extends ConsumerState<TranslationDropdow
       });
     }
 
-    final effectiveSelectedId = (!hasVip && activeId != null && !TranslationVipPolicy.isTranslationFree(activeId))
+    final candidateId = (!hasVip && activeId != null && !TranslationVipPolicy.isTranslationFree(activeId))
         ? TranslationVipPolicy.freeTranslationId
         : (_selectedTranslationId ?? activeId ?? translations.first.id);
+
+    final effectiveSelectedId = translations.any((t) => t.id == candidateId)
+        ? candidateId
+        : translations.first.id;
 
     final colorScheme = Theme.of(context).colorScheme;
 

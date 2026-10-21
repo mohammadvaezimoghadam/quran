@@ -103,7 +103,7 @@ class _TafsirManagerBottomSheetState extends ConsumerState<TafsirManagerBottomSh
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -115,6 +115,7 @@ class _TafsirManagerBottomSheetState extends ConsumerState<TafsirManagerBottomSh
                               fontFamily: AppTypography.fontFamily,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
+                              color: Colors.white,
                             ),
                           ),
                         ),

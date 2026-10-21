@@ -303,7 +303,7 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
               Positioned.fill(
                 child: Container(
                   color: isDark
-                      ? Colors.black.withValues(alpha: 0.15)
+                      ? Colors.black.withValues(alpha: 0.35)
                       : Colors.white.withValues(alpha: 0.30),
                 ),
               ),
@@ -315,10 +315,11 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.primary,
+                    color: isDark ? Colors.white : AppColors.primary,
                     shadows: [
                       Shadow(
-                        color: Colors.white.withValues(alpha: 0.95),
+                        color: (isDark ? Colors.black : Colors.white)
+                            .withValues(alpha: 0.95),
                         blurRadius: 3,
                         offset: const Offset(0, 1),
                       ),

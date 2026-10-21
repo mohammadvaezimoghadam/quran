@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/utils/arabic_text_helper.dart';
@@ -761,6 +762,9 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     final isSingleAyahMode = ref.watch(
       quranAudioControllerProvider.select((s) => s.isSingleAyahMode),
     );
+    final audioVolume = ref.watch(
+      quranAudioControllerProvider.select((s) => s.volume),
+    );
     final autoHighlight = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.autoHighlight),
     );
@@ -954,7 +958,40 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
           16.0.vSpace,
         ],
 
-        // GROUP 2: AUDIO PLAYBACK OPTIONS
+        // GROUP 3: AUDIO VOLUME (Unified for Recitation & Audio Translation)
+        _buildSectionTitle('بلندی صدای تلاوت و ترجمه', textSecondary),
+        6.0.vSpace,
+        _buildCardGroup(
+          cardBgColor: cardBgColor,
+          children: [
+            _buildSliderTile(
+              context: context,
+              title: 'میزان صدای پخش',
+              valueLabel: '${(audioVolume * 100).round().toPersianDigit()}٪',
+              value: audioVolume,
+              min: 0.0,
+              max: 1.0,
+              divisions: 20,
+              leadingWidget: Icon(
+                CupertinoIcons.volume_mute,
+                size: 16,
+                color: textSecondary,
+              ),
+              trailingWidget: Icon(
+                CupertinoIcons.volume_up,
+                size: 17,
+                color: textSecondary,
+              ),
+              accentColor: accentColor,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
+              onChanged: (val) => audioController.setVolume(val),
+            ),
+          ],
+        ),
+        16.0.vSpace,
+
+        // GROUP 4: AUDIO PLAYBACK OPTIONS
         _buildSectionTitle('گزینه‌های پخش صوت', textSecondary),
         6.0.vSpace,
         _buildCardGroup(
@@ -1062,6 +1099,10 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     required Color textPrimary,
     required Color textSecondary,
     required ValueChanged<double> onChanged,
+    String minLabel = 'کوچک',
+    String maxLabel = 'بزرگ',
+    Widget? leadingWidget,
+    Widget? trailingWidget,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
@@ -1101,14 +1142,15 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
           4.0.vSpace,
           Row(
             children: [
-              Text(
-                'کوچک',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 10.5,
-                  color: textSecondary,
-                ),
-              ),
+              leadingWidget ??
+                  Text(
+                    minLabel,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 10.5,
+                      color: textSecondary,
+                    ),
+                  ),
               Expanded(
                 child: SliderTheme(
                   data: SliderThemeData(
@@ -1132,15 +1174,16 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                   ),
                 ),
               ),
-              Text(
-                'بزرگ',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: textSecondary,
-                ),
-              ),
+              trailingWidget ??
+                  Text(
+                    maxLabel,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondary,
+                    ),
+                  ),
             ],
           ),
         ],

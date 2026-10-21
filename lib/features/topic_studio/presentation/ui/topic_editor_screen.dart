@@ -335,7 +335,7 @@ class _TopicEditorScreenState extends ConsumerState<TopicEditorScreen> {
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
+                      foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -343,10 +343,10 @@ class _TopicEditorScreenState extends ConsumerState<TopicEditorScreen> {
                       ),
                     ),
                     onPressed: () => _copyFullTopic(topic),
-                    icon: const Icon(CupertinoIcons.share_up, size: 16),
+                    icon: const Icon(CupertinoIcons.share_up, size: 16, color: Colors.white),
                     label: const Text(
                       'کپی برای ارسال',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                 ),

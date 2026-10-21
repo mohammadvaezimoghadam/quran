@@ -24,6 +24,9 @@ import '../../../../core/routes/route_name.dart';
 import '../../../audio_manager/application/controllers/audio_download_controller.dart';
 import '../../../audio_manager/domain/entities/audio_download_task.dart';
 import '../utils/reciter_download_helper.dart';
+import '../../../../core/services/audio/ambient_sound/ambient_sound_controller.dart';
+import '../../../../core/services/audio/echo/echo_controller.dart';
+import 'audio_ambiance_bottom_sheet.dart';
 import 'sleep_timer_active_badge.dart';
 
 class AudioPlayerBottomBar extends ConsumerWidget {
@@ -79,6 +82,66 @@ class AudioPlayerBottomBar extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildAmbientSoundButton(
+    BuildContext context,
+    WidgetRef ref,
+    ColorScheme colorScheme,
+  ) {
+    final ambientState = ref.watch(ambientSoundControllerProvider);
+    final echoState = ref.watch(echoControllerProvider);
+    final isAnyActive = ambientState.isEnabled || echoState.isEnabled;
+
+    return Material(
+      color: Colors.transparent,
+      child: Tooltip(
+        message: 'فضاسازی و افکت‌های صوتی',
+        child: InkResponse(
+          radius: 17,
+          onTap: () => AudioAmbianceBottomSheet.show(context),
+          child: SizedBox(
+            width: 34,
+            height: 32,
+            child: Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    CupertinoIcons.music_note_2,
+                    size: 20,
+                    color: isAnyActive
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                  ),
+                  if (isAnyActive)
+                    Positioned(
+                      top: 2,
+                      right: 2,
+                      child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: colorScheme.primary.withValues(alpha: 0.5),
+                              blurRadius: 3,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -423,7 +486,12 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                     ),
                                                   ),
 
-                                                  const SizedBox(width: 6),
+                                                  const SizedBox(width: 4),
+
+                                                  // Ambient Sound & Effects Button (Unified)
+                                                  _buildAmbientSoundButton(context, ref, colorScheme),
+
+                                                  const SizedBox(width: 4),
 
                                                   // Sleep Timer Active Button
                                                   const SleepTimerPlayerButton(),
@@ -512,7 +580,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
 
                                                   // Speed Dropdown Button (Bottom Left - opens speed selection dropdown menu)
                                                   SizedBox(
-                                                    width: 40,
+                                                    width: 44,
                                                     height: 32,
                                                     child: Center(
                                                       child: Theme(
@@ -537,9 +605,9 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                             audioController.setPlaybackSpeed(speed);
                                                           },
                                                           itemBuilder: (BuildContext context) {
-                                                            const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+                                                            const speeds = [0.5, 0.75, 0.85, 1.0, 1.25, 1.5, 1.75, 2.0];
                                                             return speeds.map((speed) {
-                                                              final isSelected = (speed - playbackSpeed).abs() < 0.05;
+                                                              final isSelected = (speed - playbackSpeed).abs() < 0.03;
                                                               final label = '${speed.toString().replaceAll(RegExp(r'\.0$'), '')}x';
                                                               return PopupMenuItem<double>(
                                                                 value: speed,

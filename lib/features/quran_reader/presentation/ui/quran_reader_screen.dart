@@ -134,6 +134,8 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
               surahId: widget.surahId,
               ayahNumber: initialAyah,
               page: initialPage,
+              isEndOfPage: false,
+              pageFraction: 0.0,
             );
       }
       _readerControlsNotifier.reset();

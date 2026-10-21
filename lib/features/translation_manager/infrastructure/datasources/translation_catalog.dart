@@ -107,7 +107,8 @@ class TranslationCatalog {
       sourceUrl: 'https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/fas-sayyedjalaloddi.json',
     ),
 
-    // 2. International (بین‌المللی / خارجی) - One per language
+    // 2. International (غیرفارسی / بین‌المللی) - کامنت‌شده بر اساس درخواست
+    /*
     TranslationEntity(
       id: 'en.sahih',
       name: 'English (Saheeh)',
@@ -269,5 +270,6 @@ class TranslationCatalog {
       languageCode: 'uz',
       sourceUrl: 'https://api.alquran.cloud/v1/quran/uz.sodik',
     ),
+    */
   ];
 }

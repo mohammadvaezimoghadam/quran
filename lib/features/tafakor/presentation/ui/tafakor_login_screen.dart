@@ -12,6 +12,7 @@ import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/tafakor_auth_controller.dart';
 import '../../domain/entities/tafakor_auth_state.dart';
@@ -64,13 +65,6 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final colorScheme = context.colorScheme;
-    final isDark = context.isDark;
-
-    final authState = ref.watch(tafakorAuthControllerProvider);
-    final controller = ref.read(tafakorAuthControllerProvider.notifier);
-
     ref.listen<TafakorAuthState>(tafakorAuthControllerProvider, (prev, next) {
       if (prev?.isCodeSent != true && next.isCodeSent) {
         _listenForSms();
@@ -91,9 +85,19 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
       }
     });
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
+    final authState = ref.watch(tafakorAuthControllerProvider);
+    final controller = ref.read(tafakorAuthControllerProvider.notifier);
+
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: Builder(
+        builder: (context) {
+          final colors = context.colors;
+          final colorScheme = context.colorScheme;
+
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
         extendBodyBehindAppBar: true,
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -128,9 +132,7 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
                 child: Container(
-                  color: isDark
-                      ? Colors.black.withValues(alpha: 0.35)
-                      : Colors.white.withValues(alpha: 0.20),
+                  color: Colors.white.withValues(alpha: 0.20),
                 ),
               ),
             ),
@@ -201,11 +203,13 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
 
                       // Step 1: Phone input
                       if (!authState.isCodeSent) ...[
-                        _buildPhoneStep(context, authState, controller, colorScheme, colors, isDark),
+                        _buildPhoneStep(context, authState, controller, colorScheme, colors),
                       ] else ...[
                         // Step 2: OTP input
-                        _buildOtpStep(context, authState, controller, colorScheme, colors, isDark),
+                        _buildOtpStep(context, authState, controller, colorScheme, colors),
                       ],
+                      28.vSpace,
+                      _buildPrivacyNotice(context, colorScheme),
                     ],
                   ),
                 ),
@@ -213,6 +217,9 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
             ),
           ],
         ),
+      ),
+    );
+        },
       ),
     );
   }
@@ -223,7 +230,6 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
     TafakorAuthController controller,
     ColorScheme colorScheme,
     dynamic colors,
-    bool isDark,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -275,7 +281,7 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
+            foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
@@ -303,6 +309,7 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
         ),
@@ -316,7 +323,6 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
     TafakorAuthController controller,
     ColorScheme colorScheme,
     dynamic colors,
-    bool isDark,
   ) {
     final minutes = (state.resendCountdown ~/ 60).toString().padLeft(2, '0');
     final seconds = (state.resendCountdown % 60).toString().padLeft(2, '0');
@@ -415,7 +421,7 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
+            foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
@@ -425,7 +431,7 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
           onPressed: state.isLoading
               ? null
               : () {
-                  HapticFeedback.lightImpact();
+                  HapticFeedback.mediumImpact();
                   controller.verifyOtp(_otpController.text);
                 },
           child: state.isLoading
@@ -443,10 +449,103 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPrivacyNotice(BuildContext context, ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Center(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => _showPrivacyPolicyDialog(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Text.rich(
+              TextSpan(
+                text: 'ورود به تفکر به منزله پذیرش ',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11.5,
+                  height: 1.5,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+                ),
+                children: [
+                  TextSpan(
+                    text: 'قوانین و حریم خصوصی',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                      decoration: TextDecoration.underline,
+                      decorationColor: colorScheme.primary.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const TextSpan(text: ' است.'),
+                ],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPrivacyPolicyDialog(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    HapticFeedback.lightImpact();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Text(
+            'سیاست حریم خصوصی و امنیت',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          content: Text(
+            'شماره تلفن همراه شما صرفاً جهت احراز هویت، ورود امن و همگام‌سازی ابری یادداشت‌ها و دفاتر تدبر در پلتفرم تفکر استفاده می‌شود.\n\n'
+            'ما متعهد به حفظ محرمانگی و حریم خصوصی شما هستیم و اطلاعات شما هرگز در اختیار شخص یا سرویس ثالثی قرار نخواهد گرفت.',
+            textAlign: TextAlign.justify,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 13,
+              height: 1.65,
+              color: colorScheme.onSurface.withValues(alpha: 0.85),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                'متوجه شدم',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

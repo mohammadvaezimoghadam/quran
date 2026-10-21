@@ -111,6 +111,7 @@ class _ManageLabelsBottomSheetState
                       child: const Text(
                         'حذف برچسب',
                         style: TextStyle(
+                          color: Colors.white,
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 13.5,
                           fontWeight: FontWeight.bold,

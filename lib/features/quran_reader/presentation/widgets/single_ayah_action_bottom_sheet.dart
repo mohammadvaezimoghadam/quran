@@ -27,7 +27,6 @@ import '../../application/controllers/quran_display_settings_controller.dart';
 import '../../application/controllers/quran_reader_controller.dart';
 import '../../application/controllers/selected_ayah_action_provider.dart';
 import '../../domain/entities/ayah_entity.dart';
-import '../../../tafsir_manager/presentation/widgets/tafsir_selection_dialog.dart';
 import '../utils/reciter_download_helper.dart';
 import 'word_by_word_bottom_sheet.dart';
 
@@ -196,35 +195,28 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                   ),
                   8.hSpace,
 
-                  // Action 2: Tafsir (تفسیر آیه)
+                  // Action 2: Tafsir (تفسیر آیه - موقتاً غیرفعال با برچسب به‌زودی)
                   Expanded(
                     child: _buildActionButton(
                       context: context,
                       isDark: isDark,
                       cardBg: cardBg,
                       borderColor: borderColor,
+                      badgeText: 'به‌زودی',
                       iconWidget: SvgPicture.asset(
                         'assets/icons/ic_tafsir.svg',
                         width: 22,
                         height: 22,
                         fit: BoxFit.contain,
                         colorFilter: ColorFilter.mode(
-                          isDark ? Colors.white70 : Colors.black87,
+                          isDark ? Colors.white38 : Colors.black38,
                           BlendMode.srcIn,
                         ),
                       ),
                       label: 'تفسیر',
                       onTap: () {
-                        final navContext = rootNavigatorKey.currentContext ?? context;
-                        final container = ProviderScope.containerOf(navContext, listen: false);
-                        Navigator.of(context).pop();
-                        container.read(selectedAyahActionProvider.notifier).clearSelection();
-
-                        TafsirSelectionDialog.show(
-                          navContext,
-                          ayah: ayah,
-                          surahName: cleanSurahName,
-                        );
+                        HapticFeedback.lightImpact();
+                        AppSnackBar.showInfo(context, 'بخش تفسیر به زودی در دسترس قرار خواهد گرفت.');
                       },
                     ),
                   ),
@@ -453,6 +445,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
     Color? iconColor,
     required String label,
     required VoidCallback onTap,
+    String? badgeText,
   }) {
     return Container(
       height: 64,
@@ -467,34 +460,66 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (iconWidget != null)
-                  SizedBox(
-                    width: 21,
-                    height: 21,
-                    child: Center(child: iconWidget),
-                  )
-                else if (icon != null)
-                  Icon(icon, size: 21, color: iconColor),
-                5.vSpace,
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white70 : const Color(0xFF4A463F),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (iconWidget != null)
+                        SizedBox(
+                          width: 21,
+                          height: 21,
+                          child: Center(child: iconWidget),
+                        )
+                      else if (icon != null)
+                        Icon(icon, size: 21, color: iconColor),
+                      5.vSpace,
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white70 : const Color(0xFF4A463F),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              if (badgeText != null)
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.5),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2C3238) : const Color(0xFFE8ECEF),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.black12,
+                        width: 0.6,
+                      ),
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 8.0,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white70 : const Color(0xFF555555),
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -548,7 +573,7 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
               Positioned.fill(
                 child: Container(
                   color: isDark
-                      ? Colors.black.withValues(alpha: 0.15)
+                      ? Colors.black.withValues(alpha: 0.35)
                       : Colors.white.withValues(alpha: 0.30),
                 ),
               ),
@@ -560,11 +585,12 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.primary,
+                    color: isDark ? Colors.white : AppColors.primary,
                     letterSpacing: 0.5,
                     shadows: [
                       Shadow(
-                        color: Colors.white.withValues(alpha: 0.95),
+                        color: (isDark ? Colors.black : Colors.white)
+                            .withValues(alpha: 0.95),
                         blurRadius: 3,
                         offset: const Offset(0, 1),
                       ),

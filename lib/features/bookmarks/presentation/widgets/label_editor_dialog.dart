@@ -193,6 +193,7 @@ class _LabelEditorDialogState extends ConsumerState<LabelEditorDialog> {
                       child: Text(
                         _isEditing ? 'ذخیره تغییرات' : 'ثبت برچسب',
                         style: const TextStyle(
+                          color: Colors.white,
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,

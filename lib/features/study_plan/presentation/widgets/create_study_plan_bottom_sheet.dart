@@ -230,6 +230,9 @@ class _CreateStudyPlanBottomSheetState
                 ),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: errorText != null
                     ? null
                     : () {
@@ -244,9 +247,10 @@ class _CreateStudyPlanBottomSheetState
                           });
                         }
                       },
-                child: Text(
+                child: const Text(
                   'تأیید',
                   style: TextStyle(
+                    color: Colors.white,
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -391,6 +395,9 @@ class _CreateStudyPlanBottomSheetState
                 ),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: errorText != null
                     ? null
                     : () {
@@ -407,9 +414,10 @@ class _CreateStudyPlanBottomSheetState
                           });
                         }
                       },
-                child: Text(
+                child: const Text(
                   'تأیید',
                   style: TextStyle(
+                    color: Colors.white,
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -564,7 +572,8 @@ class _CreateStudyPlanBottomSheetState
                 widget.initialPlan != null
                     ? 'ذخیره تغییرات'
                     : 'ایجاد برنامه مطالعه',
-                style: TextStyle(
+                style: const TextStyle(
+                  color: Colors.white,
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 14.5,
                   fontWeight: FontWeight.bold,

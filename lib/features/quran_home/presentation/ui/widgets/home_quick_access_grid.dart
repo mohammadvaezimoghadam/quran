@@ -6,8 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../../../../common/widgets/app_snackbar.dart';
 import '../../../../main_navigation/application/tab_navigation_controller.dart';
-import '../../../../tafsir_manager/presentation/widgets/tafsir_manager_bottom_sheet.dart';
 import '../../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
 /// Modern Asymmetric Action Hub:
@@ -127,19 +127,20 @@ class HomeQuickAccessGrid extends ConsumerWidget {
         ),
         8.hSpace,
 
-        // 3. Secondary Companion Card: "تفسیر"
+        // 3. Secondary Companion Card: "تفسیر" (موقتاً غیرفعال - به‌زودی)
         Expanded(
           flex: 2,
           child: _buildSecondaryCard(
             context: context,
             title: 'تفسیر',
+            badgeText: 'به‌زودی',
             iconWidget: SvgPicture.asset(
               'assets/icons/ic_tafsir.svg',
               width: 38,
               height: 38,
               fit: BoxFit.contain,
               colorFilter: ColorFilter.mode(
-                primaryMint,
+                primaryMint.withValues(alpha: 0.6),
                 BlendMode.srcIn,
               ),
             ),
@@ -148,7 +149,7 @@ class HomeQuickAccessGrid extends ConsumerWidget {
             borderColor: cardBorderColor,
             onTap: () {
               HapticFeedback.lightImpact();
-              TafsirManagerBottomSheet.show(context);
+              AppSnackBar.showInfo(context, 'بخش تفسیر به زودی در دسترس قرار خواهد گرفت.');
             },
           ),
         ),
@@ -164,6 +165,7 @@ class HomeQuickAccessGrid extends ConsumerWidget {
     required Color bgColor,
     required Color borderColor,
     required VoidCallback onTap,
+    String? badgeText,
   }) {
     return Container(
       height: 80,
@@ -190,36 +192,68 @@ class HomeQuickAccessGrid extends ConsumerWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 5.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 38,
-                  height: 38,
-                  child: Center(
-                    child: iconWidget,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 5.0),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 38,
+                        height: 38,
+                        child: Center(
+                          child: iconWidget,
+                        ),
+                      ),
+                      2.vSpace,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF2C2C2C),
+                            height: 1.1,
+                          ),
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                2.vSpace,
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF2C2C2C),
-                      height: 1.1,
+              ),
+              if (badgeText != null)
+                Positioned(
+                  top: 5,
+                  left: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2C3238) : const Color(0xFFE8ECEF),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.black12,
+                        width: 0.6,
+                      ),
                     ),
-                    maxLines: 1,
+                    child: Text(
+                      badgeText,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white70 : const Color(0xFF555555),
+                        height: 1.1,
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

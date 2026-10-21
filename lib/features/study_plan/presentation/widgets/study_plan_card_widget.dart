@@ -185,6 +185,7 @@ class StudyPlanCardWidget extends ConsumerWidget {
             child: Text(
               'حذف',
               style: TextStyle(
+                color: Colors.white,
                 fontFamily: AppTypography.fontFamily,
                 fontSize: 13.5,
                 fontWeight: FontWeight.bold,

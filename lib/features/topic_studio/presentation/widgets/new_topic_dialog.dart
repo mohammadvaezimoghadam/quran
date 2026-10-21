@@ -211,7 +211,7 @@ class _NewTopicDialogState extends ConsumerState<NewTopicDialog> {
                             return ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorScheme.primary,
-                                foregroundColor: colorScheme.onPrimary,
+                                foregroundColor: Colors.white,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
@@ -221,7 +221,10 @@ class _NewTopicDialogState extends ConsumerState<NewTopicDialog> {
                               onPressed: canSubmit ? _submit : null,
                               child: Text(
                                 widget.isEditing ? 'ذخیره' : 'ایجاد موضوع',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             );
                           },

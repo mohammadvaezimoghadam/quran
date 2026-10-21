@@ -133,6 +133,7 @@ abstract class BazaarErrorDialogHelper {
                       child: FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: dialogCtx.colorScheme.primary,
+                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -165,6 +166,7 @@ abstract class BazaarErrorDialogHelper {
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),

@@ -72,6 +72,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     final savedTranslationReciterId = prefs.getInt('selected_translation_reciter_id');
     final savedModeIndex = prefs.getInt('audio_playback_mode');
     final savedSpeed = prefs.getDouble('audio_playback_speed') ?? 1.0;
+    final savedVolume = prefs.getDouble('audio_playback_volume') ?? 0.70;
 
     AudioPlaybackMode initialMode = AudioPlaybackMode.onlyQuran;
     if (savedModeIndex != null && savedModeIndex >= 0 && savedModeIndex < AudioPlaybackMode.values.length) {
@@ -81,6 +82,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     if (savedSpeed != 1.0) {
       ref.read(audioPlayerServiceProvider).setSpeed(savedSpeed);
     }
+    ref.read(audioPlayerServiceProvider).setVolume(savedVolume);
 
     final result = await repo.getAllReciters();
     result.when(
@@ -115,6 +117,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
             selectedTranslationReciter: defaultTranslationReciter,
             playbackMode: initialMode,
             speed: savedSpeed,
+            volume: savedVolume,
           );
           _enforceFreePlaybackDefaults();
         }
@@ -653,9 +656,8 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     try {
       final audioService = ref.read(audioPlayerServiceProvider);
       await audioService.play(audioSourceToPlay);
-      if (state.speed != 1.0) {
-        await audioService.setSpeed(state.speed);
-      }
+      await audioService.setSpeed(state.speed);
+      await audioService.setVolume(state.volume);
     } catch (e) {
       _isTransitioningTrack = false;
       await stop();
@@ -842,7 +844,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     _isTransitioningTrack = false;
     final audioService = ref.read(audioPlayerServiceProvider);
     await audioService.stop();
-    await audioService.setVolume(1.0);
+    await audioService.setVolume(state.volume);
     
     // Explicitly tell the Android MediaSession (AudioHandler) to stop and dismiss the notification
     await ref.read(quranAudioHandlerProvider).stop();
@@ -927,15 +929,24 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     await audioService.setSpeed(speed);
   }
 
-  /// Cycle through standard playback speeds (1.0 -> 1.25 -> 1.5 -> 0.75 -> 1.0)
+  /// Cycle through standard playback speeds (1.0 -> 1.25 -> 1.5 -> 0.75 -> 0.85 -> 1.0)
   Future<void> cyclePlaybackSpeed() async {
-    const speeds = [0.75, 1.0, 1.25, 1.5];
+    const speeds = [0.75, 0.85, 1.0, 1.25, 1.5];
     final currentSpeed = state.speed;
-    int currentIndex = speeds.indexWhere((s) => (s - currentSpeed).abs() < 0.05);
+    int currentIndex = speeds.indexWhere((s) => (s - currentSpeed).abs() < 0.03);
     if (currentIndex == -1) {
-      currentIndex = 1; // default to 1.0
+      currentIndex = 2; // default to 1.0
     }
     final nextIndex = (currentIndex + 1) % speeds.length;
     await setPlaybackSpeed(speeds[nextIndex]);
+  }
+
+  /// Change audio playback volume for Quran recitation & translation (0.0 to 1.0)
+  Future<void> setVolume(double volume) async {
+    final clamped = volume.clamp(0.0, 1.0);
+    state = state.copyWith(volume: clamped);
+    ref.read(preferencesServiceProvider).setDouble('audio_playback_volume', clamped);
+    final audioService = ref.read(audioPlayerServiceProvider);
+    await audioService.setVolume(clamped);
   }
 }

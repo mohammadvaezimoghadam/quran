@@ -1148,6 +1148,7 @@ class _SurahListItem extends ConsumerWidget {
                       child: FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: colorScheme.error,
+                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -1180,6 +1181,7 @@ class _SurahListItem extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),

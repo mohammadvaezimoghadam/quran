@@ -244,6 +244,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                               child: const Text(
                                 'اتصال و ورود',
                                 style: TextStyle(
+                                  color: Colors.white,
                                   fontFamily: AppTypography.fontFamily,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -364,7 +365,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
-                          child: const Text('تلاش مجدد', style: TextStyle(fontFamily: AppTypography.fontFamily)),
+                          child: const Text('تلاش مجدد', style: TextStyle(color: Colors.white, fontFamily: AppTypography.fontFamily)),
                         ),
                       ),
                     ],
@@ -1486,7 +1487,7 @@ class _SmartDeviceSettingsScreenState extends State<SmartDeviceSettingsScreen>
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                     ),
-                                    child: const Text('ریست برد', style: TextStyle(fontFamily: AppTypography.fontFamily)),
+                                    child: const Text('ریست برد', style: TextStyle(color: Colors.white, fontFamily: AppTypography.fontFamily)),
                                   ),
                                 ),
                               ],

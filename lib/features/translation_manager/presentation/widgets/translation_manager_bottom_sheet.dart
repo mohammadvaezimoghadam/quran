@@ -120,18 +120,19 @@ class _TranslationManagerBottomSheetState
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           onPressed: () => Navigator.of(ctx).pop(true),
-                          child: Text(
+                          child: const Text(
                             'دانلود',
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
+                              color: Colors.white,
                             ),
                           ),
                         ),

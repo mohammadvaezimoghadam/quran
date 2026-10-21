@@ -135,19 +135,6 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
           totalAyahs: state.ayahs.length,
         );
 
-        // Detect visible items on screen to know if end of page has been scrolled to
-        int maxVisibleIndex = effectiveReadingIndex;
-        for (final p in positions) {
-          if (p.itemTrailingEdge > topCutoff && p.itemLeadingEdge < 0.95) {
-            if (p.index > maxVisibleIndex) {
-              maxVisibleIndex = p.index;
-            }
-          }
-        }
-        final maxVisibleAyah = (maxVisibleIndex >= 0 && maxVisibleIndex < state.ayahs.length)
-            ? state.ayahs[maxVisibleIndex]
-            : readingAyah;
-
         // Check if the reading position has actually reached the end of this page/surah
         final isNextAyahOnNextPage = effectiveReadingIndex + 1 < state.ayahs.length &&
             state.ayahs[effectiveReadingIndex + 1].page != readingAyah.page;
@@ -158,21 +145,16 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                     readingAyah.page != null &&
                     kStaticQuranSurahs[widget.surahId].startPage > readingAyah.page!));
 
-        final isNextPageVisible = maxVisibleAyah.page != null &&
-            readingAyah.page != null &&
-            maxVisibleAyah.page! > readingAyah.page!;
+        final isLastAyahOfPage = isNextAyahOnNextPage || isSurahEndingPage;
+        final isEndOfPage = _hasUserScrolled && (isLastAyahOfPage || (_isAtScrollBottom && isLastAyahOfSurah));
 
-        final isLastAyahOfPage = isNextAyahOnNextPage || isSurahEndingPage || isNextPageVisible;
-        final isEndOfPage = (_hasUserScrolled && isLastAyahOfPage) || isNextPageVisible;
-
-        // Calculate live ayah-level fraction on this page
+        // Calculate live ayah-level fraction on this page based strictly on reading position
         final ayahsOnThisPage = state.ayahs.where((a) => a.page == readingAyah.page).toList();
-        final ayahsReadOnThisPage = isNextPageVisible
-            ? ayahsOnThisPage.length
-            : ayahsOnThisPage.where((a) => a.ayahNumber <= readingAyah.ayahNumber).length;
-        final pageFraction = ayahsOnThisPage.isNotEmpty
+        final ayahsReadOnThisPage = ayahsOnThisPage.where((a) => a.ayahNumber <= readingAyah.ayahNumber).length;
+        final double rawPageFraction = ayahsOnThisPage.isNotEmpty
             ? (ayahsReadOnThisPage / ayahsOnThisPage.length).clamp(0.0, 1.0)
             : 0.0;
+        final pageFraction = isEndOfPage ? 1.0 : rawPageFraction;
 
         if (ref.read(isStudyPlanSessionActiveProvider)) {
           ref.read(studyPlanControllerProvider.notifier).recordProgress(

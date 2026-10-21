@@ -103,61 +103,80 @@ class QuickAccessPickerBottomSheet extends ConsumerWidget {
                             height: 44,
                             clipBehavior: Clip.antiAlias,
                             decoration: BoxDecoration(
-                              color: colorScheme.primary
-                                  .withValues(alpha: isDark ? 0.25 : 0.12),
                               borderRadius: BorderRadius.circular(AppDimens.radiusDefault),
-                              image: isTopic
-                                  ? DecorationImage(
-                                      image: const AssetImage(AppConstants.splashBgAsset),
-                                      fit: BoxFit.cover,
-                                      colorFilter: isDark
-                                          ? ColorFilter.mode(
-                                              Colors.black.withValues(alpha: 0.45),
-                                              BlendMode.darken,
-                                            )
-                                          : null,
-                                    )
+                              border: Border.all(
+                                color: isTopic
+                                    ? (isDark
+                                        ? const Color(0xFF52C498).withValues(alpha: 0.35)
+                                        : AppColors.primary.withValues(alpha: 0.22))
+                                    : (isDark
+                                        ? Colors.white.withValues(alpha: 0.08)
+                                        : Colors.black.withValues(alpha: 0.06)),
+                                width: 0.8,
+                              ),
+                              boxShadow: isTopic
+                                  ? [
+                                      BoxShadow(
+                                        color: isDark
+                                            ? Colors.black.withValues(alpha: 0.20)
+                                            : AppColors.primary.withValues(alpha: 0.08),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ]
                                   : null,
                             ),
                             child: isTopic
-                                ? Center(
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        ImageFiltered(
-                                          imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 5),
-                                          child: Container(
-                                            width: 32,
-                                            height: 16,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(8),
-                                              color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.90),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.90),
-                                                  blurRadius: 8,
-                                                  spreadRadius: 2,
-                                                ),
-                                              ],
-                                            ),
+                                ? Stack(
+                                    fit: StackFit.expand,
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Positioned.fill(
+                                        child: ImageFiltered(
+                                          imageFilter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                                          child: Image.asset(
+                                            AppConstants.splashBgAsset,
+                                            fit: BoxFit.cover,
                                           ),
                                         ),
-                                        Text(
+                                      ),
+                                      Positioned.fill(
+                                        child: Container(
+                                          color: isDark
+                                              ? Colors.black.withValues(alpha: 0.35)
+                                              : Colors.white.withValues(alpha: 0.30),
+                                        ),
+                                      ),
+                                      Center(
+                                        child: Text(
                                           'تفکر',
                                           style: TextStyle(
                                             fontFamily: AppTypography.fontFamily,
-                                            fontSize: 11,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.w900,
                                             color: isDark ? Colors.white : AppColors.primary,
+                                            shadows: [
+                                              Shadow(
+                                                color: (isDark ? Colors.black : Colors.white)
+                                                    .withValues(alpha: 0.95),
+                                                blurRadius: 3,
+                                                offset: const Offset(0, 1),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   )
-                                : Icon(
-                                    tool.iconData,
-                                    color: colorScheme.primary,
-                                    size: 22,
+                                : Container(
+                                    color: colorScheme.primary.withValues(alpha: isDark ? 0.25 : 0.12),
+                                    child: Center(
+                                      child: Icon(
+                                        tool.iconData,
+                                        color: colorScheme.primary,
+                                        size: 22,
+                                      ),
+                                    ),
                                   ),
                           ),
                           14.hSpace,

@@ -677,4 +677,144 @@ void main() {
     containerWidget = tester.widget(animatedContainerFinder);
     expect(containerWidget.constraints?.maxHeight, equals(KhatmReaderBar.barHeight));
   });
+
+  test('Single-page session (fromUnit == toUnit) does NOT auto-complete on initial open, only when endOfPage is reached', () async {
+    final now = DateTime.now();
+    final plan = KhatmPlan(
+      id: 'khatm-single-page',
+      title: 'ختم تک صفحه‌ای',
+      unitType: KhatmUnitType.page,
+      rangeFrom: 5,
+      rangeTo: 5,
+      planningMode: KhatmPlanningMode.byUnitQuota,
+      sessionCount: 1,
+      quotaPerSession: 1,
+      cadence: KhatmCadence.daily,
+      startDateTime: now,
+      endDateTime: now,
+      sessions: [
+        KhatmSessionItem(
+          sessionIndex: 0,
+          fromUnit: 5,
+          toUnit: 5,
+          scheduledDate: now,
+          isCompleted: false,
+        ),
+      ],
+      createdAt: now,
+    );
+
+    final dataSource = InMemoryKhatmDataSource([plan]);
+    final container = ProviderContainer(
+      overrides: [
+        khatmLocalDataSourceProvider.overrideWithValue(dataSource),
+      ],
+    );
+
+    final subscription = container.listen(
+      khatmDetailControllerProvider('khatm-single-page'),
+      (_, _) {},
+    );
+
+    final controller =
+        container.read(khatmDetailControllerProvider('khatm-single-page').notifier);
+    await container.pump();
+
+    // 1. Initial entry to page 5 (isEndOfPage: false, pageFraction: 0.1): must NOT complete!
+    final res1 = await controller.recordReadingProgress(
+      sessionIndex: 0,
+      surahId: 2,
+      ayahNumber: 25,
+      page: 5,
+      pageFraction: 0.1,
+      isEndOfPage: false,
+    );
+    expect(res1, isFalse);
+    expect(container.read(khatmDetailControllerProvider('khatm-single-page')).plan!.sessions[0].isCompleted, isFalse);
+
+    // 2. User finishes reading page 5 (isEndOfPage: true): must complete!
+    final res2 = await controller.recordReadingProgress(
+      sessionIndex: 0,
+      surahId: 2,
+      ayahNumber: 29,
+      page: 5,
+      pageFraction: 1.0,
+      isEndOfPage: true,
+    );
+    expect(res2, isTrue);
+    expect(container.read(khatmDetailControllerProvider('khatm-single-page')).plan!.sessions[0].isCompleted, isTrue);
+
+    subscription.close();
+    container.dispose();
+  });
+
+  test('Single-surah session does NOT auto-complete on initial open, only when user finishes reading it', () async {
+    final now = DateTime.now();
+    final plan = KhatmPlan(
+      id: 'khatm-single-surah',
+      title: 'ختم سوره فاتحه',
+      unitType: KhatmUnitType.surah,
+      rangeFrom: 1,
+      rangeTo: 1,
+      planningMode: KhatmPlanningMode.byUnitQuota,
+      sessionCount: 1,
+      quotaPerSession: 1,
+      cadence: KhatmCadence.daily,
+      startDateTime: now,
+      endDateTime: now,
+      sessions: [
+        KhatmSessionItem(
+          sessionIndex: 0,
+          fromUnit: 1,
+          toUnit: 1,
+          scheduledDate: now,
+          isCompleted: false,
+        ),
+      ],
+      createdAt: now,
+    );
+
+    final dataSource = InMemoryKhatmDataSource([plan]);
+    final container = ProviderContainer(
+      overrides: [
+        khatmLocalDataSourceProvider.overrideWithValue(dataSource),
+      ],
+    );
+
+    final subscription = container.listen(
+      khatmDetailControllerProvider('khatm-single-surah'),
+      (_, _) {},
+    );
+
+    final controller =
+        container.read(khatmDetailControllerProvider('khatm-single-surah').notifier);
+    await container.pump();
+
+    // 1. Initial entry to Surah 1 at ayah 1 (isEndOfPage: false): must NOT complete!
+    final res1 = await controller.recordReadingProgress(
+      sessionIndex: 0,
+      surahId: 1,
+      ayahNumber: 1,
+      page: 1,
+      pageFraction: 0.14,
+      isEndOfPage: false,
+    );
+    expect(res1, isFalse);
+    expect(container.read(khatmDetailControllerProvider('khatm-single-surah')).plan!.sessions[0].isCompleted, isFalse);
+
+    // 2. User reaches last ayah 7 with isEndOfPage: true: must complete!
+    final res2 = await controller.recordReadingProgress(
+      sessionIndex: 0,
+      surahId: 1,
+      ayahNumber: 7,
+      page: 1,
+      pageFraction: 1.0,
+      isEndOfPage: true,
+    );
+    expect(res2, isTrue);
+    expect(container.read(khatmDetailControllerProvider('khatm-single-surah')).plan!.sessions[0].isCompleted, isTrue);
+
+    subscription.close();
+    container.dispose();
+  });
 }

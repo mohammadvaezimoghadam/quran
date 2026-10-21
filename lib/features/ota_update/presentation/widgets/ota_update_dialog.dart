@@ -388,6 +388,7 @@ class OtaUpdateDialog extends ConsumerWidget {
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),

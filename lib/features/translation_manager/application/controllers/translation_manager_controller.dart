@@ -38,8 +38,9 @@ class TranslationManagerController extends _$TranslationManagerController {
     final activeIdResult = await repository.getActiveTranslation();
     final activeId = activeIdResult.tryGetSuccess();
 
-    String? initialActiveId = activeId ?? 'fa.makarem';
-    if (activeId == null) {
+    final isExisting = translations.any((t) => t.id == activeId);
+    String? initialActiveId = (activeId != null && isExisting) ? activeId : 'fa.makarem';
+    if (activeId == null || !isExisting) {
       await repository.setActiveTranslation('fa.makarem');
     }
 

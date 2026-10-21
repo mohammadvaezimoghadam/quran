@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,6 +38,7 @@ class TafakorEditorScreen extends ConsumerStatefulWidget {
 class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
   late final InDrawerEditorController _editorController;
   late final TextEditingController _inputController;
+  late final UndoHistoryController _undoController;
   late final FocusNode _inputFocusNode;
   late final ScrollController _scrollController;
   bool _isExpanded = false;
@@ -48,6 +48,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     super.initState();
     _editorController = ref.read(inDrawerEditorControllerProvider.notifier);
     _inputController = TextEditingController();
+    _undoController = UndoHistoryController();
     _inputFocusNode = FocusNode();
     _scrollController = ScrollController();
     _inputController.addListener(() {
@@ -58,6 +59,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
   @override
   void dispose() {
     _inputController.dispose();
+    _undoController.dispose();
     _inputFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -190,57 +192,115 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
         },
         child: Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: _isExpanded
-              ? null
-              : AppBar(
-            backgroundColor: colors.cardBackground,
+          appBar: AppBar(
+            backgroundColor: _isExpanded
+                ? (isDark ? const Color(0xFF121212) : Theme.of(context).scaffoldBackgroundColor)
+                : colors.cardBackground,
             elevation: 0,
+            scrolledUnderElevation: 0,
             leading: IconButton(
               tooltip: 'بازگشت',
+              splashRadius: 22,
               icon: Icon(
                 CupertinoIcons.chevron_forward,
+                size: 24,
                 color: colorScheme.onSurface,
               ),
               onPressed: () {
-                ref.read(inDrawerEditorControllerProvider.notifier).clearAll();
-                Navigator.of(context).maybePop();
+                if (_isExpanded) {
+                  setState(() => _isExpanded = false);
+                } else {
+                  ref.read(inDrawerEditorControllerProvider.notifier).clearAll();
+                  Navigator.of(context).maybePop();
+                }
               },
             ),
-          centerTitle: true,
-          title: Text(
-            'دفتر تفکر',
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          actions: [
-            if (_inputController.text.trim().isNotEmpty) ...[
-              IconButton(
-                tooltip: 'پاک‌سازی متن',
-                icon: Icon(
-                  CupertinoIcons.trash,
-                  size: 19,
-                  color: colorScheme.error.withValues(alpha: 0.85),
-                ),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  _inputController.clear();
-                },
+            centerTitle: true,
+            title: Text(
+              _isExpanded ? 'یادداشت جدید' : 'دفتر تفکر',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 16.5,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
               ),
-            ],
-            const SizedBox(width: 4),
-          ],
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(0.8),
-            child: Container(
-              height: 0.8,
-              color: colors.cardBorder,
             ),
+            actions: [
+              if (_isExpanded) ...[
+                ValueListenableBuilder<UndoHistoryValue>(
+                  valueListenable: _undoController,
+                  builder: (context, value, _) {
+                    final canUndo = value.canUndo;
+                    final canRedo = value.canRedo;
+
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: 'واگرد (Undo)',
+                          icon: Icon(
+                            Icons.undo_rounded,
+                            size: 23,
+                            color: canUndo
+                                ? (isDark ? Colors.white70 : const Color(0xFF2C3E50))
+                                : (isDark ? Colors.white24 : Colors.black26),
+                          ),
+                          onPressed: canUndo
+                              ? () {
+                                  HapticFeedback.selectionClick();
+                                  _undoController.undo();
+                                }
+                              : null,
+                        ),
+                        IconButton(
+                          tooltip: 'تکرار (Redo)',
+                          icon: Icon(
+                            Icons.redo_rounded,
+                            size: 23,
+                            color: canRedo
+                                ? (isDark ? Colors.white70 : const Color(0xFF2C3E50))
+                                : (isDark ? Colors.white24 : Colors.black26),
+                          ),
+                          onPressed: canRedo
+                              ? () {
+                                  HapticFeedback.selectionClick();
+                                  _undoController.redo();
+                                }
+                              : null,
+                        ),
+                        4.hSpace,
+                      ],
+                    );
+                  },
+                ),
+              ] else ...[
+                if (_inputController.text.trim().isNotEmpty) ...[
+                  IconButton(
+                    tooltip: 'پاک‌سازی متن',
+                    icon: Icon(
+                      CupertinoIcons.trash,
+                      size: 19,
+                      color: colorScheme.error.withValues(alpha: 0.85),
+                    ),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _inputController.clear();
+                    },
+                  ),
+                ],
+                const SizedBox(width: 4),
+              ],
+            ],
+            bottom: _isExpanded
+                ? null
+                : PreferredSize(
+                    preferredSize: const Size.fromHeight(0.8),
+                    child: Container(
+                      height: 0.8,
+                      color: colors.cardBorder,
+                    ),
+                  ),
           ),
-        ),
         body: _isExpanded
             ? _buildFullScreenComposer(
                 context, isDark, colorScheme, colors, editorState)
@@ -648,84 +708,51 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     dynamic colors,
     InDrawerEditorState editorState,
   ) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final text = _inputController.text;
-        final hasText = text.trim().isNotEmpty;
-        final canSend = hasText || editorState.isNotEmpty;
+    final text = _inputController.text;
+    final hasText = text.trim().isNotEmpty;
+    final canSend = hasText || editorState.isNotEmpty;
 
-        // Detect if text spans to a second line (newline or character wrap)
-        bool isMultiLine = false;
-        if (text.isNotEmpty) {
-          if (text.contains('\n')) {
-            isMultiLine = true;
-          } else {
-            final availableWidth = constraints.maxWidth - 40;
-            if (availableWidth > 60) {
-              final painter = TextPainter(
-                text: TextSpan(
-                  text: text,
-                  style: const TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 15.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                textDirection: TextDirection.rtl,
-                maxLines: 2,
-              )..layout(maxWidth: availableWidth);
-              isMultiLine = painter.computeLineMetrics().length > 1;
-            } else {
-              isMultiLine = text.trim().length > 35;
-            }
-          }
-        }
-        final bool showExpandIcon = isMultiLine || hasText;
-
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF222226) : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.18)
-                      : const Color(0xFFE5E5EA),
-                  width: 1.3,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.50)
-                        : const Color(0xFF000000).withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 4),
-                  ),
-                  if (!isDark)
-                    BoxShadow(
-                      color: const Color(0xFF000000).withValues(alpha: 0.03),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                ],
-              ),
-              child: _buildCompactContent(
-                context,
-                isDark,
-                colorScheme,
-                canSend,
-                showExpandIcon,
-                editorState,
-              ),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF222226) : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.18)
+                  : const Color(0xFFE5E5EA),
+              width: 1.3,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.50)
+                    : const Color(0xFF000000).withValues(alpha: 0.08),
+                blurRadius: 16,
+                spreadRadius: 1,
+                offset: const Offset(0, 4),
+              ),
+              if (!isDark)
+                BoxShadow(
+                  color: const Color(0xFF000000).withValues(alpha: 0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+            ],
           ),
-        );
-      },
+          child: _buildCompactContent(
+            context,
+            isDark,
+            colorScheme,
+            canSend,
+            editorState,
+          ),
+        ),
+      ),
     );
   }
 
@@ -735,27 +762,13 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     bool isDark,
     ColorScheme colorScheme,
     bool canSend,
-    bool showExpandIcon,
     InDrawerEditorState editorState,
   ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Top row: Expand button appears at top right when text reaches line 2
-        if (showExpandIcon) ...[
-          Align(
-            alignment: AlignmentDirectional.topStart,
-            child: _buildExpandCollapseButton(
-              isDark: isDark,
-              colorScheme: colorScheme,
-              isExpanded: false,
-            ),
-          ),
-          4.vSpace,
-        ],
-
-        // 1. Topmost row inside text field: 1:1 minimal image preview if attached
+        // 1. 1:1 minimal image preview if attached
         if (editorState.hasAttachedImage) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 2, 4, 8),
@@ -772,6 +785,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
           child: TextField(
             controller: _inputController,
             focusNode: _inputFocusNode,
+            undoController: _undoController,
             minLines: 1,
             maxLines: 5,
             keyboardType: TextInputType.multiline,
@@ -803,15 +817,25 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
 
         4.vSpace,
 
-        // 3. Action row UNDERNEATH the text field (دکمه‌های انتخاب عکس و ارسال)
+        // 3. Action row UNDERNEATH the text field (دکمه‌های انتخاب عکس، بزرگ‌نمایی و ارسال)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Circular photo picker icon button
-            _buildPhotoPickerButton(isDark, colorScheme),
+            // Left: Circular photo picker & Expand button
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildPhotoPickerButton(isDark, colorScheme),
+                8.hSpace,
+                _buildExpandCollapseButton(
+                  isDark: isDark,
+                  colorScheme: colorScheme,
+                ),
+              ],
+            ),
 
-            // Send button
+            // Right: Send button
             _buildSendButton(canSend, isDark, colorScheme),
           ],
         ),
@@ -819,8 +843,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     );
   }
 
-  /// Fullscreen ChatGPT-style Composer above the keyboard (no pixel overflow, pinned send button)
-  /// Expanded mode preserving the exact text field card style, positioned above keyboard
+  /// Fullscreen Telegram-style Composer (seamless canvas, no box or dividing border)
   Widget _buildFullScreenComposer(
     BuildContext context,
     bool isDark,
@@ -832,124 +855,101 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     final hasText = text.trim().isNotEmpty;
     final canSend = hasText || editorState.isNotEmpty;
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF222226) : Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.22)
-                  : const Color(0xFFE5E5EA),
-              width: 1.3,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.50)
-                    : const Color(0xFF000000).withValues(alpha: 0.12),
-                blurRadius: 24,
-                spreadRadius: 1,
-                offset: const Offset(0, 4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 1. Full-bleed, scrollable writing canvas
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => _inputFocusNode.requestFocus(),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
               ),
-              if (!isDark)
-                BoxShadow(
-                  color: const Color(0xFF000000).withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top row: Collapse button at top right (preserving exact button style)
-              Align(
-                alignment: AlignmentDirectional.topStart,
-                child: _buildExpandCollapseButton(
-                  isDark: isDark,
-                  colorScheme: colorScheme,
-                  isExpanded: true,
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Topmost row inside expanded text field: 1:1 minimal image preview if attached
+                  if (editorState.hasAttachedImage) ...[
+                    _buildMinimal1x1ImagePreview(editorState, isDark),
+                    14.vSpace,
+                  ],
 
-              4.vSpace,
-
-              // Topmost row inside expanded text field: 1:1 minimal image preview if attached
-              if (editorState.hasAttachedImage) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 2, 4, 8),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: _buildMinimal1x1ImagePreview(editorState, isDark),
-                  ),
-                ),
-              ],
-
-              // Large scrollable multiline TextField filling remaining flex space
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: TextField(
+                  // Large scrollable multiline TextField filling remaining flex space
+                  TextField(
                     controller: _inputController,
                     focusNode: _inputFocusNode,
+                    undoController: _undoController,
                     maxLines: null,
-                    expands: true,
-                    textAlignVertical: TextAlignVertical.top,
+                    minLines: 12,
                     keyboardType: TextInputType.multiline,
                     textInputAction: TextInputAction.newline,
                     textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.start,
                     style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w600,
-                      height: 1.7,
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w500,
+                      height: 1.75,
                       color: isDark ? Colors.white : const Color(0xFF1C1C1E),
                     ),
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      contentPadding:
-                          const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
                       hintText:
                           'متن، تأملات و یادداشت‌های خود را با خیال راحت بنویسید...',
                       hintTextDirection: TextDirection.rtl,
                       hintStyle: TextStyle(
                         fontFamily: AppTypography.fontFamily,
-                        fontSize: 15.0,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white38 : const Color(0xFF8E8E93),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w400,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.32)
+                            : const Color(0xFF8E8E93),
                       ),
                     ),
                   ),
-                ),
-              ),
-
-              4.vSpace,
-
-              // Bottom Action Row in Expanded Mode: Photo Button & Send Button (Always pinned & visible!)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildPhotoPickerButton(isDark, colorScheme),
-                  _buildSendButton(
-                    canSend,
-                    isDark,
-                    colorScheme,
-                    onPressedOverride: () {
-                      setState(() => _isExpanded = false);
-                      _handleSend();
-                    },
-                  ),
                 ],
+              ),
+            ),
+          ),
+        ),
+
+        // 2. Bottom Action Row in Expanded Mode: Photo Button & Send Button (Seamless, transparent, no white box)
+        Container(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 6,
+            bottom: MediaQuery.paddingOf(context).bottom > 0
+                ? (MediaQuery.paddingOf(context).bottom / 2) + 6
+                : 10,
+          ),
+          color: Colors.transparent,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildPhotoPickerButton(isDark, colorScheme),
+              _buildSendButton(
+                canSend,
+                isDark,
+                colorScheme,
+                onPressedOverride: () {
+                  setState(() => _isExpanded = false);
+                  _handleSend();
+                },
               ),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -1091,33 +1091,30 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     );
   }
 
-  /// Modern Expand / Collapse icon button (Cupertino)
+  /// Telegram-style Fullscreen Editor launcher button
   Widget _buildExpandCollapseButton({
     required bool isDark,
     required ColorScheme colorScheme,
-    required bool isExpanded,
   }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(20),
         onTap: () {
           HapticFeedback.lightImpact();
-          setState(() => _isExpanded = !_isExpanded);
-          if (_isExpanded) {
-            _inputFocusNode.requestFocus();
-          }
+          setState(() => _isExpanded = true);
+          _inputFocusNode.requestFocus();
         },
         child: Tooltip(
-          message: isExpanded ? 'کوچک‌نمایی' : 'بزرگ‌نمایی',
+          message: 'ویرایشگر تمام‌صفحه',
           child: Container(
-            width: 32,
-            height: 32,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
+              shape: BoxShape.circle,
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.10)
+                  ? Colors.white.withValues(alpha: 0.08)
                   : const Color(0xFFF2F2F7),
-              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.12)
@@ -1126,15 +1123,10 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
               ),
             ),
             child: Center(
-              child: Transform.rotate(
-                angle: math.pi / 4,
-                child: Icon(
-                  isExpanded
-                      ? Icons.unfold_less_rounded
-                      : Icons.unfold_more_rounded,
-                  size: 19,
-                  color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
-                ),
+              child: Icon(
+                Icons.unfold_more_rounded,
+                size: 20,
+                color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
               ),
             ),
           ),

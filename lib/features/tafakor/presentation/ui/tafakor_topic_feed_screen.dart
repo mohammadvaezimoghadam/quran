@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +21,7 @@ import '../../domain/entities/tafakor_topic.dart';
 import '../../domain/entities/tafakor_topic_admins_data.dart';
 import '../../infrastructure/datasources/tafakor_local_data_source.dart';
 import 'tafakor_login_screen.dart';
+import 'tafakor_post_editor_screen.dart';
 
 
 /// Screen displaying the paginated posts/notes feed of a Tafakor Topic,
@@ -55,7 +55,6 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
   bool _isSubmitting = false;
   String? _attachedMediaPath;
   bool _isAttachedVideo = false;
-  bool _isExpanded = false;
 
   void _onTextChanged() {
     if (mounted) setState(() {});
@@ -117,17 +116,15 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     }
   }
 
-  void _startEditingPost(TafakorPost post) {
-    setState(() {
-      _editingPost = post;
-      _textController.text = post.content;
-      _attachedMediaPath = null;
-      _isAttachedVideo = false;
-      _textController.selection = TextSelection.fromPosition(
-        TextPosition(offset: _textController.text.length),
-      );
-    });
-    _textFocusNode.requestFocus();
+  Future<void> _startEditingPost(TafakorPost post) async {
+    final updated = await TafakorPostEditorScreen.push(
+      context,
+      topic: widget.topic,
+      editingPost: post,
+    );
+    if (updated == true && mounted) {
+      _cancelEditing();
+    }
   }
 
   void _cancelEditing() {
@@ -136,7 +133,6 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
       _textController.clear();
       _attachedMediaPath = null;
       _isAttachedVideo = false;
-      _isExpanded = false;
     });
     _textFocusNode.unfocus();
   }
@@ -237,16 +233,9 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: PopScope(
-        canPop: !_isExpanded,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop && _isExpanded) {
-            setState(() => _isExpanded = false);
-          }
-        },
-        child: Scaffold(
-          backgroundColor: isDark ? const Color(0xFF121212) : theme.scaffoldBackgroundColor,
-          appBar: _isExpanded ? null : PreferredSize(
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF121212) : theme.scaffoldBackgroundColor,
+        appBar: PreferredSize(
           preferredSize: const Size.fromHeight(62.0),
           child: Container(
             padding: EdgeInsets.only(
@@ -357,57 +346,48 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
             ),
           ),
         ),
-        body: _isExpanded
-            ? _buildFullScreenComposer(
-                context,
-                controller,
-                isDark,
-                colors,
-                colorScheme,
-              )
-            : Column(
+        body: Column(
+          children: [
+            Expanded(
+              child: Stack(
                 children: [
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        _buildBody(
-                          context,
-                          state,
-                          controller,
-                          isDark,
-                          colors,
-                          colorScheme,
-                          currentPhone: currentPhone,
-                          isTopicOwner: isTopicOwner,
-                          isTopicAdmin: isTopicAdmin,
-                        ),
-                        if (_showScrollToBottom)
-                          Positioned(
-                            left: 16,
-                            bottom: 12,
-                            child: FloatingActionButton.small(
-                              onPressed: _scrollToBottom,
-                              backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.white,
-                              foregroundColor: isDark ? Colors.white : const Color(0xFF1C1C1E),
-                              elevation: 3,
-                              shape: const CircleBorder(),
-                              child: const Icon(CupertinoIcons.chevron_down, size: 20),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  _buildBottomInputBar(
+                  _buildBody(
                     context,
+                    state,
                     controller,
                     isDark,
                     colors,
                     colorScheme,
-                    canPostInTopic: canPostInTopic,
-                    isAuthenticated: isAuthenticated,
+                    currentPhone: currentPhone,
+                    isTopicOwner: isTopicOwner,
+                    isTopicAdmin: isTopicAdmin,
                   ),
+                  if (_showScrollToBottom)
+                    Positioned(
+                      left: 16,
+                      bottom: 12,
+                      child: FloatingActionButton.small(
+                        onPressed: _scrollToBottom,
+                        backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+                        foregroundColor: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                        elevation: 3,
+                        shape: const CircleBorder(),
+                        child: const Icon(CupertinoIcons.chevron_down, size: 20),
+                      ),
+                    ),
                 ],
               ),
+            ),
+            _buildBottomInputBar(
+              context,
+              controller,
+              isDark,
+              colors,
+              colorScheme,
+              canPostInTopic: canPostInTopic,
+              isAuthenticated: isAuthenticated,
+            ),
+          ],
         ),
       ),
     );
@@ -1245,89 +1225,56 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     dynamic colors,
     TafakorTopicFeedController controller,
   ) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final text = _textController.text;
-        final hasText = text.trim().isNotEmpty;
-        final canSend = (hasText || _attachedMediaPath != null) && !_isSubmitting;
+    final text = _textController.text;
+    final hasText = text.trim().isNotEmpty;
+    final canSend = (hasText || _attachedMediaPath != null) && !_isSubmitting;
 
-        // Detect if text spans to a second line (newline or character wrap)
-        bool isMultiLine = false;
-        if (text.isNotEmpty) {
-          if (text.contains('\n')) {
-            isMultiLine = true;
-          } else {
-            final availableWidth = constraints.maxWidth - 40;
-            if (availableWidth > 60) {
-              final painter = TextPainter(
-                text: TextSpan(
-                  text: text,
-                  style: const TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 15.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                textDirection: TextDirection.rtl,
-                maxLines: 2,
-              )..layout(maxWidth: availableWidth);
-              isMultiLine = painter.computeLineMetrics().length > 1;
-            } else {
-              isMultiLine = text.trim().length > 35;
-            }
-          }
-        }
-        final bool showExpandIcon = isMultiLine || hasText;
-
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF222226) : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.18)
-                      : const Color(0xFFE5E5EA),
-                  width: 1.3,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.50)
-                        : const Color(0xFF000000).withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 4),
-                  ),
-                  if (!isDark)
-                    BoxShadow(
-                      color: const Color(0xFF000000).withValues(alpha: 0.03),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                ],
-              ),
-              child: _buildCompactInputContent(
-                context,
-                isDark,
-                colorScheme,
-                colors,
-                controller,
-                canSend,
-                showExpandIcon,
-              ),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF222226) : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.18)
+                  : const Color(0xFFE5E5EA),
+              width: 1.3,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.50)
+                    : const Color(0xFF000000).withValues(alpha: 0.08),
+                blurRadius: 16,
+                spreadRadius: 1,
+                offset: const Offset(0, 4),
+              ),
+              if (!isDark)
+                BoxShadow(
+                  color: const Color(0xFF000000).withValues(alpha: 0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+            ],
           ),
-        );
-      },
+          child: _buildCompactInputContent(
+            context,
+            isDark,
+            colorScheme,
+            colors,
+            controller,
+            canSend,
+          ),
+        ),
+      ),
     );
   }
 
-  /// Compact mode of the input bar (matching Tafakor Notebook)
+  /// Compact mode of the input bar
   Widget _buildCompactInputContent(
     BuildContext context,
     bool isDark,
@@ -1335,28 +1282,12 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     dynamic colors,
     TafakorTopicFeedController controller,
     bool canSend,
-    bool showExpandIcon,
   ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Top row: Expand button appears at top right when text reaches line 2
-        if (showExpandIcon) ...[
-          Align(
-            alignment: AlignmentDirectional.topStart,
-            child: _buildExpandCollapseButton(
-              isDark: isDark,
-              colorScheme: colorScheme,
-              isExpanded: false,
-            ),
-          ),
-          4.vSpace,
-        ],
-
-
-
-        // 2. 1:1 media preview if attached
+        // 1. 1:1 media preview if attached
         if (_attachedMediaPath != null) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 2, 4, 8),
@@ -1367,7 +1298,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
           ),
         ],
 
-        // 3. Text Field at top
+        // 2. Text Field
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           child: TextField(
@@ -1407,161 +1338,26 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
 
         4.vSpace,
 
-        // 4. Action row UNDERNEATH the text field (Media picker on one side, Send on other)
+        // 3. Action row UNDERNEATH the text field
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Circular media picker button (+)
-            _buildMediaPickerButton(context, isDark, colors, colorScheme),
+            // Left: Attachment (+) & Telegram-style Fullscreen Editor button
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMediaPickerButton(context, isDark, colors, colorScheme),
+                8.hSpace,
+                _buildOpenEditorButton(isDark, colorScheme),
+              ],
+            ),
 
-            // Send button
+            // Right: Send button
             _buildSendButton(canSend, isDark, colorScheme, controller),
           ],
         ),
       ],
-    );
-  }
-
-  /// Fullscreen ChatGPT-style Composer above the keyboard (no pixel overflow, pinned send button)
-  /// Expanded mode preserving the exact text field card style, positioned above keyboard
-  Widget _buildFullScreenComposer(
-    BuildContext context,
-    TafakorTopicFeedController controller,
-    bool isDark,
-    dynamic colors,
-    ColorScheme colorScheme,
-  ) {
-    final text = _textController.text;
-    final hasText = text.trim().isNotEmpty;
-    final canSend = (hasText || _attachedMediaPath != null) && !_isSubmitting;
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF222226) : Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.22)
-                  : const Color(0xFFE5E5EA),
-              width: 1.3,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.50)
-                    : const Color(0xFF000000).withValues(alpha: 0.12),
-                blurRadius: 24,
-                spreadRadius: 1,
-                offset: const Offset(0, 4),
-              ),
-              if (!isDark)
-                BoxShadow(
-                  color: const Color(0xFF000000).withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top row: Collapse button at top right (preserving exact button style)
-              Align(
-                alignment: AlignmentDirectional.topStart,
-                child: _buildExpandCollapseButton(
-                  isDark: isDark,
-                  colorScheme: colorScheme,
-                  isExpanded: true,
-                ),
-              ),
-
-              4.vSpace,
-
-
-
-              // 1:1 media preview if attached
-              if (_attachedMediaPath != null) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 2, 4, 8),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: _buildMinimal1x1MediaPreview(isDark),
-                  ),
-                ),
-              ],
-
-              // Large scrollable multiline TextField filling remaining flex space
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: TextField(
-                    controller: _textController,
-                    focusNode: _textFocusNode,
-                    maxLines: null,
-                    expands: true,
-                    textAlignVertical: TextAlignVertical.top,
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.newline,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w600,
-                      height: 1.7,
-                      color: isDark ? Colors.white : const Color(0xFF1C1C1E),
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding:
-                          const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                      hintText: _isAttachedVideo
-                          ? 'توضیحات اختیاری ویدیو...'
-                          : (_attachedMediaPath != null
-                              ? 'توضیحات اختیاری تصویر...'
-                              : (_editingPost != null
-                                  ? 'ویرایش متن یادداشت...'
-                                  : 'متن، تأملات و یادداشت‌های خود را بنویسید...')),
-                      hintTextDirection: TextDirection.rtl,
-                      hintStyle: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 15.0,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white38 : const Color(0xFF8E8E93),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              4.vSpace,
-
-              // Bottom Action Row in Expanded Mode: Media Button & Send Button (Always pinned & visible!)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildMediaPickerButton(context, isDark, colors, colorScheme),
-                  _buildSendButton(
-                    canSend,
-                    isDark,
-                    colorScheme,
-                    controller,
-                    onPressedOverride: () {
-                      setState(() => _isExpanded = false);
-                      _submitPost(controller);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -1662,33 +1458,36 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     );
   }
 
-  /// Modern Expand / Collapse icon button (Cupertino)
-  Widget _buildExpandCollapseButton({
-    required bool isDark,
-    required ColorScheme colorScheme,
-    required bool isExpanded,
-  }) {
+  /// Telegram-style Fullscreen Editor launcher button
+  Widget _buildOpenEditorButton(bool isDark, ColorScheme colorScheme) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () {
+        borderRadius: BorderRadius.circular(20),
+        onTap: () async {
           HapticFeedback.lightImpact();
-          setState(() => _isExpanded = !_isExpanded);
-          if (_isExpanded) {
-            _textFocusNode.requestFocus();
+          final sent = await TafakorPostEditorScreen.push(
+            context,
+            topic: widget.topic,
+            editingPost: _editingPost,
+            initialText: _textController.text,
+            initialMediaPath: _attachedMediaPath,
+            isAttachedVideo: _isAttachedVideo,
+          );
+          if (sent == true && mounted) {
+            _cancelEditing();
           }
         },
         child: Tooltip(
-          message: isExpanded ? 'کوچک‌نمایی' : 'بزرگ‌نمایی',
+          message: 'ویرایشگر تمام‌صفحه (تلگرامی)',
           child: Container(
-            width: 32,
-            height: 32,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
+              shape: BoxShape.circle,
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.10)
+                  ? Colors.white.withValues(alpha: 0.08)
                   : const Color(0xFFF2F2F7),
-              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.12)
@@ -1697,15 +1496,10 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
               ),
             ),
             child: Center(
-              child: Transform.rotate(
-                angle: math.pi / 4,
-                child: Icon(
-                  isExpanded
-                      ? Icons.unfold_less_rounded
-                      : Icons.unfold_more_rounded,
-                  size: 19,
-                  color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
-                ),
+              child: Icon(
+                Icons.unfold_more_rounded,
+                size: 20,
+                color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
               ),
             ),
           ),

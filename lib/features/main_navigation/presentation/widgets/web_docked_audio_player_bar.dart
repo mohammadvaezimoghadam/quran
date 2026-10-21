@@ -243,7 +243,7 @@ class WebDockedAudioPlayerBar extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '${audioState.speed}x',
+                          '${audioState.speed.toString().replaceAll(RegExp(r'\.0$'), '')}x',
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 11.5,

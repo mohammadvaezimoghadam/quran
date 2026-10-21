@@ -26,12 +26,17 @@ class SleepTimerController extends Notifier<SleepTimerState> {
     return SleepTimerState(isFadeOutEnabled: savedFadeOut);
   }
 
+  double _getUserVolume() {
+    final prefs = ref.read(preferencesServiceProvider);
+    return prefs.getDouble('audio_playback_volume') ?? 0.70;
+  }
+
   /// Toggle or update the audio fade-out preference.
   void setFadeOutEnabled(bool enabled) {
     ref.read(preferencesServiceProvider).setBool(_fadeOutPrefKey, enabled);
     state = state.copyWith(isFadeOutEnabled: () => enabled);
     if (!enabled) {
-      ref.read(audioPlayerServiceProvider).setVolume(1.0);
+      ref.read(audioPlayerServiceProvider).setVolume(_getUserVolume());
     }
   }
 
@@ -39,7 +44,7 @@ class SleepTimerController extends Notifier<SleepTimerState> {
   void activate(SleepTimerCondition condition) {
     _countdownTimer?.cancel();
     _countdownTimer = null;
-    ref.read(audioPlayerServiceProvider).setVolume(1.0);
+    ref.read(audioPlayerServiceProvider).setVolume(_getUserVolume());
 
     if (condition is TimerCondition) {
       final initialRemaining = condition.targetEndTime.difference(DateTime.now());
@@ -60,7 +65,7 @@ class SleepTimerController extends Notifier<SleepTimerState> {
   void cancel() {
     _countdownTimer?.cancel();
     _countdownTimer = null;
-    ref.read(audioPlayerServiceProvider).setVolume(1.0);
+    ref.read(audioPlayerServiceProvider).setVolume(_getUserVolume());
     state = state.copyWith(
       activeCondition: () => null,
       remainingTime: () => null,
@@ -76,13 +81,13 @@ class SleepTimerController extends Notifier<SleepTimerState> {
         _countdownTimer = null;
         state = state.copyWith(remainingTime: () => Duration.zero);
         if (state.isFadeOutEnabled) {
-          ref.read(audioPlayerServiceProvider).setVolume(1.0);
+          ref.read(audioPlayerServiceProvider).setVolume(_getUserVolume());
         }
       } else {
         state = state.copyWith(remainingTime: () => remaining);
         if (state.isFadeOutEnabled && remaining <= const Duration(seconds: 30)) {
           final factor = (remaining.inMilliseconds / 30000.0).clamp(0.05, 1.0);
-          ref.read(audioPlayerServiceProvider).setVolume(factor);
+          ref.read(audioPlayerServiceProvider).setVolume(_getUserVolume() * factor);
         }
       }
     });

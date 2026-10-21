@@ -136,12 +136,13 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
-                      child: Text(
+                      child: const Text(
                         'حذف همه',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),

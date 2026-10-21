@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
@@ -179,7 +180,28 @@ class ProfileScreen extends ConsumerWidget {
             */
 
             // Tafakor Platform Integration Section
-            _buildSectionHeader('پلتفرم تفکر', isDark),
+            _buildSectionHeader(
+              'پلتفرم تفکر',
+              isDark,
+              trailing: TextButton.icon(
+                onPressed: () => _showAboutTafakorDialog(context),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: colorScheme.primary,
+                ),
+                icon: const Icon(CupertinoIcons.info_circle, size: 14),
+                label: const Text(
+                  'درباره تفکر',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
             8.vSpace,
             const TafakorProfileStatusCard(),
             20.vSpace,
@@ -343,6 +365,161 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  void _showAboutTafakorDialog(BuildContext context) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: colors.dialogSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppModalHeader(
+                    title: 'درباره پلتفرم تفکر',
+                    onClose: () => Navigator.of(dialogCtx).pop(),
+                    bottomSpacing: 14,
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4.5),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: isDark ? 0.16 : 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: isDark ? 0.30 : 0.20),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      'سامانه جامع تفکر و تدبر',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'پلتفرم تفکر بستری یکپارچه برای یادداشت‌برداری موضوعی، اندیشه‌ورزی و ثبت تدبر پیرامون مفاهیم قرآن و زندگی است.\n\n'
+                    'این سامانه امکان دسته‌بندی یادداشت‌ها در دفاتر تفکر (Topics) و همگام‌سازی لحظه‌ای با پیام‌رسان‌های بله و تلگرام را فراهم می‌کند. در اپلیکیشن قرآن، شما می‌توانید آیات منتخب، ترجمه‌ها و یادداشت‌های تدبری خود را مستقیماً به موضوعات دلخواه در پلتفرم تفکر ارسال کنید.',
+                    textAlign: TextAlign.justify,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13,
+                      height: 1.65,
+                      color: colorScheme.onSurface.withValues(alpha: 0.85),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        final uri = Uri.parse('https://tafakormag.ir');
+                        try {
+                          final launched = await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                          if (!launched) {
+                            await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            AppSnackBar.showError(
+                              context,
+                              'امکان باز کردن نشانی اینترنتی وجود ندارد.',
+                            );
+                          }
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.25),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              CupertinoIcons.globe,
+                              size: 15,
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'tafakormag.ir',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              CupertinoIcons.arrow_up_right,
+                              size: 13,
+                              color: colorScheme.primary.withValues(alpha: 0.7),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(dialogCtx).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'بستن',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDivider(bool isDark) {
     return Divider(
       height: 1,
@@ -382,17 +559,28 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, bool isDark) {
+  Widget _buildSectionHeader(
+    String title,
+    bool isDark, {
+    Widget? trailing,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontFamily: AppTypography.fontFamily,
-          fontSize: 12.5,
-          fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white54 : const Color(0xFF7A756D),
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white54 : const Color(0xFF7A756D),
+            ),
+          ),
+          ?trailing,
+        ],
       ),
     );
   }
@@ -557,6 +745,8 @@ class _OtaUpdateSection extends ConsumerWidget {
               await OtaUpdateController.restartApp();
             },
             style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -566,6 +756,7 @@ class _OtaUpdateSection extends ConsumerWidget {
               style: TextStyle(
                 fontFamily: AppTypography.fontFamily,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
           ),

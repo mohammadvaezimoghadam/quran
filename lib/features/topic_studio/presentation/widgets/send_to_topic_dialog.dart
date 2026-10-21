@@ -321,6 +321,7 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                             label: const Text(
                               'ورود مجدد',
                               style: TextStyle(
+                                color: Colors.white,
                                 fontFamily: AppTypography.fontFamily,
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.bold,
