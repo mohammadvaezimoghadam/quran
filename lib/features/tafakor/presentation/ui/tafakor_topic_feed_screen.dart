@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:url_launcher/url_launcher.dart';
@@ -48,13 +49,30 @@ class TafakorTopicFeedScreen extends ConsumerStatefulWidget {
 
 class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen> {
   late final ScrollController _scrollController;
-  late final TextEditingController _textController;
+  late final QuillController _quillController;
   late final FocusNode _textFocusNode;
+  late final ScrollController _inputScrollController;
   bool _showScrollToBottom = false;
   TafakorPost? _editingPost;
   bool _isSubmitting = false;
   String? _attachedMediaPath;
   bool _isAttachedVideo = false;
+
+  String get _currentText {
+    final raw = _quillController.document.toPlainText();
+    if (raw.endsWith('\n')) return raw.substring(0, raw.length - 1);
+    return raw;
+  }
+
+  void _setEditorText(String text) {
+    final docLen = _quillController.document.length;
+    final replaceLen = docLen > 1 ? docLen - 1 : 0;
+    _quillController.replaceText(0, replaceLen, text, null);
+    _quillController.updateSelection(
+      TextSelection.collapsed(offset: text.length),
+      ChangeSource.local,
+    );
+  }
 
   void _onTextChanged() {
     if (mounted) setState(() {});
@@ -71,7 +89,8 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
-    _textController = TextEditingController()..addListener(_onTextChanged);
+    _quillController = QuillController.basic()..addListener(_onTextChanged);
+    _inputScrollController = ScrollController();
     _textFocusNode = FocusNode();
     Future.microtask(() {
       ref.read(tafakorTopicFeedControllerProvider.notifier).loadPosts(topicId: widget.topic.id);
@@ -82,8 +101,9 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _textController.removeListener(_onTextChanged);
-    _textController.dispose();
+    _quillController.removeListener(_onTextChanged);
+    _quillController.dispose();
+    _inputScrollController.dispose();
     _textFocusNode.dispose();
     super.dispose();
   }
@@ -117,20 +137,32 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
   }
 
   Future<void> _startEditingPost(TafakorPost post) async {
-    final updated = await TafakorPostEditorScreen.push(
+    final result = await TafakorPostEditorScreen.push(
       context,
       topic: widget.topic,
       editingPost: post,
     );
-    if (updated == true && mounted) {
-      _cancelEditing();
+    if (result != null && mounted) {
+      if (result.wasSent) {
+        _cancelEditing();
+      } else {
+        setState(() {
+          _editingPost = post;
+          _setEditorText(result.text);
+          _attachedMediaPath = result.mediaPath;
+          _isAttachedVideo = result.isAttachedVideo;
+        });
+      }
     }
   }
 
   void _cancelEditing() {
     setState(() {
       _editingPost = null;
-      _textController.clear();
+      final docLen = _quillController.document.length;
+      if (docLen > 1) {
+        _quillController.replaceText(0, docLen - 1, '', null);
+      }
       _attachedMediaPath = null;
       _isAttachedVideo = false;
     });
@@ -138,7 +170,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
   }
 
   Future<void> _submitPost(TafakorTopicFeedController controller) async {
-    final text = _textController.text.trim();
+    final text = _currentText.trim();
     if (text.isEmpty && _attachedMediaPath == null) return;
 
     final token = await ref.read(tafakorLocalDataSourceProvider).getToken();
@@ -1225,7 +1257,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     dynamic colors,
     TafakorTopicFeedController controller,
   ) {
-    final text = _textController.text;
+    final text = _currentText;
     final hasText = text.trim().isNotEmpty;
     final canSend = (hasText || _attachedMediaPath != null) && !_isSubmitting;
 
@@ -1298,40 +1330,55 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
           ),
         ],
 
-        // 2. Text Field
+        // 2. Quill Editor for compact mode
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: TextField(
-            controller: _textController,
-            focusNode: _textFocusNode,
-            minLines: 1,
-            maxLines: 5,
-            keyboardType: TextInputType.multiline,
-            textInputAction: TextInputAction.newline,
-            textDirection: TextDirection.rtl,
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 15.0,
-              fontWeight: FontWeight.w600,
-              height: 1.45,
-              color: isDark ? Colors.white : const Color(0xFF1C1C1E),
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              hintText: _isAttachedVideo
-                  ? 'توضیحات اختیاری ویدیو...'
-                  : (_attachedMediaPath != null
-                      ? 'توضیحات اختیاری تصویر...'
-                      : (_editingPost != null ? 'ویرایش متن یادداشت...' : 'یادداشت یا تفکر خود را بنویسید...')),
-              hintTextDirection: TextDirection.rtl,
-              hintStyle: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 14.0,
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white38 : const Color(0xFF8E8E93),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 36, maxHeight: 110),
+            child: QuillEditor.basic(
+              controller: _quillController,
+              focusNode: _textFocusNode,
+              scrollController: _inputScrollController,
+              config: QuillEditorConfig(
+                placeholder: _isAttachedVideo
+                    ? 'توضیحات اختیاری ویدیو...'
+                    : (_attachedMediaPath != null
+                        ? 'توضیحات اختیاری تصویر...'
+                        : (_editingPost != null
+                            ? 'ویرایش متن یادداشت...'
+                            : 'یادداشت یا تفکر خود را بنویسید...')),
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                autoFocus: false,
+                expands: false,
+                scrollable: true,
+                customStyles: DefaultStyles(
+                  paragraph: DefaultTextBlockStyle(
+                    TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 15.0,
+                      fontWeight: FontWeight.w600,
+                      height: 1.45,
+                      color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                    ),
+                    HorizontalSpacing.zero,
+                    VerticalSpacing.zero,
+                    VerticalSpacing.zero,
+                    null,
+                  ),
+                  placeHolder: DefaultTextBlockStyle(
+                    TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white38 : const Color(0xFF8E8E93),
+                    ),
+                    HorizontalSpacing.zero,
+                    VerticalSpacing.zero,
+                    VerticalSpacing.zero,
+                    null,
+                  ),
+                ),
               ),
-              border: InputBorder.none,
             ),
           ),
         ),
@@ -1466,16 +1513,24 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
         borderRadius: BorderRadius.circular(20),
         onTap: () async {
           HapticFeedback.lightImpact();
-          final sent = await TafakorPostEditorScreen.push(
+          final result = await TafakorPostEditorScreen.push(
             context,
             topic: widget.topic,
             editingPost: _editingPost,
-            initialText: _textController.text,
+            initialText: _currentText,
             initialMediaPath: _attachedMediaPath,
             isAttachedVideo: _isAttachedVideo,
           );
-          if (sent == true && mounted) {
-            _cancelEditing();
+          if (result != null && mounted) {
+            if (result.wasSent) {
+              _cancelEditing();
+            } else {
+              setState(() {
+                _setEditorText(result.text);
+                _attachedMediaPath = result.mediaPath;
+                _isAttachedVideo = result.isAttachedVideo;
+              });
+            }
           }
         },
         child: Tooltip(
@@ -1682,7 +1737,9 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
               title: 'افزودن پیوند یا مرجع',
               onTap: () {
                 Navigator.pop(sheetContext);
-                _textController.text = '${_textController.text}\nhttps://'.trim();
+                final cur = _currentText;
+                final appended = cur.isEmpty ? 'https://' : '$cur\nhttps://';
+                _setEditorText(appended);
                 _textFocusNode.requestFocus();
               },
             ),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/context_extension.dart';
@@ -13,6 +14,21 @@ import '../../application/controllers/tafakor_topic_feed_controller.dart';
 import '../../domain/entities/tafakor_post.dart';
 import '../../domain/entities/tafakor_topic.dart';
 import '../../../topic_studio/presentation/widgets/topic_media_picker_sheet.dart';
+
+/// Result returned from [TafakorPostEditorScreen] to preserve user draft on collapse
+class TafakorEditorResult {
+  final String text;
+  final String? mediaPath;
+  final bool isAttachedVideo;
+  final bool wasSent;
+
+  const TafakorEditorResult({
+    required this.text,
+    this.mediaPath,
+    this.isAttachedVideo = false,
+    this.wasSent = false,
+  });
+}
 
 /// Full-screen Telegram-style Post / Note Editor.
 /// Provides a distraction-free writing canvas, Undo/Redo support,
@@ -33,7 +49,7 @@ class TafakorPostEditorScreen extends ConsumerStatefulWidget {
     this.isAttachedVideo = false,
   });
 
-  static Future<bool?> push(
+  static Future<TafakorEditorResult?> push(
     BuildContext context, {
     required TafakorTopic topic,
     TafakorPost? editingPost,
@@ -41,7 +57,7 @@ class TafakorPostEditorScreen extends ConsumerStatefulWidget {
     String? initialMediaPath,
     bool isAttachedVideo = false,
   }) {
-    return Navigator.of(context).push<bool>(
+    return Navigator.of(context).push<TafakorEditorResult>(
       MaterialPageRoute(
         builder: (_) => TafakorPostEditorScreen(
           topic: topic,
@@ -61,9 +77,8 @@ class TafakorPostEditorScreen extends ConsumerStatefulWidget {
 
 class _TafakorPostEditorScreenState
     extends ConsumerState<TafakorPostEditorScreen> {
-  late final TextEditingController _textController;
-  late final UndoHistoryController _undoController;
-  late final FocusNode _textFocusNode;
+  late final QuillController _quillController;
+  late final FocusNode _quillFocusNode;
   late final ScrollController _scrollController;
 
   String? _attachedMediaPath;
@@ -72,32 +87,44 @@ class _TafakorPostEditorScreenState
 
   bool get _isEditing => widget.editingPost != null;
 
+  String get _currentText {
+    final raw = _quillController.document.toPlainText();
+    if (raw.endsWith('\n')) {
+      return raw.substring(0, raw.length - 1);
+    }
+    return raw;
+  }
+
   @override
   void initState() {
     super.initState();
     final initialContent =
         widget.editingPost?.content ?? widget.initialText ?? '';
-    _textController = TextEditingController(text: initialContent);
-    _undoController = UndoHistoryController();
-    _textFocusNode = FocusNode();
+    final doc = initialContent.isEmpty
+        ? Document()
+        : (Document()
+          ..insert(
+            0,
+            initialContent.endsWith('\n') ? initialContent : '$initialContent\n',
+          ));
+    _quillController = QuillController(
+      document: doc,
+      selection: TextSelection.collapsed(
+        offset: initialContent.isNotEmpty ? initialContent.length : 0,
+      ),
+    );
+    _quillFocusNode = FocusNode();
     _scrollController = ScrollController();
 
     _attachedMediaPath = widget.initialMediaPath;
     _isAttachedVideo = widget.isAttachedVideo;
 
-    // Set cursor to the end of existing text
-    if (initialContent.isNotEmpty) {
-      _textController.selection = TextSelection.fromPosition(
-        TextPosition(offset: initialContent.length),
-      );
-    }
+    _quillController.addListener(_onTextChanged);
 
-    _textController.addListener(_onTextChanged);
-
-    // Auto-focus the text field once the view is loaded
+    // Auto-focus the editor once the view is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _textFocusNode.requestFocus();
+        _quillFocusNode.requestFocus();
       }
     });
   }
@@ -108,10 +135,9 @@ class _TafakorPostEditorScreenState
 
   @override
   void dispose() {
-    _textController.removeListener(_onTextChanged);
-    _textController.dispose();
-    _undoController.dispose();
-    _textFocusNode.dispose();
+    _quillController.removeListener(_onTextChanged);
+    _quillController.dispose();
+    _quillFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -162,7 +188,7 @@ class _TafakorPostEditorScreenState
   }
 
   Future<void> _handleSubmit() async {
-    final text = _textController.text.trim();
+    final text = _currentText.trim();
     if (text.isEmpty && _attachedMediaPath == null) {
       AppSnackBar.showInfo(context, 'لطفاً ابتدا متنی بنویسید.');
       return;
@@ -184,7 +210,7 @@ class _TafakorPostEditorScreenState
         setState(() => _isSubmitting = false);
         if (success) {
           AppSnackBar.showSuccess(context, 'یادداشت با موفقیت ویرایش شد');
-          Navigator.of(context).pop(true);
+          Navigator.of(context).pop(const TafakorEditorResult(text: '', wasSent: true));
         } else {
           AppSnackBar.showError(context, 'خطا در ویرایش یادداشت');
         }
@@ -200,7 +226,7 @@ class _TafakorPostEditorScreenState
         setState(() => _isSubmitting = false);
         if (success) {
           AppSnackBar.showSuccess(context, 'یادداشت با موفقیت ثبت شد');
-          Navigator.of(context).pop(true);
+          Navigator.of(context).pop(const TafakorEditorResult(text: '', wasSent: true));
         } else {
           AppSnackBar.showError(context, 'خطا در ثبت یادداشت');
         }
@@ -208,37 +234,15 @@ class _TafakorPostEditorScreenState
     }
   }
 
-  Future<bool> _onWillPop() async {
-    final currentText = _textController.text.trim();
-    final originalText = (widget.editingPost?.content ?? widget.initialText ?? '').trim();
-    final hasChanges = currentText != originalText || _attachedMediaPath != widget.initialMediaPath;
-
-    if (!hasChanges || currentText.isEmpty) {
-      return true;
-    }
-
-    final result = await showCupertinoDialog<bool>(
-      context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('انصراف از ویرایش'),
-        content: const Text(
-          'تغییرات ذخیره نشده‌اند. آیا مایل به خروج بدون ذخیره هستید؟',
-        ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('ادامه ویرایش'),
-            onPressed: () => Navigator.of(ctx).pop(false),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('خروج'),
-          ),
-        ],
+  void _popWithDraft() {
+    Navigator.of(context).pop(
+      TafakorEditorResult(
+        text: _currentText,
+        mediaPath: _attachedMediaPath,
+        isAttachedVideo: _isAttachedVideo,
+        wasSent: false,
       ),
     );
-
-    return result ?? false;
   }
 
   @override
@@ -246,7 +250,7 @@ class _TafakorPostEditorScreenState
     final theme = Theme.of(context);
     final isDark = context.isDark;
     final colorScheme = context.colorScheme;
-    final canSubmit = (_textController.text.trim().isNotEmpty ||
+    final canSubmit = (_currentText.trim().isNotEmpty ||
             _attachedMediaPath != null) &&
         !_isSubmitting;
 
@@ -258,12 +262,9 @@ class _TafakorPostEditorScreenState
       textDirection: TextDirection.rtl,
       child: PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
+        onPopInvokedWithResult: (didPop, result) {
           if (didPop) return;
-          final shouldPop = await _onWillPop();
-          if (shouldPop && context.mounted) {
-            Navigator.of(context).pop(false);
-          }
+          _popWithDraft();
         },
         child: Scaffold(
           backgroundColor: scaffoldBg,
@@ -273,65 +274,88 @@ class _TafakorPostEditorScreenState
             children: [
               // 1. Full-bleed, scrollable writing canvas
               Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () => _textFocusNode.requestFocus(),
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Media attachment preview card (if any)
-                        if (_attachedMediaPath != null) ...[
-                          _buildMediaPreview(isDark, cardBg),
-                          14.vSpace,
-                        ],
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      controller: _scrollController,
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            _quillFocusNode.requestFocus();
+                            final textLen = _currentText.length;
+                            _quillController.updateSelection(
+                              TextSelection.collapsed(offset: textLen),
+                              ChangeSource.local,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Media attachment preview card (if any)
+                                if (_attachedMediaPath != null) ...[
+                                  _buildMediaPreview(isDark, cardBg),
+                                  14.vSpace,
+                                ],
 
-                        // Main multiline text field (Telegram style)
-                        TextField(
-                          controller: _textController,
-                          focusNode: _textFocusNode,
-                          undoController: _undoController,
-                          maxLines: null,
-                          minLines: 12,
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          textDirection: TextDirection.rtl,
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w500,
-                            height: 1.75,
-                            color: isDark ? Colors.white : const Color(0xFF1C1C1E),
-                          ),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                            hintText: _isEditing
-                                ? 'متن یادداشت را ویرایش کنید...'
-                                : 'یادداشت یا تفکر خود را بنویسید...',
-                            hintTextDirection: TextDirection.rtl,
-                            hintStyle: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.w400,
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.32)
-                                  : const Color(0xFF8E8E93),
+                                // Web & Telegram-style editor powered by flutter_quill
+                                QuillEditor.basic(
+                                  controller: _quillController,
+                                  focusNode: _quillFocusNode,
+                                  scrollController: _scrollController,
+                                  config: QuillEditorConfig(
+                                    placeholder: _isEditing
+                                        ? 'متن یادداشت را ویرایش کنید...'
+                                        : 'یادداشت یا تفکر خود را بنویسید...',
+                                    padding: EdgeInsets.zero,
+                                    autoFocus: true,
+                                    expands: false,
+                                    scrollable: false,
+                                    customStyles: DefaultStyles(
+                                      paragraph: DefaultTextBlockStyle(
+                                        TextStyle(
+                                          fontFamily: AppTypography.fontFamily,
+                                          fontSize: 16.5,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.75,
+                                          color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                                        ),
+                                        HorizontalSpacing.zero,
+                                        VerticalSpacing.zero,
+                                        VerticalSpacing.zero,
+                                        null,
+                                      ),
+                                      placeHolder: DefaultTextBlockStyle(
+                                        TextStyle(
+                                          fontFamily: AppTypography.fontFamily,
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.w400,
+                                          color: isDark
+                                              ? Colors.white.withValues(alpha: 0.32)
+                                              : const Color(0xFF8E8E93),
+                                        ),
+                                        HorizontalSpacing.zero,
+                                        VerticalSpacing.zero,
+                                        VerticalSpacing.zero,
+                                        null,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
 
@@ -359,11 +383,9 @@ class _TafakorPostEditorScreenState
           size: 24,
           color: colorScheme.onSurface,
         ),
-        onPressed: () async {
-          final shouldPop = await _onWillPop();
-          if (shouldPop && mounted) {
-            Navigator.of(context).pop(false);
-          }
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          _popWithDraft();
         },
       ),
       title: Text(
@@ -376,12 +398,12 @@ class _TafakorPostEditorScreenState
         ),
       ),
       actions: [
-        // Undo and Redo actions powered by Flutter's native UndoHistoryController
-        ValueListenableBuilder<UndoHistoryValue>(
-          valueListenable: _undoController,
-          builder: (context, value, _) {
-            final canUndo = value.canUndo;
-            final canRedo = value.canRedo;
+        // Undo and Redo actions powered by QuillController document history
+        ListenableBuilder(
+          listenable: _quillController,
+          builder: (context, _) {
+            final canUndo = _quillController.hasUndo;
+            final canRedo = _quillController.hasRedo;
 
             return Row(
               mainAxisSize: MainAxisSize.min,
@@ -399,7 +421,7 @@ class _TafakorPostEditorScreenState
                   onPressed: canUndo
                       ? () {
                           HapticFeedback.selectionClick();
-                          _undoController.undo();
+                          _quillController.undo();
                         }
                       : null,
                 ),
@@ -417,7 +439,7 @@ class _TafakorPostEditorScreenState
                   onPressed: canRedo
                       ? () {
                           HapticFeedback.selectionClick();
-                          _undoController.redo();
+                          _quillController.redo();
                         }
                       : null,
                 ),

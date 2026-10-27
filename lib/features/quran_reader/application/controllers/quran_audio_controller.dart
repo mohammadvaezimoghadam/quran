@@ -442,6 +442,28 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       if (surahId < 114) {
         final nextSurahId = surahId + 1;
         final nextTotalAyahs = kStaticQuranSurahs[nextSurahId - 1].numberOfAyahs;
+
+        // Check if next surah ayah 1 audio is downloaded or web streaming
+        if (!kIsWeb) {
+          final audioStorage = ref.read(audioStorageServiceProvider);
+          final activeReciter = targetTrack == CurrentTrackType.quran
+              ? (state.selectedReciter ?? await _getFallbackReciter(isTranslation: false))
+              : (state.selectedTranslationReciter ?? await _getFallbackReciter(isTranslation: true));
+          final nextAyahLocal = await audioStorage.getLocalAyahAudioPath(
+            reciterId: activeReciter.id,
+            surahId: nextSurahId,
+            ayahNumber: 1,
+          );
+          if (nextAyahLocal == null) {
+            debugPrint(
+              '📖 [QuranAudioController] End of Surah $surahId reached. Next Surah $nextSurahId audio not downloaded, stopping gracefully.',
+            );
+            _isTransitioningTrack = false;
+            await stop();
+            return;
+          }
+        }
+
         debugPrint(
           '📖 [QuranAudioController] AutoPlay advancing into next Surah: $nextSurahId',
         );
@@ -573,8 +595,8 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       );
       if (!canPlay) {
         _isTransitioningTrack = false;
+        await stop();
         state = state.copyWith(
-          status: AudioStatus.stopped,
           errorMessage: 'برای شنیدن تلاوت این قاری در این سوره، اشتراک ویژه لازم است.',
         );
         return;
@@ -583,8 +605,8 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       final canPlay = AudioVipPolicy.canPlayAudioTranslation(isVip: isVip);
       if (!canPlay) {
         _isTransitioningTrack = false;
+        await stop();
         state = state.copyWith(
-          status: AudioStatus.stopped,
           errorMessage: 'پخش ترجمه گویا نیازمند اشتراک ویژه است.',
         );
         return;
@@ -642,11 +664,11 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     } else {
       // On Android/iOS/Desktop: file not downloaded → stop gracefully
       _isTransitioningTrack = false;
+      await stop();
       final trackLabel = trackType == CurrentTrackType.translation
           ? 'ترجمه گویا'
           : 'تلاوت';
       state = state.copyWith(
-        status: AudioStatus.stopped,
         errorMessage: 'فایل صوتی $trackLabel برای این آیه دانلود نشده است. لطفاً ابتدا دانلود کنید.',
         lastAttemptedAyahNumber: ayahNumber,
       );
@@ -792,7 +814,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
       );
     } else {
       _isTransitioningTrack = false;
-      stop();
+      await stop();
     }
   }
 

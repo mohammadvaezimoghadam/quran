@@ -205,11 +205,15 @@ class EchoService implements IEchoService {
       _tap1Player.pause().catchError((_) {});
       _tap2Player.pause().catchError((_) {});
 
-      unawaited(_ensureRadioTextureLoaded().then((_) {
-        if (_isPlaying && _isEnabled && _preset.isRadio) {
-          _radioTexturePlayer.play().catchError((_) {});
-        }
-      }));
+      if (!_isPlaying) {
+        _radioTexturePlayer.pause().catchError((_) {});
+      } else {
+        unawaited(_ensureRadioTextureLoaded().then((_) {
+          if (_isPlaying && _isEnabled && _preset.isRadio) {
+            _radioTexturePlayer.play().catchError((_) {});
+          }
+        }));
+      }
     } else {
       // Reverb / Echo mode: mute radio texture and use dual-tap echo engine
       _radioTexturePlayer.pause().catchError((_) {});

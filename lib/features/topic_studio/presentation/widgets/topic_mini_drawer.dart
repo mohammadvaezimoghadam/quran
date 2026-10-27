@@ -22,6 +22,7 @@ import '../../../tafakor/application/controllers/tafakor_auth_controller.dart';
 import '../../../tafakor/presentation/ui/tafakor_login_screen.dart';
 import 'send_to_topic_dialog.dart';
 import 'topic_media_picker_sheet.dart';
+import 'quill_block_field.dart';
 
 /// Floating Mini-Drawer for Contemplation Notebook (دفتر تفکر).
 /// Sits on the right edge of the Quran reader and houses the in-drawer live editor.
@@ -1477,7 +1478,7 @@ class _TopicMiniDrawerContent extends ConsumerWidget {
                     6.vSpace,
                   ],
 
-                  _EditableBlockField(
+                  QuillBlockField(
                     initialText: block.content,
                     hintText: 'یادداشت، تأمل یا توضیحات تصویر را اینجا بنویسید...',
                     style: contentStyle,
@@ -1531,7 +1532,7 @@ class _TopicMiniDrawerContent extends ConsumerWidget {
               ),
             )
           else
-            _EditableBlockField(
+            QuillBlockField(
               initialText: block.content,
               hintText: hintText,
               style: contentStyle,
@@ -1573,117 +1574,6 @@ class _TopicMiniDrawerContent extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Standalone stateful widget for editable block text to prevent rebuilding the entire list on every keystroke
-/// (Exact implementation from topic_editor_screen.dart)
-class _EditableBlockField extends StatefulWidget {
-  final String initialText;
-  final String hintText;
-  final TextStyle? style;
-  final int minLines;
-  final ValueChanged<String> onChanged;
-
-  const _EditableBlockField({
-    required this.initialText,
-    required this.hintText,
-    this.style,
-    this.minLines = 1,
-    required this.onChanged,
-  });
-
-  @override
-  State<_EditableBlockField> createState() => _EditableBlockFieldState();
-}
-
-class _EditableBlockFieldState extends State<_EditableBlockField> {
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
-  Timer? _debounceTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialText);
-    _focusNode = FocusNode();
-    _focusNode.addListener(_onFocusChanged);
-  }
-
-  void _onFocusChanged() {
-    if (!_focusNode.hasFocus) {
-      _flush();
-    }
-  }
-
-  void _flush() {
-    _debounceTimer?.cancel();
-    _debounceTimer = null;
-    if (_controller.text != widget.initialText) {
-      widget.onChanged(_controller.text);
-    }
-  }
-
-  void _onTextChanged(String text) {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
-      if (mounted && _controller.text != widget.initialText) {
-        widget.onChanged(_controller.text);
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant _EditableBlockField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Don't overwrite the field while user is actively typing in it
-    if (oldWidget.initialText != widget.initialText &&
-        widget.initialText != _controller.text &&
-        !_focusNode.hasFocus) {
-      _controller.text = widget.initialText;
-    }
-  }
-
-  @override
-  void dispose() {
-    _flush();
-    _focusNode.removeListener(_onFocusChanged);
-    _focusNode.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final defaultStyle = TextStyle(
-      fontFamily: AppTypography.fontFamily,
-      fontSize: 13.5,
-      height: 1.6,
-      color: isDark ? Colors.white : Colors.black87,
-    );
-
-    return TextField(
-      controller: _controller,
-      focusNode: _focusNode,
-      maxLines: null,
-      minLines: widget.minLines,
-      keyboardType: TextInputType.multiline,
-      style: widget.style ?? defaultStyle,
-      decoration: InputDecoration(
-        isDense: true,
-        hintText: widget.hintText,
-        hintStyle: TextStyle(
-          fontFamily: AppTypography.fontFamily,
-          fontSize: 12.5,
-          color: isDark ? Colors.white38 : Colors.black38,
-        ),
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.zero,
-      ),
-      onChanged: _onTextChanged,
     );
   }
 }

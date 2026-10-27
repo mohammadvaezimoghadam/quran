@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter_quill/flutter_quill.dart';
+
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
@@ -15,6 +17,7 @@ import '../../../tafakor/application/controllers/tafakor_auth_controller.dart';
 import '../../../tafakor/presentation/ui/tafakor_login_screen.dart';
 import '../../application/controllers/in_drawer_editor_controller.dart';
 import '../../domain/entities/topic_block.dart';
+import '../widgets/quill_block_field.dart';
 import '../widgets/send_to_topic_dialog.dart';
 import '../widgets/topic_media_picker_sheet.dart';
 
@@ -37,31 +40,37 @@ class TafakorEditorScreen extends ConsumerStatefulWidget {
 
 class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
   late final InDrawerEditorController _editorController;
-  late final TextEditingController _inputController;
-  late final UndoHistoryController _undoController;
+  late final QuillController _quillController;
   late final FocusNode _inputFocusNode;
   late final ScrollController _scrollController;
+  late final ScrollController _compactScrollController;
   bool _isExpanded = false;
+
+  String get _currentText {
+    final raw = _quillController.document.toPlainText();
+    if (raw.endsWith('\n')) return raw.substring(0, raw.length - 1);
+    return raw;
+  }
 
   @override
   void initState() {
     super.initState();
     _editorController = ref.read(inDrawerEditorControllerProvider.notifier);
-    _inputController = TextEditingController();
-    _undoController = UndoHistoryController();
+    _quillController = QuillController.basic();
     _inputFocusNode = FocusNode();
     _scrollController = ScrollController();
-    _inputController.addListener(() {
+    _compactScrollController = ScrollController();
+    _quillController.addListener(() {
       if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
-    _inputController.dispose();
-    _undoController.dispose();
+    _quillController.dispose();
     _inputFocusNode.dispose();
     _scrollController.dispose();
+    _compactScrollController.dispose();
     super.dispose();
   }
 
@@ -118,7 +127,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     HapticFeedback.lightImpact();
     FocusManager.instance.primaryFocus?.unfocus();
 
-    final currentText = _inputController.text.trim();
+    final currentText = _currentText.trim();
     final hasCurrentText = currentText.isNotEmpty;
 
     final editorState = ref.read(inDrawerEditorControllerProvider);
@@ -154,12 +163,14 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     if (!mounted) return;
 
     if (sent == true) {
-      // Sent successfully: clear the textfield and close the editor screen
-      _inputController.clear();
+      // Sent successfully: clear the editor and close the editor screen
+      if (_quillController.document.length > 1) {
+        _quillController.replaceText(0, _quillController.document.length - 1, '', null);
+      }
       nav.maybePop();
     } else {
       // User cancelled: roll back the temporary block so it isn't duplicated,
-      // and keep the textfield text intact so the user can continue editing.
+      // and keep the text intact so the user can continue editing.
       if (tempBlockId != null) {
         _editorController.removeBlock(tempBlockId);
       }
@@ -227,11 +238,11 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
             ),
             actions: [
               if (_isExpanded) ...[
-                ValueListenableBuilder<UndoHistoryValue>(
-                  valueListenable: _undoController,
-                  builder: (context, value, _) {
-                    final canUndo = value.canUndo;
-                    final canRedo = value.canRedo;
+                ListenableBuilder(
+                  listenable: _quillController,
+                  builder: (context, _) {
+                    final canUndo = _quillController.hasUndo;
+                    final canRedo = _quillController.hasRedo;
 
                     return Row(
                       mainAxisSize: MainAxisSize.min,
@@ -248,7 +259,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
                           onPressed: canUndo
                               ? () {
                                   HapticFeedback.selectionClick();
-                                  _undoController.undo();
+                                  _quillController.undo();
                                 }
                               : null,
                         ),
@@ -264,7 +275,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
                           onPressed: canRedo
                               ? () {
                                   HapticFeedback.selectionClick();
-                                  _undoController.redo();
+                                  _quillController.redo();
                                 }
                               : null,
                         ),
@@ -274,7 +285,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
                   },
                 ),
               ] else ...[
-                if (_inputController.text.trim().isNotEmpty) ...[
+                if (_currentText.trim().isNotEmpty) ...[
                   IconButton(
                     tooltip: 'پاک‌سازی متن',
                     icon: Icon(
@@ -284,7 +295,10 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
                     ),
                     onPressed: () {
                       HapticFeedback.lightImpact();
-                      _inputController.clear();
+                      final docLen = _quillController.document.length;
+                      if (docLen > 1) {
+                        _quillController.replaceText(0, docLen - 1, '', null);
+                      }
                     },
                   ),
                 ],
@@ -658,7 +672,8 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
 
           2.vSpace,
 
-          _EditableBlockField(
+          // Editable content sitting cleanly with zero extra padding powered by flutter_quill
+          QuillBlockField(
             initialText: block.content,
             hintText: hintText,
             style: contentStyle,
@@ -708,7 +723,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     dynamic colors,
     InDrawerEditorState editorState,
   ) {
-    final text = _inputController.text;
+    final text = _currentText;
     final hasText = text.trim().isNotEmpty;
     final canSend = hasText || editorState.isNotEmpty;
 
@@ -779,38 +794,49 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
           ),
         ],
 
-        // 2. Text Field at top
+        // 2. Text Field at top powered by flutter_quill
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: TextField(
-            controller: _inputController,
-            focusNode: _inputFocusNode,
-            undoController: _undoController,
-            minLines: 1,
-            maxLines: 5,
-            keyboardType: TextInputType.multiline,
-            textInputAction: TextInputAction.newline,
-            textDirection: TextDirection.rtl,
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 15.0,
-              fontWeight: FontWeight.w600,
-              height: 1.45,
-              color: isDark ? Colors.white : const Color(0xFF1C1C1E),
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              hintText: 'یادداشت یا تفکر خود را بنویسید...',
-              hintTextDirection: TextDirection.rtl,
-              hintStyle: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 14.0,
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white38 : const Color(0xFF8E8E93),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 36, maxHeight: 110),
+            child: QuillEditor.basic(
+              controller: _quillController,
+              focusNode: _inputFocusNode,
+              scrollController: _compactScrollController,
+              config: QuillEditorConfig(
+                placeholder: 'یادداشت یا تفکر خود را بنویسید...',
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                autoFocus: false,
+                expands: false,
+                scrollable: true,
+                customStyles: DefaultStyles(
+                  paragraph: DefaultTextBlockStyle(
+                    TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 15.0,
+                      fontWeight: FontWeight.w600,
+                      height: 1.45,
+                      color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                    ),
+                    HorizontalSpacing.zero,
+                    VerticalSpacing.zero,
+                    VerticalSpacing.zero,
+                    null,
+                  ),
+                  placeHolder: DefaultTextBlockStyle(
+                    TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white38 : const Color(0xFF8E8E93),
+                    ),
+                    HorizontalSpacing.zero,
+                    VerticalSpacing.zero,
+                    VerticalSpacing.zero,
+                    null,
+                  ),
+                ),
               ),
-              border: InputBorder.none,
             ),
           ),
         ),
@@ -851,7 +877,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     dynamic colors,
     InDrawerEditorState editorState,
   ) {
-    final text = _inputController.text;
+    final text = _currentText;
     final hasText = text.trim().isNotEmpty;
     final canSend = hasText || editorState.isNotEmpty;
 
@@ -861,8 +887,15 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
         // 1. Full-bleed, scrollable writing canvas
         Expanded(
           child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: () => _inputFocusNode.requestFocus(),
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              _inputFocusNode.requestFocus();
+              final len = _currentText.length;
+              _quillController.updateSelection(
+                TextSelection.collapsed(offset: len),
+                ChangeSource.local,
+              );
+            },
             child: SingleChildScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(
@@ -878,40 +911,46 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
                     14.vSpace,
                   ],
 
-                  // Large scrollable multiline TextField filling remaining flex space
-                  TextField(
-                    controller: _inputController,
+                  // Quill Editor canvas
+                  QuillEditor.basic(
+                    controller: _quillController,
                     focusNode: _inputFocusNode,
-                    undoController: _undoController,
-                    maxLines: null,
-                    minLines: 12,
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.newline,
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.start,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w500,
-                      height: 1.75,
-                      color: isDark ? Colors.white : const Color(0xFF1C1C1E),
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                      hintText:
+                    scrollController: _scrollController,
+                    config: QuillEditorConfig(
+                      placeholder:
                           'متن، تأملات و یادداشت‌های خود را با خیال راحت بنویسید...',
-                      hintTextDirection: TextDirection.rtl,
-                      hintStyle: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w400,
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.32)
-                            : const Color(0xFF8E8E93),
+                      padding: EdgeInsets.zero,
+                      autoFocus: true,
+                      expands: false,
+                      scrollable: false,
+                      customStyles: DefaultStyles(
+                        paragraph: DefaultTextBlockStyle(
+                          TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w500,
+                            height: 1.75,
+                            color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                          ),
+                          HorizontalSpacing.zero,
+                          VerticalSpacing.zero,
+                          VerticalSpacing.zero,
+                          null,
+                        ),
+                        placeHolder: DefaultTextBlockStyle(
+                          TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.w400,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.32)
+                                : const Color(0xFF8E8E93),
+                          ),
+                          HorizontalSpacing.zero,
+                          VerticalSpacing.zero,
+                          VerticalSpacing.zero,
+                          null,
+                        ),
                       ),
                     ),
                   ),
@@ -1179,89 +1218,6 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _EditableBlockField extends StatefulWidget {
-  final String initialText;
-  final String hintText;
-  final TextStyle? style;
-  final ValueChanged<String> onChanged;
-
-  const _EditableBlockField({
-    required this.initialText,
-    required this.hintText,
-    this.style,
-    required this.onChanged,
-  });
-
-  @override
-  State<_EditableBlockField> createState() => _EditableBlockFieldState();
-}
-
-class _EditableBlockFieldState extends State<_EditableBlockField> {
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialText);
-    _focusNode = FocusNode();
-  }
-
-  void _onTextChanged(String text) {
-    widget.onChanged(text);
-  }
-
-  @override
-  void didUpdateWidget(covariant _EditableBlockField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialText != widget.initialText &&
-        widget.initialText != _controller.text &&
-        !_focusNode.hasFocus) {
-      _controller.text = widget.initialText;
-    }
-  }
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final defaultStyle = TextStyle(
-      fontFamily: AppTypography.fontFamily,
-      fontSize: 13.5,
-      height: 1.6,
-      color: isDark ? Colors.white : Colors.black87,
-    );
-
-    return TextField(
-      controller: _controller,
-      focusNode: _focusNode,
-      autofocus: false,
-      maxLines: null,
-      keyboardType: TextInputType.multiline,
-      style: widget.style ?? defaultStyle,
-      decoration: InputDecoration(
-        isDense: true,
-        hintText: widget.hintText,
-        hintStyle: TextStyle(
-          fontFamily: AppTypography.fontFamily,
-          fontSize: 12.5,
-          color: isDark ? Colors.white38 : Colors.black38,
-        ),
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.zero,
-      ),
-      onChanged: _onTextChanged,
     );
   }
 }
