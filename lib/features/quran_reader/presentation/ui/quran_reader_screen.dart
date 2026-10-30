@@ -363,6 +363,10 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     if (ayahs.isNotEmpty && positions != null && positions.isNotEmpty) {
       const topCutoff = 0.18;
       const readingBaseline = 0.22;
+      final lastAyahIndex = ayahs.length - 1;
+      final endCardPos = positions.where((p) => p.index == ayahs.length).firstOrNull;
+      final lastPos = positions.where((p) => p.index == lastAyahIndex).firstOrNull;
+
       ItemPosition? targetPos;
       for (final p in positions) {
         if (p.itemLeadingEdge <= readingBaseline && p.itemTrailingEdge > readingBaseline) {
@@ -370,19 +374,22 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
           break;
         }
       }
-      if (targetPos == null) {
-        final lastPos = positions.where((p) => p.index == ayahs.length - 1).firstOrNull;
-        if (lastPos != null && lastPos.itemTrailingEdge <= readingBaseline) {
-          targetPos = lastPos;
-        } else {
-          final visiblePositions = positions.where((p) => p.itemTrailingEdge > topCutoff).toList();
-          if (visiblePositions.isNotEmpty) {
-            targetPos = visiblePositions.reduce((min, cur) => cur.index < min.index ? cur : min);
-          }
+      if (targetPos != null) {
+        final clampedIndex = targetPos.index.clamp(0, lastAyahIndex);
+        return ayahs[clampedIndex].ayahNumber;
+      } else if (endCardPos != null && endCardPos.itemTrailingEdge <= 1.0) {
+        return ayahs[lastAyahIndex].ayahNumber;
+      } else if (lastPos != null && lastPos.itemTrailingEdge <= readingBaseline) {
+        return ayahs[lastAyahIndex].ayahNumber;
+      } else {
+        final visiblePositions = positions
+            .where((p) => p.itemTrailingEdge > topCutoff && p.index < ayahs.length)
+            .toList();
+        if (visiblePositions.isNotEmpty) {
+          targetPos = visiblePositions.reduce((min, cur) => cur.index < min.index ? cur : min);
+          return ayahs[targetPos.index.clamp(0, lastAyahIndex)].ayahNumber;
         }
-      }
-      if (targetPos != null && targetPos.index >= 0 && targetPos.index < ayahs.length) {
-        return ayahs[targetPos.index].ayahNumber;
+        return ayahs[lastAyahIndex].ayahNumber;
       }
     }
 
@@ -397,6 +404,18 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
     }
 
     return 1;
+  }
+
+  void _navigateToSurah(int targetSurahId) {
+    if (!_pageController.hasClients) return;
+    final targetPageIndex = targetSurahId - 1;
+    if (targetPageIndex >= 0 && targetPageIndex < 114) {
+      _pageController.animateToPage(
+        targetPageIndex,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 
   int _getActiveOrVisibleAyahNumber() {
@@ -719,6 +738,12 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> with Widg
                             initialAyahNumber: initialAyahForPage,
                             translationId: widget.translationId,
                             topPadding: expandedHeaderHeight + 8.0,
+                            onNextSurah: pageSurahId < 114
+                                ? () => _navigateToSurah(pageSurahId + 1)
+                                : null,
+                            onPreviousSurah: pageSurahId > 1
+                                ? () => _navigateToSurah(pageSurahId - 1)
+                                : null,
                           );
                         },
                       ),

@@ -102,6 +102,12 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
     setState(() => _isSending = true);
     HapticFeedback.mediumImpact();
 
+    // Extract canonical plugin references (Quran Ayahs) from blocks
+    final pluginReferences = TopicBlock.extractPluginReferences(editorState.blocks);
+    if (pluginReferences.isNotEmpty) {
+      debugPrint('[SendToTopic] Extracted ${pluginReferences.length} Quran Ayah reference(s): $pluginReferences');
+    }
+
     int successCount = 0;
     final List<String> failedTopicNames = [];
     final dio = ref.read(tafakorDioProvider);
@@ -109,12 +115,15 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
 
     for (final targetTopic in targetTopics) {
       try {
+        final postData = <String, dynamic>{
+          'topic': targetTopic.id,
+          'content': content,
+          if (pluginReferences.isNotEmpty) 'plugin_references': pluginReferences,
+        };
+
         final response = await dio.post(
           'notes/',
-          data: {
-            'topic': targetTopic.id,
-            'content': content,
-          },
+          data: postData,
         );
 
         debugPrint('[SendToTopic] Topic ${targetTopic.id} response statusCode: ${response.statusCode}');

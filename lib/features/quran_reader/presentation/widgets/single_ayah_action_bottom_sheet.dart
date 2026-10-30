@@ -29,6 +29,7 @@ import '../../application/controllers/selected_ayah_action_provider.dart';
 import '../../domain/entities/ayah_entity.dart';
 import '../utils/reciter_download_helper.dart';
 import 'word_by_word_bottom_sheet.dart';
+import '../../../tafakor/presentation/widgets/ayah_notes_bottom_sheet.dart';
 
 /// Luxury bottom sheet displayed when a user long-presses an Ayah.
 /// Houses single-ayah quick actions: Copy, Share, Word-by-word Dictionary,
@@ -148,6 +149,89 @@ class SingleAyahActionBottomSheet extends ConsumerWidget {
                 showDragHandle: true,
                 title: 'سوره $cleanSurahName • آیه ${ayah.ayahNumber.toPersianDigit()}',
                 bottomSpacing: 14,
+              ),
+
+              // Ayah Notes & Reflections Banner Button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    final navContext = rootNavigatorKey.currentContext ?? context;
+                    Navigator.of(context).pop();
+                    final container = ProviderScope.containerOf(navContext, listen: false);
+                    container.read(selectedAyahActionProvider.notifier).clearSelection();
+
+                    AyahNotesBottomSheet.show(
+                      navContext,
+                      surahNumber: ayah.surahId,
+                      ayahNumber: ayah.ayahNumber,
+                      surahName: cleanSurahName,
+                      ayahArabicText: ayah.arabicText,
+                      translationText: ayah.translationText,
+                      ayahEntity: ayah,
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: isDark ? 0.12 : 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.25),
+                        width: 0.9,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            CupertinoIcons.bubble_left_bubble_right_fill,
+                            size: 16,
+                            color: primaryColor,
+                          ),
+                        ),
+                        10.hSpace,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'یادداشت‌ها و تدبرهای این آیه',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              Text(
+                                'مشاهده نظرات، یادداشت‌های من و مباحثات پیرامون آیه',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 11,
+                                  color: isDark ? Colors.white54 : Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          CupertinoIcons.chevron_left,
+                          size: 16,
+                          color: primaryColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
 
               // Row 1: Study & Listening (پخش، تفسیر، لغت‌نامه)

@@ -3,6 +3,8 @@ import '../../../../common/constants/app_constants.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/utils/jalali_date.dart';
 import 'tafakor_topic.dart';
+import 'tafakor_quran_reference.dart';
+import '../../infrastructure/services/tafakor_quran_extractor.dart';
 
 part 'tafakor_post.freezed.dart';
 
@@ -27,6 +29,13 @@ abstract class TafakorPost with _$TafakorPost {
     @Default(0) int commentsCount,
     @Default([]) List<String> publishedPlatforms,
   }) = _TafakorPost;
+
+  /// Quran Ayah references linked to this post (canonical or extracted)
+  List<TafakorQuranReference> get quranReferences =>
+      TafakorQuranRegistry.getReferences(this);
+
+  /// Whether this post references any Quran Ayah
+  bool get hasQuranReference => quranReferences.isNotEmpty;
 
   String? get formattedJalaliDate {
     if (createdAt == null || createdAt!.trim().isEmpty) return null;

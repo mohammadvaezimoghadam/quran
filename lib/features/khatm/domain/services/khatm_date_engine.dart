@@ -56,16 +56,31 @@ class KhatmDateEngine {
     required KhatmCadence cadence,
     List<int> selectedWeekdays = const [],
   }) {
-    final dates = generateSessionDates(
-      startDate: startDate,
-      sessionCount: sessionCount,
-      cadence: cadence,
-      selectedWeekdays: selectedWeekdays,
-    );
-    if (dates.isEmpty) {
+    if (sessionCount <= 1) {
       return DateTime(startDate.year, startDate.month, startDate.day);
     }
-    return dates.last;
+
+    DateTime current = DateTime(startDate.year, startDate.month, startDate.day);
+
+    if (cadence == KhatmCadence.daily) {
+      return DateTime(current.year, current.month, current.day + (sessionCount - 1));
+    }
+    if (cadence == KhatmCadence.everyOtherDay) {
+      return DateTime(current.year, current.month, current.day + (sessionCount - 1) * 2);
+    }
+    if (cadence == KhatmCadence.weekly) {
+      return DateTime(current.year, current.month, current.day + (sessionCount - 1) * 7);
+    }
+
+    if (selectedWeekdays.isNotEmpty) {
+      while (!selectedWeekdays.contains(current.weekday)) {
+        current = DateTime(current.year, current.month, current.day + 1);
+      }
+      for (int i = 1; i < sessionCount; i++) {
+        current = _nextSelectedWeekday(current, selectedWeekdays);
+      }
+    }
+    return current;
   }
 
   static DateTime _nextSelectedWeekday(DateTime current, List<int> weekdays) {

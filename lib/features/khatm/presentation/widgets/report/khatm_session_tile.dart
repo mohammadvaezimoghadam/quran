@@ -49,29 +49,34 @@ class KhatmSessionTile extends StatelessWidget {
     final status = session.computeStatus();
 
     return Container(
+      constraints: const BoxConstraints(minHeight: 52),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(border: isLast ? null : rowBorder),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── ردیف: Timeline Node with checkbox toggle (Right in RTL) ──
-            SizedBox(
-              width: 44,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Vertical dotted connector line
-                  CustomPaint(
-                    size: const Size(2, double.infinity),
-                    painter: _DottedLinePainter(
-                      color: primary.withValues(alpha: 0.35),
-                      isFirst: isFirst,
-                      isLast: isLast,
-                    ),
-                  ),
-                  // Circled node badge (tap to toggle completion)
-                  GestureDetector(
+      child: Stack(
+        children: [
+          // Vertical dotted connector line matching full tile height
+          PositionedDirectional(
+            start: (44 - 2) / 2,
+            top: 0,
+            bottom: 0,
+            width: 2,
+            child: CustomPaint(
+              painter: _DottedLinePainter(
+                color: primary.withValues(alpha: 0.35),
+                isFirst: isFirst,
+                isLast: isLast,
+              ),
+            ),
+          ),
+          // Main content row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // ── ردیف: Timeline Node with checkbox toggle (Right in RTL) ──
+              SizedBox(
+                width: 44,
+                child: Center(
+                  child: GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
                       onToggle?.call(!isCompleted);
@@ -118,26 +123,25 @@ class KhatmSessionTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
 
-            // ── عنوان جلسه (Middle in RTL) ──
-            Expanded(
-              child: InkWell(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  if (onSessionTap != null) {
-                    onSessionTap!();
-                  } else {
-                    onToggle?.call(!isCompleted);
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 14,
-                  ),
+              // ── عنوان جلسه (Middle in RTL) ──
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    if (onSessionTap != null) {
+                      onSessionTap!();
+                    } else {
+                      onToggle?.call(!isCompleted);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 14,
+                    ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -227,9 +231,10 @@ class KhatmSessionTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 }
 
 /// Draws vertical dotted line connecting timeline nodes.

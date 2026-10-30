@@ -10,16 +10,18 @@ import 'package:quran/core/routes/route_name.dart';
 import 'package:quran/core/theme/app_typography.dart';
 import 'package:quran/features/khatm/application/controllers/khatm_detail_controller.dart';
 import 'package:quran/features/khatm/application/controllers/khatm_list_controller.dart';
+import 'package:quran/features/khatm/domain/entities/khatm_plan.dart';
+import 'package:quran/features/khatm/domain/entities/khatm_session_item.dart';
 import 'package:quran/features/khatm/domain/services/khatm_quran_resolver.dart';
 import '../widgets/report/khatm_continue_button.dart';
 import '../widgets/report/khatm_date_range_card.dart';
 import '../widgets/report/khatm_progress_donut_chart.dart';
-import '../widgets/report/khatm_session_timeline.dart';
+import '../widgets/report/khatm_session_tile.dart';
 import '../widgets/report/khatm_session_timeline_header.dart';
 
 /// Screen presenting the detailed Khatm Report & Sessions Timeline
 /// styled cleanly to match the app's minimal Apple design system without decorative icons.
-class KhatmDetailReportScreen extends ConsumerWidget {
+class KhatmDetailReportScreen extends ConsumerStatefulWidget {
   final String planId;
 
   const KhatmDetailReportScreen({
@@ -27,7 +29,88 @@ class KhatmDetailReportScreen extends ConsumerWidget {
     required this.planId,
   });
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<KhatmDetailReportScreen> createState() =>
+      _KhatmDetailReportScreenState();
+}
+
+class _KhatmDetailReportScreenState
+    extends ConsumerState<KhatmDetailReportScreen> {
+  late final ScrollController _scrollController = ScrollController();
+  final GlobalKey _topCardsKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  int _findTargetIndex(KhatmPlan plan) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // 1. Check for session whose scheduled date is today
+    final todayIdx = plan.sessions.indexWhere((s) {
+      final d = DateTime(
+        s.scheduledDate.year,
+        s.scheduledDate.month,
+        s.scheduledDate.day,
+      );
+      return d.isAtSameMomentAs(today);
+    });
+    if (todayIdx != -1) return todayIdx;
+
+    // 2. Otherwise find the first uncompleted session
+    final pendingIdx = plan.sessions.indexWhere((s) => !s.isCompleted);
+    if (pendingIdx != -1) return pendingIdx;
+
+    return 0;
+  }
+
+  void _scrollToSession(int index, int totalSessions) {
+    if (!_scrollController.hasClients) return;
+    HapticFeedback.lightImpact();
+
+    // 1. Determine exact height of top cards dynamically (fallback 248.0)
+    double topCardsHeight = 248.0;
+    final renderBox =
+        _topCardsKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null && renderBox.hasSize) {
+      // 14 top padding + measured column height + 12 bottom padding
+      topCardsHeight = 14.0 + renderBox.size.height + 12.0;
+    }
+
+    // 2. Each session tile has minHeight of 52.0px.
+    const tileEstimatedHeight = 52.0;
+
+    // To position the item completely below the sticky header without being obscured,
+    // we scroll topCardsHeight + item offset, with a comfortable 14px margin so it's
+    // clearly visible below the header divider.
+    final targetOffset =
+        (topCardsHeight + (index * tileEstimatedHeight) - 14.0)
+            .clamp(0.0, _scrollController.position.maxScrollExtent);
+
+    final currentOffset = _scrollController.offset;
+    final distance = (targetOffset - currentOffset).abs();
+
+    // For long distances, jump near the target to prevent intermediate widget build lag
+    if (distance > 700) {
+      final preOffset = targetOffset > currentOffset
+          ? targetOffset - 250
+          : targetOffset + 250;
+      _scrollController.jumpTo(
+        preOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      );
+    }
+
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
     HapticFeedback.lightImpact();
     final colors = context.colors;
     final isDark = context.isDark;
@@ -100,7 +183,7 @@ class KhatmDetailReportScreen extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       final success = await ref
-          .read(khatmDetailControllerProvider(planId).notifier)
+          .read(khatmDetailControllerProvider(widget.planId).notifier)
           .deletePlan();
       if (success && context.mounted) {
         AppSnackBar.showSuccess(context, 'برنامه ختم حذف شد.');
@@ -109,9 +192,9 @@ class KhatmDetailReportScreen extends ConsumerWidget {
     }
   }
 
-  void _onContinueKhatm(BuildContext context, WidgetRef ref) {
+  void _onContinueKhatm(BuildContext context) {
     HapticFeedback.lightImpact();
-    final state = ref.read(khatmDetailControllerProvider(planId));
+    final state = ref.read(khatmDetailControllerProvider(widget.planId));
     final plan = state.plan;
     if (plan == null) return;
 
@@ -141,20 +224,55 @@ class KhatmDetailReportScreen extends ConsumerWidget {
         'khatmSession': nextSession.sessionIndex.toString(),
       },
     ).then((_) {
-      ref.read(khatmDetailControllerProvider(planId).notifier).loadPlan();
+      if (!mounted) return;
+      ref.read(khatmDetailControllerProvider(widget.planId).notifier).loadPlan();
       ref.read(khatmListControllerProvider.notifier).loadPlans();
     });
   }
 
+  void _onSessionTap(KhatmPlan plan, KhatmSessionItem session) {
+    final unitToNavigate = (!session.isCompleted &&
+            session.lastReadUnit != null &&
+            session.lastReadUnit! >= session.fromUnit &&
+            session.lastReadUnit! <= session.toUnit)
+        ? session.lastReadUnit!
+        : session.fromUnit;
+
+    final target = KhatmQuranResolver.resolveUnit(
+      unitType: plan.unitType,
+      unitNumber: unitToNavigate,
+    );
+
+    context.pushNamed(
+      quranReaderRoute,
+      pathParameters: {'id': target.surahId.toString()},
+      queryParameters: {
+        'ayah': target.ayahNumber.toString(),
+        if (!session.isCompleted) ...{
+          'khatmId': plan.id,
+          'khatmSession': session.sessionIndex.toString(),
+        },
+      },
+    ).then((_) {
+      if (!mounted) return;
+      ref
+          .read(khatmDetailControllerProvider(widget.planId).notifier)
+          .loadPlan();
+      ref
+          .read(khatmListControllerProvider.notifier)
+          .loadPlans();
+    });
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
     final isDark = context.isDark;
 
-    final state = ref.watch(khatmDetailControllerProvider(planId));
+    final state = ref.watch(khatmDetailControllerProvider(widget.planId));
     final controller =
-        ref.read(khatmDetailControllerProvider(planId).notifier);
+        ref.read(khatmDetailControllerProvider(widget.planId).notifier);
 
     if (state.isLoading) {
       return const Scaffold(
@@ -278,7 +396,7 @@ class KhatmDetailReportScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: TextButton(
-              onPressed: () => _confirmDelete(context, ref),
+              onPressed: () => _confirmDelete(context),
               child: Text(
                 'حذف',
                 style: TextStyle(
@@ -296,97 +414,88 @@ class KhatmDetailReportScreen extends ConsumerWidget {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
+              child: CustomScrollView(
+                controller: _scrollController,
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Card 1: Donut Progress Chart ───────────────────────
-                    KhatmProgressDonutChart(
-                      title: plan.title,
-                      totalUnits: plan.totalUnits,
-                      completedUnits: plan.completedUnits,
-                      unitLabel: plan.unitLabel,
-                    ),
-                    const SizedBox(height: 12),
+                slivers: [
+                  // ── Top Header Section (Donut Chart & Date Range) ────────
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        key: _topCardsKey,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // ── Card 1: Donut Progress Chart ─────────────────
+                          KhatmProgressDonutChart(
+                            title: plan.title,
+                            totalUnits: plan.totalUnits,
+                            completedUnits: plan.completedUnits,
+                            unitLabel: plan.unitLabel,
+                          ),
+                          const SizedBox(height: 12),
 
-                    // ── Card 2: Date Range (Zero icons) ────────────────────
-                    KhatmDateRangeCard(
-                      startDateFa: plan.startDateFa,
-                      endDateFa: plan.endDateFa,
-                    ),
-                    const SizedBox(height: 22),
-
-                    // ── Section Title: گزارش تلاوت براساس تاریخ ────────────
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(
-                        'گزارش تلاوت براساس تاریخ',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? Colors.white70
-                              : const Color(0xFF5A554E),
-                        ),
+                          // ── Card 2: Date Range (Zero icons) ──────────────
+                          KhatmDateRangeCard(
+                            startDateFa: plan.startDateFa,
+                            endDateFa: plan.endDateFa,
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                  ),
 
-                    // ── Table Column Headers & Divider ─────────────────────
-                    const KhatmSessionTimelineHeader(),
-                    Container(
-                      height: 0.8,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      color: colors.cardBorder,
+                  // ── Pinned Sticky Header (Title, Today Jump Chip, Column Headers) ─
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _KhatmTimelineStickyHeaderDelegate(
+                      plan: plan,
+                      onJumpToToday: !plan.isCompleted && plan.sessions.isNotEmpty
+                          ? () {
+                              final targetIdx = _findTargetIndex(plan);
+                              _scrollToSession(
+                                targetIdx,
+                                plan.sessions.length,
+                              );
+                            }
+                          : null,
                     ),
+                  ),
 
-                    // ── Timeline Sessions List ─────────────────────────────
-                    KhatmSessionTimeline(
-                      sessions: plan.sessions,
-                      unitType: plan.unitType,
-                      onSessionToggle: (sessionIndex, isCompleted) {
-                        controller.toggleSession(sessionIndex, isCompleted);
-                      },
-                      onSessionTap: (sessionIndex) {
-                        final session = plan.sessions[sessionIndex];
-                        final unitToNavigate = (!session.isCompleted &&
-                                session.lastReadUnit != null &&
-                                session.lastReadUnit! >= session.fromUnit &&
-                                session.lastReadUnit! <= session.toUnit)
-                            ? session.lastReadUnit!
-                            : session.fromUnit;
-                        final target = KhatmQuranResolver.resolveUnit(
-                          unitType: plan.unitType,
-                          unitNumber: unitToNavigate,
-                        );
-                        context.pushNamed(
-                          quranReaderRoute,
-                          pathParameters: {'id': target.surahId.toString()},
-                          queryParameters: {
-                            'ayah': target.ayahNumber.toString(),
-                            if (!session.isCompleted) ...{
-                              'khatmId': plan.id,
-                              'khatmSession': session.sessionIndex.toString(),
+                  // ── Virtualized Timeline Sessions List (SliverList) ───────
+                  if (plan.sessions.isEmpty)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Center(child: Text('جلسه‌ای تعریف نشده است')),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      sliver: SliverList.builder(
+                        itemCount: plan.sessions.length,
+                        itemBuilder: (context, index) {
+                          final session = plan.sessions[index];
+                          return KhatmSessionTile(
+                            session: session,
+                            unitType: plan.unitType,
+                            isFirst: index == 0,
+                            isLast: index == plan.sessions.length - 1,
+                            onToggle: (val) {
+                              controller.toggleSession(
+                                session.sessionIndex,
+                                val,
+                              );
                             },
-                          },
-                        ).then((_) {
-                          ref
-                              .read(khatmDetailControllerProvider(planId).notifier)
-                              .loadPlan();
-                          ref
-                              .read(khatmListControllerProvider.notifier)
-                              .loadPlans();
-                        });
-                      },
+                            onSessionTap: () {
+                              _onSessionTap(plan, session);
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
 
@@ -394,7 +503,7 @@ class KhatmDetailReportScreen extends ConsumerWidget {
             KhatmContinueButton(
               isEnabled: !plan.isCompleted,
               label: plan.isCompleted ? 'ختم تکمیل شده است' : 'ادامه ختم',
-              onPressed: () => _onContinueKhatm(context, ref),
+              onPressed: () => _onContinueKhatm(context),
             ),
           ],
         ),
@@ -404,5 +513,139 @@ class KhatmDetailReportScreen extends ConsumerWidget {
 
   Color themeErrorColor(BuildContext context) {
     return Theme.of(context).colorScheme.error;
+  }
+}
+
+/// Pinned persistent sticky header for the sessions timeline.
+/// Holds the section title, "نوبت امروز" jump chip, and table column headers.
+class _KhatmTimelineStickyHeaderDelegate
+    extends SliverPersistentHeaderDelegate {
+  final KhatmPlan plan;
+  final VoidCallback? onJumpToToday;
+
+  _KhatmTimelineStickyHeaderDelegate({
+    required this.plan,
+    this.onJumpToToday,
+  });
+
+  @override
+  double get minExtent => 74.0;
+
+  @override
+  double get maxExtent => 74.0;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final isDark = context.isDark;
+
+    return Container(
+      height: 74.0,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: overlapsContent
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Section Title & Jump to Today Button ─────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'گزارش تلاوت براساس تاریخ',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white70 : const Color(0xFF5A554E),
+                  ),
+                ),
+                if (!plan.isCompleted &&
+                    plan.sessions.isNotEmpty &&
+                    onJumpToToday != null)
+                  GestureDetector(
+                    onTap: onJumpToToday,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white10
+                            : Colors.black.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: colors.cardBorder,
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            CupertinoIcons.arrow_down_to_line,
+                            size: 12,
+                            color: colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'نوبت امروز',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+
+          // ── Table Column Headers (ردیف | عنوان | تاریخ) ───
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: KhatmSessionTimelineHeader(),
+          ),
+
+          // ── Divider ──────────────────────────────────────
+          Container(
+            height: 0.8,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            color: colors.cardBorder,
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(
+      covariant _KhatmTimelineStickyHeaderDelegate oldDelegate) {
+    return oldDelegate.plan != plan ||
+        oldDelegate.onJumpToToday != onJumpToToday;
   }
 }

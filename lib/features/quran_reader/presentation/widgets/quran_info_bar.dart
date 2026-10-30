@@ -91,7 +91,9 @@ class QuranInfoBar extends ConsumerWidget {
       builder: (context, positions, child) {
         int currentIndex = 0;
         if (positions.isNotEmpty) {
-          final lastPos = positions.where((p) => p.index == ayahs.length - 1).firstOrNull;
+          final lastAyahIndex = ayahs.length - 1;
+          final endCardPos = positions.where((p) => p.index == ayahs.length).firstOrNull;
+          final lastPos = positions.where((p) => p.index == lastAyahIndex).firstOrNull;
 
           ItemPosition? targetPosition;
           for (final p in positions) {
@@ -102,18 +104,28 @@ class QuranInfoBar extends ConsumerWidget {
           }
 
           if (targetPosition != null) {
-            currentIndex = targetPosition.index;
+            if (targetPosition.index >= ayahs.length) {
+              // EndCard is crossing readingBaseline -> user completed the surah!
+              currentIndex = lastAyahIndex;
+            } else {
+              currentIndex = targetPosition.index;
+            }
+          } else if (endCardPos != null && endCardPos.itemTrailingEdge <= 1.0) {
+            // EndCard is visible in the viewport
+            currentIndex = lastAyahIndex;
           } else if (lastPos != null && lastPos.itemTrailingEdge <= readingBaseline) {
             // User has scrolled past the reading baseline all the way to the end of the surah!
-            currentIndex = ayahs.length - 1;
+            currentIndex = lastAyahIndex;
           } else {
-            final visible = positions.where((p) => p.itemTrailingEdge > topCutoff).toList();
+            final visible = positions
+                .where((p) => p.itemTrailingEdge > topCutoff && p.index < ayahs.length)
+                .toList();
             if (visible.isNotEmpty) {
               targetPosition = visible.reduce((min, cur) => cur.index < min.index ? cur : min);
+              currentIndex = targetPosition.index;
             } else {
-              targetPosition = positions.reduce((min, cur) => cur.index < min.index ? cur : min);
+              currentIndex = lastAyahIndex;
             }
-            currentIndex = targetPosition.index;
           }
         } else {
           // If positions are temporarily empty, prioritize active/audio ayah instead of defaulting to 0
@@ -126,9 +138,7 @@ class QuranInfoBar extends ConsumerWidget {
           }
         }
 
-        if (currentIndex < 0 || currentIndex >= ayahs.length) {
-          currentIndex = 0;
-        }
+        currentIndex = currentIndex.clamp(0, ayahs.length - 1);
 
         return _buildContent(context, ref, ayahs[currentIndex], surahs);
       },

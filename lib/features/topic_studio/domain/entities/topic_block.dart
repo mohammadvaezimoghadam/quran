@@ -131,6 +131,33 @@ abstract class TopicBlock with _$TopicBlock {
     return buffer.toString().trim();
   }
 
+  /// Extracts canonical plugin references (e.g. Quran Ayahs) from draft blocks
+  /// formatted for Tafakor Post creation payload (`PostPluginReference`).
+  static List<Map<String, dynamic>> extractPluginReferences(List<TopicBlock> blocks) {
+    final references = <Map<String, dynamic>>[];
+    final seenAyahs = <String>{};
+
+    for (final block in blocks) {
+      if (block.surahId != null && block.ayahNumber != null) {
+        final canonicalId = 'surah:${block.surahId},ayah:${block.ayahNumber}';
+        if (seenAyahs.add(canonicalId)) {
+          references.add({
+            'plugin': 'quran',
+            'resource_type': 'ayah',
+            'external_id': canonicalId,
+            'metadata': {
+              'surah_number': block.surahId,
+              'ayah_number': block.ayahNumber,
+              if (block.surahName != null && block.surahName!.trim().isNotEmpty)
+                'surah_name': block.surahName!.trim(),
+            },
+          });
+        }
+      }
+    }
+    return references;
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

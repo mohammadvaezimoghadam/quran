@@ -19,6 +19,7 @@ import '../../../quran_home/application/controllers/continue_reading_controller.
 import '../../../study_plan/application/controllers/study_plan_controller.dart';
 import '../../../surah_list/infrastructure/datasources/static_surahs_data.dart';
 import 'ayah_list_item.dart';
+import 'surah_end_navigation_section.dart';
 
 class SurahAyahPageView extends ConsumerStatefulWidget {
   final int surahId;
@@ -27,6 +28,8 @@ class SurahAyahPageView extends ConsumerStatefulWidget {
   final int? initialAyahNumber;
   final String? translationId;
   final double? topPadding;
+  final VoidCallback? onNextSurah;
+  final VoidCallback? onPreviousSurah;
 
   const SurahAyahPageView({
     super.key,
@@ -36,6 +39,8 @@ class SurahAyahPageView extends ConsumerStatefulWidget {
     this.initialAyahNumber,
     this.translationId,
     this.topPadding,
+    this.onNextSurah,
+    this.onPreviousSurah,
   });
 
   @override
@@ -113,10 +118,13 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
         }
       }
 
-      final topIndex = topPosition.index;
+      final topIndex = topPosition.index.clamp(0, state.ayahs.length - 1);
 
-      // The focused reading ayah: if user scrolled to the absolute bottom of the list, focus the last ayah!
-      final effectiveReadingIndex = (_isAtScrollBottom && _hasUserScrolled)
+      // The focused reading ayah: if user scrolled to the absolute bottom of the list,
+      // or if the end section is visible in the viewport, focus the last ayah!
+      final endSectionPos = positions.where((p) => p.index == state.ayahs.length).firstOrNull;
+      final isEndVisible = endSectionPos != null && endSectionPos.itemTrailingEdge <= 1.0;
+      final effectiveReadingIndex = ((_isAtScrollBottom || isEndVisible) && _hasUserScrolled)
           ? state.ayahs.length - 1
           : topIndex;
 
@@ -146,7 +154,8 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                     kStaticQuranSurahs[widget.surahId].startPage > readingAyah.page!));
 
         final isLastAyahOfPage = isNextAyahOnNextPage || isSurahEndingPage;
-        final isEndOfPage = _hasUserScrolled && (isLastAyahOfPage || (_isAtScrollBottom && isLastAyahOfSurah));
+        final isEndOfPage = _hasUserScrolled &&
+            (isLastAyahOfPage || ((_isAtScrollBottom || isEndVisible) && isLastAyahOfSurah));
 
         // Calculate live ayah-level fraction on this page based strictly on reading position
         final ayahsOnThisPage = state.ayahs.where((a) => a.page == readingAyah.page).toList();
@@ -557,7 +566,7 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
             final firstVisible = positions.reduce((min, position) =>
                 position.itemLeadingEdge.abs() < min.itemLeadingEdge.abs() ? position : min);
             
-            final index = firstVisible.index;
+            final index = firstVisible.index.clamp(0, state.ayahs.length - 1);
             final alignment = firstVisible.itemLeadingEdge > 0 ? 0.0 : firstVisible.itemLeadingEdge;
             
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -668,13 +677,20 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                 left: context.isWideScreen ? 24.0 : 0.0,
                 right: context.isWideScreen ? 24.0 : 0.0,
                 top: widget.topPadding ?? (context.isWideScreen ? 16.0 : 0.0),
-                bottom: MediaQuery.viewPaddingOf(context).bottom +
-                    (MediaQuery.sizeOf(context).height > 0
-                        ? (MediaQuery.sizeOf(context).height * 0.85).clamp(450.0, 750.0)
-                        : 500.0),
+                bottom: MediaQuery.viewPaddingOf(context).bottom + 110.0,
               ),
-              itemCount: state.ayahs.length,
+              itemCount: state.ayahs.length + 1,
               itemBuilder: (context, index) {
+                if (index == state.ayahs.length) {
+                  return SurahEndNavigationSection(
+                    surahId: widget.surahId,
+                    surahName: widget.surahName,
+                    totalAyahs: state.ayahs.length,
+                    onNextSurah: widget.onNextSurah,
+                    onPreviousSurah: widget.onPreviousSurah,
+                  );
+                }
+
                 final ayah = state.ayahs[index];
                 final previousAyah = index > 0 ? state.ayahs[index - 1] : null;
                 

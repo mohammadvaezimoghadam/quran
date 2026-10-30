@@ -14,6 +14,7 @@ abstract class ITafakorPostsRepository {
     required int topicId,
     required String content,
     String? mediaFilePath,
+    List<Map<String, dynamic>>? pluginReferences,
   });
 
   Future<Result<TafakorPost, Failure>> updatePost({
@@ -26,5 +27,13 @@ abstract class ITafakorPostsRepository {
   Future<Result<void, Failure>> reactToPost(int postId, String emoji);
 
   Future<Result<TafakorTopicAdminsData, Failure>> getTopicAdmins(int topicId);
+
+  Future<Result<TafakorPaginatedPosts, Failure>> getAyahPosts({
+    required int surahNumber,
+    required int ayahNumber,
+    bool? mine,
+    String? search,
+    int page = 1,
+  });
 }
 

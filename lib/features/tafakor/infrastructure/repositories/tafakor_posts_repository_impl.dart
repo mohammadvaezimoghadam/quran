@@ -12,6 +12,8 @@ import '../../domain/entities/tafakor_post.dart';
 import '../../domain/entities/tafakor_topic_admins_data.dart';
 import '../../domain/repositories/i_tafakor_posts_repository.dart';
 import '../dtos/tafakor_post_dto.dart';
+import '../dtos/tafakor_paginated_posts_dto.dart';
+import '../services/tafakor_quran_extractor.dart';
 
 
 final tafakorPostsRepositoryProvider = Provider<ITafakorPostsRepository>((ref) {
@@ -31,6 +33,7 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
     required int topicId,
     required String content,
     String? mediaFilePath,
+    List<Map<String, dynamic>>? pluginReferences,
   }) async {
     try {
       debugPrint('[TafakorPosts] Creating post for topic $topicId...');
@@ -61,10 +64,15 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
         requestData = {
           'topic': topicId,
           'content': content,
+          if (pluginReferences != null && pluginReferences.isNotEmpty)
+            'plugin_references': pluginReferences,
         };
       }
 
       final response = await _dio.post('notes/', data: requestData);
+      if (response.data is Map) {
+        TafakorQuranRegistry.registerFromRaw(Map<String, dynamic>.from(response.data as Map));
+      }
       final dto = TafakorPostDto.fromJson(response.data as Map<String, dynamic>);
       debugPrint('[TafakorPosts] Successfully created post ${dto.id}');
       return Success(dto.toDomain());
@@ -110,7 +118,26 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
   }) async {
     try {
       debugPrint('[TafakorPosts] Fetching posts for topic: $topicId (page: $page)...');
-      final dto = await _apiClient.getPosts(topicId, page);
+      final response = await _dio.get('notes/', queryParameters: {
+        'topic_id': topicId,
+        'page': page,
+      });
+      final Map<String, dynamic> data = Map<String, dynamic>.from(response.data as Map);
+      if (!data.containsKey('count') || data['count'] == null) {
+        data['count'] = (data['results'] as List?)?.length ?? 0;
+      }
+
+      // Register Quran references from raw JSON
+      final rawResults = data['results'];
+      if (rawResults is List) {
+        for (final raw in rawResults) {
+          if (raw is Map) {
+            TafakorQuranRegistry.registerFromRaw(Map<String, dynamic>.from(raw));
+          }
+        }
+      }
+
+      final dto = TafakorPaginatedPostsDto.fromJson(data);
       debugPrint('[TafakorPosts] Successfully fetched ${dto.results.length} posts (total: ${dto.count})');
       return Success(dto.toDomain());
     } on DioException catch (e, stackTrace) {
@@ -177,6 +204,58 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
       debugPrint('[TafakorPosts] Unexpected error on getTopicAdmins: $e');
       return Error(Failure(
         message: 'خطا در دریافت لیست ادمین‌های تاپیک: $e',
+        stackTrace: stackTrace,
+      ));
+    }
+  }
+
+  @override
+  Future<Result<TafakorPaginatedPosts, Failure>> getAyahPosts({
+    required int surahNumber,
+    required int ayahNumber,
+    bool? mine,
+    String? search,
+    int page = 1,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'ayah': 'surah:$surahNumber,ayah:$ayahNumber',
+        'page': page,
+      };
+      if (mine == true) {
+        queryParams['mine'] = 'true';
+      }
+      if (search != null && search.trim().isNotEmpty) {
+        queryParams['search'] = search.trim();
+      }
+
+      debugPrint('[TafakorPosts] Fetching ayah notes for $surahNumber:$ayahNumber (mine: $mine, page: $page, search: $search)...');
+      final response = await _dio.get('notes/', queryParameters: queryParams);
+      final Map<String, dynamic> data = Map<String, dynamic>.from(response.data as Map);
+      if (!data.containsKey('count') || data['count'] == null) {
+        data['count'] = (data['results'] as List?)?.length ?? 0;
+      }
+
+      // Register Quran references from raw JSON
+      final rawResults = data['results'];
+      if (rawResults is List) {
+        for (final raw in rawResults) {
+          if (raw is Map) {
+            TafakorQuranRegistry.registerFromRaw(Map<String, dynamic>.from(raw));
+          }
+        }
+      }
+
+      final dto = TafakorPaginatedPostsDto.fromJson(data);
+      debugPrint('[TafakorPosts] Successfully fetched ${dto.results.length} ayah notes (total: ${dto.count})');
+      return Success(dto.toDomain());
+    } on DioException catch (e, stackTrace) {
+      debugPrint('[TafakorPosts] DioException on getAyahPosts: ${e.message}');
+      return Error(mapDioExceptionToFailure(e, stackTrace));
+    } catch (e, stackTrace) {
+      debugPrint('[TafakorPosts] Unexpected error on getAyahPosts: $e');
+      return Error(Failure(
+        message: 'خطا در دریافت یادداشت‌های آیه: $e',
         stackTrace: stackTrace,
       ));
     }

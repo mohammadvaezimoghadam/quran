@@ -111,9 +111,18 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
   final Ref? _ref;
   bool _isAutoCompleting = false;
 
-  KhatmDetailController(this._localDataSource, this.planId, [this._ref])
-      : super(const KhatmDetailState()) {
-    loadPlan();
+  KhatmDetailController(
+    this._localDataSource,
+    this.planId, [
+    this._ref,
+    KhatmPlan? initialPlan,
+  ]) : super(KhatmDetailState(
+          plan: initialPlan,
+          isLoading: initialPlan == null,
+        )) {
+    if (initialPlan == null) {
+      loadPlan();
+    }
   }
 
   Future<void> loadPlan() async {
@@ -584,5 +593,13 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
 final khatmDetailControllerProvider = StateNotifierProvider.autoDispose
     .family<KhatmDetailController, KhatmDetailState, String>((ref, planId) {
   final localDataSource = ref.read(khatmLocalDataSourceProvider);
-  return KhatmDetailController(localDataSource, planId, ref);
+  final listState = ref.read(khatmListControllerProvider);
+  KhatmPlan? initialPlan;
+  for (final p in listState.plans) {
+    if (p.id == planId) {
+      initialPlan = p;
+      break;
+    }
+  }
+  return KhatmDetailController(localDataSource, planId, ref, initialPlan);
 });

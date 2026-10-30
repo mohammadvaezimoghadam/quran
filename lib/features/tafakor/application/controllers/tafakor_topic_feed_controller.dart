@@ -170,11 +170,13 @@ class TafakorTopicFeedController extends Notifier<TafakorTopicFeedState> {
     required int topicId,
     required String content,
     String? mediaFilePath,
+    List<Map<String, dynamic>>? pluginReferences,
   }) async {
     final result = await _repository.createPost(
       topicId: topicId,
       content: content,
       mediaFilePath: mediaFilePath,
+      pluginReferences: pluginReferences,
     );
 
     return result.when(

@@ -1,4 +1,4 @@
-﻿
+
 abstract class AppConstants {
   // Base URLs
   static const String alQuranCloudBaseUrl = 'https://api.alquran.cloud/v1';
@@ -6,6 +6,8 @@ abstract class AppConstants {
   static const String everyAyahAudioBaseUrl = 'https://www.everyayah.com/data';
   // Production (سرور اصلی تفکر):
   static const String tafakorBaseUrl = 'https://tafakormag.ir/api/';
+  // Staging / Local Ubuntu Server (تست و شبیه‌سازی روی لپ‌تاپ):
+  // static const String tafakorBaseUrl = 'http://192.168.1.106:8085/api/';
   // Local Docker (اتصال به داکر لوکال روی پورت 8085):
   // static String get tafakorBaseUrl {
   //   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {

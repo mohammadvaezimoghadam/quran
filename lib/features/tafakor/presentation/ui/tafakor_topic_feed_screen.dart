@@ -23,6 +23,7 @@ import '../../domain/entities/tafakor_topic_admins_data.dart';
 import '../../infrastructure/datasources/tafakor_local_data_source.dart';
 import 'tafakor_login_screen.dart';
 import 'tafakor_post_editor_screen.dart';
+import '../widgets/tafakor_ayah_chip.dart';
 
 
 /// Screen displaying the paginated posts/notes feed of a Tafakor Topic,
@@ -1928,6 +1929,13 @@ class _PostCard extends StatelessWidget {
                 height: 1.6,
                 color: colorScheme.onSurface,
               ),
+            ),
+
+          // Quran Ayah Badges (Reverse Linkage)
+          if (post.hasQuranReference)
+            TafakorPostAyahBadgesSection(
+              post: post,
+              isDark: isDark,
             ),
 
 
