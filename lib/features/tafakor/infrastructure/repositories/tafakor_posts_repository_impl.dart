@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +30,7 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
   TafakorPostsRepositoryImpl(this._apiClient, this._dio);
 
   @override
+  @override
   Future<Result<TafakorPost, Failure>> createPost({
     required int topicId,
     required String content,
@@ -54,12 +56,16 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
             lower.endsWith('.aac');
         final mediaType = isVideo ? 'video' : (isAudio ? 'audio' : 'image');
 
-        requestData = FormData.fromMap({
+        final formDataMap = <String, dynamic>{
           'topic': topicId,
           'content': content,
           'media_type': mediaType,
           'media_file': await MultipartFile.fromFile(mediaFilePath),
-        });
+        };
+        if (pluginReferences != null && pluginReferences.isNotEmpty) {
+          formDataMap['plugin_references'] = jsonEncode(pluginReferences);
+        }
+        requestData = FormData.fromMap(formDataMap);
       } else {
         requestData = {
           'topic': topicId,
@@ -69,7 +75,57 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
         };
       }
 
-      final response = await _dio.post('notes/', data: requestData);
+      Response response;
+      try {
+        response = await _dio.post('notes/', data: requestData);
+      } on DioException catch (postErr) {
+        final statusCode = postErr.response?.statusCode;
+        // If post with plugin_references failed with a 400 or 500 error,
+        // fallback to basic post and attach plugin references via PATCH!
+        if (pluginReferences != null &&
+            pluginReferences.isNotEmpty &&
+            statusCode != 401 &&
+            statusCode != 403) {
+          debugPrint(
+            '[TafakorPosts] POST with plugin_references failed ($statusCode). Retrying basic post...',
+          );
+          final dynamic basicData;
+          if (mediaFilePath != null && mediaFilePath.isNotEmpty) {
+            final lower = mediaFilePath.toLowerCase();
+            final isVideo = lower.endsWith('.mp4') || lower.endsWith('.mov');
+            final mediaType = isVideo ? 'video' : 'image';
+            basicData = FormData.fromMap({
+              'topic': topicId,
+              'content': content,
+              'media_type': mediaType,
+              'media_file': await MultipartFile.fromFile(mediaFilePath),
+            });
+          } else {
+            basicData = {
+              'topic': topicId,
+              'content': content,
+            };
+          }
+          response = await _dio.post('notes/', data: basicData);
+          final createdId = (response.data is Map) ? (response.data as Map)['id'] : null;
+          if (createdId is int) {
+            try {
+              final patchRes = await _dio.patch(
+                'notes/$createdId/',
+                data: {'plugin_references': pluginReferences},
+              );
+              if (patchRes.data is Map) {
+                response = patchRes;
+              }
+            } catch (patchErr) {
+              debugPrint('[TafakorPosts] Patching references after fallback failed: $patchErr');
+            }
+          }
+        } else {
+          rethrow;
+        }
+      }
+
       if (response.data is Map) {
         TafakorQuranRegistry.registerFromRaw(Map<String, dynamic>.from(response.data as Map));
       }
@@ -77,8 +133,10 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
       debugPrint('[TafakorPosts] Successfully created post ${dto.id}');
       return Success(dto.toDomain());
     } on DioException catch (e, stackTrace) {
-      debugPrint('[TafakorPosts] DioException on create: ${e.message}');
-      return Error(mapDioExceptionToFailure(e, stackTrace));
+      debugPrint(
+        '[TafakorPosts] DioException on create: ${e.message}, status: ${e.response?.statusCode}, data: ${e.response?.data}',
+      );
+      return Error(_extractBackendError(e, stackTrace));
     } catch (e, stackTrace) {
       debugPrint('[TafakorPosts] Unexpected error on create: $e');
       return Error(Failure(
@@ -86,6 +144,34 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
         stackTrace: stackTrace,
       ));
     }
+  }
+
+  Failure _extractBackendError(DioException e, StackTrace stackTrace) {
+    final responseData = e.response?.data;
+    if (responseData is Map<String, dynamic>) {
+      const prioritizedKeys = [
+        'detail',
+        'error',
+        'message',
+        'content',
+        'topic',
+        'plugin_references',
+        'non_field_errors',
+      ];
+      for (final key in prioritizedKeys) {
+        if (responseData.containsKey(key) && responseData[key] != null) {
+          final val = responseData[key];
+          final msg = val is List ? val.join('، ') : val.toString();
+          return Failure(
+            message: msg,
+            statusCode: e.response?.statusCode,
+            exception: e,
+            stackTrace: stackTrace,
+          );
+        }
+      }
+    }
+    return mapDioExceptionToFailure(e, stackTrace);
   }
 
   @override
@@ -108,6 +194,38 @@ class TafakorPostsRepositoryImpl with DioExceptionMapper implements ITafakorPost
         message: 'خطا در ویرایش یادداشت: $e',
         stackTrace: stackTrace,
       ));
+    }
+  }
+
+  @override
+  Future<Result<TafakorPost, Failure>> updatePostReferences({
+    required int postId,
+    required List<Map<String, dynamic>> pluginReferences,
+  }) async {
+    try {
+      debugPrint('[TafakorPosts] Updating post $postId references (${pluginReferences.length} items)...');
+      final response = await _dio.patch(
+        'notes/$postId/',
+        data: {'plugin_references': pluginReferences},
+      );
+      if (response.data is Map) {
+        TafakorQuranRegistry.registerFromRaw(
+          Map<String, dynamic>.from(response.data as Map),
+        );
+      }
+      final dto = TafakorPostDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      debugPrint('[TafakorPosts] Successfully updated references for post ${dto.id}');
+      return Success(dto.toDomain());
+    } on DioException catch (e, stackTrace) {
+      debugPrint('[TafakorPosts] DioException on update references: ${e.message}');
+      return Error(mapDioExceptionToFailure(e, stackTrace));
+    } catch (e, stackTrace) {
+      debugPrint('[TafakorPosts] Unexpected error on update references: $e');
+      return Error(
+        Failure(message: 'خطا در به‌روزرسانی ارتباطات آیه: $e', stackTrace: stackTrace),
+      );
     }
   }
 

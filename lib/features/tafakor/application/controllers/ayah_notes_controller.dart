@@ -6,7 +6,24 @@ import '../../infrastructure/repositories/tafakor_posts_repository_impl.dart';
 
 enum AyahNotesTab {
   community,
+  authors,
   mine,
+}
+
+class TafakorAyahAuthor {
+  final int authorId;
+  final String authorName;
+  final String? authorAvatar;
+  final String authorPhone;
+  final int notesCount;
+
+  const TafakorAyahAuthor({
+    required this.authorId,
+    required this.authorName,
+    this.authorAvatar,
+    required this.authorPhone,
+    required this.notesCount,
+  });
 }
 
 class AyahNotesState {
@@ -44,14 +61,45 @@ class AyahNotesState {
     this.error,
   });
 
+  List<TafakorAyahAuthor> get authors {
+    final Map<String, TafakorAyahAuthor> map = {};
+    for (final post in communityPosts) {
+      final key = post.authorId > 0
+          ? '${post.authorId}'
+          : (post.authorPhone.isNotEmpty ? post.authorPhone : post.authorName);
+      if (key.trim().isEmpty) continue;
+      if (map.containsKey(key)) {
+        final existing = map[key]!;
+        map[key] = TafakorAyahAuthor(
+          authorId: existing.authorId,
+          authorName: existing.authorName,
+          authorAvatar: existing.authorAvatar ?? post.authorAvatar,
+          authorPhone: existing.authorPhone,
+          notesCount: existing.notesCount + 1,
+        );
+      } else {
+        map[key] = TafakorAyahAuthor(
+          authorId: post.authorId,
+          authorName: post.authorName.isNotEmpty ? post.authorName : 'کاربر تفکر',
+          authorAvatar: post.authorAvatar,
+          authorPhone: post.authorPhone,
+          notesCount: 1,
+        );
+      }
+    }
+    return map.values.toList();
+  }
+
   List<TafakorPost> get currentPosts =>
       activeTab == AyahNotesTab.mine ? minePosts : communityPosts;
 
-  int get currentTotal =>
-      activeTab == AyahNotesTab.mine ? mineTotal : communityTotal;
+  int get currentTotal => activeTab == AyahNotesTab.mine
+      ? mineTotal
+      : (activeTab == AyahNotesTab.authors ? authors.length : communityTotal);
 
-  bool get hasMore =>
-      activeTab == AyahNotesTab.mine ? hasMoreMine : hasMoreCommunity;
+  bool get hasMore => activeTab == AyahNotesTab.mine
+      ? hasMoreMine
+      : (activeTab == AyahNotesTab.authors ? false : hasMoreCommunity);
 
   AyahNotesState copyWith({
     int? surahNumber,
@@ -293,6 +341,64 @@ class AyahNotesController extends Notifier<AyahNotesState> {
         } else {
           state = state.copyWith(communityPosts: rollbackList);
         }
+      },
+    );
+  }
+
+  /// Unlinks a specific Ayah from a post and removes it from the current Ayah notes view
+  Future<bool> unlinkAyahFromPost({
+    required int postId,
+    required int surahNumber,
+    required int ayahNumber,
+  }) async {
+    TafakorPost? post;
+    for (final p in [...state.communityPosts, ...state.minePosts]) {
+      if (p.id == postId) {
+        post = p;
+        break;
+      }
+    }
+    if (post == null) return false;
+
+    final currentRefs = post.quranReferences;
+    final remainingRefs = currentRefs.where((r) =>
+      !(r.surahNumber == surahNumber && r.ayahNumber == ayahNumber)
+    ).toList();
+
+    final payload = remainingRefs.map((r) => {
+      'plugin': 'quran',
+      'resource_type': 'ayah',
+      'external_id': 'surah:${r.surahNumber},ayah:${r.ayahNumber}',
+      'metadata': {
+        'surah_number': r.surahNumber,
+        'ayah_number': r.ayahNumber,
+        'surah_name': r.surahName,
+      },
+    }).toList();
+
+    final result = await _repository.updatePostReferences(
+      postId: postId,
+      pluginReferences: payload,
+    );
+
+    return result.when(
+      (updatedPost) {
+        final updatedCommunity = state.communityPosts.where((p) => p.id != postId).toList();
+        final updatedMine = state.minePosts.where((p) => p.id != postId).toList();
+        final commDiff = state.communityPosts.length - updatedCommunity.length;
+        final mineDiff = state.minePosts.length - updatedMine.length;
+
+        state = state.copyWith(
+          communityPosts: updatedCommunity,
+          minePosts: updatedMine,
+          communityTotal: (state.communityTotal - commDiff).clamp(0, 999999),
+          mineTotal: (state.mineTotal - mineDiff).clamp(0, 999999),
+        );
+        return true;
+      },
+      (failure) {
+        state = state.copyWith(error: failure);
+        return false;
       },
     );
   }

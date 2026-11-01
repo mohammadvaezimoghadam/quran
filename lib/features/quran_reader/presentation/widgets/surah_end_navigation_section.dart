@@ -1,17 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../application/controllers/quran_display_settings_controller.dart';
+import '../../domain/entities/ayah_theme_entity.dart';
 import 'quran_ornamental_divider.dart';
 
 /// A minimalist, elegant end-of-surah section with clean typography,
 /// delicate circular chevron indicators, and intuitive Next/Previous Surah navigation.
-/// Always displays both Next and Previous buttons, with appropriate disabled styling
-/// at the boundaries (Surah 1 and Surah 114).
-class SurahEndNavigationSection extends StatelessWidget {
+/// Colors strictly follow the active Surah skin (activeTheme):
+/// - Light skins (Ivory, White, Sepia, Emerald) -> Crisp black/dark typography and icons.
+/// - Dark skins (Midnight Slate, OLED Black) -> Crisp white/light typography and icons.
+class SurahEndNavigationSection extends ConsumerWidget {
   final int surahId;
   final String surahName;
   final int totalAyahs;
@@ -28,10 +32,17 @@ class SurahEndNavigationSection extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Read the active Surah skin (e.g. classic_ivory, pure_white, midnight_slate, oled_black)
+    final ayahThemeId = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.ayahThemeId),
+    );
+    final activeTheme = AyahThemePresets.getById(ayahThemeId);
+
+    // Dark state strictly depends on the Surah skin background:
+    // When the skin is light, text MUST be black/dark regardless of system dark mode.
+    // When the skin is dark (شب / دودی), text MUST be white/light.
+    final isDark = activeTheme.isDark;
 
     final cleanSurahName = surahName.replaceAll('سوره ', '').trim();
     final hasNext = surahId < 114;
@@ -45,32 +56,36 @@ class SurahEndNavigationSection extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── 1. Top Decorative Divider ──
+          // ── 1. Top Decorative Divider (Harmonized with skin) ──
           QuranOrnamentalDivider(
-            color: colorScheme.primary.withValues(alpha: isDark ? 0.45 : 0.6),
+            color: activeTheme.dividerColor,
             height: 18.0,
           ),
           const SizedBox(height: 20),
 
-          // ── 2. Clean Typography Title (No box, no checkmark) ──
+          // ── 2. Clean Typography Title ──
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'پایان سوره مبارکه $cleanSurahName',
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white.withValues(alpha: 0.9) : colorScheme.onSurface,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.95)
+                      : const Color(0xFF1E1E22),
                   fontSize: 15,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 '${totalAyahs.toPersianDigit()} آیه • سوره ${surahId.toPersianDigit()} قرآن کریم',
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.65),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.65)
+                      : const Color(0xFF666666),
                   fontSize: 12,
                 ),
               ),
@@ -91,7 +106,6 @@ class SurahEndNavigationSection extends StatelessWidget {
                     surahNameSubtitle: prevSurahName,
                     isEnabled: hasPrevious,
                     isDark: isDark,
-                    colorScheme: colorScheme,
                     onPressed: hasPrevious
                         ? () {
                             HapticFeedback.lightImpact();
@@ -112,7 +126,6 @@ class SurahEndNavigationSection extends StatelessWidget {
                     surahNameSubtitle: nextSurahName,
                     isEnabled: hasNext,
                     isDark: isDark,
-                    colorScheme: colorScheme,
                     onPressed: hasNext
                         ? () {
                             HapticFeedback.lightImpact();
@@ -127,10 +140,10 @@ class SurahEndNavigationSection extends StatelessWidget {
 
           if (surahId == 114) ...[
             const SizedBox(height: 16),
-            _buildQuranCompletionText(context, colorScheme, isDark),
+            _buildQuranCompletionText(context, activeTheme, isDark),
           ],
 
-          // ── 4. Bottom Spacing (Replaced divider with SizedBox) ──
+          // ── 4. Bottom Spacing ──
           const SizedBox(height: 24),
         ],
       ),
@@ -142,17 +155,24 @@ class SurahEndNavigationSection extends StatelessWidget {
     required BuildContext context,
     required String surahNameSubtitle,
     required bool isDark,
-    required ColorScheme colorScheme,
     required bool isEnabled,
     required VoidCallback? onPressed,
   }) {
     final titleColor = isEnabled
-        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.7)
-        : (isDark ? Colors.white24 : colorScheme.onSurfaceVariant.withValues(alpha: 0.35));
+        ? (isDark
+            ? Colors.white.withValues(alpha: 0.65)
+            : const Color(0xFF666666))
+        : (isDark
+            ? Colors.white24
+            : const Color(0xFFB0B0B0));
 
     final nameColor = isEnabled
-        ? (isDark ? Colors.white : colorScheme.onSurface)
-        : (isDark ? Colors.white30 : colorScheme.onSurface.withValues(alpha: 0.35));
+        ? (isDark
+            ? Colors.white
+            : const Color(0xFF1E1E22))
+        : (isDark
+            ? Colors.white30
+            : const Color(0xFF999999));
 
     return Material(
       color: Colors.transparent,
@@ -204,7 +224,6 @@ class SurahEndNavigationSection extends StatelessWidget {
                 icon: CupertinoIcons.chevron_left,
                 isEnabled: isEnabled,
                 isDark: isDark,
-                colorScheme: colorScheme,
               ),
             ],
           ),
@@ -218,17 +237,24 @@ class SurahEndNavigationSection extends StatelessWidget {
     required BuildContext context,
     required String surahNameSubtitle,
     required bool isDark,
-    required ColorScheme colorScheme,
     required bool isEnabled,
     required VoidCallback? onPressed,
   }) {
     final titleColor = isEnabled
-        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.7)
-        : (isDark ? Colors.white24 : colorScheme.onSurfaceVariant.withValues(alpha: 0.35));
+        ? (isDark
+            ? Colors.white.withValues(alpha: 0.65)
+            : const Color(0xFF666666))
+        : (isDark
+            ? Colors.white24
+            : const Color(0xFFB0B0B0));
 
     final nameColor = isEnabled
-        ? (isDark ? Colors.white : colorScheme.onSurface)
-        : (isDark ? Colors.white30 : colorScheme.onSurface.withValues(alpha: 0.35));
+        ? (isDark
+            ? Colors.white
+            : const Color(0xFF1E1E22))
+        : (isDark
+            ? Colors.white30
+            : const Color(0xFF999999));
 
     return Material(
       color: Colors.transparent,
@@ -247,7 +273,6 @@ class SurahEndNavigationSection extends StatelessWidget {
                 icon: CupertinoIcons.chevron_right,
                 isEnabled: isEnabled,
                 isDark: isDark,
-                colorScheme: colorScheme,
               ),
 
               const SizedBox(width: 8),
@@ -293,24 +318,29 @@ class SurahEndNavigationSection extends StatelessWidget {
   Widget _buildDelicateCircleIcon({
     required IconData icon,
     required bool isDark,
-    required ColorScheme colorScheme,
     bool isEnabled = true,
   }) {
     final borderColor = isEnabled
         ? (isDark
-            ? Colors.white.withValues(alpha: 0.16)
-            : Colors.black.withValues(alpha: 0.14))
+            ? Colors.white.withValues(alpha: 0.22)
+            : Colors.black.withValues(alpha: 0.16))
         : (isDark
-            ? Colors.white.withValues(alpha: 0.06)
-            : Colors.black.withValues(alpha: 0.05));
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.06));
 
     final iconColor = isEnabled
         ? (isDark
-            ? Colors.white.withValues(alpha: 0.85)
-            : colorScheme.onSurface.withValues(alpha: 0.85))
+            ? Colors.white.withValues(alpha: 0.95)
+            : const Color(0xFF1E1E22))
         : (isDark
-            ? Colors.white.withValues(alpha: 0.22)
-            : colorScheme.onSurface.withValues(alpha: 0.22));
+            ? Colors.white.withValues(alpha: 0.25)
+            : const Color(0xFFAAAAAA));
+
+    final circleBg = isEnabled
+        ? (isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.black.withValues(alpha: 0.03))
+        : Colors.transparent;
 
     return Container(
       width: 32,
@@ -318,11 +348,7 @@ class SurahEndNavigationSection extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: borderColor, width: 1.0),
-        color: isEnabled
-            ? (isDark
-                ? Colors.white.withValues(alpha: 0.04)
-                : Colors.black.withValues(alpha: 0.02))
-            : Colors.transparent,
+        color: circleBg,
       ),
       child: Center(
         child: Icon(
@@ -336,7 +362,7 @@ class SurahEndNavigationSection extends StatelessWidget {
 
   Widget _buildQuranCompletionText(
     BuildContext context,
-    ColorScheme colorScheme,
+    AyahThemeEntity activeTheme,
     bool isDark,
   ) {
     return Column(
@@ -348,7 +374,7 @@ class SurahEndNavigationSection extends StatelessWidget {
             fontFamily: AppTypography.amiriQuranFont,
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: colorScheme.primary,
+            color: activeTheme.headerTextColor,
           ),
         ),
         const SizedBox(height: 4),
@@ -357,7 +383,9 @@ class SurahEndNavigationSection extends StatelessWidget {
           style: TextStyle(
             fontFamily: AppTypography.fontFamily,
             fontSize: 12,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.75)
+                : const Color(0xFF555555),
           ),
         ),
       ],

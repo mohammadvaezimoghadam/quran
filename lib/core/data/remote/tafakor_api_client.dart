@@ -57,13 +57,10 @@ abstract class TafakorApiClient {
 final tafakorDioProvider = Provider<Dio>((ref) {
   final options = BaseOptions(
     baseUrl: AppConstants.tafakorBaseUrl,
-    connectTimeout: const Duration(seconds: 15),
-    receiveTimeout: const Duration(seconds: 15),
-    sendTimeout: const Duration(seconds: 15),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+    sendTimeout: const Duration(seconds: 30),
+    headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
   );
 
   final dio = Dio(options);
@@ -86,14 +83,18 @@ final tafakorDioProvider = Provider<Dio>((ref) {
         // Automatically inject Authorization token if user is logged in
         final localDataSource = ref.read(tafakorLocalDataSourceProvider);
         final token = await localDataSource.getToken();
-        if (token != null && token.isNotEmpty && !options.headers.containsKey('Authorization')) {
+        if (token != null &&
+            token.isNotEmpty &&
+            !options.headers.containsKey('Authorization')) {
           options.headers['Authorization'] = 'Token $token';
         }
         return handler.next(options);
       },
       onError: (DioException err, handler) {
         if (err.response?.statusCode == 401) {
-          debugPrint('[Dio/Tafakor] 401 Unauthorized detected for: ${err.requestOptions.path}');
+          debugPrint(
+            '[Dio/Tafakor] 401 Unauthorized detected for: ${err.requestOptions.path}',
+          );
           ref.read(tafakorLocalDataSourceProvider).clear();
           Future.microtask(() {
             try {

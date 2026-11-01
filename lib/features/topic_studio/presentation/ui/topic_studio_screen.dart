@@ -36,6 +36,7 @@ class _TopicStudioScreenState extends ConsumerState<TopicStudioScreen> {
     final isDark = context.isDark;
 
     final currentUser = ref.watch(tafakorUserProvider);
+    final userPhone = currentUser?.phone;
     final isAuthenticated = ref.watch(isTafakorAuthenticatedProvider);
 
     return Directionality(
@@ -73,7 +74,7 @@ class _TopicStudioScreenState extends ConsumerState<TopicStudioScreen> {
         ),
         body: !isAuthenticated
             ? _buildUnauthenticatedView(colors, colorScheme, isDark)
-            : _buildChannelsView(currentUser?.phone, colors, colorScheme, isDark),
+            : _buildChannelsView(userPhone, colors, colorScheme, isDark),
       ),
     );
   }
@@ -218,10 +219,8 @@ class _TopicStudioScreenState extends ConsumerState<TopicStudioScreen> {
         ),
       ),
       data: (allTopics) {
-        // Filter: only topics where user can post (owner)
-        final allowedTopics = allTopics.where((t) {
-          return t.isOwner(userPhone);
-        }).toList();
+        final allowedTopics =
+            allTopics.where((t) => t.isOwner(userPhone)).toList();
 
         if (allowedTopics.isEmpty) {
           return RefreshIndicator(

@@ -143,6 +143,7 @@ abstract class TopicBlock with _$TopicBlock {
         if (seenAyahs.add(canonicalId)) {
           references.add({
             'plugin': 'quran',
+            'plugin_identifier': 'quran',
             'resource_type': 'ayah',
             'external_id': canonicalId,
             'metadata': {

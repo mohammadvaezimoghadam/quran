@@ -17,6 +17,7 @@ final tafakorTopicsRepositoryProvider = Provider<ITafakorTopicsRepository>((ref)
 
 class TafakorTopicsRepositoryImpl with DioExceptionMapper implements ITafakorTopicsRepository {
   final TafakorApiClient _apiClient;
+  static List<TafakorTopic>? _cachedTopics;
 
   TafakorTopicsRepositoryImpl(this._apiClient);
 
@@ -27,12 +28,21 @@ class TafakorTopicsRepositoryImpl with DioExceptionMapper implements ITafakorTop
       final dtos = await _apiClient.getTopics();
       debugPrint('[TafakorTopics] Successfully fetched ${dtos.length} topics');
       final topics = dtos.map((d) => d.toDomain()).toList();
+      _cachedTopics = topics;
       return Success(topics);
     } on DioException catch (e, stackTrace) {
       debugPrint('[TafakorTopics] DioException: ${e.message ?? ""} status: ${e.response?.statusCode ?? ""}');
+      if (_cachedTopics != null && _cachedTopics!.isNotEmpty) {
+        debugPrint('[TafakorTopics] Serving ${_cachedTopics!.length} cached topics after error');
+        return Success(_cachedTopics!);
+      }
       return Error(mapDioExceptionToFailure(e, stackTrace));
     } catch (e, stackTrace) {
       debugPrint('[TafakorTopics] Unexpected error: $e');
+      if (_cachedTopics != null && _cachedTopics!.isNotEmpty) {
+        debugPrint('[TafakorTopics] Serving ${_cachedTopics!.length} cached topics after error');
+        return Success(_cachedTopics!);
+      }
       return Error(Failure(
         message: AppConstants.unexpectedError,
         stackTrace: stackTrace,

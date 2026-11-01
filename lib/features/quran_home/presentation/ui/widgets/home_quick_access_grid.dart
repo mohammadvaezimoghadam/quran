@@ -6,8 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/theme/app_typography.dart';
-import '../../../../../common/widgets/app_snackbar.dart';
 import '../../../../main_navigation/application/tab_navigation_controller.dart';
+import '../../../../tafsir_manager/presentation/widgets/tafsir_manager_bottom_sheet.dart';
 import '../../../../translation_manager/presentation/widgets/translation_manager_bottom_sheet.dart';
 
 /// Modern Asymmetric Action Hub:
@@ -35,8 +35,14 @@ class HomeQuickAccessGrid extends ConsumerWidget {
             height: 80,
             decoration: BoxDecoration(
               color: isDark
-                  ? Color.alphaBlend(primaryMint.withValues(alpha: 0.08), cardBg)
-                  : Color.alphaBlend(primaryMint.withValues(alpha: 0.05), cardBg),
+                  ? Color.alphaBlend(
+                      primaryMint.withValues(alpha: 0.08),
+                      cardBg,
+                    )
+                  : Color.alphaBlend(
+                      primaryMint.withValues(alpha: 0.05),
+                      cardBg,
+                    ),
               borderRadius: BorderRadius.circular(16.0),
               border: Border.all(
                 color: primaryMint.withValues(alpha: isDark ? 0.30 : 0.22),
@@ -56,11 +62,16 @@ class HomeQuickAccessGrid extends ConsumerWidget {
               child: InkWell(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  ref.read(tabNavigationControllerProvider.notifier).switchTab(1);
+                  ref
+                      .read(tabNavigationControllerProvider.notifier)
+                      .switchTab(1);
                 },
                 borderRadius: BorderRadius.circular(16.0),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     children: [
                       // Quran Surahs Icon
@@ -127,20 +138,19 @@ class HomeQuickAccessGrid extends ConsumerWidget {
         ),
         8.hSpace,
 
-        // 3. Secondary Companion Card: "تفسیر" (موقتاً غیرفعال - به‌زودی)
+        // 3. Secondary Companion Card: "تفسیر"
         Expanded(
           flex: 2,
           child: _buildSecondaryCard(
             context: context,
             title: 'تفسیر',
-            badgeText: 'به‌زودی',
             iconWidget: SvgPicture.asset(
               'assets/icons/ic_tafsir.svg',
               width: 38,
               height: 38,
               fit: BoxFit.contain,
               colorFilter: ColorFilter.mode(
-                primaryMint.withValues(alpha: 0.6),
+                primaryMint,
                 BlendMode.srcIn,
               ),
             ),
@@ -149,7 +159,7 @@ class HomeQuickAccessGrid extends ConsumerWidget {
             borderColor: cardBorderColor,
             onTap: () {
               HapticFeedback.lightImpact();
-              AppSnackBar.showInfo(context, 'بخش تفسیر به زودی در دسترس قرار خواهد گرفت.');
+              TafsirManagerBottomSheet.show(context);
             },
           ),
         ),
@@ -172,10 +182,7 @@ class HomeQuickAccessGrid extends ConsumerWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: borderColor,
-          width: 0.8,
-        ),
+        border: Border.all(color: borderColor, width: 0.8),
         boxShadow: isDark
             ? null
             : [
@@ -195,7 +202,10 @@ class HomeQuickAccessGrid extends ConsumerWidget {
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 5.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 2.0,
+                  vertical: 5.0,
+                ),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -204,9 +214,7 @@ class HomeQuickAccessGrid extends ConsumerWidget {
                       SizedBox(
                         width: 38,
                         height: 38,
-                        child: Center(
-                          child: iconWidget,
-                        ),
+                        child: Center(child: iconWidget),
                       ),
                       2.vSpace,
                       FittedBox(
@@ -217,7 +225,9 @@ class HomeQuickAccessGrid extends ConsumerWidget {
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 11.5,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF2C2C2C),
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.9)
+                                : const Color(0xFF2C2C2C),
                             height: 1.1,
                           ),
                           maxLines: 1,
@@ -232,9 +242,14 @@ class HomeQuickAccessGrid extends ConsumerWidget {
                   top: 5,
                   left: 6,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2C3238) : const Color(0xFFE8ECEF),
+                      color: isDark
+                          ? const Color(0xFF2C3238)
+                          : const Color(0xFFE8ECEF),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: isDark ? Colors.white12 : Colors.black12,
@@ -247,7 +262,9 @@ class HomeQuickAccessGrid extends ConsumerWidget {
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 8.5,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white70 : const Color(0xFF555555),
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF555555),
                         height: 1.1,
                       ),
                     ),

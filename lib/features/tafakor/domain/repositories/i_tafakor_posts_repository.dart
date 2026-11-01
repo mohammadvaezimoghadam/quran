@@ -22,6 +22,11 @@ abstract class ITafakorPostsRepository {
     required String content,
   });
 
+  Future<Result<TafakorPost, Failure>> updatePostReferences({
+    required int postId,
+    required List<Map<String, dynamic>> pluginReferences,
+  });
+
   Future<Result<void, Failure>> deletePost(int postId);
 
   Future<Result<void, Failure>> reactToPost(int postId, String emoji);

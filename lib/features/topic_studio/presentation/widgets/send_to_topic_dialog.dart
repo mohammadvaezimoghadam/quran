@@ -9,12 +9,14 @@ import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../common/widgets/app_snackbar.dart';
-import '../../../../core/data/remote/tafakor_api_client.dart';
 import '../../../../common/widgets/app_cached_network_image.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../tafakor/application/controllers/tafakor_auth_controller.dart';
 import '../../../tafakor/application/controllers/tafakor_topics_controller.dart';
+import '../../../tafakor/application/controllers/ayah_notes_controller.dart';
 import '../../../tafakor/domain/entities/tafakor_topic.dart';
+import '../../../tafakor/infrastructure/datasources/tafakor_local_data_source.dart';
+import '../../../tafakor/infrastructure/repositories/tafakor_posts_repository_impl.dart';
 import '../../application/controllers/in_drawer_editor_controller.dart';
 import '../../domain/entities/topic_block.dart';
 
@@ -92,62 +94,75 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
 
     final content = _formatDraftContent(editorState.blocks);
     if (content.isEmpty) {
-      debugPrint('[SendToTopic] Content is empty after formatting. Blocks count: ${editorState.blocks.length}');
-      setState(() => _errorMessage = 'مطلبی برای ارسال وجود ندارد. لطفاً متنی بنویسید.');
+      debugPrint(
+        '[SendToTopic] Content is empty after formatting. Blocks count: ${editorState.blocks.length}',
+      );
+      setState(
+        () =>
+            _errorMessage = 'مطلبی برای ارسال وجود ندارد. لطفاً متنی بنویسید.',
+      );
       AppSnackBar.showError(context, 'مطلبی برای ارسال وجود ندارد.');
       return;
     }
 
-    debugPrint('[SendToTopic] Starting post to ${targetTopics.length} topics. Length: ${content.length}');
+    debugPrint(
+      '[SendToTopic] Starting post to ${targetTopics.length} topics. Length: ${content.length}',
+    );
     setState(() => _isSending = true);
     HapticFeedback.mediumImpact();
 
     // Extract canonical plugin references (Quran Ayahs) from blocks
-    final pluginReferences = TopicBlock.extractPluginReferences(editorState.blocks);
+    final pluginReferences = TopicBlock.extractPluginReferences(
+      editorState.blocks,
+    );
     if (pluginReferences.isNotEmpty) {
-      debugPrint('[SendToTopic] Extracted ${pluginReferences.length} Quran Ayah reference(s): $pluginReferences');
+      debugPrint(
+        '[SendToTopic] Extracted ${pluginReferences.length} Quran Ayah reference(s): $pluginReferences',
+      );
     }
 
     int successCount = 0;
     final List<String> failedTopicNames = [];
-    final dio = ref.read(tafakorDioProvider);
+    String? lastFailureMessage;
+    final postsRepo = ref.read(tafakorPostsRepositoryProvider);
     bool authExpired = false;
 
     for (final targetTopic in targetTopics) {
-      try {
-        final postData = <String, dynamic>{
-          'topic': targetTopic.id,
-          'content': content,
-          if (pluginReferences.isNotEmpty) 'plugin_references': pluginReferences,
-        };
+      final result = await postsRepo.createPost(
+        topicId: targetTopic.id,
+        content: content,
+        mediaFilePath: editorState.attachedImagePath,
+        pluginReferences: pluginReferences.isNotEmpty ? pluginReferences : null,
+      );
 
-        final response = await dio.post(
-          'notes/',
-          data: postData,
-        );
-
-        debugPrint('[SendToTopic] Topic ${targetTopic.id} response statusCode: ${response.statusCode}');
-
-        if (response.statusCode == 201 || response.statusCode == 200) {
+      result.when(
+        (post) {
           successCount++;
-        } else {
+          debugPrint(
+            '[SendToTopic] Successfully published post ${post.id} to topic ${targetTopic.id}',
+          );
+        },
+        (failure) {
+          debugPrint(
+            '[SendToTopic] Failed publishing to topic ${targetTopic.id}: ${failure.message}',
+          );
+          lastFailureMessage = failure.message;
+          if (failure.statusCode == 401) {
+            authExpired = true;
+          }
           failedTopicNames.add(targetTopic.name);
-        }
-      } catch (e, st) {
-        debugPrint('[SendToTopic] Exception sending note to topic ${targetTopic.id}: $e\n$st');
-        if (e is DioException &&
-            (e.response?.statusCode == 401 || e.response?.statusCode == 403)) {
-          authExpired = true;
-          break;
-        }
-        failedTopicNames.add(targetTopic.name);
-      }
+        },
+      );
+
+      if (authExpired) break;
     }
 
     if (!mounted) return;
 
     if (authExpired) {
-      debugPrint('[SendToTopic] 401/403 detected on sending note. Logging out and redirecting to login.');
+      debugPrint(
+        '[SendToTopic] 401/403 detected on sending note. Logging out and redirecting to login.',
+      );
       await ref.read(tafakorAuthControllerProvider.notifier).logout();
 
       if (mounted) {
@@ -176,6 +191,11 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
       ref.read(inDrawerEditorControllerProvider.notifier).clearAll();
       ref.invalidate(tafakorTopicsProvider);
 
+      // Auto-refresh AyahNotesController so new post appears immediately in active sheet
+      try {
+        ref.read(ayahNotesControllerProvider.notifier).refresh();
+      } catch (_) {}
+
       final targetContext = rootNavigatorKey.currentContext;
       Navigator.of(context).pop(true);
       if (targetContext != null && targetContext.mounted) {
@@ -199,9 +219,11 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
         }
       }
     } else {
-      final msg = failedTopicNames.isEmpty
-          ? 'خطا در ارسال پست: لطفاً اتصال اینترنت را بررسی کنید.'
-          : 'خطا در ارسال پست به کانال‌های انتخاب‌شده.';
+      final msg =
+          lastFailureMessage ??
+          (failedTopicNames.isEmpty
+              ? 'خطا در ارسال پست: لطفاً اتصال اینترنت را بررسی کنید.'
+              : 'خطا در ارسال پست به کانال‌های انتخاب‌شده.');
       setState(() => _errorMessage = msg);
       AppSnackBar.showError(context, msg);
     }
@@ -213,14 +235,15 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
     final isDark = context.isDark;
 
     final currentUser = ref.watch(tafakorUserProvider);
-    final userPhone = currentUser?.phone;
+    final userPhone =
+        currentUser?.phone ??
+        ref.watch(tafakorLocalDataSourceProvider).getUserSync()?.phone;
     final topicsAsync = ref.watch(tafakorTopicsProvider);
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Dialog(
-        backgroundColor:
-            isDark ? const Color(0xFF1E1E22) : Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E1E22) : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
@@ -239,7 +262,9 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
             children: [
               AppModalHeader(
                 title: 'ارسال به تاپیک',
-                onClose: _isSending ? null : () => Navigator.of(context).pop(false),
+                onClose: _isSending
+                    ? null
+                    : () => Navigator.of(context).pop(false),
                 showDragHandle: false,
                 showDivider: true,
                 bottomSpacing: 12,
@@ -249,12 +274,11 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
               topicsAsync.when(
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: 32.0),
-                  child: Center(
-                    child: CupertinoActivityIndicator(radius: 13),
-                  ),
+                  child: Center(child: CupertinoActivityIndicator(radius: 13)),
                 ),
                 error: (err, stack) {
-                  final isUnauthorized = (err is Failure &&
+                  final isUnauthorized =
+                      (err is Failure &&
                           (err.statusCode == 401 || err.statusCode == 403)) ||
                       (err is DioException &&
                           (err.response?.statusCode == 401 ||
@@ -317,7 +341,8 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                 Navigator.of(rootContext).push(
                                   MaterialPageRoute(
                                     settings: const RouteSettings(
-                                        name: tafakorLoginRoute),
+                                      name: tafakorLoginRoute,
+                                    ),
                                     builder: (_) => const TafakorLoginScreen(),
                                   ),
                                 );
@@ -363,7 +388,8 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                         ),
                         10.vSpace,
                         OutlinedButton(
-                          onPressed: () => ref.invalidate(tafakorTopicsProvider),
+                          onPressed: () =>
+                              ref.invalidate(tafakorTopicsProvider),
                           child: const Text('تلاش مجدد'),
                         ),
                       ],
@@ -372,8 +398,7 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                 },
                 data: (allTopics) {
                   final allowedTopics = allTopics.where((t) {
-                    return t.isOwner(userPhone) ||
-                        (currentUser != null && false);
+                    return t.isOwner(userPhone);
                   }).toList();
 
                   if (allowedTopics.isEmpty) {
@@ -388,7 +413,7 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                           ),
                           10.vSpace,
                           Text(
-                            'کانالی با دسترسی ارسال یافت نشد',
+                            'تاپیکی متعلق به شما یافت نشد',
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 13,
@@ -398,7 +423,7 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                           ),
                           4.vSpace,
                           Text(
-                            'برای ارسال پست، ابتدا باید در تفکر کانال داشته باشید.',
+                            'برای ارسال یادداشت، شما باید سازنده یا ادمین تاپیک باشید.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
@@ -412,7 +437,8 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                   }
 
                   final showScrollbar = allowedTopics.length > 3;
-                  final allSelected = _selectedTopicIds.length == allowedTopics.length;
+                  final allSelected =
+                      _selectedTopicIds.length == allowedTopics.length;
 
                   return Column(
                     mainAxisSize: MainAxisSize.min,
@@ -420,7 +446,11 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                     children: [
                       if (allowedTopics.length > 1) ...[
                         Padding(
-                          padding: const EdgeInsets.only(left: 4, right: 4, bottom: 6),
+                          padding: const EdgeInsets.only(
+                            left: 4,
+                            right: 4,
+                            bottom: 6,
+                          ),
                           child: Align(
                             alignment: AlignmentDirectional.centerEnd,
                             child: InkWell(
@@ -461,7 +491,8 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                       ],
                       ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxHeight: (MediaQuery.sizeOf(context).height * 0.42).clamp(180.0, 360.0),
+                          maxHeight: (MediaQuery.sizeOf(context).height * 0.42)
+                              .clamp(180.0, 360.0),
                         ),
                         child: RawScrollbar(
                           controller: _scrollController,
@@ -476,12 +507,19 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                             controller: _scrollController,
                             shrinkWrap: true,
                             physics: const BouncingScrollPhysics(),
-                            padding: const EdgeInsets.only(left: 6, right: 1, top: 2, bottom: 2),
+                            padding: const EdgeInsets.only(
+                              left: 6,
+                              right: 1,
+                              top: 2,
+                              bottom: 2,
+                            ),
                             itemCount: allowedTopics.length,
                             separatorBuilder: (_, _) => 8.vSpace,
                             itemBuilder: (context, index) {
                               final topic = allowedTopics[index];
-                              final isSelected = _selectedTopicIds.contains(topic.id);
+                              final isSelected = _selectedTopicIds.contains(
+                                topic.id,
+                              );
 
                               return Material(
                                 color: Colors.transparent,
@@ -493,7 +531,9 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                           HapticFeedback.selectionClick();
                                           setState(() {
                                             if (isSelected) {
-                                              _selectedTopicIds.remove(topic.id);
+                                              _selectedTopicIds.remove(
+                                                topic.id,
+                                              );
                                             } else {
                                               _selectedTopicIds.add(topic.id);
                                             }
@@ -512,8 +552,12 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                               alpha: isDark ? 0.20 : 0.10,
                                             )
                                           : (isDark
-                                              ? Colors.white.withValues(alpha: 0.03)
-                                              : Colors.black.withValues(alpha: 0.02)),
+                                                ? Colors.white.withValues(
+                                                    alpha: 0.03,
+                                                  )
+                                                : Colors.black.withValues(
+                                                    alpha: 0.02,
+                                                  )),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
@@ -523,16 +567,20 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                           imageUrl: topic.fullImageUrl,
                                           width: 36,
                                           height: 36,
-                                          borderRadius: BorderRadius.circular(9),
+                                          borderRadius: BorderRadius.circular(
+                                            9,
+                                          ),
                                           fallbackText: topic.name,
                                           fallbackIcon: null,
-                                          backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
+                                          backgroundColor: colorScheme.primary
+                                              .withValues(alpha: 0.12),
                                         ),
                                         12.hSpace,
                                         // Title & Post Badge / Active Bot Channels
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Text(
@@ -540,20 +588,24 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
-                                                  fontFamily: AppTypography.fontFamily,
+                                                  fontFamily:
+                                                      AppTypography.fontFamily,
                                                   fontSize: 13.5,
                                                   fontWeight: isSelected
                                                       ? FontWeight.bold
                                                       : FontWeight.w500,
                                                   color: isSelected
                                                       ? (isDark
-                                                          ? Colors.white
-                                                          : colorScheme.primary)
+                                                            ? Colors.white
+                                                            : colorScheme
+                                                                  .primary)
                                                       : colorScheme.onSurface,
                                                 ),
                                               ),
                                               if ((topic.postBadge != null &&
-                                                      topic.postBadge!.isNotEmpty) ||
+                                                      topic
+                                                          .postBadge!
+                                                          .isNotEmpty) ||
                                                   topic.telegramBotActive ||
                                                   topic.baleBotActive) ...[
                                                 3.5.vSpace,
@@ -563,16 +615,23 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                                   crossAxisAlignment:
                                                       WrapCrossAlignment.center,
                                                   children: [
-                                                    if (topic.postBadge != null &&
-                                                        topic.postBadge!.isNotEmpty)
+                                                    if (topic.postBadge !=
+                                                            null &&
+                                                        topic
+                                                            .postBadge!
+                                                            .isNotEmpty)
                                                       Text(
                                                         topic.postBadge!,
                                                         style: TextStyle(
                                                           fontFamily:
-                                                              AppTypography.fontFamily,
+                                                              AppTypography
+                                                                  .fontFamily,
                                                           fontSize: 10.5,
-                                                          color: colorScheme.primary
-                                                              .withValues(alpha: 0.8),
+                                                          color: colorScheme
+                                                              .primary
+                                                              .withValues(
+                                                                alpha: 0.8,
+                                                              ),
                                                         ),
                                                       ),
                                                     if (topic.telegramBotActive)
@@ -580,7 +639,8 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                                         assetPath: AppConstants
                                                             .telegramLogoAsset,
                                                         label: 'تلگرام',
-                                                        colorScheme: colorScheme,
+                                                        colorScheme:
+                                                            colorScheme,
                                                         isDark: isDark,
                                                       ),
                                                     if (topic.baleBotActive)
@@ -588,7 +648,8 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                                         assetPath: AppConstants
                                                             .baleLogoAsset,
                                                         label: 'بله',
-                                                        colorScheme: colorScheme,
+                                                        colorScheme:
+                                                            colorScheme,
                                                         isDark: isDark,
                                                       ),
                                                   ],
@@ -600,7 +661,9 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                                         8.hSpace,
                                         // Standalone green checkmark (no circle)
                                         AnimatedOpacity(
-                                          duration: const Duration(milliseconds: 180),
+                                          duration: const Duration(
+                                            milliseconds: 180,
+                                          ),
                                           opacity: isSelected ? 1.0 : 0.0,
                                           child: Icon(
                                             CupertinoIcons.checkmark_alt,
@@ -625,7 +688,10 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
               // Inline error banner
               if (_errorMessage != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(10),
@@ -734,8 +800,8 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
                             _isSending
                                 ? 'در حال ارسال...'
                                 : (_selectedTopicIds.length <= 1
-                                    ? 'ارسال پست'
-                                    : 'ارسال به ${_selectedTopicIds.length.toPersianDigit()} کانال'),
+                                      ? 'ارسال پست'
+                                      : 'ارسال به ${_selectedTopicIds.length.toPersianDigit()} کانال'),
                             style: const TextStyle(
                               fontFamily: AppTypography.fontFamily,
                               fontSize: 12.5,

@@ -38,6 +38,9 @@ class _TafakorTopicsScreenState extends ConsumerState<TafakorTopicsScreen> {
     super.initState();
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(tafakorTopicsControllerProvider.notifier).loadTopics(isRefresh: true);
+    });
   }
 
   @override

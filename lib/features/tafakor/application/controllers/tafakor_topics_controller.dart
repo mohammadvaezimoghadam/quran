@@ -72,11 +72,10 @@ class TafakorTopicsController extends Notifier<TafakorTopicsState> {
   }
 
   Future<void> loadTopics({bool isRefresh = false}) async {
-    if (!isRefresh && state.topics.isNotEmpty) {
-      state = state.copyWith(isLoading: false, clearError: true);
-    } else {
-      state = state.copyWith(isLoading: true, clearError: true);
-    }
+    state = state.copyWith(
+      isLoading: state.topics.isEmpty,
+      clearError: true,
+    );
 
     final result = await _repository.getTopics();
 

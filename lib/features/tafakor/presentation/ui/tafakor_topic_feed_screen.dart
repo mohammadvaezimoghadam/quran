@@ -4,51 +4,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart' hide TextDirection;
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
-import '../../../../common/widgets/app_cached_network_image.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/services/media/image_picker_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/tafakor_auth_controller.dart';
 import '../../application/controllers/tafakor_topic_feed_controller.dart';
+import '../../../../core/routes/go_router_provider.dart';
 import '../../domain/entities/tafakor_post.dart';
+import '../../domain/entities/tafakor_quran_reference.dart';
 import '../../domain/entities/tafakor_topic.dart';
 import '../../domain/entities/tafakor_topic_admins_data.dart';
 import '../../infrastructure/datasources/tafakor_local_data_source.dart';
+import '../../infrastructure/services/tafakor_quran_extractor.dart';
 import 'tafakor_login_screen.dart';
 import 'tafakor_post_editor_screen.dart';
-import '../widgets/tafakor_ayah_chip.dart';
-
+import '../widgets/tafakor_manage_ayah_references_sheet.dart';
+import '../widgets/tafakor_post_card.dart';
 
 /// Screen displaying the paginated posts/notes feed of a Tafakor Topic,
 /// matching Image 3 and Image 1 with full high-performance rendering.
 class TafakorTopicFeedScreen extends ConsumerStatefulWidget {
   final TafakorTopic topic;
+  final int? highlightPostId;
+  final TafakorPost? initialHighlightPost;
 
   const TafakorTopicFeedScreen({
     super.key,
     required this.topic,
+    this.highlightPostId,
+    this.initialHighlightPost,
   });
 
-  static Future<void> push(BuildContext context, TafakorTopic topic) {
-    return Navigator.of(context).push(
+  static Future<void> push(
+    BuildContext context,
+    TafakorTopic topic, {
+    int? highlightPostId,
+    TafakorPost? initialHighlightPost,
+  }) {
+    final navContext = rootNavigatorKey.currentContext ?? context;
+    return Navigator.of(navContext).push(
       MaterialPageRoute(
-        builder: (_) => TafakorTopicFeedScreen(topic: topic),
+        builder: (_) => TafakorTopicFeedScreen(
+          topic: topic,
+          highlightPostId: highlightPostId,
+          initialHighlightPost: initialHighlightPost,
+        ),
       ),
     );
   }
 
   @override
-  ConsumerState<TafakorTopicFeedScreen> createState() => _TafakorTopicFeedScreenState();
+  ConsumerState<TafakorTopicFeedScreen> createState() =>
+      _TafakorTopicFeedScreenState();
 }
 
-class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen> {
+class _TafakorTopicFeedScreenState
+    extends ConsumerState<TafakorTopicFeedScreen> {
   late final ScrollController _scrollController;
   late final QuillController _quillController;
   late final FocusNode _textFocusNode;
@@ -58,6 +74,119 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
   bool _isSubmitting = false;
   String? _attachedMediaPath;
   bool _isAttachedVideo = false;
+  int _feedFilterIndex = 0; // 0: all, 1: with ayah, 2: without ayah
+  final GlobalKey _highlightKey = GlobalKey();
+  final Set<String> _deletingAyahKeys = {};
+  bool _hasScrolledToHighlight = false;
+  bool _isScrollingToHighlight = false;
+
+  String _ayahKey(int postId, TafakorQuranReference ref) =>
+      '${postId}_${ref.surahNumber}_${ref.ayahNumber}';
+
+  void _triggerScrollToHighlight() {
+    if (widget.highlightPostId == null ||
+        _hasScrolledToHighlight ||
+        _isScrollingToHighlight) {
+      return;
+    }
+    _isScrollingToHighlight = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      // Allow route transition to settle
+      await Future.delayed(const Duration(milliseconds: 320));
+      if (!mounted) return;
+
+      final targetId = widget.highlightPostId;
+      if (targetId == null) {
+        _isScrollingToHighlight = false;
+        return;
+      }
+
+      final state = ref.read(tafakorTopicFeedControllerProvider);
+      // Ensure filter is set to 0 (all) so target post is visible
+      if (_feedFilterIndex != 0) {
+        setState(() {
+          _feedFilterIndex = 0;
+        });
+      }
+
+      final filteredPosts = state.posts;
+      final targetIndex = filteredPosts.indexWhere((p) => p.id == targetId);
+      if (targetIndex == -1) {
+        _isScrollingToHighlight = false;
+        return;
+      }
+
+      _hasScrolledToHighlight = true;
+      _isScrollingToHighlight = false;
+
+      if (!_scrollController.hasClients) return;
+
+      // In reverse: true ListView:
+      // Index 0 is at offset 0.0 (bottom of screen).
+      if (targetIndex == 0) {
+        await _scrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+        if (mounted && _highlightKey.currentContext != null) {
+          Scrollable.ensureVisible(
+            _highlightKey.currentContext!,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            alignment: 0.5,
+          );
+        }
+        return;
+      }
+
+      // If the widget is already rendered in the viewport:
+      if (_highlightKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          _highlightKey.currentContext!,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOutCubic,
+          alignment: 0.5,
+        );
+        return;
+      }
+
+      // If offscreen, jump close to estimated position (average card is ~340px)
+      // This forces Flutter's ListView to build and layout the target card
+      final estimatedOffset = (targetIndex * 340.0).clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+      _scrollController.jumpTo(estimatedOffset);
+
+      // Wait for next frame pipeline to attach the RenderBox
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+
+      // Precisely center the card on screen
+      if (_highlightKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          _highlightKey.currentContext!,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOutCubic,
+          alignment: 0.5,
+        );
+      } else {
+        // If slightly further away, wait briefly and try once more
+        await Future.delayed(const Duration(milliseconds: 120));
+        if (mounted && _highlightKey.currentContext != null) {
+          Scrollable.ensureVisible(
+            _highlightKey.currentContext!,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+            alignment: 0.5,
+          );
+        }
+      }
+    });
+  }
 
   String get _currentText {
     final raw = _quillController.document.toPlainText();
@@ -94,7 +223,13 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     _inputScrollController = ScrollController();
     _textFocusNode = FocusNode();
     Future.microtask(() {
-      ref.read(tafakorTopicFeedControllerProvider.notifier).loadPosts(topicId: widget.topic.id);
+      ref
+          .read(tafakorTopicFeedControllerProvider.notifier)
+          .loadPosts(
+            topicId: widget.topic.id,
+            highlightPostId: widget.highlightPostId,
+            initialHighlightPost: widget.initialHighlightPost,
+          );
     });
   }
 
@@ -112,8 +247,11 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
   void _onScroll() {
     if (_scrollController.hasClients) {
       // In reverse: true, maxScrollExtent represents the oldest posts at the top
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 240) {
-        ref.read(tafakorTopicFeedControllerProvider.notifier).loadNextPage(topicId: widget.topic.id);
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 240) {
+        ref
+            .read(tafakorTopicFeedControllerProvider.notifier)
+            .loadNextPage(topicId: widget.topic.id);
       }
 
       // Show scroll-to-bottom FAB when user has scrolled away from the newest posts
@@ -177,7 +315,10 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     final token = await ref.read(tafakorLocalDataSourceProvider).getToken();
     if (token == null || token.isEmpty) {
       if (mounted) {
-        AppSnackBar.showError(context, 'برای ثبت یا ویرایش یادداشت، لطفاً ابتدا وارد حساب خود شوید');
+        AppSnackBar.showError(
+          context,
+          'برای ثبت یا ویرایش یادداشت، لطفاً ابتدا وارد حساب خود شوید',
+        );
       }
       return;
     }
@@ -185,23 +326,20 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     final currentUser = ref.read(tafakorUserProvider);
     final currentPhone = currentUser?.phone;
     final state = ref.read(tafakorTopicFeedControllerProvider);
-    final isTopicOwner = widget.topic.isOwner(currentPhone) || (state.adminsData?.isOwner(currentPhone) ?? false);
+    final isTopicOwner =
+        widget.topic.isOwner(currentPhone) ||
+        (state.adminsData?.isOwner(currentPhone) ?? false);
     final isTopicAdmin = state.adminsData?.isAdmin(currentPhone) ?? false;
-    final canPostInTopic = isTopicOwner || isTopicAdmin;
 
     if (_editingPost != null) {
       final isAuthor = _editingPost!.isAuthor(currentPhone);
       final canModify = isAuthor || isTopicOwner || isTopicAdmin;
       if (!canModify) {
         if (mounted) {
-          AppSnackBar.showError(context, 'شما اجازه ویرایش این یادداشت را ندارید');
-        }
-        return;
-      }
-    } else {
-      if (!canPostInTopic) {
-        if (mounted) {
-          AppSnackBar.showError(context, 'فقط سازنده و ادمین‌های این تاپیک مجاز به ارسال یادداشت هستند');
+          AppSnackBar.showError(
+            context,
+            'شما اجازه ویرایش این یادداشت را ندارید',
+          );
         }
         return;
       }
@@ -238,11 +376,13 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
           _scrollToBottom();
           AppSnackBar.showSuccess(context, 'یادداشت جدید با موفقیت ثبت شد');
         } else {
-          AppSnackBar.showError(context, 'خطا در ثبت یادداشت');
+          final errorMsg =
+              ref.read(tafakorTopicFeedControllerProvider).error?.message ??
+              'خطا در ثبت یادداشت';
+          AppSnackBar.showError(context, errorMsg);
         }
       }
     }
-
   }
 
   @override
@@ -252,22 +392,42 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     final colorScheme = context.colorScheme;
     final isDark = context.isDark;
 
+    ref.listen<TafakorTopicFeedState>(tafakorTopicFeedControllerProvider, (
+      previous,
+      next,
+    ) {
+      if (widget.highlightPostId != null &&
+          !_hasScrolledToHighlight &&
+          next.posts.any((p) => p.id == widget.highlightPostId)) {
+        _triggerScrollToHighlight();
+      }
+    });
+
     final state = ref.watch(tafakorTopicFeedControllerProvider);
+    if (widget.highlightPostId != null &&
+        !_hasScrolledToHighlight &&
+        state.posts.any((p) => p.id == widget.highlightPostId)) {
+      _triggerScrollToHighlight();
+    }
+
     final controller = ref.read(tafakorTopicFeedControllerProvider.notifier);
 
     final currentUser = ref.watch(tafakorUserProvider);
     final isAuthenticated = ref.watch(isTafakorAuthenticatedProvider);
     final currentPhone = currentUser?.phone;
 
-    final isTopicOwner = widget.topic.isOwner(currentPhone) ||
+    final isTopicOwner =
+        widget.topic.isOwner(currentPhone) ||
         (state.adminsData?.isOwner(currentPhone) ?? false);
     final isTopicAdmin = state.adminsData?.isAdmin(currentPhone) ?? false;
-    final canPostInTopic = isTopicOwner || isTopicAdmin;
+    final canPostInTopic = isAuthenticated;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF121212) : theme.scaffoldBackgroundColor,
+        backgroundColor: isDark
+            ? const Color(0xFF121212)
+            : theme.scaffoldBackgroundColor,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(62.0),
           child: Container(
@@ -280,10 +440,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
             decoration: BoxDecoration(
               color: colors.cardBackground,
               border: Border(
-                bottom: BorderSide(
-                  color: colors.cardBorder,
-                  width: 0.8,
-                ),
+                bottom: BorderSide(color: colors.cardBorder, width: 0.8),
               ),
             ),
             child: Row(
@@ -325,20 +482,31 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                   alignment: Alignment.center,
                   children: [
                     IconButton(
-                      icon: const Icon(CupertinoIcons.question_circle, size: 21),
+                      icon: const Icon(
+                        CupertinoIcons.question_circle,
+                        size: 21,
+                      ),
                       splashRadius: 20,
                       color: isDark ? Colors.white70 : Colors.black54,
                       onPressed: () {
-                        AppSnackBar.showInfo(context, 'راهنما و مستندات به زودی اضافه می‌شود');
+                        AppSnackBar.showInfo(
+                          context,
+                          'راهنما و مستندات به زودی اضافه می‌شود',
+                        );
                       },
                     ),
                     Positioned(
                       top: 4,
                       left: 2,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF2C2C2E) : Colors.black12,
+                          color: isDark
+                              ? const Color(0xFF2C2C2E)
+                              : Colors.black12,
                           borderRadius: BorderRadius.circular(5),
                           border: Border.all(
                             color: isDark ? Colors.white24 : Colors.black26,
@@ -381,6 +549,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
         ),
         body: Column(
           children: [
+            _buildMonochromeFilterBar(isDark, state),
             Expanded(
               child: Stack(
                 children: [
@@ -401,11 +570,18 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                       bottom: 12,
                       child: FloatingActionButton.small(
                         onPressed: _scrollToBottom,
-                        backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.white,
-                        foregroundColor: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                        backgroundColor: isDark
+                            ? const Color(0xFF2C2C2E)
+                            : Colors.white,
+                        foregroundColor: isDark
+                            ? Colors.white
+                            : const Color(0xFF1C1C1E),
                         elevation: 3,
                         shape: const CircleBorder(),
-                        child: const Icon(CupertinoIcons.chevron_down, size: 20),
+                        child: const Icon(
+                          CupertinoIcons.chevron_down,
+                          size: 20,
+                        ),
                       ),
                     ),
                 ],
@@ -424,7 +600,6 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
         ),
       ),
     );
-
   }
 
   Widget _buildBody(
@@ -440,9 +615,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
   }) {
     // 1. Initial Fullscreen Loading
     if (state.isLoading && state.posts.isEmpty) {
-      return const Center(
-        child: CupertinoActivityIndicator(radius: 14),
-      );
+      return const Center(child: CupertinoActivityIndicator(radius: 14));
     }
 
     // 2. Fullscreen Error View
@@ -464,7 +637,8 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
               ),
               8.vSpace,
               Text(
-                state.error?.message ?? 'لطفاً اتصال اینترنت خود را بررسی کنید.',
+                state.error?.message ??
+                    'لطفاً اتصال اینترنت خود را بررسی کنید.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
@@ -478,12 +652,18 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                   backgroundColor: colorScheme.primary,
                   foregroundColor: colorScheme.onPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () => controller.loadPosts(topicId: widget.topic.id, isRefresh: true),
+                onPressed: () => controller.loadPosts(
+                  topicId: widget.topic.id,
+                  isRefresh: true,
+                ),
                 child: const Text(
                   'تلاش مجدد',
                   style: TextStyle(
@@ -502,7 +682,8 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     // 3. Empty Posts View
     if (state.posts.isEmpty) {
       return RefreshIndicator(
-        onRefresh: () => controller.loadPosts(topicId: widget.topic.id, isRefresh: true),
+        onRefresh: () =>
+            controller.loadPosts(topicId: widget.topic.id, isRefresh: true),
         color: isDark ? Colors.white : const Color(0xFF1C1C1E),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -512,7 +693,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),
                 child: Text(
-                  'هنوز پستی در این تاپیک ثبت نشده است',
+                  'هنوز یادداشتی ثبت نشده است',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
@@ -529,37 +710,76 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     }
 
     // 4. Paginated Posts List View (Reverse scroll: newest at bottom, history upwards)
+    final filteredPosts = _feedFilterIndex == 1
+        ? state.posts.where((p) => p.quranReferences.isNotEmpty).toList()
+        : (_feedFilterIndex == 2
+              ? state.posts.where((p) => p.quranReferences.isEmpty).toList()
+              : state.posts);
+
+    if (filteredPosts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Text(
+            _feedFilterIndex == 1
+                ? 'یادداشت مرتبط با آیه یافت نشد'
+                : (_feedFilterIndex == 2
+                      ? 'یادداشت آزادی یافت نشد'
+                      : 'هنوز یادداشتی ثبت نشده است'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 13,
+              color: isDark ? Colors.white54 : Colors.black45,
+            ),
+          ),
+        ),
+      );
+    }
+
     return RefreshIndicator(
-      onRefresh: () => controller.loadPosts(topicId: widget.topic.id, isRefresh: true),
+      onRefresh: () =>
+          controller.loadPosts(topicId: widget.topic.id, isRefresh: true),
       color: isDark ? Colors.white : const Color(0xFF1C1C1E),
       child: ListView.separated(
         controller: _scrollController,
         reverse: true,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
-        itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
+        itemCount: filteredPosts.length + (state.isLoadingMore ? 1 : 0),
         separatorBuilder: (_, _) => 14.vSpace,
         itemBuilder: (context, index) {
-          if (index == state.posts.length) {
+          if (index == filteredPosts.length) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Center(
-                child: CupertinoActivityIndicator(radius: 12),
-              ),
+              child: Center(child: CupertinoActivityIndicator(radius: 12)),
             );
           }
 
-          final post = state.posts[index];
+          final post = filteredPosts[index];
           final isAuthor = post.isAuthor(currentPhone);
           final canModifyPost = isAuthor || isTopicOwner || isTopicAdmin;
+          final isHighlighted =
+              widget.highlightPostId != null &&
+              post.id == widget.highlightPostId;
 
           return RepaintBoundary(
-            key: ValueKey(post.id),
-            child: _PostCard(
+            key: isHighlighted ? _highlightKey : ValueKey(post.id),
+            child: TafakorPostCard(
               post: post,
               isDark: isDark,
               colors: colors,
               colorScheme: colorScheme,
+              isHighlighted: isHighlighted,
+              canModifyPost: canModifyPost,
+              isDeletingAyahReference: (reference) =>
+                  _deletingAyahKeys.contains(_ayahKey(post.id, reference)),
+              onDeleteAyahReference: (reference) => _confirmDeleteAyahReference(
+                context,
+                post,
+                reference,
+                controller,
+              ),
               onToggleReaction: () {
                 HapticFeedback.lightImpact();
                 controller.toggleReaction(post.id);
@@ -576,6 +796,123 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildMonochromeFilterBar(bool isDark, TafakorTopicFeedState state) {
+    final allCount = state.posts.length;
+    final withAyahCount = state.posts
+        .where((p) => p.quranReferences.isNotEmpty)
+        .length;
+    final withoutAyahCount = allCount - withAyahCount;
+
+    Widget buildItem(String title, int count, int index) {
+      final isSelected = _feedFilterIndex == index;
+      return GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          setState(() => _feedFilterIndex = index);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? const Color(0xFF2C2C2E) : Colors.white)
+                : (isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03)),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? (isDark ? Colors.white24 : Colors.black12)
+                  : (isDark
+                        ? Colors.white10
+                        : Colors.black.withValues(alpha: 0.04)),
+              width: 0.8,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.30 : 0.06,
+                      ),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                  color: isSelected
+                      ? (isDark ? Colors.white : Colors.black87)
+                      : (isDark ? Colors.white60 : Colors.black54),
+                ),
+              ),
+              if (state.posts.isNotEmpty) ...[
+                5.hSpace,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5.5,
+                    vertical: 1.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? (isDark
+                              ? Colors.white.withValues(alpha: 0.16)
+                              : Colors.black.withValues(alpha: 0.08))
+                        : (isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.black.withValues(alpha: 0.04)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    count.toPersianDigit(),
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 10,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? (isDark ? Colors.white : Colors.black87)
+                          : (isDark ? Colors.white60 : Colors.black45),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      color: Colors.transparent,
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            buildItem('همه', allCount, 0),
+            6.hSpace,
+            buildItem('مرتبط با آیه', withAyahCount, 1),
+            6.hSpace,
+            buildItem('یادداشت آزاد', withoutAyahCount, 2),
+          ],
+        ),
       ),
     );
   }
@@ -599,10 +936,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: colors.cardBorder,
-              width: 0.8,
-            ),
+            border: Border.all(color: colors.cardBorder, width: 0.8),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
@@ -643,7 +977,13 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                 title: 'وضعیت انتشار',
                 onTap: () {
                   Navigator.pop(sheetContext);
-                  _showPublishStatusDialog(context, post, isDark, colors, colorScheme);
+                  _showPublishStatusDialog(
+                    context,
+                    post,
+                    isDark,
+                    colors,
+                    colorScheme,
+                  );
                 },
               ),
 
@@ -653,13 +993,35 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                 title: 'تاریخچه ویرایش‌ها',
                 onTap: () {
                   Navigator.pop(sheetContext);
-                  _showEditHistoryDialog(context, post, isDark, colors, colorScheme);
+                  _showEditHistoryDialog(
+                    context,
+                    post,
+                    isDark,
+                    colors,
+                    colorScheme,
+                  );
                 },
               ),
 
               // Only show Edit and Delete if the user is Author, Owner, or Admin
               if (canModifyPost) ...[
                 const Divider(height: 1),
+
+                // افزودن آیه مرتبط
+                _MenuActionTile(
+                  icon: CupertinoIcons.link,
+                  title: 'افزودن آیه مرتبط',
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    TafakorManageAyahReferencesSheet.show(
+                      context,
+                      post: post,
+                      onPostUpdated: (updatedPost) {
+                        controller.updatePostLocally(updatedPost);
+                      },
+                    );
+                  },
+                ),
 
                 // 4. ویرایش پست
                 _MenuActionTile(
@@ -690,6 +1052,122 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     );
   }
 
+  void _confirmDeleteAyahReference(
+    BuildContext context,
+    TafakorPost post,
+    TafakorQuranReference reference,
+    TafakorTopicFeedController controller,
+  ) {
+    HapticFeedback.lightImpact();
+    showCupertinoDialog(
+      context: context,
+      builder: (dialogCtx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: CupertinoAlertDialog(
+          title: Text(
+            'حذف ارجاع آیه',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              'آیا از حذف ارجاع «سوره ${reference.surahName}، آیه ${reference.ayahNumber.toPersianDigit()}» از این پست اطمینان دارید؟',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 12.5,
+                height: 1.5,
+              ),
+            ),
+          ),
+          actions: [
+            CupertinoDialogAction(
+              child: Text(
+                'انصراف',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 13,
+                  color: Colors.grey,
+                ),
+              ),
+              onPressed: () => Navigator.pop(dialogCtx),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              child: Text(
+                'حذف',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onPressed: () async {
+                Navigator.pop(dialogCtx);
+                HapticFeedback.mediumImpact();
+
+                final remainingRefs = post.quranReferences
+                    .where(
+                      (r) =>
+                          !(r.surahNumber == reference.surahNumber &&
+                              r.ayahNumber == reference.ayahNumber),
+                    )
+                    .toList();
+
+                final payload = remainingRefs
+                    .map(
+                      (r) => {
+                        'plugin': 'quran',
+                        'resource_type': 'ayah',
+                        'external_id':
+                            'surah:${r.surahNumber},ayah:${r.ayahNumber}',
+                        'metadata': {
+                          'surah_number': r.surahNumber,
+                          'ayah_number': r.ayahNumber,
+                          'surah_name': r.surahName,
+                        },
+                      },
+                    )
+                    .toList();
+
+                final key = _ayahKey(post.id, reference);
+                setState(() => _deletingAyahKeys.add(key));
+
+                try {
+                  final success = await controller.updatePostReferences(
+                    postId: post.id,
+                    pluginReferences: payload,
+                  );
+
+                  if (context.mounted) {
+                    if (success) {
+                      TafakorQuranRegistry.register(post.id, remainingRefs);
+                      AppSnackBar.showSuccess(
+                        context,
+                        'ارجاع آیه با موفقیت حذف شد.',
+                      );
+                    } else {
+                      AppSnackBar.showError(
+                        context,
+                        'خطا در حذف ارجاع آیه از یادداشت.',
+                      );
+                    }
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() => _deletingAyahKeys.remove(key));
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _confirmDeletePost(
     BuildContext context,
@@ -699,15 +1177,47 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     showCupertinoDialog(
       context: context,
       builder: (dialogCtx) => CupertinoAlertDialog(
-        title: const Text('حذف پست'),
-        content: const Text('آیا از حذف این پست اطمینان دارید؟ این عملیات غیرقابل بازگشت است.'),
+        title: Text(
+          'حذف پست',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(
+            'آیا از حذف این پست اطمینان دارید؟ این عملیات غیرقابل بازگشت است.',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 12.5,
+              height: 1.5,
+            ),
+          ),
+        ),
         actions: [
           CupertinoDialogAction(
-            child: const Text('انصراف'),
+            child: Text(
+              'انصراف',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13,
+                color: Colors.grey,
+              ),
+            ),
             onPressed: () => Navigator.pop(dialogCtx),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
+            child: Text(
+              'حذف',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             onPressed: () async {
               Navigator.pop(dialogCtx);
               final success = await controller.deletePost(post.id);
@@ -719,7 +1229,6 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                 }
               }
             },
-            child: const Text('حذف'),
           ),
         ],
       ),
@@ -758,13 +1267,17 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
             Row(
               children: [
                 Icon(
-                  hasTg ? CupertinoIcons.check_mark_circled_solid : CupertinoIcons.xmark_circle,
+                  hasTg
+                      ? CupertinoIcons.check_mark_circled_solid
+                      : CupertinoIcons.xmark_circle,
                   color: hasTg ? const Color(0xFF22C55E) : Colors.grey,
                   size: 20,
                 ),
                 10.hSpace,
                 Text(
-                  hasTg ? 'منتشر شده در کانال تلگرام' : 'در تلگرام منتشر نشده است',
+                  hasTg
+                      ? 'منتشر شده در کانال تلگرام'
+                      : 'در تلگرام منتشر نشده است',
                   style: const TextStyle(fontSize: 13),
                 ),
               ],
@@ -773,7 +1286,9 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
             Row(
               children: [
                 Icon(
-                  hasBale ? CupertinoIcons.check_mark_circled_solid : CupertinoIcons.xmark_circle,
+                  hasBale
+                      ? CupertinoIcons.check_mark_circled_solid
+                      : CupertinoIcons.xmark_circle,
                   color: hasBale ? const Color(0xFF22C55E) : Colors.grey,
                   size: 20,
                 ),
@@ -809,10 +1324,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: colors.cardBorder,
-            width: 0.8,
-          ),
+          border: Border.all(color: colors.cardBorder, width: 0.8),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -820,7 +1332,11 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
           children: [
             Row(
               children: [
-                Icon(CupertinoIcons.clock, size: 20, color: colorScheme.onSurface),
+                Icon(
+                  CupertinoIcons.clock,
+                  size: 20,
+                  color: colorScheme.onSurface,
+                ),
                 10.hSpace,
                 const Text(
                   'تاریخچه ویرایش‌های یادداشت',
@@ -892,10 +1408,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: colors.cardBorder,
-              width: 0.8,
-            ),
+            border: Border.all(color: colors.cardBorder, width: 0.8),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
@@ -924,7 +1437,13 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                 title: isTopicOwner ? 'مدیریت ادمین‌ها' : 'اطلاعات و ادمین‌ها',
                 onTap: () {
                   Navigator.pop(sheetContext);
-                  _showTopicAdminsInfoDialog(context, isDark, colors, colorScheme, adminsData);
+                  _showTopicAdminsInfoDialog(
+                    context,
+                    isDark,
+                    colors,
+                    colorScheme,
+                    adminsData,
+                  );
                 },
               ),
 
@@ -936,7 +1455,10 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                   title: 'میز ویراستاری تاپیک',
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    AppSnackBar.showInfo(context, 'میز ویراستاری تاپیک به زودی فعال می‌شود');
+                    AppSnackBar.showInfo(
+                      context,
+                      'میز ویراستاری تاپیک به زودی فعال می‌شود',
+                    );
                   },
                 ),
 
@@ -946,7 +1468,10 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                   title: 'ویرایش مشخصات تاپیک',
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    AppSnackBar.showInfo(context, 'نام تاپیک: ${widget.topic.name}');
+                    AppSnackBar.showInfo(
+                      context,
+                      'نام تاپیک: ${widget.topic.name}',
+                    );
                   },
                 ),
 
@@ -956,9 +1481,16 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                   title: 'تنظیمات اتصالات تاپیک',
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    final tg = widget.topic.telegramBotActive ? 'فعال' : 'غیرفعال';
-                    final bale = widget.topic.baleBotActive ? 'فعال' : 'غیرفعال';
-                    AppSnackBar.showInfo(context, 'اتصال تلگرام: $tg | اتصال بله: $bale');
+                    final tg = widget.topic.telegramBotActive
+                        ? 'فعال'
+                        : 'غیرفعال';
+                    final bale = widget.topic.baleBotActive
+                        ? 'فعال'
+                        : 'غیرفعال';
+                    AppSnackBar.showInfo(
+                      context,
+                      'اتصال تلگرام: $tg | اتصال بله: $bale',
+                    );
                   },
                 ),
               ],
@@ -971,7 +1503,10 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                   title: 'آپلود تاریخچه تلگرام',
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    AppSnackBar.showInfo(context, 'امکان ورود فایل خروجی تاریخچه JSON تلگرام به زودی');
+                    AppSnackBar.showInfo(
+                      context,
+                      'امکان ورود فایل خروجی تاریخچه JSON تلگرام به زودی',
+                    );
                   },
                 ),
 
@@ -1003,8 +1538,11 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     ColorScheme colorScheme,
     TafakorTopicAdminsData? adminsData,
   ) {
-    final ownerName = adminsData?.ownerName ??
-        (widget.topic.createdByPhone != null ? widget.topic.createdByPhone!.toPersianDigit() : 'نامشخص');
+    final ownerName =
+        adminsData?.ownerName ??
+        (widget.topic.createdByPhone != null
+            ? widget.topic.createdByPhone!.toPersianDigit()
+            : 'نامشخص');
     final adminsList = adminsData?.admins ?? [];
 
     showModalBottomSheet(
@@ -1033,7 +1571,11 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
             children: [
               Row(
                 children: [
-                  Icon(CupertinoIcons.shield, size: 20, color: colorScheme.onSurface),
+                  Icon(
+                    CupertinoIcons.shield,
+                    size: 20,
+                    color: colorScheme.onSurface,
+                  ),
                   10.hSpace,
                   const Text(
                     'اطلاعات و ادمین‌های تاپیک',
@@ -1044,17 +1586,28 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
               16.vSpace,
               // Owner
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 16,
-                      backgroundColor: const Color(0xFF00A884).withValues(alpha: 0.15),
-                      child: const Icon(CupertinoIcons.person_fill, size: 16, color: Color(0xFF00A884)),
+                      backgroundColor: const Color(
+                        0xFF00A884,
+                      ).withValues(alpha: 0.15),
+                      child: const Icon(
+                        CupertinoIcons.person_fill,
+                        size: 16,
+                        color: Color(0xFF00A884),
+                      ),
                     ),
                     10.hSpace,
                     Expanded(
@@ -1063,24 +1616,37 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                         children: [
                           Text(
                             ownerName,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
                           ),
                           Text(
                             'سازنده و مالک تاپیک',
-                            style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.black54),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.white54 : Colors.black54,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF00A884).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
                         'مالک',
-                        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF00A884)),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF00A884),
+                        ),
                       ),
                     ),
                   ],
@@ -1090,45 +1656,73 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
               if (adminsList.isNotEmpty) ...[
                 Text(
                   'ادمین‌های فعال (${adminsList.length})',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
                 ),
                 8.vSpace,
-                ...adminsList.map((admin) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 14,
-                          backgroundColor: Colors.blue.withValues(alpha: 0.15),
-                          child: const Icon(CupertinoIcons.person, size: 14, color: Colors.blue),
-                        ),
-                        10.hSpace,
-                        Expanded(
-                          child: Text(
-                            admin.name.isNotEmpty ? admin.name : admin.phone.toPersianDigit(),
-                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                ...adminsList.map(
+                  (admin) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.03)
+                            : Colors.black.withValues(alpha: 0.02),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: Colors.blue.withValues(
+                              alpha: 0.15,
+                            ),
+                            child: const Icon(
+                              CupertinoIcons.person,
+                              size: 14,
+                              color: Colors.blue,
+                            ),
                           ),
-                        ),
-                        Text(
-                          admin.customTitle,
-                          style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black38),
-                        ),
-                      ],
+                          10.hSpace,
+                          Expanded(
+                            child: Text(
+                              admin.name.isNotEmpty
+                                  ? admin.name
+                                  : admin.phone.toPersianDigit(),
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            admin.customTitle,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.white38 : Colors.black38,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                )),
+                ),
               ] else ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     'ادمین دیگری برای این تاپیک تعریف نشده است.',
-                    style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white38 : Colors.black38),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
                   ),
                 ),
               ],
@@ -1143,20 +1737,54 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
     showCupertinoDialog(
       context: context,
       builder: (dialogCtx) => CupertinoAlertDialog(
-        title: const Text('حذف تاپیک'),
-        content: Text('آیا از حذف تاپیک «${widget.topic.name}» اطمینان دارید؟ تمامی یادداشت‌های آن حذف خواهند شد.'),
+        title: Text(
+          'حذف تاپیک',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(
+            'آیا از حذف تاپیک «${widget.topic.name}» اطمینان دارید؟ تمامی یادداشت‌های آن حذف خواهند شد.',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 12.5,
+              height: 1.5,
+            ),
+          ),
+        ),
         actions: [
           CupertinoDialogAction(
-            child: const Text('انصراف'),
+            child: Text(
+              'انصراف',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13,
+                color: Colors.grey,
+              ),
+            ),
             onPressed: () => Navigator.pop(dialogCtx),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () {
               Navigator.pop(dialogCtx);
-              AppSnackBar.showInfo(context, 'حذف تاپیک نیازمند دسترسی ویژه سازنده تاپیک است');
+              AppSnackBar.showInfo(
+                context,
+                'حذف تاپیک نیازمند دسترسی ویژه سازنده تاپیک است',
+              );
             },
-            child: const Text('حذف'),
+            child: Text(
+              'حذف',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -1188,7 +1816,9 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.10) : Colors.black.withValues(alpha: 0.08),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : Colors.black.withValues(alpha: 0.08),
               width: 0.8,
             ),
             boxShadow: [
@@ -1201,12 +1831,14 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
           ),
           child: Row(
             children: [
-              Icon(
-                isAuthenticated ? CupertinoIcons.lock_fill : CupertinoIcons.person_crop_circle_badge_exclam,
-                size: 19,
-                color: isDark ? Colors.white54 : Colors.black45,
-              ),
-              10.hSpace,
+              if (isAuthenticated) ...[
+                Icon(
+                  CupertinoIcons.lock_fill,
+                  size: 19,
+                  color: isDark ? Colors.white54 : Colors.black45,
+                ),
+                10.hSpace,
+              ],
               Expanded(
                 child: Text(
                   isAuthenticated
@@ -1224,7 +1856,10 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                 TextButton(
                   onPressed: () => TafakorLoginScreen.push(context),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     foregroundColor: const Color(0xFF00A884),
@@ -1241,13 +1876,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
       );
     }
 
-    return _buildChatInputBar(
-      context,
-      isDark,
-      colorScheme,
-      colors,
-      controller,
-    );
+    return _buildChatInputBar(context, isDark, colorScheme, colors, controller);
   }
 
   /// Modern floating card input bar matching "دفتر تفکر" (tafakor_editor_screen.dart)
@@ -1344,10 +1973,10 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                 placeholder: _isAttachedVideo
                     ? 'توضیحات اختیاری ویدیو...'
                     : (_attachedMediaPath != null
-                        ? 'توضیحات اختیاری تصویر...'
-                        : (_editingPost != null
-                            ? 'ویرایش متن یادداشت...'
-                            : 'یادداشت یا تفکر خود را بنویسید...')),
+                          ? 'توضیحات اختیاری تصویر...'
+                          : (_editingPost != null
+                                ? 'ویرایش متن یادداشت...'
+                                : 'یادداشت یا تفکر خود را بنویسید...')),
                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                 autoFocus: false,
                 expands: false,
@@ -1607,7 +2236,9 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
                 isEditing ? CupertinoIcons.xmark : CupertinoIcons.plus,
                 size: isEditing ? 18 : 20,
                 color: isEditing
-                    ? (isDark ? const Color(0xFFFF6B6B) : const Color(0xFFE53935))
+                    ? (isDark
+                          ? const Color(0xFFFF6B6B)
+                          : const Color(0xFFE53935))
                     : (isDark ? Colors.white60 : Colors.black54),
               ),
             ),
@@ -1641,8 +2272,8 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
             color: canSend
                 ? const Color(0xFF00A884)
                 : (isDark
-                    ? Colors.white.withValues(alpha: 0.12)
-                    : const Color(0xFFE5E5EA)),
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : const Color(0xFFE5E5EA)),
             boxShadow: canSend
                 ? [
                     BoxShadow(
@@ -1655,7 +2286,10 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
           ),
           child: Center(
             child: _isSubmitting
-                ? const CupertinoActivityIndicator(color: Colors.white, radius: 9)
+                ? const CupertinoActivityIndicator(
+                    color: Colors.white,
+                    radius: 9,
+                  )
                 : Icon(
                     CupertinoIcons.arrow_up,
                     size: 20,
@@ -1683,10 +2317,7 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: colors.cardBorder,
-            width: 0.8,
-          ),
+          border: Border.all(color: colors.cardBorder, width: 0.8),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1706,7 +2337,9 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
               title: 'ارسال تصویر یادداشت',
               onTap: () async {
                 Navigator.pop(sheetContext);
-                final file = await ref.read(imagePickerServiceProvider).pickImageFromGallery();
+                final file = await ref
+                    .read(imagePickerServiceProvider)
+                    .pickImageFromGallery();
                 if (file != null && mounted) {
                   setState(() {
                     _attachedMediaPath = file.path;
@@ -1722,7 +2355,9 @@ class _TafakorTopicFeedScreenState extends ConsumerState<TafakorTopicFeedScreen>
               title: 'ارسال ویدیوی یادداشت',
               onTap: () async {
                 Navigator.pop(sheetContext);
-                final file = await ref.read(imagePickerServiceProvider).pickVideoFromGallery();
+                final file = await ref
+                    .read(imagePickerServiceProvider)
+                    .pickVideoFromGallery();
                 if (file != null && mounted) {
                   setState(() {
                     _attachedMediaPath = file.path;
@@ -1768,7 +2403,9 @@ class _MenuActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDestructive ? const Color(0xFFEF4444) : context.colorScheme.onSurface;
+    final color = isDestructive
+        ? const Color(0xFFEF4444)
+        : context.colorScheme.onSurface;
 
     return Material(
       color: Colors.transparent,
@@ -1793,703 +2430,6 @@ class _MenuActionTile extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Dedicated Post Card matching Image 3 with author info, clock time, content, heart reaction & comments
-class _PostCard extends StatelessWidget {
-  final TafakorPost post;
-  final bool isDark;
-  final dynamic colors;
-  final ColorScheme colorScheme;
-  final VoidCallback onToggleReaction;
-  final VoidCallback onMoreOptions;
-
-  const _PostCard({
-    required this.post,
-    required this.isDark,
-    required this.colors,
-    required this.colorScheme,
-    required this.onToggleReaction,
-    required this.onMoreOptions,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final jalaliDate = post.formattedJalaliDate;
-    final isLiked = post.isLiked;
-    final totalLikes = post.totalLikes;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1C1C1E) : colors.cardBackground,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: colors.cardBorder,
-          width: 0.8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 1. Post Header: Author Avatar & Phone (Right) + Clock Date & 3-Dots Menu (Left)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Author Avatar
-              _buildAvatar(),
-
-              10.hSpace,
-
-              // Author Phone & "نویسنده" Role Badge
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      (post.authorName.isNotEmpty ? post.authorName : post.authorPhone).toPersianDigit(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    2.vSpace,
-                    Text(
-                      'نویسنده',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        color: isDark ? Colors.white38 : Colors.black38,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Jalali Date + Clock Icon (e.g. ۱۴۰۵/۷/۱۹, ۱۵:۲۴)
-              if (jalaliDate != null) ...[
-                Text(
-                  jalaliDate,
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
-                ),
-                4.hSpace,
-                Icon(
-                  CupertinoIcons.clock,
-                  size: 13,
-                  color: isDark ? Colors.white38 : Colors.black38,
-                ),
-                4.hSpace,
-              ],
-
-              // 3-dots Context Menu Button
-              IconButton(
-                icon: const Icon(CupertinoIcons.ellipsis_vertical, size: 17),
-                splashRadius: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                color: isDark ? Colors.white54 : Colors.black45,
-                onPressed: onMoreOptions,
-              ),
-            ],
-          ),
-
-          12.vSpace,
-
-          // 2. Post Content (Text)
-          if (post.content.isNotEmpty)
-            SelectableText(
-              post.content,
-              textDirection: Bidi.detectRtlDirectionality(post.content) ? TextDirection.rtl : TextDirection.ltr,
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 14,
-                height: 1.6,
-                color: colorScheme.onSurface,
-              ),
-            ),
-
-          // Quran Ayah Badges (Reverse Linkage)
-          if (post.hasQuranReference)
-            TafakorPostAyahBadgesSection(
-              post: post,
-              isDark: isDark,
-            ),
-
-
-          // Media Section (Video / Image / Audio)
-          if (post.hasMedia && post.fullMediaUrl != null)
-            _PostMediaSection(
-              post: post,
-              isDark: isDark,
-              colors: colors,
-              colorScheme: colorScheme,
-            ),
-
-          14.vSpace,
-
-          // 3. Post Footer: Share Button (Left) + Comments & Hearts (Right)
-          Row(
-            children: [
-              // Share Button (Left)
-              IconButton(
-                tooltip: 'اشتراک‌گذاری',
-                icon: Icon(
-                  CupertinoIcons.share,
-                  size: 19,
-                  color: isDark ? Colors.white54 : Colors.black45,
-                ),
-                splashRadius: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  Clipboard.setData(ClipboardData(text: post.content));
-                  AppSnackBar.showSuccess(context, 'متن پست برای اشتراک‌گذاری کپی شد');
-                },
-              ),
-
-              const Spacer(),
-
-              // Comments Count & Icon (e.g. 💬 ۰)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      post.commentsCount.toPersianDigit(),
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white60 : Colors.black54,
-                      ),
-                    ),
-                    6.hSpace,
-                    Icon(
-                      CupertinoIcons.chat_bubble,
-                      size: 16,
-                      color: isDark ? Colors.white60 : Colors.black54,
-                    ),
-                  ],
-                ),
-              ),
-
-              8.hSpace,
-
-              // Heart Reaction & Count (e.g. ♡ ۰ or ❤️ ۲)
-              InkWell(
-                onTap: onToggleReaction,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isLiked
-                        ? const Color(0xFFEF4444).withValues(alpha: 0.12)
-                        : (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        totalLikes.toPersianDigit(),
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isLiked ? const Color(0xFFEF4444) : (isDark ? Colors.white60 : Colors.black54),
-                        ),
-                      ),
-                      6.hSpace,
-                      Icon(
-                        isLiked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-                        size: 16,
-                        color: isLiked ? const Color(0xFFEF4444) : (isDark ? Colors.white60 : Colors.black54),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvatar() {
-    if (post.authorAvatar != null && post.authorAvatar!.isNotEmpty) {
-      return AppCachedNetworkImage(
-        imageUrl: post.authorAvatar,
-        width: 36,
-        height: 36,
-        borderRadius: BorderRadius.circular(18),
-        backgroundColor: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA),
-      );
-    }
-
-    return Container(
-      width: 36,
-      height: 36,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isDark ? Colors.white12 : Colors.black12,
-          width: 0.8,
-        ),
-      ),
-      child: Text(
-        post.authorName.isNotEmpty ? post.authorName.characters.first : 'ن',
-        style: TextStyle(
-          fontFamily: AppTypography.fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: isDark ? Colors.white : const Color(0xFF1C1C1E),
-        ),
-      ),
-    );
-  }
-}
-
-/// Dynamic Media Section Widget for Tafakor Post (Video, Image, Audio)
-class _PostMediaSection extends StatelessWidget {
-  final TafakorPost post;
-  final bool isDark;
-  final dynamic colors;
-  final ColorScheme colorScheme;
-
-  const _PostMediaSection({
-    required this.post,
-    required this.isDark,
-    required this.colors,
-    required this.colorScheme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!post.hasMedia || post.fullMediaUrl == null) {
-      return const SizedBox.shrink();
-    }
-
-    if (post.isVideo) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 10.0),
-        child: _PostVideoWidget(
-          videoUrl: post.fullMediaUrl!,
-          fileName: post.mediaFileName,
-          isDark: isDark,
-          colorScheme: colorScheme,
-        ),
-      );
-    }
-
-    if (post.isAudio) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 10.0),
-        child: _PostAudioWidget(
-          audioUrl: post.fullMediaUrl!,
-          fileName: post.mediaFileName,
-          isDark: isDark,
-          colorScheme: colorScheme,
-        ),
-      );
-    }
-
-    // Default to Image
-    return Padding(
-      padding: const EdgeInsets.only(top: 10.0),
-      child: _PostImageWidget(
-        imageUrl: post.fullMediaUrl!,
-        isDark: isDark,
-      ),
-    );
-  }
-}
-
-/// Rich Telegram-style Video Player Card for Post Feed
-class _PostVideoWidget extends StatelessWidget {
-  final String videoUrl;
-  final String fileName;
-  final bool isDark;
-  final ColorScheme colorScheme;
-
-  const _PostVideoWidget({
-    required this.videoUrl,
-    required this.fileName,
-    required this.isDark,
-    required this.colorScheme,
-  });
-
-  Future<void> _playVideo(BuildContext context) async {
-    HapticFeedback.lightImpact();
-    final uri = Uri.tryParse(videoUrl);
-    if (uri == null) {
-      AppSnackBar.showError(context, 'آدرس ویدیو نامعتبر است');
-      return;
-    }
-    try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!launched) {
-        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        AppSnackBar.showError(context, 'خطا در باز کردن ویدیو: $e');
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 195,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1E2229), const Color(0xFF121418)]
-              : [const Color(0xFF2C3E50), const Color(0xFF1A252F)],
-        ),
-        border: Border.all(
-          color: const Color(0xFF00A884).withValues(alpha: 0.35),
-          width: 0.9,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _playVideo(context),
-            child: Stack(
-              children: [
-                // Background subtle decorative pattern
-                Positioned.fill(
-                  child: Center(
-                    child: Icon(
-                      CupertinoIcons.videocam_fill,
-                      size: 90,
-                      color: Colors.white.withValues(alpha: 0.04),
-                    ),
-                  ),
-                ),
-
-                // Top "ویدیو" badge
-                Positioned(
-                  top: 10,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        width: 0.6,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(CupertinoIcons.videocam_fill, size: 12, color: Colors.white),
-                        SizedBox(width: 4),
-                        Text(
-                          'ویدیو',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Center Play Button
-                Center(
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00A884),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF00A884).withValues(alpha: 0.45),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      CupertinoIcons.play_arrow_solid,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
-                ),
-
-                // Bottom Gradient Overlay with File name & Play prompt
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.85),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            fileName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        10.hSpace,
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(CupertinoIcons.play_circle, size: 13, color: Colors.white),
-                              SizedBox(width: 4),
-                              Text(
-                                'پخش ویدیو',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Audio Player Widget for Post Feed
-class _PostAudioWidget extends StatelessWidget {
-  final String audioUrl;
-  final String fileName;
-  final bool isDark;
-  final ColorScheme colorScheme;
-
-  const _PostAudioWidget({
-    required this.audioUrl,
-    required this.fileName,
-    required this.isDark,
-    required this.colorScheme,
-  });
-
-  Future<void> _playAudio(BuildContext context) async {
-    HapticFeedback.lightImpact();
-    final uri = Uri.tryParse(audioUrl);
-    if (uri == null) return;
-    try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!launched) {
-        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-      }
-    } catch (_) {}
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF22242A) : const Color(0xFFF1F3F6),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFF00A884).withValues(alpha: 0.3),
-          width: 0.8,
-        ),
-      ),
-      child: InkWell(
-        onTap: () => _playAudio(context),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: Color(0xFF00A884),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                CupertinoIcons.play_arrow_solid,
-                color: Colors.white,
-                size: 18,
-              ),
-            ),
-            12.hSpace,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'فایل صوتی',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  2.vSpace,
-                  Text(
-                    fileName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 10.5,
-                      color: isDark ? Colors.white54 : Colors.black45,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              CupertinoIcons.waveform,
-              color: Color(0xFF00A884),
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Image Preview Widget with Fullscreen Viewer
-class _PostImageWidget extends StatelessWidget {
-  final String imageUrl;
-  final bool isDark;
-
-  const _PostImageWidget({
-    required this.imageUrl,
-    required this.isDark,
-  });
-
-  void _showFullScreen(BuildContext context) {
-    HapticFeedback.lightImpact();
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.94),
-      builder: (dialogCtx) => Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(CupertinoIcons.xmark, color: Colors.white, size: 24),
-            onPressed: () => Navigator.pop(dialogCtx),
-          ),
-        ),
-        body: Center(
-          child: InteractiveViewer(
-            panEnabled: true,
-            minScale: 0.8,
-            maxScale: 4.0,
-            child: AppCachedNetworkImage(
-              imageUrl: imageUrl,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showFullScreen(context),
-          child: AppCachedNetworkImage(
-            imageUrl: imageUrl,
-            height: 200,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            backgroundColor: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA),
           ),
         ),
       ),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
+import '../../../../common/widgets/app_cached_network_image.dart';
 import '../../../../common/widgets/app_modal_header.dart';
 import '../../../../core/routes/go_router_provider.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -15,8 +16,10 @@ import '../../../topic_studio/domain/entities/topic_drag_data.dart';
 import '../../../topic_studio/presentation/ui/tafakor_editor_screen.dart';
 import '../../application/controllers/ayah_notes_controller.dart';
 import '../../application/controllers/tafakor_auth_controller.dart';
+import '../../application/controllers/tafakor_topics_controller.dart';
 import '../../domain/entities/tafakor_post.dart';
 import '../ui/tafakor_login_screen.dart';
+import '../ui/tafakor_single_post_screen.dart';
 
 /// Luxury, modular bottom sheet for viewing and creating notes & reflections for a specific Quran Ayah.
 class AyahNotesBottomSheet extends ConsumerStatefulWidget {
@@ -62,13 +65,14 @@ class AyahNotesBottomSheet extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<AyahNotesBottomSheet> createState() => _AyahNotesBottomSheetState();
+  ConsumerState<AyahNotesBottomSheet> createState() =>
+      _AyahNotesBottomSheetState();
 }
 
 class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
   late final TextEditingController _searchController;
   final ScrollController _scrollController = ScrollController();
-  bool _isSearching = false;
+  // bool _isSearching = false;
 
   @override
   void initState() {
@@ -77,7 +81,9 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
     _scrollController.addListener(_onScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(ayahNotesControllerProvider.notifier).loadInitial(
+      ref
+          .read(ayahNotesControllerProvider.notifier)
+          .loadInitial(
             surahNumber: widget.surahNumber,
             ayahNumber: widget.ayahNumber,
           );
@@ -115,15 +121,35 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
         removeBrackets: removeBrackets,
       );
       final blocks = dragData.toBlocks();
-      container.read(inDrawerEditorControllerProvider.notifier).setBlocks(blocks);
+      container
+          .read(inDrawerEditorControllerProvider.notifier)
+          .setBlocks(blocks);
     }
 
     Navigator.of(context).pop();
 
-    Navigator.of(navContext).push(
-      MaterialPageRoute(
-        builder: (_) => const TafakorEditorScreen(),
-      ),
+    Navigator.of(
+      navContext,
+    ).push(MaterialPageRoute(builder: (_) => const TafakorEditorScreen()));
+  }
+
+  void _openTopicPost(TafakorPost post) {
+    HapticFeedback.lightImpact();
+    final cachedTopics = ref.read(tafakorTopicsProvider).asData?.value;
+    final topic = cachedTopics?.where((t) => t.id == post.topicId).firstOrNull;
+
+    final state = ref.read(ayahNotesControllerProvider);
+    final currentList = state.currentPosts;
+    final postIndex = currentList.indexWhere((p) => p.id == post.id);
+
+    TafakorSinglePostScreen.push(
+      context,
+      post: post,
+      topic: topic,
+      posts: currentList.isNotEmpty ? currentList : [post],
+      initialIndex: postIndex >= 0 ? postIndex : 0,
+      surahNumber: widget.surahNumber,
+      ayahNumber: widget.ayahNumber,
     );
   }
 
@@ -153,7 +179,9 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
           return Container(
             decoration: BoxDecoration(
               color: cardBg,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.28),
@@ -165,47 +193,17 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header & Ayah Badge
+                // Header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: Column(
-                    children: [
-                      AppModalHeader(
-                        showDragHandle: true,
-                        title: 'یادداشت‌های سوره ${widget.surahName} • آیه ${widget.ayahNumber.toPersianDigit()}',
-                        bottomSpacing: 8,
-                      ),
-
-                      // Ayah Arabic snippet card
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.04)
-                              : Colors.black.withValues(alpha: 0.03),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: borderColor, width: 0.8),
-                        ),
-                        child: Text(
-                          widget.ayahArabicText,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Amiri',
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
-                            height: 1.8,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppModalHeader(
+                    showDragHandle: true,
+                    title: 'جامعه تفکر',
+                    bottomSpacing: 6,
                   ),
                 ),
 
-                10.vSpace,
+                8.vSpace,
 
                 // Segmented Tabs: Community vs Mine
                 Padding(
@@ -213,18 +211,21 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF141416) : const Color(0xFFF1F2F4),
+                      color: isDark
+                          ? const Color(0xFF141416)
+                          : const Color(0xFFF1F2F4),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: borderColor, width: 0.7),
                     ),
                     child: Row(
                       children: [
-                        // Tab 1: Community (مجله تفکر / عمومی)
+                        // Tab 1: Others (تفکر دیگران)
                         Expanded(
                           child: _buildTabButton(
-                            title: 'مجله تفکر',
+                            title: 'تفکر دیگران',
                             count: state.communityTotal,
-                            isSelected: state.activeTab == AyahNotesTab.community,
+                            isSelected:
+                                state.activeTab == AyahNotesTab.community,
                             isDark: isDark,
                             primaryColor: primaryColor,
                             onTap: () {
@@ -234,12 +235,29 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                           ),
                         ),
 
-                        6.hSpace,
+                        4.hSpace,
 
-                        // Tab 2: My Notes (یادداشت‌های من)
+                        // Tab 2: Contributors / Authors (اهل تفکر)
                         Expanded(
                           child: _buildTabButton(
-                            title: 'یادداشت‌های من',
+                            title: 'اهل تفکر',
+                            count: state.authors.length,
+                            isSelected: state.activeTab == AyahNotesTab.authors,
+                            isDark: isDark,
+                            primaryColor: primaryColor,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              controller.switchTab(AyahNotesTab.authors);
+                            },
+                          ),
+                        ),
+
+                        4.hSpace,
+
+                        // Tab 3: My Reflections (تفکر من)
+                        Expanded(
+                          child: _buildTabButton(
+                            title: 'تفکر من',
                             count: state.mineTotal,
                             isSelected: state.activeTab == AyahNotesTab.mine,
                             isDark: isDark,
@@ -261,6 +279,7 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
 
                 10.vSpace,
 
+                /*
                 // Search Bar
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -275,6 +294,7 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                     ),
                     child: TextField(
                       controller: _searchController,
+                      textAlignVertical: TextAlignVertical.center,
                       textInputAction: TextInputAction.search,
                       onSubmitted: (query) => controller.setSearch(query),
                       onChanged: (val) {
@@ -282,7 +302,7 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                           setState(() => _isSearching = false);
                           controller.setSearch('');
                         } else if (val.isNotEmpty && !_isSearching) {
-                          setState(() => _isSearching = true);
+                          // setState(() => _isSearching = true);
                         }
                       },
                       style: TextStyle(
@@ -291,20 +311,36 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                         color: isDark ? Colors.white : Colors.black87,
                       ),
                       decoration: InputDecoration(
+                        isDense: true,
                         hintText: 'جستجو در یادداشت‌های این آیه...',
                         hintStyle: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 12.5,
                           color: isDark ? Colors.white38 : Colors.black38,
                         ),
-                        prefixIcon: Icon(
-                          CupertinoIcons.search,
-                          size: 18,
-                          color: isDark ? Colors.white54 : Colors.black54,
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Icon(
+                            CupertinoIcons.search,
+                            size: 17,
+                            color: isDark ? Colors.white54 : Colors.black54,
+                          ),
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 38,
+                          minHeight: 42,
                         ),
                         suffixIcon: _isSearching
                             ? IconButton(
-                                icon: const Icon(CupertinoIcons.clear_circled_solid, size: 16),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 36,
+                                  minHeight: 42,
+                                ),
+                                icon: const Icon(
+                                  CupertinoIcons.clear_circled_solid,
+                                  size: 16,
+                                ),
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _isSearching = false);
@@ -312,14 +348,20 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                                 },
                               )
                             : null,
+                        suffixIconConstraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 42,
+                        ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                        contentPadding: EdgeInsets.zero,
                       ),
                     ),
                   ),
                 ),
 
                 12.vSpace,
+                */
+                6.vSpace,
 
                 // Feed List
                 Expanded(
@@ -342,28 +384,29 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
                   decoration: BoxDecoration(
                     color: cardBg,
-                    border: Border(top: BorderSide(color: borderColor, width: 0.8)),
+                    border: Border(
+                      top: BorderSide(color: borderColor, width: 0.8),
+                    ),
                   ),
                   child: SafeArea(
                     top: false,
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
                         elevation: 0,
-                        minimumSize: const Size.fromHeight(48),
+                        minimumSize: const Size.fromHeight(46),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                       onPressed: _openEditor,
-                      icon: const Icon(CupertinoIcons.pencil_ellipsis_rectangle, size: 20),
-                      label: Text(
-                        'ثبت یادداشت جدید روی این آیه',
+                      child: Text(
+                        'نگارش تفکر',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -401,7 +444,7 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                     color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -410,9 +453,11 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
           children: [
             Text(
               title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: AppTypography.fontFamily,
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected
                     ? (isDark ? Colors.white : Colors.black87)
@@ -420,24 +465,31 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
               ),
             ),
             if (count > 0) ...[
-              6.hSpace,
+              4.hSpace,
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 5,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? primaryColor.withValues(alpha: 0.15)
-                      : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
-                  borderRadius: BorderRadius.circular(10),
+                      ? (isDark
+                            ? Colors.white.withValues(alpha: 0.15)
+                            : Colors.black.withValues(alpha: 0.08))
+                      : (isDark
+                            ? Colors.white10
+                            : Colors.black.withValues(alpha: 0.04)),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   count.toPersianDigit(),
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: isSelected
-                        ? primaryColor
-                        : (isDark ? Colors.white60 : Colors.black54),
+                        ? (isDark ? Colors.white : Colors.black87)
+                        : (isDark ? Colors.white60 : Colors.black45),
                   ),
                 ),
               ),
@@ -457,9 +509,7 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
     required Color borderColor,
   }) {
     if (state.isLoading) {
-      return const Center(
-        child: CupertinoActivityIndicator(radius: 14),
-      );
+      return const Center(child: CupertinoActivityIndicator(radius: 14));
     }
 
     if (state.error != null && state.currentPosts.isEmpty) {
@@ -471,11 +521,18 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 20.0,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(CupertinoIcons.exclamationmark_triangle, size: 36, color: Colors.orange.shade300),
+                      Icon(
+                        CupertinoIcons.exclamationmark_triangle,
+                        size: 36,
+                        color: Colors.orange.shade300,
+                      ),
                       12.vSpace,
                       Text(
                         state.error?.message ?? 'خطا در بارگذاری یادداشت‌ها',
@@ -501,6 +558,17 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
       );
     }
 
+    if (state.activeTab == AyahNotesTab.authors) {
+      return _buildAuthorsGrid(
+        context: context,
+        state: state,
+        controller: controller,
+        isDark: isDark,
+        borderColor: borderColor,
+        primaryColor: primaryColor,
+      );
+    }
+
     final posts = state.currentPosts;
 
     if (posts.isEmpty) {
@@ -513,57 +581,33 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isMine ? CupertinoIcons.square_pencil : CupertinoIcons.bubble_left_bubble_right,
-                        size: 44,
+                        isMine
+                            ? CupertinoIcons.square_pencil
+                            : CupertinoIcons.bubble_left_bubble_right,
+                        size: 38,
                         color: isDark ? Colors.white24 : Colors.black26,
                       ),
                       10.vSpace,
                       Text(
-                        isMine
-                            ? 'شما هنوز یادداشتی روی این آیه ننوشته‌اید'
-                            : 'هنوز تفکری پیرامون این آیه در کانال‌ها منتشر نشده است',
+                        state.searchQuery.isNotEmpty
+                            ? 'موردی یافت نشد'
+                            : (isMine
+                                  ? 'هنوز تفکری ثبت نکرده‌اید'
+                                  : 'هنوز یادداشتی ثبت نشده است'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white70 : Colors.black87,
-                        ),
-                      ),
-                      6.vSpace,
-                      Text(
-                        isMine
-                            ? 'افکار و تدبرهای خود پیرامون این آیه را در دفتر تفکر ثبت کنید.'
-                            : 'اولین نفری باشید که برداشت خود را از این آیه با دیگران به اشتراک می‌گذارد.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11.5,
-                          color: isDark ? Colors.white38 : Colors.black45,
-                        ),
-                      ),
-                      14.vSpace,
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: primaryColor, width: 1.2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        ),
-                        onPressed: _openEditor,
-                        icon: Icon(CupertinoIcons.add, size: 15, color: primaryColor),
-                        label: Text(
-                          'نگارش تفکر',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: primaryColor,
-                          ),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white60 : Colors.black54,
                         ),
                       ),
                     ],
@@ -576,6 +620,9 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
       );
     }
 
+    final currentUser = ref.watch(tafakorUserProvider);
+    final currentPhone = currentUser?.phone;
+
     return ListView.separated(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
@@ -585,19 +632,175 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
         if (index == posts.length) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 14.0),
-            child: Center(
-              child: CupertinoActivityIndicator(radius: 10),
-            ),
+            child: Center(child: CupertinoActivityIndicator(radius: 10)),
           );
         }
 
         final post = posts[index];
+        final isAuthor = post.isAuthor(currentPhone);
+
         return _AyahPostCard(
           post: post,
           isDark: isDark,
           primaryColor: primaryColor,
           borderColor: borderColor,
           onToggleReaction: () => controller.toggleReaction(post.id),
+          onOpenPost: () => _openTopicPost(post),
+          onUnlink: isAuthor ? () => _confirmUnlink(post) : null,
+        );
+      },
+    );
+  }
+
+  void _confirmUnlink(TafakorPost post) {
+    HapticFeedback.lightImpact();
+    showCupertinoDialog(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: Text(
+          'قطع ارتباط با آیه',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 14.5,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(
+            'آیا ارتباط این یادداشت با آیه ${widget.ayahNumber.toPersianDigit()} سوره ${widget.surahName} قطع شود؟',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 12.5,
+              height: 1.5,
+            ),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: Text(
+              'انصراف',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13,
+                color: Colors.grey,
+              ),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: Text(
+              'قطع ارتباط',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await ref
+                  .read(ayahNotesControllerProvider.notifier)
+                  .unlinkAyahFromPost(
+                    postId: post.id,
+                    surahNumber: widget.surahNumber,
+                    ayahNumber: widget.ayahNumber,
+                  );
+              if (mounted && success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'ارتباط با این آیه برداشته شد',
+                      style: TextStyle(fontFamily: AppTypography.fontFamily),
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuthorsGrid({
+    required BuildContext context,
+    required AyahNotesState state,
+    required AyahNotesController controller,
+    required bool isDark,
+    required Color borderColor,
+    required Color primaryColor,
+  }) {
+    final query = state.searchQuery.trim().toLowerCase();
+    final authors = query.isEmpty
+        ? state.authors
+        : state.authors
+              .where((a) => a.authorName.toLowerCase().contains(query))
+              .toList();
+
+    if (authors.isEmpty) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        CupertinoIcons.person_2,
+                        size: 38,
+                        color: isDark ? Colors.white24 : Colors.black26,
+                      ),
+                      10.vSpace,
+                      Text(
+                        query.isNotEmpty
+                            ? 'نویسنده‌ای یافت نشد'
+                            : 'هنوز نویسنده‌ای ثبت نشده است',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return GridView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+      physics: const AlwaysScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.18,
+      ),
+      itemCount: authors.length,
+      itemBuilder: (context, index) {
+        final author = authors[index];
+        return _AyahAuthorCard(
+          author: author,
+          isDark: isDark,
+          borderColor: borderColor,
         );
       },
     );
@@ -610,6 +813,8 @@ class _AyahPostCard extends StatelessWidget {
   final Color primaryColor;
   final Color borderColor;
   final VoidCallback onToggleReaction;
+  final VoidCallback onOpenPost;
+  final VoidCallback? onUnlink;
 
   const _AyahPostCard({
     required this.post,
@@ -617,6 +822,8 @@ class _AyahPostCard extends StatelessWidget {
     required this.primaryColor,
     required this.borderColor,
     required this.onToggleReaction,
+    required this.onOpenPost,
+    this.onUnlink,
   });
 
   @override
@@ -625,143 +832,345 @@ class _AyahPostCard extends StatelessWidget {
     final isLiked = post.isLiked;
     final totalLikes = post.totalLikes;
 
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onOpenPost,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 0.8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Author Header
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: isDark
+                        ? Colors.white10
+                        : Colors.black.withValues(alpha: 0.06),
+                    child: Text(
+                      post.authorName.isNotEmpty
+                          ? post.authorName.substring(0, 1)
+                          : 'ک',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  10.hSpace,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          post.authorName.isNotEmpty
+                              ? post.authorName
+                              : 'کاربر تفکر',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          post.formattedJalaliDate ?? '',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              10.vSpace,
+
+              // Post Text Content (Collapsed summary)
+              Text(
+                post.content.trim(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textDirection: TextDirection.rtl,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 13,
+                  height: 1.6,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.88)
+                      : Colors.black87,
+                ),
+              ),
+
+              10.vSpace,
+
+              // Actions Row: Reactions & Comments Count + "مشاهده پست" + Unlink (if author)
+              Row(
+                children: [
+                  // View Post Text Link (No box)
+                  GestureDetector(
+                    onTap: onOpenPost,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'مشاهده پست',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                          3.hSpace,
+                          Icon(
+                            CupertinoIcons.chevron_left,
+                            size: 11,
+                            color: isDark ? Colors.white54 : Colors.black54,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  if (onUnlink != null) ...[
+                    8.hSpace,
+                    GestureDetector(
+                      onTap: onUnlink,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.04)
+                              : Colors.black.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: borderColor, width: 0.6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              CupertinoIcons.xmark,
+                              size: 11,
+                              color: isDark ? Colors.white54 : Colors.black45,
+                            ),
+                            4.hSpace,
+                            Text(
+                              'حذف از این آیه',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 10.5,
+                                color: isDark ? Colors.white54 : Colors.black45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const Spacer(),
+
+                  if (post.commentsCount > 0) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          CupertinoIcons.chat_bubble,
+                          size: 14,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                        4.hSpace,
+                        Text(
+                          post.commentsCount.toPersianDigit(),
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 11.5,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                      ],
+                    ),
+                    12.hSpace,
+                  ],
+
+                  // Heart Button
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      onToggleReaction();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.04)
+                            : Colors.black.withValues(alpha: 0.03),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isLiked
+                                ? CupertinoIcons.heart_fill
+                                : CupertinoIcons.heart,
+                            size: 14,
+                            color: isLiked
+                                ? const Color(0xFFE05353)
+                                : (isDark ? Colors.white38 : Colors.black38),
+                          ),
+                          if (totalLikes > 0) ...[
+                            4.hSpace,
+                            Text(
+                              totalLikes.toPersianDigit(),
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white60 : Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AyahAuthorCard extends StatelessWidget {
+  final TafakorAyahAuthor author;
+  final bool isDark;
+  final Color borderColor;
+
+  const _AyahAuthorCard({
+    required this.author,
+    required this.isDark,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cardBg = isDark ? const Color(0xFF161618) : const Color(0xFFFBFBFB);
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor, width: 0.8),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Author Header
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: primaryColor.withValues(alpha: 0.15),
-                child: Text(
-                  post.authorName.isNotEmpty ? post.authorName.substring(0, 1) : 'ک',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
-                  ),
-                ),
-              ),
-              10.hSpace,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post.authorName.isNotEmpty ? post.authorName : 'کاربر تفکر',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    Text(
-                      post.formattedJalaliDate ?? '',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        color: isDark ? Colors.white38 : Colors.black38,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          10.vSpace,
-
-          // Post Text Content
-          SelectableText(
-            post.content,
+          _buildAvatar(),
+          8.vSpace,
+          Text(
+            author.authorName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: AppTypography.fontFamily,
-              fontSize: 13.5,
-              height: 1.7,
-              color: isDark ? Colors.white.withValues(alpha: 0.88) : Colors.black87,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
-
-          8.vSpace,
-
-          // Actions Row: Reactions & Comments Count
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (post.commentsCount > 0) ...[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      CupertinoIcons.chat_bubble,
-                      size: 15,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                    4.hSpace,
-                    Text(
-                      post.commentsCount.toPersianDigit(),
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11.5,
-                        color: isDark ? Colors.white38 : Colors.black38,
-                      ),
-                    ),
-                  ],
-                ),
-                14.hSpace,
-              ],
-
-              // Heart Button
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  onToggleReaction();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isLiked
-                        ? Colors.red.withValues(alpha: 0.12)
-                        : (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isLiked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-                        size: 15,
-                        color: isLiked ? Colors.redAccent : (isDark ? Colors.white38 : Colors.black38),
-                      ),
-                      if (totalLikes > 0) ...[
-                        4.hSpace,
-                        Text(
-                          totalLikes.toPersianDigit(),
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: isLiked ? Colors.redAccent : (isDark ? Colors.white38 : Colors.black38),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+          5.vSpace,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '${author.notesCount.toPersianDigit()} یادداشت',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white60 : Colors.black54,
               ),
-            ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    const size = 44.0;
+    if (author.authorAvatar != null && author.authorAvatar!.trim().isNotEmpty) {
+      return AppCachedNetworkImage(
+        imageUrl: author.authorAvatar!,
+        width: size,
+        height: size,
+        borderRadius: BorderRadius.circular(size / 2),
+        backgroundColor: isDark
+            ? const Color(0xFF2C2C2E)
+            : const Color(0xFFE5E5EA),
+      );
+    }
+
+    final initial = author.authorName.trim().isNotEmpty
+        ? author.authorName.trim().substring(0, 1)
+        : 'ک';
+
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.05),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isDark ? Colors.white12 : Colors.black12,
+          width: 0.8,
+        ),
+      ),
+      child: Text(
+        initial,
+        style: TextStyle(
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white70 : Colors.black87,
+        ),
       ),
     );
   }

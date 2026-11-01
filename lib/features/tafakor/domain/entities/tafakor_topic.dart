@@ -50,7 +50,7 @@ abstract class TafakorTopic with _$TafakorTopic {
   }
 
   static String normalizePhone(String phone) {
-    var p = phone.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    var p = phone.toEnglishDigit().trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
     if (p.startsWith('+98')) {
       p = '0${p.substring(3)}';
     } else if (p.startsWith('0098')) {
@@ -64,7 +64,7 @@ abstract class TafakorTopic with _$TafakorTopic {
   }
 
   bool isOwner(String? userPhone) {
-    if (userPhone == null || userPhone.isEmpty || createdByPhone == null) {
+    if (userPhone == null || userPhone.trim().isEmpty || createdByPhone == null) {
       return false;
     }
     return normalizePhone(userPhone) == normalizePhone(createdByPhone!);
