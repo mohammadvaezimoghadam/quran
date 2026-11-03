@@ -20,6 +20,7 @@ import '../../../ota_update/application/controllers/ota_update_controller.dart';
 import '../../../ota_update/domain/entities/ota_patch.dart';
 import '../../../ota_update/presentation/widgets/ota_update_dialog.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
 
 /// Dedicated Profile Screen featuring user status, subscription details card,
 /// and direct navigation to VIP Subscription checkout.
@@ -39,6 +40,9 @@ class ProfileScreen extends ConsumerWidget {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = colorScheme.primary;
+    final isVip = ref.watch(hasVipAccessProvider);
+    final vipState = ref.watch(vipSubscriptionControllerProvider);
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -133,9 +137,8 @@ class ProfileScreen extends ConsumerWidget {
             const _UserHeader(),
             16.vSpace,
 
-            // Account Status Grouped Section (کامنت شده به دلیل رایگان بودن تمامی امکانات)
-            /*
-            _buildSectionHeader('وضعیت حساب', isDark),
+            // Subscription Section
+            _buildSectionHeader('اشتراک تفکر', isDark),
             8.vSpace,
             _buildGroupCard(
               context: context,
@@ -174,10 +177,19 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                 ],
+                _buildDivider(isDark),
+                _buildProfileTile(
+                  context: context,
+                  title: isVip ? 'تمدید اشتراک تفکر' : 'خرید اشتراک تفکر',
+                  subtitle: isVip
+                      ? 'مشاهده پلن‌ها و افزایش مدت اعتبار'
+                      : 'دسترسی به تمامی قاریان، تفاسیر و اصوات پس‌زمینه',
+                  onTap: () => VipSubscriptionSheet.show(context),
+                ),
               ],
             ),
             20.vSpace,
-            */
+
 
             // Tafakor Platform Integration Section
             _buildSectionHeader(
@@ -206,25 +218,7 @@ class ProfileScreen extends ConsumerWidget {
             const TafakorProfileStatusCard(),
             20.vSpace,
 
-            // VIP Subscription Navigation Item (کامنت شده به دلیل رایگان بودن تمامی امکانات)
-            /*
-            _buildSectionHeader('اشتراک ویژه', isDark),
-            8.vSpace,
-            _buildGroupCard(
-              context: context,
-              children: [
-                _buildProfileTile(
-                  context: context,
-                  title: 'اشتراک ویژه',
-                  subtitle: isVip
-                      ? 'مشاهده پلن‌ها و تمدید اعتبار اشتراک تفکر'
-                      : 'دسترسی نامحدود به تمامی قاریان و ترجمه‌های گویا',
-                  onTap: () => context.pushNamed(vipSubscriptionRoute),
-                ),
-              ],
-            ),
-            20.vSpace,
-            */
+
 
             // Khatm Plans Section
             _buildSectionHeader('برنامه و ختم قرآن', isDark),

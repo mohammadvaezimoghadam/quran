@@ -12,15 +12,19 @@ import '../../../tafakor/application/controllers/tafakor_auth_controller.dart';
 import '../../application/vip_subscription_controller.dart';
 import '../utils/bazaar_error_dialog_helper.dart';
 import '../widgets/subscription_plan_card.dart';
-import '../widgets/vip_required_dialog.dart';
 
 /// Bottom sheet presenting audio subscription options and direct checkout.
 class VipSubscriptionSheet extends ConsumerStatefulWidget {
   const VipSubscriptionSheet({super.key});
 
-  /// Convenient static helper to show this dialog from anywhere in the app.
+  /// Convenient static helper to show this bottom sheet from anywhere in the app.
   static Future<void> show(BuildContext context) {
-    return VipRequiredDialog.show(context: context);
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => const VipSubscriptionSheet(),
+    );
   }
 
   @override

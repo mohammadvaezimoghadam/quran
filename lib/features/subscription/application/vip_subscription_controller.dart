@@ -196,21 +196,104 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
   bool _isSyncingServer = false;
   bool _isSyncingStore = false;
 
-  /// Fetches live prices and details from Bazaar.
+  /// Fetches subscription plans dynamically from Tafakor Backend (configured in Admin),
+  /// caches them securely for offline rendering, and queries Bazaar for live prices if available.
   Future<void> fetchLiveProducts() async {
     if (_isFetchingProducts) return;
     _isFetchingProducts = true;
     try {
-      final skuIds = PaymentProduct.allSubscriptions.map((p) => p.id).toList();
-      _log('🔍 [Live Products] Fetching live SKU details from Bazaar: $skuIds');
-      final liveProducts = await _paymentService.getSubscriptionProducts(skuIds);
-      if (liveProducts.isNotEmpty) {
-        _log('📦 [Live Products] Updated available products list with ${liveProducts.length} items from Bazaar.');
-        await _storage.setCachedProducts(liveProducts);
-        state = state.copyWith(availableProducts: liveProducts);
+      _log('🌐 [Live Products] Querying Tafakor server for subscription plans (plugin=quran)...');
+      final serverPlans = await _remoteDataSource.getPlans(plugin: 'quran');
+
+      List<PaymentProduct> products = [];
+      if (serverPlans.isNotEmpty) {
+        _log('📦 [Live Products] Received ${serverPlans.length} plans from Tafakor backend.');
+        products = serverPlans.map((plan) {
+          final sku = plan['sku'] as String? ?? '';
+          final title = plan['title'] as String? ?? '';
+          final description = plan['description'] as String? ?? '';
+          final durationDays = (plan['duration_days'] as num?)?.toInt() ?? 30;
+          final priceToman = (plan['price_toman'] as num?)?.toInt() ??
+              ((plan['price'] as num?) != null ? ((plan['price'] as num).toInt() ~/ 10) : 0);
+
+          SubscriptionPlan subscriptionPlan;
+          if (durationDays <= 31) {
+            subscriptionPlan = SubscriptionPlan.monthly;
+          } else if (durationDays <= 95) {
+            subscriptionPlan = SubscriptionPlan.quarterly;
+          } else if (durationDays <= 185) {
+            subscriptionPlan = SubscriptionPlan.semiAnnual;
+          } else if (durationDays <= 370) {
+            subscriptionPlan = SubscriptionPlan.yearly;
+          } else {
+            subscriptionPlan = SubscriptionPlan.monthly;
+          }
+
+          String? discountBadge;
+          bool isRecommended = false;
+          if (durationDays == 90) {
+            discountBadge = 'تخفیف فصلی';
+          } else if (durationDays == 180) {
+            discountBadge = 'محبوب‌ترین (۳۰٪ تخفیف)';
+            isRecommended = true;
+          }
+
+          return PaymentProduct(
+            id: sku,
+            title: title,
+            description: description,
+            priceToman: priceToman,
+            subscriptionPlan: subscriptionPlan,
+            discountBadge: discountBadge,
+            isRecommended: isRecommended,
+          );
+        }).toList();
+      }
+
+      // If server returned plans, optionally enrich with Bazaar localized prices
+      if (products.isNotEmpty) {
+        try {
+          final isConnected = await _paymentService.isConnected();
+          if (isConnected) {
+            final skuIds = products.map((p) => p.id).toList();
+            _log('🔍 [Live Products] Checking Cafe Bazaar prices for server SKUs: $skuIds');
+            final bazaarProducts = await _paymentService.getSubscriptionProducts(skuIds);
+            if (bazaarProducts.isNotEmpty) {
+              products = products.map((sp) {
+                final match = bazaarProducts.where((bp) => bp.id == sp.id).firstOrNull;
+                if (match != null && match.formattedPrice != null) {
+                  return sp.copyWith(
+                    formattedPrice: match.formattedPrice,
+                    priceToman: match.priceToman > 0 ? match.priceToman : sp.priceToman,
+                  );
+                }
+                return sp;
+              }).toList();
+            }
+          }
+        } catch (bazaarErr) {
+          _log('ℹ️ [Live Products] Cafe Bazaar query skipped or error: $bazaarErr');
+        }
+
+        // Cache the plans in secure storage
+        await _storage.setCachedProducts(products);
+        state = state.copyWith(availableProducts: products);
+        _log('✅ [Live Products] Successfully updated and cached ${products.length} plans.');
+      } else {
+        // If server was unreachable or empty, try reading from cache
+        final cached = await _storage.getCachedProducts();
+        if (cached != null && cached.isNotEmpty) {
+          _log('📱 [Live Products] Using ${cached.length} cached plans from local storage.');
+          state = state.copyWith(availableProducts: cached);
+        }
       }
     } catch (e, stack) {
-      _log('❌ Error fetching live SKU details: $e', error: e, stackTrace: stack);
+      _log('❌ Error fetching subscription plans: $e', error: e, stackTrace: stack);
+      // Fallback to cached products if network failed
+      final cached = await _storage.getCachedProducts();
+      if (cached != null && cached.isNotEmpty) {
+        state = state.copyWith(availableProducts: cached);
+      }
     } finally {
       _isFetchingProducts = false;
     }

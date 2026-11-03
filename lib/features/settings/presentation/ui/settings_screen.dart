@@ -2,7 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:go_router/go_router.dart';
+import '../../../../common/widgets/app_snackbar.dart';
+import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../common/extensions/int_extension.dart';
+import '../../../../core/routes/route_name.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
@@ -29,15 +34,14 @@ class SettingsScreen extends ConsumerWidget {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
     final isDark = context.isDark;
-    // final isVip = ref.watch(hasVipAccessProvider);
-    // final vipState = ref.watch(vipSubscriptionControllerProvider);
+    final isVip = ref.watch(hasVipAccessProvider);
+    final vipState = ref.watch(vipSubscriptionControllerProvider);
 
-    // final profileSubtitle = isVip
-    //     ? (vipState.remainingDays > 0
-    //         ? 'اشتراک ویژه فعال است (${vipState.remainingDays} روز باقی‌مانده)'
-    //             .toPersianDigit()
-    //         : 'اشتراک ویژه فعال است (مشاهده و تمدید)')
-    //     : 'کاربر عادی - خرید و ارتقا به اشتراک ویژه تفکر';
+    final profileSubtitle = isVip
+        ? (vipState.remainingDays > 0
+            ? 'اشتراک ویژه فعال است (${vipState.remainingDays.toPersianDigit()} روز باقی‌مانده)'
+            : 'اشتراک ویژه فعال است (مشاهده و تمدید)')
+        : 'کاربر عادی - خرید و ارتقا به اشتراک ویژه تفکر';
 
     return Scaffold(
       appBar: PreferredSize(
@@ -105,8 +109,7 @@ class SettingsScreen extends ConsumerWidget {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         children: [
-          // Section 1: Profile & Account (Commented out)
-          /*
+          // Section 1: Profile & Account
           _buildSectionHeader('پروفایل', isDark),
           6.vSpace,
           _buildGroupCard(
@@ -150,7 +153,6 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
           18.vSpace,
-          */
 
           // Section 2: Reading Experience & Content
           _buildSectionHeader('مطالعه و محتوا', isDark),
@@ -192,6 +194,31 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'مدیریت برچسب‌ها',
                 subtitle: 'ایجاد، ویرایش و حذف برچسب‌های نشانک',
                 onTap: () => ManageLabelsBottomSheet.show(context),
+              ),
+            ],
+          ),
+          18.vSpace,
+
+          // Section 4: Walkthrough & Help
+          _buildSectionHeader('راهنما و آموزش', isDark),
+          6.vSpace,
+          _buildGroupCard(
+            context: context,
+            children: [
+              _buildSettingsTile(
+                context: context,
+                icon: CupertinoIcons.question_circle,
+                title: 'مشاهده مجدد راهنمای برنامه',
+                subtitle: 'بازنشانی و نمایش مجدد تورهای آموزشی بخش‌های مختلف',
+                onTap: () async {
+                  await AppWalkthrough.resetAll(ref);
+                  if (context.mounted) {
+                    AppSnackBar.showSuccess(
+                      context,
+                      'راهنمای برنامه بازنشانی شد. با ورود به هر بخش، آموزش آن مجدداً نمایش داده می‌شود.',
+                    );
+                  }
+                },
               ),
             ],
           ),

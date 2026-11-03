@@ -198,36 +198,6 @@ class _AudioAmbianceBottomSheetState
                             color: colorScheme.onSurface,
                           ),
                         ),
-                        if (!hasVip) ...[
-                          6.hSpace,
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: Colors.amber.withValues(alpha: 0.4),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.workspace_premium, size: 12, color: Colors.amber),
-                                SizedBox(width: 2),
-                                Text(
-                                  'ویژه',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.amber,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                     2.vSpace,
@@ -673,14 +643,14 @@ class _AudioAmbianceBottomSheetState
                                   color: Colors.black.withValues(alpha: 0.55),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.amber.withValues(alpha: 0.7),
+                                    color: Colors.white24,
                                     width: 1,
                                   ),
                                 ),
                                 child: const Icon(
                                   Icons.lock_rounded,
                                   size: 12,
-                                  color: Colors.amber,
+                                  color: Colors.white70,
                                 ),
                               )
                             : const SizedBox(height: 20)),

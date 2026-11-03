@@ -436,12 +436,12 @@ class _TafsirReaderScreenState extends ConsumerState<TafsirReaderScreen> {
                         height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.amber.withValues(alpha: 0.15),
+                          color: colorScheme.primary.withValues(alpha: 0.12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           CupertinoIcons.lock_shield_fill,
                           size: 42,
-                          color: Colors.amber,
+                          color: colorScheme.primary,
                         ),
                       ),
                       20.vSpace,
