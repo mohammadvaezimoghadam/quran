@@ -14,6 +14,9 @@ import '../../../../core/services/audio/echo/echo_controller.dart';
 import '../../../../core/services/audio/echo/echo_preset.dart';
 import '../../../../core/services/audio/echo/echo_state.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../app_walkthrough/app_walkthrough.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 
 /// Unified bottom sheet for Audio Ambience (Ambient Background Music)
 /// and Sound Effects / Reverb (Echo, Mosque, Shrine, Vintage Radio).
@@ -48,6 +51,18 @@ class _AudioAmbianceBottomSheetState
   void initState() {
     super.initState();
     _selectedTab = widget.initialTab;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (mounted) {
+            AppWalkthrough.showAmbianceTourIfNeeded(
+              context: context,
+              ref: ref,
+            );
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -157,6 +172,7 @@ class _AudioAmbianceBottomSheetState
     required AmbientSoundController controller,
   }) {
     final volumePercent = (state.volume * 100).round();
+    final hasVip = ref.watch(hasVipAccessProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -171,14 +187,48 @@ class _AudioAmbianceBottomSheetState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'پخش همزمان با تلاوت قرآن',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'پخش همزمان با تلاوت قرآن',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        if (!hasVip) ...[
+                          6.hSpace,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Colors.amber.withValues(alpha: 0.4),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.workspace_premium, size: 12, color: Colors.amber),
+                                SizedBox(width: 2),
+                                Text(
+                                  'ویژه',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontFamily,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     2.vSpace,
                     Text(
@@ -192,16 +242,28 @@ class _AudioAmbianceBottomSheetState
                   ],
                 ),
               ),
-              Transform.scale(
-                scale: 0.75,
-                child: Switch(
-                  value: state.isEnabled,
-                  activeTrackColor: colorScheme.primary,
-                  activeThumbColor: Colors.white,
-                  onChanged: (value) {
-                    HapticFeedback.selectionClick();
-                    controller.setEnabled(value);
-                  },
+              WalkthroughAnchor(
+                id: WalkthroughTargetId.ambianceToggleSwitch,
+                child: Transform.scale(
+                  scale: 0.75,
+                  child: Switch(
+                    value: state.isEnabled,
+                    activeTrackColor: colorScheme.primary,
+                    activeThumbColor: Colors.white,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      if (value && !hasVip) {
+                        VipRequiredDialog.show(
+                          context: context,
+                          customTitle: 'اصوات و نغمه‌های پس‌زمینه ویژه',
+                          customMessage:
+                              'پخش نغمه‌های آرامش‌بخش همگام با تلاوت قرآن کریم، ویژه کاربران دارای اشتراک است.',
+                        );
+                        return;
+                      }
+                      controller.setEnabled(value);
+                    },
+                  ),
                 ),
               ),
             ],
@@ -308,8 +370,18 @@ class _AudioAmbianceBottomSheetState
               colorScheme: colorScheme,
               imageAsset: track.imageAsset,
               title: track.title,
+              isLocked: !hasVip,
               onTap: () {
                 HapticFeedback.selectionClick();
+                if (!hasVip) {
+                  VipRequiredDialog.show(
+                    context: context,
+                    customTitle: 'اصوات و نغمه‌های پس‌زمینه ویژه',
+                    customMessage:
+                        'پخش نغمه‌های آرامش‌بخش همگام با تلاوت قرآن کریم، ویژه کاربران دارای اشتراک است.',
+                  );
+                  return;
+                }
                 controller.selectTrack(track);
               },
             );
@@ -521,6 +593,7 @@ class _AudioAmbianceBottomSheetState
     required String imageAsset,
     required String title,
     required VoidCallback onTap,
+    bool isLocked = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -571,7 +644,7 @@ class _AudioAmbianceBottomSheetState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Top: Checkmark circle badge when active
+                  // Top: Checkmark circle badge when active, or Lock badge when locked
                   Align(
                     alignment: AlignmentDirectional.topStart,
                     child: isSelected
@@ -593,7 +666,24 @@ class _AudioAmbianceBottomSheetState
                               color: Colors.white,
                             ),
                           )
-                        : const SizedBox(height: 20),
+                        : (isLocked
+                            ? Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.55),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.amber.withValues(alpha: 0.7),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.lock_rounded,
+                                  size: 12,
+                                  color: Colors.amber,
+                                ),
+                              )
+                            : const SizedBox(height: 20)),
                   ),
 
                   // Bottom: Title text on image (no caption/description)

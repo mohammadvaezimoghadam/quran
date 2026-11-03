@@ -27,6 +27,8 @@ import '../../../topic_studio/application/controllers/in_drawer_editor_controlle
 import '../../../topic_studio/domain/entities/topic_block.dart';
 import '../../../topic_studio/presentation/ui/tafakor_editor_screen.dart';
 import '../widgets/tafsir_manager_bottom_sheet.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
 
 final tafsirAyahsProvider =
     FutureProvider.family<List<AyahEntity>, int>((ref, surahId) async {
@@ -61,8 +63,9 @@ class _TafsirReaderScreenState extends ConsumerState<TafsirReaderScreen> {
   late String _currentTafsirId;
   double _fontSize = 15.0;
 
-  final ItemScrollController _itemScrollController = ItemScrollController();
-  final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
+  String? _lastListKey;
+  ItemScrollController _itemScrollController = ItemScrollController();
+  ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
   final Map<int, TextSelection> _tafsirSelections = {};
   int _currentFocusedAyahNumber = 1;
 
@@ -81,10 +84,10 @@ class _TafsirReaderScreenState extends ConsumerState<TafsirReaderScreen> {
       _currentSurahId = newSurahId;
       _currentSurahName = newSurahName ?? newSurahId.surahNameFa;
       _currentFocusedAyahNumber = 1;
+      _lastListKey = null;
+      _itemScrollController = ItemScrollController();
+      _itemPositionsListener = ItemPositionsListener.create();
     });
-    if (_itemScrollController.isAttached) {
-      _itemScrollController.jumpTo(index: 0);
-    }
   }
 
   void _scrollToNextAyah(int totalAyahs) {
@@ -419,6 +422,80 @@ class _TafsirReaderScreenState extends ConsumerState<TafsirReaderScreen> {
               return const Center(child: CircularProgressIndicator());
             }
 
+            // Check VIP Subscription Access
+            final hasVip = ref.watch(hasVipAccessProvider);
+            if (!hasVip) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.amber.withValues(alpha: 0.15),
+                        ),
+                        child: const Icon(
+                          CupertinoIcons.lock_shield_fill,
+                          size: 42,
+                          color: Colors.amber,
+                        ),
+                      ),
+                      20.vSpace,
+                      Text(
+                        'بخش تفاسیر قرآن کریم ویژه اعضای ویژه است',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      10.vSpace,
+                      Text(
+                        'برای دسترسی کامل به تفاسیر معتبر قرآنی (نمونه، المیزان و نور) و مطالعه عمیق آیات، لطفاً اشتراک ویژه را فعال کنید.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13,
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.6,
+                        ),
+                      ),
+                      24.vSpace,
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFD97706),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 2,
+                        ),
+                        onPressed: () {
+                          VipSubscriptionSheet.show(context);
+                        },
+                        icon: const Icon(CupertinoIcons.sparkles, size: 20),
+                        label: const Text(
+                          'تهیه اشتراک ویژه',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             // 1. Check if the Tafsir is not downloaded
             if (!activeTafsir.isDownloaded && !isDownloading) {
               return Center(
@@ -650,10 +727,17 @@ class _TafsirReaderScreenState extends ConsumerState<TafsirReaderScreen> {
                 ? widget.initialAyahNumber!
                 : 0;
 
+            final currentListKey = 'tafsir_${_currentSurahId}_$effectiveTafsirId';
+            if (_lastListKey != currentListKey) {
+              _lastListKey = currentListKey;
+              _itemScrollController = ItemScrollController();
+              _itemPositionsListener = ItemPositionsListener.create();
+            }
+
             return Stack(
               children: [
                 ScrollablePositionedList.builder(
-                  key: ValueKey('tafsir_${_currentSurahId}_$effectiveTafsirId'),
+                  key: ValueKey(currentListKey),
                   itemScrollController: _itemScrollController,
                   itemPositionsListener: _itemPositionsListener,
                   initialScrollIndex: targetIndex,

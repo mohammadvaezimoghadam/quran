@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/data/local/preferences/preferences_service_provider.dart';
 import '../../../../features/quran_reader/application/controllers/quran_audio_controller.dart';
+import '../../../../features/subscription/application/vip_subscription_controller.dart';
 import '../audio_player_state.dart';
 import 'ambient_sound_service.dart';
 import 'ambient_sound_state.dart';
@@ -69,6 +70,14 @@ class AmbientSoundController extends Notifier<AmbientSoundState> {
       },
     );
 
+    // Watch VIP status: ambient sounds are completely subscription-based.
+    final hasVip = ref.watch(hasVipAccessProvider);
+    final effectiveEnabled = savedEnabled && hasVip;
+
+    if (!hasVip && _service.isPlaying) {
+      Future.microtask(() => _service.stopWithFadeOut());
+    }
+
     // Initial async track preloading
     Future.microtask(() async {
       final loaded = await _service.loadTrack(track);
@@ -81,7 +90,7 @@ class AmbientSoundController extends Notifier<AmbientSoundState> {
     // (e.g. user entered reader screen with auto-playing audio or toggled bottom sheet),
     // immediately trigger ambient sound without waiting for next status change event.
     final currentQuranStatus = ref.read(quranAudioControllerProvider).status;
-    if (savedEnabled && currentQuranStatus == AudioStatus.playing) {
+    if (effectiveEnabled && currentQuranStatus == AudioStatus.playing) {
       Future.microtask(() async {
         if (!isDisposed) {
           await _service.playWithFadeIn(
@@ -93,7 +102,7 @@ class AmbientSoundController extends Notifier<AmbientSoundState> {
     }
 
     return AmbientSoundState(
-      isEnabled: savedEnabled,
+      isEnabled: effectiveEnabled,
       volume: savedVolume,
       selectedTrack: track,
       isPlaying: _service.isPlaying,
@@ -153,6 +162,9 @@ class AmbientSoundController extends Notifier<AmbientSoundState> {
 
   /// Set ambient sound enabled or disabled.
   Future<void> setEnabled(bool enabled) async {
+    if (enabled && !ref.read(hasVipAccessProvider)) {
+      return;
+    }
     final prefs = ref.read(preferencesServiceProvider);
     await prefs.setBool(_prefKeyEnabled, enabled);
     state = state.copyWith(isEnabled: enabled);
@@ -223,6 +235,9 @@ class AmbientSoundController extends Notifier<AmbientSoundState> {
 
   /// Standalone preview test without needing to run Quran audio.
   Future<void> previewToggle() async {
+    if (!ref.read(hasVipAccessProvider)) {
+      return;
+    }
     debugPrint('AmbientSoundController: previewToggle called '
         '(isPlaying=${_service.isPlaying}, '
         'track=${state.selectedTrack.id}, '

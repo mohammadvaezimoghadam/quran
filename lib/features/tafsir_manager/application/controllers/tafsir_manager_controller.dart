@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/tafsir_entity.dart';
 import '../../infrastructure/repositories/tafsir_repository_impl.dart';
 import '../states/tafsir_manager_state.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
 
 class TafsirManagerController extends AsyncNotifier<TafsirManagerState> {
   final Map<String, CancelToken> _cancelTokens = {};
@@ -45,6 +46,13 @@ class TafsirManagerController extends AsyncNotifier<TafsirManagerState> {
 
   /// Downloads a specific Tafsir and updates the UI progress
   Future<void> downloadTafsir(TafsirEntity tafsir) async {
+    if (!ref.read(hasVipAccessProvider)) {
+      state = AsyncData(state.value!.copyWith(
+        errorMessage: 'دریافت تفاسیر نیازمند تهیه اشتراک ویژه است.',
+      ));
+      return;
+    }
+
     if (state.value?.downloadProgress.containsKey(tafsir.id) ?? false) return;
 
     final currentProgress = Map<String, double>.from(state.value?.downloadProgress ?? {});

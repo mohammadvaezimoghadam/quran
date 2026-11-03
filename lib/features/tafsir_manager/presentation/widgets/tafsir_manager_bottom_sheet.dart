@@ -13,6 +13,8 @@ import '../../../surah_list/application/controllers/surah_list_controller.dart';
 import '../../../surah_list/domain/entities/surah_entity.dart';
 import '../../application/controllers/tafsir_manager_controller.dart';
 import '../../domain/entities/tafsir_entity.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 
 /// Bottom sheet for selecting a Surah and a Tafsir using scrollable wheels (CupertinoPicker).
 class TafsirManagerBottomSheet extends ConsumerStatefulWidget {
@@ -50,6 +52,12 @@ class _TafsirManagerBottomSheetState extends ConsumerState<TafsirManagerBottomSh
     SurahEntity surah,
     TafsirEntity tafsir,
   ) async {
+    if (!ref.read(hasVipAccessProvider)) {
+      Navigator.of(context).pop();
+      VipRequiredDialog.show(context: context);
+      return;
+    }
+
     final controller = ref.read(tafsirManagerControllerProvider.notifier);
 
     // If it's not downloaded, ask for permission to download

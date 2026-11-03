@@ -16,6 +16,8 @@ import '../../application/controllers/tafsir_manager_controller.dart';
 import '../../application/states/tafsir_manager_state.dart';
 import '../../domain/entities/tafsir_entity.dart';
 import '../../infrastructure/datasources/tafsir_catalog.dart';
+import '../../../subscription/application/vip_subscription_controller.dart';
+import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
 
 /// Clean, minimal, non-colored centered dialog for selecting and downloading
 /// authentic Persian Quran Exegeses (Tafsirs) for a specific Ayah.
@@ -244,6 +246,11 @@ class TafsirSelectionDialog extends ConsumerWidget {
               ),
               onPressed: () async {
                 HapticFeedback.lightImpact();
+                if (!ref.read(hasVipAccessProvider)) {
+                  Navigator.of(context).pop();
+                  VipRequiredDialog.show(context: context);
+                  return;
+                }
                 final nav = Navigator.of(context);
                 await ref.read(tafsirManagerControllerProvider.notifier).setActiveTafsir(tafsir.id);
                 nav.pop();
@@ -283,6 +290,11 @@ class TafsirSelectionDialog extends ConsumerWidget {
               ),
               onPressed: () {
                 HapticFeedback.lightImpact();
+                if (!ref.read(hasVipAccessProvider)) {
+                  Navigator.of(context).pop();
+                  VipRequiredDialog.show(context: context);
+                  return;
+                }
                 // Download starts in the background and will NOT be cancelled on dialog close
                 ref.read(tafsirManagerControllerProvider.notifier).downloadTafsir(tafsir);
               },
