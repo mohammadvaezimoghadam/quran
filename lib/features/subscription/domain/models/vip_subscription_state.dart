@@ -4,7 +4,7 @@ import '../../../../core/services/payment/models/payment_product.dart';
 class VipSubscriptionState {
   /// Global toggle: When true, all features across the app (reciters, translations, playback modes)
   /// are 100% free for all users without requiring a paid subscription.
-  static bool isAllFeaturesFree = true;
+  static bool isAllFeaturesFree = false;
 
   final bool isVip;
   final DateTime? vipExpiryDate;

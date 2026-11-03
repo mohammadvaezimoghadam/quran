@@ -7,6 +7,8 @@ import '../../../core/services/payment/i_payment_service.dart';
 import '../../../core/services/payment/models/payment_product.dart';
 import '../../../core/services/payment/models/purchase_result.dart';
 import '../../../core/services/payment/payment_providers.dart';
+import '../../tafakor/application/controllers/tafakor_auth_controller.dart';
+import '../data/subscription_remote_datasource.dart';
 import '../data/vip_secure_storage.dart';
 import '../domain/models/vip_subscription_state.dart';
 import '../domain/policy/audio_vip_policy.dart';
@@ -17,9 +19,11 @@ final vipSecureStorageProvider = Provider<VipSecureStorage>((ref) {
 });
 
 /// Riverpod Notifier controlling VIP audio subscriptions and license checks.
+/// Architecture: Offline-First with Background Server Revalidation (Stale-While-Revalidate).
 class VipSubscriptionController extends Notifier<VipSubscriptionState> {
   late final IPaymentService _paymentService;
   late final VipSecureStorage _storage;
+  late final SubscriptionRemoteDataSource _remoteDataSource;
 
   Timer? _periodicSyncTimer;
   Timer? _exactExpiryTimer;
@@ -34,9 +38,22 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
   VipSubscriptionState build() {
     _paymentService = ref.watch(paymentServiceProvider);
     _storage = ref.watch(vipSecureStorageProvider);
+    _remoteDataSource = ref.watch(subscriptionRemoteDataSourceProvider);
 
-    _log('🚀 [Init] Initializing VipSubscriptionController...');
+    _log('🚀 [Init] Initializing VipSubscriptionController (Offline-First)...');
+
+    // Listen to Tafakor authentication state changes
+    ref.listen<bool>(isTafakorAuthenticatedProvider, (previous, current) {
+      if (current && previous != true) {
+        _log('🔑 [Auth Event] User logged into Tafakor! Triggering backend subscription sync...');
+        syncWithTafakorBackend();
+      }
+    });
+
+    // 1. Immediately load local persisted state for 0ms offline rendering
     _loadPersistedState().then((_) async {
+      // 2. In background, revalidate with server and Cafe Bazaar
+      await syncWithTafakorBackend();
       await syncWithStore();
       await fetchLiveProducts();
     });
@@ -45,7 +62,9 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
 
     _lifecycleListener = AppLifecycleListener(
       onResume: () {
-        _log('📱 [App Resume] App returned to foreground, checking subscription status with Cafe Bazaar...');
+        _log('📱 [App Resume] App returned to foreground. Checking local expiry & syncing in background...');
+        _checkLocalExpiry();
+        syncWithTafakorBackend();
         syncWithStore();
       },
     );
@@ -59,12 +78,14 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     return const VipSubscriptionState(isLoading: true);
   }
 
-  /// Starts periodic background check with Cafe Bazaar to detect subscription expirations.
+  /// Starts periodic background check with server and store while user is in-app.
   void _startPeriodicVerification() {
     _periodicSyncTimer?.cancel();
-    // Verify every 20 seconds while user is active in the app
-    _periodicSyncTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+    // Verify every 60 seconds while user is active
+    _periodicSyncTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      _checkLocalExpiry();
       if (state.isVip) {
+        syncWithTafakorBackend();
         syncWithStore();
       }
     });
@@ -82,19 +103,30 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       _exactExpiryTimer = Timer(diff, () {
         _log('⏰ [Exact Expiry Timer] VIP expiration timestamp reached!');
         _handleLocalExpiry();
-        syncWithStore();
+        syncWithTafakorBackend();
       });
+    }
+  }
+
+  /// Local calculation check: revokes access immediately if expiration date has passed.
+  void _checkLocalExpiry() {
+    if (state.isVip && state.vipExpiryDate != null) {
+      if (DateTime.now().isAfter(state.vipExpiryDate!)) {
+        _log('⏰ [Local Check] VIP expiration date passed locally.');
+        _handleLocalExpiry();
+      }
     }
   }
 
   Future<void> _handleLocalExpiry() async {
     _log('🔒 [Expiry Calculation] Revoking local VIP access because expiration date passed.');
+    _exactExpiryTimer?.cancel();
     await _storage.setIsVip(false);
     await _storage.setActivePlanId(null);
     state = state.copyWith(isVip: false, activePlanId: null);
   }
 
-  /// Loads subscription status securely from device storage and enforces expiry.
+  /// Loads subscription status securely from device storage (Offline-First).
   Future<void> _loadPersistedState() async {
     try {
       _log('📱 [App Startup] Reading subscription state from local secure storage...');
@@ -112,33 +144,20 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       final now = DateTime.now();
       bool isVipActive = isVip;
 
-      // Check if subscription has expired or has abnormal accumulated duration
+      // Local expiry calculation
       if (vipExpiry != null) {
-        // Clamp if accumulated beyond plan duration
-        final matchedProduct = activePlanId != null
-            ? PaymentProduct.allSubscriptions.where((p) => p.id == activePlanId).firstOrNull
-            : null;
-        final allowedDays = matchedProduct?.durationDays ?? 30;
-        final maxAllowed = now.add(Duration(days: allowedDays));
-        if (vipExpiry.isAfter(maxAllowed)) {
-          _log('✂️ [Expiry Clamp] Clamping abnormal accumulated expiry ($vipExpiry) to plan duration ($allowedDays days).');
-          vipExpiry = maxAllowed;
-          await _storage.setVipExpiryDate(vipExpiry);
-        }
-
         final diff = vipExpiry.difference(now);
         if (diff.isNegative) {
           final minsAgo = (-diff.inSeconds / 60).toStringAsFixed(1);
-          _log('⏰ [Expiry Calculation] Local subscription has EXPIRED! (Expired $minsAgo minutes ago on $vipExpiry).');
-          _log('🔒 [Expiry Calculation] Revoking local VIP access because expiration date passed.');
+          _log('⏰ [Expiry Calculation] Local subscription has EXPIRED ($minsAgo minutes ago on $vipExpiry).');
+          _log('🔒 [Expiry Calculation] Revoking local VIP access.');
           isVipActive = false;
           await _storage.setIsVip(false);
         } else {
           final days = diff.inDays;
           final hours = diff.inHours % 24;
           final mins = diff.inMinutes % 60;
-          final secs = diff.inSeconds % 60;
-          _log('⏳ [Expiry Calculation] Local subscription is ACTIVE! Remaining: ${days}d ${hours}h ${mins}m ${secs}s (Expires at $vipExpiry)');
+          _log('⏳ [Expiry Calculation] Local subscription is ACTIVE! Remaining: ${days}d ${hours}h ${mins}m (Expires at $vipExpiry)');
         }
       } else if (isVip) {
         _log('⏳ [Expiry Calculation] Subscription is Lifetime / Open-ended active.');
@@ -151,6 +170,7 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
           ? cachedProducts
           : PaymentProduct.allSubscriptions;
 
+      // Render local state immediately without waiting for network
       state = state.copyWith(
         isVip: isVipActive,
         vipExpiryDate: vipExpiry,
@@ -158,10 +178,11 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
         availableProducts: productsToDisplay,
         isLoading: false,
       );
+
       if (isVipActive && vipExpiry != null) {
         _scheduleExactExpiryTimer(vipExpiry);
       }
-      _log('🎯 [Local State Ready] Controller initialized with isVip=$isVipActive (Plan: $activePlanId, Products: ${productsToDisplay.length}). UI unlocked accordingly.');
+      _log('🎯 [Local State Ready] UI unlocked with local offline state (isVip=$isVipActive).');
     } catch (e, stack) {
       _log('❌ Error loading persisted subscription state: $e', error: e, stackTrace: stack);
       state = state.copyWith(
@@ -172,7 +193,8 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
   }
 
   bool _isFetchingProducts = false;
-  bool _isSyncing = false;
+  bool _isSyncingServer = false;
+  bool _isSyncingStore = false;
 
   /// Fetches live prices and details from Bazaar.
   Future<void> fetchLiveProducts() async {
@@ -194,14 +216,69 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     }
   }
 
+  /// Background sync with Tafakor Backend:
+  /// Calls GET /api/subscriptions/my-status/?plugin=quran
+  /// Authoritative server state takes precedence over local state when online.
+  Future<void> syncWithTafakorBackend() async {
+    if (_isSyncingServer) return;
+    final isAuthenticated = ref.read(isTafakorAuthenticatedProvider);
+    if (!isAuthenticated) {
+      _log('ℹ️ [Backend Sync] User not authenticated in Tafakor. Skipping server sync.');
+      return;
+    }
+
+    _isSyncingServer = true;
+    try {
+      _log('🔄 [Backend Sync] Querying Tafakor server for live subscription status...');
+      final status = await _remoteDataSource.getMyStatus(plugin: 'quran');
+      final hasActive = status['has_active_subscription'] == true;
+      final serverExpiryStr = status['expires_at'] as String?;
+      final serverSku = status['sku'] as String?;
+
+      if (hasActive && serverExpiryStr != null) {
+        final serverExpiry = DateTime.tryParse(serverExpiryStr);
+        _log('✅ [Backend Sync] Server confirmed ACTIVE VIP subscription: $serverSku (Expires: $serverExpiry)');
+
+        await _storage.setIsVip(true);
+        await _storage.setVipExpiryDate(serverExpiry);
+        if (serverSku != null) await _storage.setActivePlanId(serverSku);
+
+        state = state.copyWith(
+          isVip: true,
+          vipExpiryDate: serverExpiry,
+          activePlanId: serverSku ?? state.activePlanId,
+        );
+        _scheduleExactExpiryTimer(serverExpiry);
+      } else {
+        _log('ℹ️ [Backend Sync] Server reports NO active subscription.');
+        if (state.isVip) {
+          _log('🔒 [Backend Sync] Revoking local VIP access to match server authoritative status.');
+          _exactExpiryTimer?.cancel();
+          await _storage.setIsVip(false);
+          await _storage.setActivePlanId(null);
+          await _storage.setVipExpiryDate(null);
+          state = state.copyWith(isVip: false, activePlanId: null, vipExpiryDate: null);
+        }
+      }
+    } catch (e) {
+      _log('🛡️ [Backend Sync] Network offline or unreachable ($e). Preserving local offline state until expiry.');
+      // Do nothing: offline graceful degradation
+    } finally {
+      _isSyncingServer = false;
+    }
+  }
+
   /// Background sync to verify active subscriptions with Cafe Bazaar.
   Future<void> syncWithStore() async {
-    if (_isSyncing) return;
-    _isSyncing = true;
+    if (_isSyncingStore) return;
+    _isSyncingStore = true;
     try {
       _log('🔄 [Bazaar Sync] Querying Cafe Bazaar for live active subscriptions...');
       final isConnected = await _paymentService.isConnected();
-      _log('   ↳ Cafe Bazaar connected: $isConnected');
+      if (!isConnected) {
+        _log('ℹ️ [Bazaar Sync] Cafe Bazaar not connected.');
+        return;
+      }
 
       final purchasedIds = await _paymentService.getPurchasedProductIds();
       _log('📥 [Bazaar Sync Response] Subscribed product IDs from Bazaar: $purchasedIds');
@@ -222,8 +299,7 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
           await _storage.setVipExpiryDate(targetExpiry);
         }
 
-        if (!state.isVip || state.activePlanId != activeId || state.vipExpiryDate != targetExpiry) {
-          _log('🔄 [Bazaar Sync] Updating local storage with Bazaar subscription: $activeId (Expiry: $targetExpiry)');
+        if (!state.isVip || state.activePlanId != activeId) {
           await _storage.setIsVip(true);
           await _storage.setActivePlanId(activeId);
           state = state.copyWith(
@@ -231,117 +307,110 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
             activePlanId: activeId,
             vipExpiryDate: targetExpiry,
           );
-          _log('💾 [Bazaar Sync] Local storage updated successfully to active VIP.');
-        } else {
-          _log('✨ [Bazaar Sync] Local subscription is already in sync with Cafe Bazaar.');
-        }
-      } else {
-        _log('ℹ️ [Bazaar Sync Response] Cafe Bazaar returned 0 active subscriptions for this account.');
-
-        if (isConnected && state.isVip) {
-          _log('⚠️ [Bazaar Sync] Subscription is NO LONGER active in Cafe Bazaar (expired/cancelled in Bazaar)!');
-          _log('🔒 [Bazaar Sync] Revoking local VIP access to match Cafe Bazaar server status.');
-          _exactExpiryTimer?.cancel();
-          await _storage.setIsVip(false);
-          await _storage.setActivePlanId(null);
-          await _storage.setVipExpiryDate(null);
-          state = state.copyWith(isVip: false, activePlanId: null, vipExpiryDate: null);
-          _log('💾 [Bazaar Sync] Local storage updated: isVip=false.');
-        } else if (state.isVip && state.vipExpiryDate != null && now.isAfter(state.vipExpiryDate!)) {
-          _log('⏰ [Bazaar Sync] Local subscription expired on ${state.vipExpiryDate}. Revoking local VIP.');
-          _exactExpiryTimer?.cancel();
-          await _storage.setIsVip(false);
-          await _storage.setActivePlanId(null);
-          await _storage.setVipExpiryDate(null);
-          state = state.copyWith(isVip: false, activePlanId: null, vipExpiryDate: null);
-        } else if (state.isVip) {
-          _log('🛡️ [Bazaar Sync] Offline or Bazaar not responding; preserving local offline grace period until ${state.vipExpiryDate}.');
         }
       }
     } catch (e, stack) {
       _log('❌ [Bazaar Sync Error] Failed to sync with Cafe Bazaar: $e', error: e, stackTrace: stack);
     } finally {
-      _isSyncing = false;
+      _isSyncingStore = false;
     }
   }
 
-  /// Initiates purchase flow for a VIP subscription plan.
+  /// Initiates purchase flow for a VIP subscription plan:
+  /// 1. Prompts for Tafakor login if not authenticated.
+  /// 2. Opens Cafe Bazaar in-app billing.
+  /// 3. Sends purchase token to Tafakor Backend for server-side verification.
+  /// 4. Activates VIP upon backend confirmation.
   Future<PurchaseResult> purchaseSubscription(PaymentProduct product) async {
     _log('🛒 [Purchase Flow] User tapped to buy: ${product.id} (${product.title}) - ${product.priceToman} Tomans');
+
+    // 1. Guard: User MUST be authenticated in Tafakor to bind subscription to account
+    final isAuthenticated = ref.read(isTafakorAuthenticatedProvider);
+    if (!isAuthenticated) {
+      _log('⚠️ [Purchase Flow] User not logged in to Tafakor.');
+      return PurchaseResult.error(
+        'برای ثبت دائمی اشتراک و اتصال آن به شماره شما، لطفاً ابتدا وارد حساب کاربری تفکر شوید.',
+        productId: product.id,
+      );
+    }
+
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final result = await _paymentService.subscribe(product.id);
+      // 2. Open Cafe Bazaar purchase dialog
+      final bazaarResult = await _paymentService.subscribe(product.id);
 
-      _log('📦 [Purchase Flow] Store response received:');
-      _log('   ↳ isSuccess: ${result.isSuccess}');
-      _log('   ↳ orderId: ${result.orderId}');
-      _log('   ↳ purchaseToken: ${result.purchaseToken != null ? (result.purchaseToken!.length > 15 ? "${result.purchaseToken!.substring(0, 15)}..." : result.purchaseToken) : "null"}');
-      _log('   ↳ errorMessage: ${result.errorMessage}');
+      _log('📦 [Purchase Flow] Bazaar response received:');
+      _log('   ↳ isSuccess: ${bazaarResult.isSuccess}');
+      _log('   ↳ orderId: ${bazaarResult.orderId}');
+      _log('   ↳ purchaseToken: ${bazaarResult.purchaseToken != null ? (bazaarResult.purchaseToken!.length > 15 ? "${bazaarResult.purchaseToken!.substring(0, 15)}..." : bazaarResult.purchaseToken) : "null"}');
+      _log('   ↳ errorMessage: ${bazaarResult.errorMessage}');
 
-      if (result.isSuccess) {
-        final now = DateTime.now();
-        final durationDays = product.durationDays;
-        final newExpiry = durationDays != null
-            ? now.add(Duration(days: durationDays))
-            : null; // Lifetime
-
-        _log('💾 [Local Save] Writing purchase to encrypted storage:');
-        _log('   ↳ isVip: true');
-        _log('   ↳ activePlanId: ${product.id}');
-        _log('   ↳ expiryDate: $newExpiry (Duration: ${durationDays != null ? "$durationDays days" : "Lifetime"})');
-        _log('   ↳ purchaseToken: ${result.purchaseToken}');
-
-        await _storage.setIsVip(true);
-        await _storage.setVipExpiryDate(newExpiry);
-        await _storage.setActivePlanId(product.id);
-        if (result.purchaseToken != null) {
-          await _storage.setPurchaseToken(result.purchaseToken);
-        }
-
-        // Immediate verification read from storage
-        final readVip = await _storage.getIsVip();
-        final readExpiry = await _storage.getVipExpiryDate();
-        final readPlan = await _storage.getActivePlanId();
-        _log('🔍 [Local Verification Check] Re-read from secure storage: isVip=$readVip, plan=$readPlan, expiry=$readExpiry');
-        if (readVip && readPlan == product.id) {
-          _log('✅ [Local Verification Check] VERIFIED! Purchase safely saved and readable in encrypted storage.');
-        } else {
-          _log('⚠️ [Local Verification Check] MISMATCH detected between write and read in secure storage!');
-        }
-
-        state = state.copyWith(
-          isVip: true,
-          vipExpiryDate: newExpiry,
-          activePlanId: product.id,
-          isLoading: false,
-        );
-        _scheduleExactExpiryTimer(newExpiry);
-        _log('🎉 [Purchase Complete] VIP state active for user. All features unlocked in application!');
-      } else {
-        _log('❌ [Purchase Failed/Cancelled] Error: ${result.errorMessage}');
+      if (!bazaarResult.isSuccess) {
         state = state.copyWith(
           isLoading: false,
-          errorMessage: result.errorMessage,
+          errorMessage: bazaarResult.errorMessage,
         );
+        return bazaarResult;
       }
 
-      return result;
-    } catch (e, stack) {
-      _log('❌ [Purchase Exception] Unexpected error during purchase: $e', error: e, stackTrace: stack);
-      final errorResult = PurchaseResult.error(
-        'خطای غیرمنتظره در ارتباط با درگاه پرداخت: $e',
-        productId: product.id,
+      final purchaseToken = bazaarResult.purchaseToken;
+      if (purchaseToken == null || purchaseToken.isEmpty) {
+        throw Exception('توکن خرید از درگاه کافه‌بازار دریافت نشد.');
+      }
+
+      // 3. Verify purchase token with Tafakor Backend
+      _log('🌐 [Purchase Flow] Verifying purchase token with Tafakor Backend: POST /api/subscriptions/verify/...');
+      final verifyResponse = await _remoteDataSource.verifyPurchase(
+        sku: product.id,
+        purchaseToken: purchaseToken,
+        marketplace: 'cafebazaar',
       );
+
+      _log('🎉 [Purchase Flow] Backend verification SUCCEEDED: $verifyResponse');
+
+      // 4. Parse official expiration date returned by server
+      final subData = verifyResponse['subscription'] as Map<String, dynamic>?;
+      final serverExpiryStr = subData?['expires_at'] as String?;
+      final now = DateTime.now();
+      final newExpiry = serverExpiryStr != null
+          ? (DateTime.tryParse(serverExpiryStr) ?? now.add(Duration(days: product.durationDays ?? 30)))
+          : now.add(Duration(days: product.durationDays ?? 30));
+
+      // 5. Save verified subscription in local secure storage
+      await _storage.setIsVip(true);
+      await _storage.setVipExpiryDate(newExpiry);
+      await _storage.setActivePlanId(product.id);
+      await _storage.setPurchaseToken(purchaseToken);
+
+      // 6. Update state and schedule exact timer
+      state = state.copyWith(
+        isVip: true,
+        vipExpiryDate: newExpiry,
+        activePlanId: product.id,
+        isLoading: false,
+      );
+      _scheduleExactExpiryTimer(newExpiry);
+
+      _log('✨ [Purchase Complete] VIP state active for user! Expiry: $newExpiry');
+      return PurchaseResult.success(
+        productId: product.id,
+        orderId: bazaarResult.orderId,
+        purchaseToken: purchaseToken,
+      );
+
+    } catch (e, stack) {
+      _log('❌ [Purchase Exception] Error during purchase or verification: $e', error: e, stackTrace: stack);
+      final errorMsg = e.toString().replaceFirst('Exception: ', '');
       state = state.copyWith(
         isLoading: false,
-        errorMessage: errorResult.errorMessage,
+        errorMessage: errorMsg,
       );
-      return errorResult;
+      return PurchaseResult.error(errorMsg, productId: product.id);
     }
   }
 
-  /// Restores previous active purchases.
+  /// Restores previous active purchases from Bazaar and verifies with backend.
   Future<bool> restorePurchases() async {
     _log('🔄 [Restore Flow] User requested to restore previous purchases...');
     state = state.copyWith(isLoading: true, errorMessage: null);
@@ -356,11 +425,26 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
 
       if (results.isNotEmpty) {
         final activeProduct = results.first;
-        _log('✅ [Restore Success] Restoring subscription for product: ${activeProduct.productId}');
+        final token = activeProduct.purchaseToken;
+
+        final sku = activeProduct.productId;
+        if (sku != null && token != null && token.isNotEmpty && ref.read(isTafakorAuthenticatedProvider)) {
+          try {
+            await _remoteDataSource.verifyPurchase(
+              sku: sku,
+              purchaseToken: token,
+              marketplace: 'cafebazaar',
+            );
+            await syncWithTafakorBackend();
+          } catch (e) {
+            _log('⚠️ [Restore] Backend verification on restore failed ($e), falling back to local restore.');
+          }
+        }
+
         await _storage.setIsVip(true);
         await _storage.setActivePlanId(activeProduct.productId);
-        if (activeProduct.purchaseToken != null) {
-          await _storage.setPurchaseToken(activeProduct.purchaseToken);
+        if (token != null) {
+          await _storage.setPurchaseToken(token);
         }
 
         state = state.copyWith(

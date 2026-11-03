@@ -26,6 +26,7 @@ class AudioVipPolicy {
   }
 
   /// Determines whether playing a specific Surah for a specific Reciter is permitted.
+  /// سیاست رسمی: منحصراً تلاوت استاد پرهیزگار رایگان است؛ سایر قاریان نیازمند اشتراک ویژه هستند.
   static bool canPlayReciter({
     required String? reciterIdentifier,
     required int surahId,
@@ -35,15 +36,12 @@ class AudioVipPolicy {
       return true;
     }
 
+    // فقط و فقط استاد پرهیزگار رایگان است
     if (isDefaultReciter(reciterIdentifier)) {
       return true;
     }
 
-    if (isDemoSurah(surahId)) {
-      return true;
-    }
-
-    return isVip;
+    return false;
   }
 
   /// Determines whether playing Persian audio translation (ترجمه گویای صوتی) is permitted.

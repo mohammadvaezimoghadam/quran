@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/payment/models/payment_product.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../tafakor/application/controllers/tafakor_auth_controller.dart';
 import '../../application/vip_subscription_controller.dart';
 import '../utils/bazaar_error_dialog_helper.dart';
 import '../widgets/subscription_plan_card.dart';
@@ -72,6 +75,35 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
     PaymentProduct product,
     VipSubscriptionController controller,
   ) async {
+    final isAuth = ref.read(isTafakorAuthenticatedProvider);
+    if (!isAuth) {
+      final shouldLogin = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('ورود به حساب کاربری', textDirection: TextDirection.rtl),
+          content: const Text(
+            'برای ثبت و ماندگاری اشتراک در حساب کاربری شما و امکان استفاده در سایر دستگاه‌ها، لطفاً ابتدا وارد حساب خود شوید.',
+            textDirection: TextDirection.rtl,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('انصراف'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('ورود با شماره موبایل'),
+            ),
+          ],
+        ),
+      );
+      if (shouldLogin == true && mounted) {
+        Navigator.of(context).pop();
+        context.pushNamed(tafakorLoginRoute);
+      }
+      return;
+    }
+
     setState(() {
       _purchasingProductId = product.id;
     });
