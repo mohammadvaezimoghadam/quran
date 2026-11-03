@@ -205,7 +205,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       },
       child: ResponsiveLayout(
         // Mobile Layout (Bottom Nav)
-        mobile: Scaffold(
+        mobileBuilder: (context) => Scaffold(
           body: body,
           bottomNavigationBar: Column(
             mainAxisSize: MainAxisSize.min,
@@ -226,7 +226,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
           ),
         ),
         // Desktop Layout (Sidebar Nav + Top Web Nav + Docked Web Audio Player)
-        desktop: Scaffold(
+        desktopBuilder: (context) => Scaffold(
           body: Row(
             children: [
               // Navigation Rail (Right side for RTL)

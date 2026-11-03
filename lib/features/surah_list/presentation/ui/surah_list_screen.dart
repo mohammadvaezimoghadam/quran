@@ -351,13 +351,13 @@ class _SurahListBody extends ConsumerWidget {
         return false;
       },
       child: ResponsiveLayout(
-        mobile: _buildMobileLayout(
+        mobileBuilder: (context) => _buildMobileLayout(
           context,
           filteredSurahs: filteredSurahs,
           showQuickActions: showQuickActions,
           isOnlyFavorites: isOnlyFavorites,
         ),
-        desktop: WebSurahCatalogView(
+        desktopBuilder: (context) => WebSurahCatalogView(
           onOpenReader: onOpenReader,
           onDownloadTap: onDownloadTap,
           onBeforeNavigation: onBeforeNavigation,

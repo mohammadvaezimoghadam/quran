@@ -17,6 +17,7 @@ import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.da
 import '../../application/controllers/continue_reading_controller.dart';
 import '../../../bookmarks/application/controllers/bookmarks_controller.dart';
 import 'widgets/continue_reading_card.dart';
+import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
 import 'widgets/home_quick_access_grid.dart';
 import 'widgets/home_search_bar_widget.dart';
 import 'web_quran_home_view.dart';
@@ -24,7 +25,7 @@ import '../../../quick_access/presentation/ui/quick_access_row.dart';
 import '../../../khatm/presentation/widgets/shared/khatm_home_section.dart';
 
 /// Clean Apple-Style Quran Home Screen with Tafakor Mint Green Theme
-class QuranHomeScreen extends ConsumerWidget {
+class QuranHomeScreen extends ConsumerStatefulWidget {
   final bool showBottomMiniPlayer;
 
   const QuranHomeScreen({
@@ -33,7 +34,23 @@ class QuranHomeScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QuranHomeScreen> createState() => _QuranHomeScreenState();
+}
+
+class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 650), () {
+        if (!mounted) return;
+        AppWalkthrough.showHomeTourIfNeeded(context: context, ref: ref);
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
     final topPadding = MediaQuery.of(context).padding.top;
@@ -116,11 +133,11 @@ class QuranHomeScreen extends ConsumerWidget {
               ),
             ),
       body: ResponsiveLayout(
-        mobile: _buildMobileLayout(context),
-        desktop: const WebQuranHomeView(),
+        mobileBuilder: (context) => _buildMobileLayout(context),
+        desktopBuilder: (context) => const WebQuranHomeView(),
       ),
       bottomNavigationBar:
-          (showBottomMiniPlayer && !context.isWideScreen) ? const MiniAudioPlayerBar() : null,
+          (widget.showBottomMiniPlayer && !context.isWideScreen) ? const MiniAudioPlayerBar() : null,
     );
   }
 

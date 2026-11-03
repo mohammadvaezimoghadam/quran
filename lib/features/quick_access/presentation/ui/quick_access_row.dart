@@ -20,6 +20,7 @@ import '../widgets/bookmarks_manager_bottom_sheet.dart';
 import '../widgets/pinned_surah_picker_bottom_sheet.dart';
 import '../widgets/quick_access_picker_bottom_sheet.dart';
 import '../widgets/quick_access_slot_card.dart';
+import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
 import '../../../topic_studio/presentation/ui/tafakor_topics_screen.dart';
 
 class QuickAccessRow extends ConsumerWidget {
@@ -214,11 +215,17 @@ class QuickAccessRow extends ConsumerWidget {
           children: List.generate(4, (index) {
             final tool = state.slots[index];
             final isPinnedSurah = tool?.type == QuickAccessToolType.pinnedSurah;
+            final isTafakor = tool?.type == QuickAccessToolType.topicStudio &&
+                index == state.slots.indexWhere((t) => t?.type == QuickAccessToolType.topicStudio);
 
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: QuickAccessSlotCard(
+                child: WalkthroughAnchor(
+                  id: WalkthroughTargetId.homeTafakor,
+                  enabled: isTafakor,
+                  child: QuickAccessSlotCard(
+
                   tool: tool,
                   isEditMode: state.isEditMode,
                   onTap: () {
@@ -241,6 +248,7 @@ class QuickAccessRow extends ConsumerWidget {
                     HapticFeedback.lightImpact();
                     controller.removeSlot(index);
                   },
+                ),
                 ),
               ),
             );
