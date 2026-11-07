@@ -12,6 +12,7 @@ import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/tafakor_auth_controller.dart';
 import '../../domain/entities/tafakor_auth_state.dart';
+import '../../infrastructure/datasources/tafakor_remote_data_source.dart';
 
 /// Formatter that automatically converts English/Arabic digits to Persian digits.
 class PersianNumberFormatter extends TextInputFormatter {
@@ -356,9 +357,60 @@ class _TafakorLoginScreenState extends ConsumerState<TafakorLoginScreen> {
       ),
     );
 
+    final debugOtp = TafakorRemoteDataSource.lastDebugOtp;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (debugOtp != null) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFFB300), width: 1.0),
+            ),
+            child: Row(
+              children: [
+                const Icon(CupertinoIcons.sparkles, size: 18, color: Color(0xFFF57F17)),
+                const SizedBox(width: 8),
+                Text(
+                  'کد تستی: ',
+                  style: const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Color(0xFFF57F17),
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    backgroundColor: const Color(0xFFF57F17),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    _otpController.text = debugOtp;
+                    controller.verifyOtp(debugOtp);
+                  },
+                  child: const Text(
+                    'ورود خودکار',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          16.vSpace,
+        ],
         Directionality(
           textDirection: TextDirection.ltr,
           child: Pinput(

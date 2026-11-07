@@ -45,7 +45,7 @@ class ProgressFile:
         self._f.close()
 
 
-def upload_apk(server_url='http://5.22.203.61', apk_file=APK_PATH, version_name='1.0.1', version_code='2', notes='نسخه جدید ۱.۰.۱'):
+def upload_apk(server_url='http://5.202.19.101:8086', apk_file=APK_PATH, version_name='1.0.1', version_code='2', notes='نسخه جدید ۱.۰.۱'):
     server_base = server_url.rstrip('/')
     url = f"{server_base}/api/releases/upload"
 

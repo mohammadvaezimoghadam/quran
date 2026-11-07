@@ -57,6 +57,52 @@ final activeAyahProvider = NotifierProvider<ActiveAyahNotifier, int?>(
   ActiveAyahNotifier.new,
 );
 
+/// Represents the currently active reading Ayah (surahId, ayahNumber)
+/// computed by the reader's info bar across both audio playing and manual scrolling.
+class ReadingAyahInfo {
+  final int surahId;
+  final int ayahNumber;
+
+  const ReadingAyahInfo({
+    required this.surahId,
+    required this.ayahNumber,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ReadingAyahInfo &&
+          runtimeType == other.runtimeType &&
+          surahId == other.surahId &&
+          ayahNumber == other.ayahNumber;
+
+  @override
+  int get hashCode => surahId.hashCode ^ ayahNumber.hashCode;
+
+  @override
+  String toString() => 'ReadingAyahInfo(surah: , ayah: )';
+}
+
+class CurrentReadingAyahNotifier extends Notifier<ReadingAyahInfo?> {
+  @override
+  ReadingAyahInfo? build() => null;
+
+  void updateAyah(int surahId, int ayahNumber) {
+    if (state?.surahId != surahId || state?.ayahNumber != ayahNumber) {
+      state = ReadingAyahInfo(surahId: surahId, ayahNumber: ayahNumber);
+    }
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
+final currentReadingAyahProvider =
+    NotifierProvider<CurrentReadingAyahNotifier, ReadingAyahInfo?>(
+  CurrentReadingAyahNotifier.new,
+);
+
 class NavigationTargetNotifier extends Notifier<AyahTarget?> {
   @override
   AyahTarget? build() => null;
@@ -145,11 +191,14 @@ class ReaderControlsNotifier extends Notifier<ReaderControlsState> {
   }
 
   void enterFullScreen() {
+    // Full-screen mode temporarily commented out
+    /*
     state = const ReaderControlsState(
       isFullScreen: true,
       isControlsVisible: false,
       isAudioBarCollapsed: true,
     );
+    */
   }
 
   void exitFullScreen() {
@@ -181,11 +230,14 @@ class ReaderControlsNotifier extends Notifier<ReaderControlsState> {
   }
 
   void toggleFullScreenOrControls() {
+    // Full-screen mode temporarily commented out
+    /*
     if (state.isFullScreen && !state.isControlsVisible) {
       exitFullScreen();
     } else {
       enterFullScreen();
     }
+    */
   }
 
   void reset() {

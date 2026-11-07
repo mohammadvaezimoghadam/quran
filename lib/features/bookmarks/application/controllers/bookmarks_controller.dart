@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/analytics/analytics_providers.dart';
 import '../../domain/entities/bookmark_item.dart';
 import '../../infrastructure/datasources/bookmark_local_datasource.dart';
 
@@ -9,7 +10,7 @@ final bookmarksControllerProvider =
 );
 
 class BookmarksController extends Notifier<List<BookmarkItem>> {
-  late final IBookmarkLocalDataSource _dataSource;
+  late IBookmarkLocalDataSource _dataSource;
 
   @override
   List<BookmarkItem> build() {
@@ -49,6 +50,11 @@ class BookmarksController extends Notifier<List<BookmarkItem>> {
         ...state.sublist(0, existingIndex),
         ...state.sublist(existingIndex + 1),
       ];
+      ref.read(analyticsServiceProvider).logBookmarkToggle(
+        surahNumber: surahId,
+        ayahNumber: ayahNumber,
+        isBookmarked: false,
+      );
       return false;
     } else {
       // Add new bookmark at the front (newest first)
@@ -66,6 +72,11 @@ class BookmarksController extends Notifier<List<BookmarkItem>> {
 
       await _dataSource.saveBookmark(newItem);
       state = [newItem, ...state];
+      ref.read(analyticsServiceProvider).logBookmarkToggle(
+        surahNumber: surahId,
+        ayahNumber: ayahNumber,
+        isBookmarked: true,
+      );
       return true;
     }
   }

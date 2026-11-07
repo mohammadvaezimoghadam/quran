@@ -14,6 +14,10 @@ import 'package:flutter_patcher/flutter_patcher.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'core/data/local/preferences/preferences_service_provider.dart';
+import 'core/services/analytics/analytics_providers.dart';
+import 'core/services/analytics/firebase_analytics_service_impl.dart';
+import 'core/services/analytics/i_analytics_service.dart';
+import 'core/services/analytics/noop_analytics_service_impl.dart';
 import 'core/services/audio/audio_player_providers.dart';
 import 'core/services/audio/quran_audio_handler.dart';
 import 'core/services/audio_storage/audio_storage_service_impl.dart';
@@ -157,6 +161,15 @@ void main() async {
     unawaited(pushNotificationService.initialize());
   }
 
+  // Initialize Analytics Service in background without blocking app launch
+  final IAnalyticsService analyticsService;
+  if (kIsWeb) {
+    analyticsService = const NoOpAnalyticsServiceImpl();
+  } else {
+    analyticsService = FirebaseAnalyticsServiceImpl();
+    unawaited(analyticsService.initialize());
+  }
+
   runApp(
     ProviderScope(
       overrides: [
@@ -164,6 +177,7 @@ void main() async {
         rawAudioPlayerProvider.overrideWithValue(rawPlayer),
         quranAudioHandlerProvider.overrideWithValue(audioHandler),
         pushNotificationServiceProvider.overrideWithValue(pushNotificationService),
+        analyticsServiceProvider.overrideWithValue(analyticsService),
       ],
       child: const MainWidget(),
     ),

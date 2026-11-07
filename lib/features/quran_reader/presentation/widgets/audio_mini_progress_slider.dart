@@ -36,8 +36,7 @@ class AudioTopEdgeProgressBar extends ConsumerWidget {
             behavior: HitTestBehavior.opaque,
             onTapDown: (details) {
               if (durationMs > 0 && totalWidth > 0) {
-                // RTL Quranic reading: 0% starts on the right, 100% ends on the left
-                final ratio = ((totalWidth - details.localPosition.dx) / totalWidth).clamp(0.0, 1.0);
+                final ratio = (details.localPosition.dx / totalWidth).clamp(0.0, 1.0);
                 ref.read(audioPlayerServiceProvider).seek(
                       Duration(milliseconds: (ratio * durationMs).toInt()),
                     );
@@ -45,8 +44,7 @@ class AudioTopEdgeProgressBar extends ConsumerWidget {
             },
             onHorizontalDragUpdate: (details) {
               if (durationMs > 0 && totalWidth > 0) {
-                // RTL Quranic reading: 0% starts on the right, 100% ends on the left
-                final ratio = ((totalWidth - details.localPosition.dx) / totalWidth).clamp(0.0, 1.0);
+                final ratio = (details.localPosition.dx / totalWidth).clamp(0.0, 1.0);
                 ref.read(audioPlayerServiceProvider).seek(
                       Duration(milliseconds: (ratio * durationMs).toInt()),
                     );
@@ -61,7 +59,7 @@ class AudioTopEdgeProgressBar extends ConsumerWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(1.5),
                     child: Stack(
-                      alignment: Alignment.centerRight,
+                      alignment: Alignment.centerLeft,
                       children: [
                         // Inactive background track
                         Container(
@@ -70,9 +68,9 @@ class AudioTopEdgeProgressBar extends ConsumerWidget {
                             color: colorScheme.primary.withValues(alpha: 0.16),
                           ),
                         ),
-                        // Active progress track (expands from Right to Left)
+                        // Active progress track (expands from Left to Right)
                         FractionallySizedBox(
-                          alignment: Alignment.centerRight,
+                          alignment: Alignment.centerLeft,
                           widthFactor: progress,
                           child: Container(
                             decoration: BoxDecoration(

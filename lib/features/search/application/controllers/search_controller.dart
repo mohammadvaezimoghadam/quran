@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/analytics/analytics_providers.dart';
 import '../../domain/entities/search_filter_type.dart';
 import '../../domain/repositories/i_search_repository.dart';
 import '../../infrastructure/repositories/search_repository_impl.dart';
@@ -12,7 +13,7 @@ final searchControllerProvider =
 );
 
 class QuranSearchController extends Notifier<SearchState> {
-  late final ISearchRepository _repository;
+  late ISearchRepository _repository;
   Timer? _debounceSearchTimer;
   Timer? _historySaveTimer;
 
@@ -104,6 +105,10 @@ class QuranSearchController extends Notifier<SearchState> {
 
     try {
       final results = await _repository.search(query: clean, filter: SearchFilterType.all);
+      ref.read(analyticsServiceProvider).logSearch(
+        query: clean,
+        resultCount: results.length,
+      );
       state = state.copyWith(
         results: results,
         isLoading: false,

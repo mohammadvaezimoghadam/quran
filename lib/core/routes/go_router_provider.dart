@@ -28,13 +28,18 @@ import '../../features/khatm/presentation/ui/khatm_list_screen.dart';
 import '../../features/study_plan/presentation/ui/create_study_plan_screen.dart';
 import '../../features/study_plan/presentation/ui/study_plans_screen.dart';
 import '../../features/tafsir_manager/presentation/ui/tafsir_reader_screen.dart';
+import '../services/analytics/analytics_providers.dart';
 import 'route_name.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final goRouterProvider = Provider<GoRouter>((ref) {
+  final analyticsObserver = ref.watch(analyticsObserverProvider);
   return GoRouter(
     navigatorKey: rootNavigatorKey,
+    observers: [
+      ?analyticsObserver,
+    ],
     initialLocation: kIsWeb ? '/main' : '/splash',
     routes: [
       GoRoute(
@@ -79,7 +84,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/vip-subscription',
         name: vipSubscriptionRoute,
-        redirect: (context, state) => '/',
+
         builder: (context, state) => const VipSubscriptionScreen(),
       ),
       GoRoute(
@@ -179,7 +184,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/tafsir-reader/:id',
         name: tafsirReaderRoute,
-        redirect: (context, state) => '/',
         builder: (context, state) {
           final surahId = int.tryParse(state.pathParameters['id'] ?? '1') ?? 1;
           final surahName = state.uri.queryParameters['name'] ?? 'سوره';

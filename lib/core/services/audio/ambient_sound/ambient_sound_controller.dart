@@ -32,7 +32,7 @@ class AmbientSoundController extends Notifier<AmbientSoundState> {
   /// Optimal calm reading speed recommended for ambient background music
   static const double ambientRecommendedSpeed = 0.85;
 
-  late final AmbientSoundService _service;
+  late AmbientSoundService _service;
   StreamSubscription<bool>? _playingSubscription;
 
   @override

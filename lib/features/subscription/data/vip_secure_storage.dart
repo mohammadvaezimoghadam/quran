@@ -1,7 +1,4 @@
-import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-import '../../../core/services/payment/models/payment_product.dart';
 
 /// Secure persistence layer for VIP subscription data using [FlutterSecureStorage].
 /// Prevents tampering or unauthorized elevation of privileges on rooted/modified devices.
@@ -15,10 +12,11 @@ class VipSecureStorage {
   static const String _keyCachedProducts = 'quran_vip_cached_products_json';
 
   const VipSecureStorage({FlutterSecureStorage? storage})
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            );
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          );
 
   Future<bool> getIsVip() async {
     final value = await _storage.read(key: _keyIsVip);
@@ -67,33 +65,12 @@ class VipSecureStorage {
     }
   }
 
-  /// Retrieves cached subscription products fetched from Cafe Bazaar.
-  Future<List<PaymentProduct>?> getCachedProducts() async {
-    final value = await _storage.read(key: _keyCachedProducts);
-    if (value == null || value.isEmpty) return null;
-    try {
-      final list = jsonDecode(value) as List<dynamic>;
-      return list
-          .map((item) => PaymentProduct.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Persists latest live products fetched from Cafe Bazaar for instant offline availability.
-  Future<void> setCachedProducts(List<PaymentProduct> products) async {
-    try {
-      final jsonString = jsonEncode(products.map((p) => p.toJson()).toList());
-      await _storage.write(key: _keyCachedProducts, value: jsonString);
-    } catch (_) {}
-  }
-
   /// Clears all subscription data (used for testing or logout)
   Future<void> clear() async {
     await _storage.delete(key: _keyIsVip);
     await _storage.delete(key: _keyVipExpiry);
     await _storage.delete(key: _keyActivePlanId);
     await _storage.delete(key: _keyPurchaseToken);
+    await _storage.delete(key: _keyCachedProducts);
   }
 }

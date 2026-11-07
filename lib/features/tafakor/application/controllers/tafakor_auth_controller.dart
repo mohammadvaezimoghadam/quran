@@ -27,7 +27,7 @@ final tafakorTokenProvider = Provider<String?>((ref) {
 });
 
 class TafakorAuthController extends Notifier<TafakorAuthState> {
-  late final ITafakorAuthRepository _repository;
+  late ITafakorAuthRepository _repository;
   Timer? _countdownTimer;
 
   @override

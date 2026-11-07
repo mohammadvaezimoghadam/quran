@@ -14,13 +14,13 @@ final themeControllerProvider =
     NotifierProvider<ThemeController, ThemeMode>(ThemeController.new);
 
 class ThemeController extends Notifier<ThemeMode> {
-  late final IThemeRepository _repository;
+  late IThemeRepository _repository;
 
   @override
   ThemeMode build() {
     _repository = ref.watch(themeRepositoryProvider);
     _loadTheme();
-    return ThemeMode.system;
+    return ThemeMode.light;
   }
 
   Future<void> _loadTheme() async {

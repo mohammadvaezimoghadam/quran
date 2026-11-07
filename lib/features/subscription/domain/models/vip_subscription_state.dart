@@ -10,6 +10,8 @@ class VipSubscriptionState {
   final DateTime? vipExpiryDate;
   final String? activePlanId;
   final List<PaymentProduct> availableProducts;
+  final bool isPlansLoading;
+  final String? plansError;
   final bool isLoading;
   final String? errorMessage;
 
@@ -17,7 +19,9 @@ class VipSubscriptionState {
     this.isVip = false,
     this.vipExpiryDate,
     this.activePlanId,
-    this.availableProducts = PaymentProduct.allSubscriptions,
+    this.availableProducts = const [],
+    this.isPlansLoading = false,
+    this.plansError,
     this.isLoading = false,
     this.errorMessage,
   });
@@ -44,6 +48,9 @@ class VipSubscriptionState {
     DateTime? vipExpiryDate,
     String? activePlanId,
     List<PaymentProduct>? availableProducts,
+    bool? isPlansLoading,
+    String? plansError,
+    bool clearPlansError = false,
     bool? isLoading,
     String? errorMessage,
   }) {
@@ -52,6 +59,8 @@ class VipSubscriptionState {
       vipExpiryDate: vipExpiryDate ?? this.vipExpiryDate,
       activePlanId: activePlanId ?? this.activePlanId,
       availableProducts: availableProducts ?? this.availableProducts,
+      isPlansLoading: isPlansLoading ?? this.isPlansLoading,
+      plansError: clearPlansError ? null : (plansError ?? this.plansError),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
     );

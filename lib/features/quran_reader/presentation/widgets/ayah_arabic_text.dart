@@ -44,6 +44,9 @@ class AyahArabicText extends ConsumerWidget {
     final harakatColorHex = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.harakatColor),
     );
+    final showPauseMarks = ref.watch(
+      quranDisplaySettingsControllerProvider.select((s) => s.showPauseMarks),
+    );
 
     final fontFamily = AppTypography.getFontFamilyByScript(fontScript);
     final harakatColor = ArabicTextHelper.parseHexColor(harakatColorHex);
@@ -57,8 +60,8 @@ class AyahArabicText extends ConsumerWidget {
     final textColor = activeTheme.isDark
         ? Colors.white.withValues(alpha: 0.95)
         : (isDark && !activeTheme.isDark
-            ? const Color(0xFF1C1B1B)
-            : colorScheme.onSurface);
+              ? const Color(0xFF1C1B1B)
+              : colorScheme.onSurface);
 
     final baseStyle = AppTypography.displayQuranReader.copyWith(
       fontFamily: fontFamily,
@@ -67,16 +70,22 @@ class AyahArabicText extends ConsumerWidget {
       color: textColor,
     );
 
-    final sanitizedText = ArabicTextHelper.removeAnnotationMarks(text);
-    final bool useCustomColor = harakatColor != null &&
-        harakatColor != textColor;
+    final sanitizedText = ArabicTextHelper.removeAnnotationMarks(
+      text,
+      keepPauseMarks: showPauseMarks,
+    );
+    final bool useCustomColor =
+        harakatColor != null && harakatColor != textColor;
 
     String? bismillahText;
     String mainText = sanitizedText;
 
     // Extract Bismillah for Surahs 2..114 (except Surah 9) on Ayah 1
     if (ayahNumber == 1 && surahId != 1 && surahId != 9) {
-      final cleaned = sanitizedText.trim().replaceAll(RegExp(r'[\uFEFF\u200B-\u200F\uFFFD]'), '');
+      final cleaned = sanitizedText.trim().replaceAll(
+        RegExp(r'[\uFEFF\u200B-\u200F\uFFFD]'),
+        '',
+      );
       final tokens = cleaned.split(RegExp(r'\s+'));
       if (tokens.length >= 5) {
         bismillahText = tokens.sublist(0, 4).join(' ');
@@ -91,13 +100,16 @@ class AyahArabicText extends ConsumerWidget {
           baseStyle: baseStyle,
           baseColor: textColor,
           harakatColor: harakatColor,
+          keepPauseMarks: showPauseMarks,
         );
       } else {
         return [TextSpan(text: rawText)];
       }
     }
 
-    final List<InlineSpan> mainTextChildren = List<InlineSpan>.from(buildSpans(mainText));
+    final List<InlineSpan> mainTextChildren = List<InlineSpan>.from(
+      buildSpans(mainText),
+    );
 
     // Append the Ayah number marker at the end of the main text.
     mainTextChildren.add(const TextSpan(text: ' \u200F'));
@@ -105,10 +117,7 @@ class AyahArabicText extends ConsumerWidget {
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,
         child: SelectionContainer.disabled(
-          child: AyahNumberMarker(
-            number: ayahNumber,
-            isActive: isActive,
-          ),
+          child: AyahNumberMarker(number: ayahNumber, isActive: isActive),
         ),
       ),
     );
@@ -123,9 +132,7 @@ class AyahArabicText extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 12.0),
             child: Text.rich(
               TextSpan(
-                style: baseStyle.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: baseStyle.copyWith(fontWeight: FontWeight.w600),
                 children: bismillahSpans,
               ),
               textAlign: TextAlign.center,
@@ -133,10 +140,7 @@ class AyahArabicText extends ConsumerWidget {
             ),
           ),
           Text.rich(
-            TextSpan(
-              style: baseStyle,
-              children: mainTextChildren,
-            ),
+            TextSpan(style: baseStyle, children: mainTextChildren),
             textAlign: TextAlign.justify,
             textDirection: TextDirection.rtl,
           ),
@@ -145,10 +149,7 @@ class AyahArabicText extends ConsumerWidget {
     }
 
     return Text.rich(
-      TextSpan(
-        style: baseStyle,
-        children: mainTextChildren,
-      ),
+      TextSpan(style: baseStyle, children: mainTextChildren),
       textAlign: TextAlign.justify,
       textDirection: TextDirection.rtl,
     );

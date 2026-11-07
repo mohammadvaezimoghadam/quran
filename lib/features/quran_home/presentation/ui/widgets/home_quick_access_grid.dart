@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
+
 import '../../../../../common/extensions/context_extension.dart';
 import '../../../../../common/extensions/size_extension.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -31,83 +33,86 @@ class HomeQuickAccessGrid extends ConsumerWidget {
         // 1. Primary Hero Gateway: "فهرست سوره‌ها"
         Expanded(
           flex: 5,
-          child: Container(
-            height: 80,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Color.alphaBlend(
-                      primaryMint.withValues(alpha: 0.08),
-                      cardBg,
-                    )
-                  : Color.alphaBlend(
-                      primaryMint.withValues(alpha: 0.05),
-                      cardBg,
-                    ),
-              borderRadius: BorderRadius.circular(16.0),
-              border: Border.all(
-                color: primaryMint.withValues(alpha: isDark ? 0.30 : 0.22),
-                width: 0.8,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryMint.withValues(alpha: isDark ? 0.12 : 0.05),
-                  blurRadius: 10.0,
-                  offset: const Offset(0, 2.0),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(16.0),
-              child: InkWell(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  ref
-                      .read(tabNavigationControllerProvider.notifier)
-                      .switchTab(1);
-                },
+          child: WalkthroughAnchor(
+            id: WalkthroughTargetId.homeSurahList,
+            child: Container(
+              height: 80,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Color.alphaBlend(
+                        primaryMint.withValues(alpha: 0.08),
+                        cardBg,
+                      )
+                    : Color.alphaBlend(
+                        primaryMint.withValues(alpha: 0.05),
+                        cardBg,
+                      ),
                 borderRadius: BorderRadius.circular(16.0),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 8.0,
+                border: Border.all(
+                  color: primaryMint.withValues(alpha: isDark ? 0.30 : 0.22),
+                  width: 0.8,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryMint.withValues(alpha: isDark ? 0.12 : 0.05),
+                    blurRadius: 10.0,
+                    offset: const Offset(0, 2.0),
                   ),
-                  child: Row(
-                    children: [
-                      // Quran Surahs Icon
-                      SvgPicture.asset(
-                        'assets/icons/ic_surah_list.svg',
-                        width: 38,
-                        height: 38,
-                        colorFilter: ColorFilter.mode(
-                          primaryMint,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      10.hSpace,
-
-                      // Surah List Typography (Clean, Minimal, No Sub-label)
-                      Expanded(
-                        child: Text(
-                          'فهرست سوره‌ها',
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontFamily,
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16.0),
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    ref
+                        .read(tabNavigationControllerProvider.notifier)
+                        .switchTab(1);
+                  },
+                  borderRadius: BorderRadius.circular(16.0),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 8.0,
+                    ),
+                    child: Row(
+                      children: [
+                        // Quran Surahs Icon
+                        SvgPicture.asset(
+                          'assets/icons/ic_surah_list.svg',
+                          width: 38,
+                          height: 38,
+                          colorFilter: ColorFilter.mode(
+                            primaryMint,
+                            BlendMode.srcIn,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
+                        10.hSpace,
 
-                      4.hSpace,
-                      Icon(
-                        CupertinoIcons.chevron_left,
-                        size: 13,
-                        color: isDark ? Colors.white38 : Colors.black38,
-                      ),
-                    ],
+                        // Surah List Typography (Clean, Minimal, No Sub-label)
+                        Expanded(
+                          child: Text(
+                            'فهرست سوره‌ها',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 15.0,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                        4.hSpace,
+                        Icon(
+                          CupertinoIcons.chevron_left,
+                          size: 13,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -119,21 +124,24 @@ class HomeQuickAccessGrid extends ConsumerWidget {
         // 2. Secondary Companion Card: "ترجمه‌ها"
         Expanded(
           flex: 2,
-          child: _buildSecondaryCard(
-            context: context,
-            title: 'ترجمه‌ها',
-            iconWidget: Icon(
-              CupertinoIcons.text_bubble,
-              size: 27,
-              color: primaryMint,
+          child: WalkthroughAnchor(
+            id: WalkthroughTargetId.homeTranslations,
+            child: _buildSecondaryCard(
+              context: context,
+              title: 'ترجمه‌ها',
+              iconWidget: Icon(
+                CupertinoIcons.text_bubble,
+                size: 27,
+                color: primaryMint,
+              ),
+              isDark: isDark,
+              bgColor: cardBg,
+              borderColor: cardBorderColor,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                TranslationManagerBottomSheet.show(context);
+              },
             ),
-            isDark: isDark,
-            bgColor: cardBg,
-            borderColor: cardBorderColor,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              TranslationManagerBottomSheet.show(context);
-            },
           ),
         ),
         8.hSpace,
@@ -141,26 +149,29 @@ class HomeQuickAccessGrid extends ConsumerWidget {
         // 3. Secondary Companion Card: "تفسیر"
         Expanded(
           flex: 2,
-          child: _buildSecondaryCard(
-            context: context,
-            title: 'تفسیر',
-            iconWidget: SvgPicture.asset(
-              'assets/icons/ic_tafsir.svg',
-              width: 38,
-              height: 38,
-              fit: BoxFit.contain,
-              colorFilter: ColorFilter.mode(
-                primaryMint,
-                BlendMode.srcIn,
+          child: WalkthroughAnchor(
+            id: WalkthroughTargetId.homeTafsir,
+            child: _buildSecondaryCard(
+              context: context,
+              title: 'تفسیر',
+              iconWidget: SvgPicture.asset(
+                'assets/icons/ic_tafsir.svg',
+                width: 38,
+                height: 38,
+                fit: BoxFit.contain,
+                colorFilter: ColorFilter.mode(
+                  primaryMint,
+                  BlendMode.srcIn,
+                ),
               ),
+              isDark: isDark,
+              bgColor: cardBg,
+              borderColor: cardBorderColor,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                TafsirManagerBottomSheet.show(context);
+              },
             ),
-            isDark: isDark,
-            bgColor: cardBg,
-            borderColor: cardBorderColor,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              TafsirManagerBottomSheet.show(context);
-            },
           ),
         ),
       ],

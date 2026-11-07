@@ -127,10 +127,10 @@ class _TafakorSinglePostScreenState
           .read(ayahNotesControllerProvider.notifier)
           .loadNextPage()
           .whenComplete(() {
-        if (mounted) {
-          setState(() => _isLoadingMore = false);
-        }
-      });
+            if (mounted) {
+              setState(() => _isLoadingMore = false);
+            }
+          });
     }
   }
 
@@ -157,16 +157,13 @@ class _TafakorSinglePostScreenState
 
     final repo = ref.read(tafakorPostsRepositoryProvider);
     final result = await repo.reactToPost(post.id, '❤️');
-    result.when(
-      (_) {},
-      (failure) {
-        if (mounted) {
-          setState(() {
-            _posts[index] = post;
-          });
-        }
-      },
-    );
+    result.when((_) {}, (failure) {
+      if (mounted) {
+        setState(() {
+          _posts[index] = post;
+        });
+      }
+    });
   }
 
   void _confirmDeleteAyahReference(
@@ -226,8 +223,9 @@ class _TafakorSinglePostScreenState
 
                 final remainingRefs = post.quranReferences
                     .where(
-                      (r) => !(r.surahNumber == reference.surahNumber &&
-                          r.ayahNumber == reference.ayahNumber),
+                      (r) =>
+                          !(r.surahNumber == reference.surahNumber &&
+                              r.ayahNumber == reference.ayahNumber),
                     )
                     .toList();
 
@@ -470,13 +468,13 @@ class _TafakorSinglePostScreenState
                         if (_posts.isEmpty) {
                           Navigator.pop(context, true);
                         } else {
-                          _currentIndex = _currentIndex.clamp(0, _posts.length - 1);
+                          _currentIndex = _currentIndex.clamp(
+                            0,
+                            _posts.length - 1,
+                          );
                         }
                       });
-                      AppSnackBar.showSuccess(
-                        context,
-                        'پست با موفقیت حذف شد.',
-                      );
+                      AppSnackBar.showSuccess(context, 'پست با موفقیت حذف شد.');
                     }
                   },
                   (failure) {
@@ -515,8 +513,9 @@ class _TafakorSinglePostScreenState
           builder: (scrollCtx, scrollController) => Container(
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E1E22) : Colors.white,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             child: Column(
               children: [
@@ -535,8 +534,10 @@ class _TafakorSinglePostScreenState
 
                 // Author name & Jalali Date
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
                   child: Row(
                     children: [
                       Text(
@@ -607,7 +608,8 @@ class _TafakorSinglePostScreenState
     final colorScheme = context.colorScheme;
 
     final currentUser = ref.watch(tafakorUserProvider);
-    final userPhone = currentUser?.phone ??
+    final userPhone =
+        currentUser?.phone ??
         ref.watch(tafakorLocalDataSourceProvider).getUserSync()?.phone;
 
     // Listen to ayah notes controller to append newly fetched posts dynamically
@@ -630,11 +632,11 @@ class _TafakorSinglePostScreenState
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor:
-            isDark ? const Color(0xFF141416) : const Color(0xFFF8F9FA),
+        backgroundColor: isDark
+            ? const Color(0xFF141416)
+            : const Color(0xFFF8F9FA),
         appBar: AppBar(
-          backgroundColor:
-              isDark ? const Color(0xFF1E1E22) : Colors.white,
+          backgroundColor: isDark ? const Color(0xFF1E1E22) : Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
@@ -678,10 +680,8 @@ class _TafakorSinglePostScreenState
                 size: 18,
                 color: colorScheme.onSurfaceVariant,
               ),
-              onPressed: () => _showOptionsMenu(
-                currentPost,
-                canModifyCurrentPost,
-              ),
+              onPressed: () =>
+                  _showOptionsMenu(currentPost, canModifyCurrentPost),
             ),
           ],
         ),
@@ -710,16 +710,21 @@ class _TafakorSinglePostScreenState
 
                   // Dynamic safe lines calculation:
                   // Guarantees zero RenderFlex overflow on ANY device screen.
-                  final chromeHeight = 168.0; // Header, footer, card padding, vertical margins
+                  final chromeHeight =
+                      168.0; // Header, footer, card padding, vertical margins
                   final mediaH = (post.hasMedia && post.fullMediaUrl != null)
                       ? (maxMediaH + 10.0)
                       : 0.0;
                   final refsH = post.hasQuranReference ? 46.0 : 0.0;
                   final availableForText =
-                      (viewportHeight - chromeHeight - mediaH - refsH)
-                          .clamp(60.0, 700.0);
-                  final maxLines =
-                      (availableForText / 22.4).floor().clamp(3, 25);
+                      (viewportHeight - chromeHeight - mediaH - refsH).clamp(
+                        60.0,
+                        700.0,
+                      );
+                  final maxLines = (availableForText / 22.4).floor().clamp(
+                    3,
+                    25,
+                  );
 
                   return Center(
                     child: Padding(
@@ -736,10 +741,8 @@ class _TafakorSinglePostScreenState
                         maxContentLines: maxLines,
                         onExpandContent: () => _showFullContentSheet(post),
                         onDeleteAyahReference: canModify
-                            ? (reference) => _confirmDeleteAyahReference(
-                                  post,
-                                  reference,
-                                )
+                            ? (reference) =>
+                                  _confirmDeleteAyahReference(post, reference)
                             : null,
                         onToggleReaction: () => _toggleReaction(post, index),
                         onMoreOptions: () => _showOptionsMenu(post, canModify),

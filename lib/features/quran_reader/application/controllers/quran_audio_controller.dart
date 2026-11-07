@@ -17,6 +17,7 @@ import '../../../../core/data/local/preferences/preferences_service_provider.dar
 import '../../../../core/services/audio/sleep_timer/sleep_timer_condition.dart';
 import '../../../../core/services/audio/sleep_timer/sleep_timer_controller.dart';
 import '../../domain/entities/ayah_entity.dart';
+import '../../../../core/services/analytics/analytics_providers.dart';
 import '../ayah_service.dart';
 import '../states/quran_audio_state.dart';
 import 'quran_reader_controller.dart';
@@ -572,6 +573,14 @@ class QuranAudioController extends Notifier<QuranAudioState> {
   }) async {
     _isTransitioningTrack = true;
 
+    if (trackType == CurrentTrackType.quran) {
+      ref.read(analyticsServiceProvider).logAudioPlay(
+        surahNumber: surahId,
+        ayahNumber: ayahNumber,
+        reciterName: state.selectedReciter?.name,
+      );
+    }
+
     if (state.errorMessage != null) {
       state = state.copyWith(errorMessage: null);
     }
@@ -711,7 +720,7 @@ class QuranAudioController extends Notifier<QuranAudioState> {
 
     // 2. Enforce Ostad Parhizgar if current reciter is not the default free reciter
     if (state.selectedReciter != null &&
-        !AudioVipPolicy.isDefaultReciter(state.selectedReciter!.identifier)) {
+        !AudioVipPolicy.isFreeReciter(state.selectedReciter!.identifier)) {
       final parhizgar = await _getFallbackReciter(isTranslation: false);
       newReciter = parhizgar;
       await prefs.setInt('selected_reciter_id', parhizgar.id);
@@ -823,6 +832,12 @@ class QuranAudioController extends Notifier<QuranAudioState> {
     _isTransitioningTrack = false;
     final audioService = ref.read(audioPlayerServiceProvider);
     await audioService.pause();
+    if (state.currentSurahId != null) {
+      ref.read(analyticsServiceProvider).logAudioPause(
+        surahNumber: state.currentSurahId!,
+        ayahNumber: state.currentAyahNumber,
+      );
+    }
   }
 
   /// Resume audio, or advance/replay if completed, stopped, or error

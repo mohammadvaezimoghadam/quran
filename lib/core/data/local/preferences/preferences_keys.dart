@@ -13,9 +13,11 @@ abstract final class PreferencesKeys {
   static const String autoHighlight = 'quran_auto_highlight';
   static const String translatorName = 'quran_translator_name';
   static const String harakatColor = 'quran_harakat_color';
-  static const String removeTranslationBrackets = 'quran_remove_translation_brackets';
+  static const String removeTranslationBrackets =
+      'quran_remove_translation_brackets';
   static const String ayahThemeId = 'quran_ayah_theme_id';
   static const String ayahThemeSolid = 'quran_ayah_theme_solid';
+  static const String showPauseMarks = 'quran_show_pause_marks';
 
   // Selected Preferences Keys
   static const String selectedReciterId = 'quran_selected_reciter_id';
@@ -23,5 +25,6 @@ abstract final class PreferencesKeys {
 
   // Topic Studio Mini Drawer
   static const String topicMiniDrawerEnabled = 'topic_mini_drawer_enabled';
-  static const String topicMiniDrawerHideCompleted = 'topic_mini_drawer_hide_completed';
+  static const String topicMiniDrawerHideCompleted =
+      'topic_mini_drawer_hide_completed';
 }

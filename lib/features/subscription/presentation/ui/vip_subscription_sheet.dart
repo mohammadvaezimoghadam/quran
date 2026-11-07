@@ -41,11 +41,7 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
-      final state = ref.read(vipSubscriptionControllerProvider);
-      if (state.availableProducts.isEmpty ||
-          state.availableProducts.first.formattedPrice == null) {
-        ref.read(vipSubscriptionControllerProvider.notifier).fetchLiveProducts();
-      }
+      ref.read(vipSubscriptionControllerProvider.notifier).fetchLiveProducts();
     });
   }
 
@@ -241,63 +237,99 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
                 child: SingleChildScrollView(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ...products.map((product) {
-                        final isPurchasing = state.isLoading &&
-                            _purchasingProductId == product.id;
-                        final isAnyPurchasing = state.isLoading;
-                        final isCurrentActivePlan = isVip && state.activePlanId == product.id;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: SubscriptionPlanCard(
-                            product: product,
-                            isLoading: isPurchasing,
-                            isDisabled: isVip || (isAnyPurchasing && !isPurchasing),
-                            isVip: isVip,
-                            buttonText: isVip
-                                ? (isCurrentActivePlan ? 'پلن فعال' : 'فعال')
-                                : null,
-                            onPurchase: isVip
-                                ? null
-                                : () =>
-                                    _handlePurchase(product, controller),
-                          ),
-                        );
-                      }),
-                      const SizedBox(height: 8),
-                      // Restore Purchases button
-                      Center(
-                        child: TextButton(
-                          onPressed: state.isLoading
-                              ? null
-                              : () async {
-                                  final restored =
-                                      await controller.restorePurchases();
-                                  if (!context.mounted) return;
-                                  if (restored) {
-                                    _showSnackBar(
-                                        'خریدهای شما با موفقیت بازیابی شد!');
-                                    Navigator.of(context).pop();
-                                  } else {
-                                    _showSnackBar(
-                                        'خریدی برای بازیابی یافت نشد.');
-                                  }
-                                },
-                          child: Text(
-                            'بازیابی خرید قبلی',
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontFamily,
-                              fontSize: 12.5,
-                              color: colorScheme.onSurfaceVariant,
+                  child: state.isPlansLoading && products.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 36),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
+                        )
+                      : products.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      state.plansError ?? 'خطا در دریافت لیست اشتراک‌ها',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontFamily,
+                                        fontSize: 13.5,
+                                        color: isDark ? Colors.white60 : Colors.black54,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextButton(
+                                      onPressed: () => controller.fetchLiveProducts(),
+                                      child: const Text('تلاش مجدد'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ...products.map((product) {
+                                  final isPurchasing = state.isLoading &&
+                                      _purchasingProductId == product.id;
+                                  final isAnyPurchasing = state.isLoading;
+                                  final isCurrentActivePlan = isVip && state.activePlanId == product.id;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: SubscriptionPlanCard(
+                                      product: product,
+                                      isLoading: isPurchasing,
+                                      isDisabled: isVip || (isAnyPurchasing && !isPurchasing),
+                                      isVip: isVip,
+                                      buttonText: isVip
+                                          ? (isCurrentActivePlan ? 'پلن فعال' : 'فعال')
+                                          : null,
+                                      onPurchase: isVip
+                                          ? null
+                                          : () =>
+                                              _handlePurchase(product, controller),
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 8),
+                                // Restore Purchases button
+                                Center(
+                                  child: TextButton(
+                                    onPressed: state.isLoading
+                                        ? null
+                                        : () async {
+                                            final restored =
+                                                await controller.restorePurchases();
+                                            if (!context.mounted) return;
+                                            if (restored) {
+                                              _showSnackBar(
+                                                  'خریدهای شما با موفقیت بازیابی شد!');
+                                              Navigator.of(context).pop();
+                                            } else {
+                                              _showSnackBar(
+                                                  'خریدی برای بازیابی یافت نشد.');
+                                            }
+                                          },
+                                    child: Text(
+                                      'بازیابی خرید قبلی',
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontFamily,
+                                        fontSize: 12.5,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                 ),
               ),
             ],

@@ -104,9 +104,9 @@ final class BazaarPaymentServiceImpl implements IPaymentService {
     try {
       _log('📲 [subscribe] Opening Cafe Bazaar purchase dialog for $productId...');
       final purchaseInfo = await FlutterPoolakey.subscribe(productId).timeout(
-        const Duration(seconds: 40),
+        const Duration(seconds: 180),
         onTimeout: () {
-          _log('⏱️ [subscribe] Purchase flow timed out after 40s.');
+          _log('⏱️ [subscribe] Purchase flow timed out after 180s.');
           throw TimeoutException('مهلت ارتباط با کافه بازار به پایان رسید.');
         },
       );

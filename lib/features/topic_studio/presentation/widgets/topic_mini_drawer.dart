@@ -709,8 +709,10 @@ class _TopicMiniDrawerContent extends ConsumerWidget {
               ),
             ),
             18.vSpace,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
@@ -740,7 +742,6 @@ class _TopicMiniDrawerContent extends ConsumerWidget {
                     ),
                   ),
                 ),
-                8.hSpace,
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colorScheme.primary,
@@ -1479,6 +1480,7 @@ class _TopicMiniDrawerContent extends ConsumerWidget {
                   ],
 
                   QuillBlockField(
+                    key: ValueKey('drawer_field_image_${block.id}'),
                     initialText: block.content,
                     hintText: 'یادداشت، تأمل یا توضیحات تصویر را اینجا بنویسید...',
                     style: contentStyle,
@@ -1533,6 +1535,7 @@ class _TopicMiniDrawerContent extends ConsumerWidget {
             )
           else
             QuillBlockField(
+              key: ValueKey('drawer_field_${block.id}'),
               initialText: block.content,
               hintText: hintText,
               style: contentStyle,

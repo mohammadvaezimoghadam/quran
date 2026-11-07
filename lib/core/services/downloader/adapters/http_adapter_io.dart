@@ -19,6 +19,7 @@ void configureHttpClientAdapter(Dio dio) {
             host.startsWith('10.') ||
             host.endsWith('.ir') ||
             host.contains('tafakormag') ||
+            host == '5.202.19.101' ||
             host == '5.22.203.61') {
           return 'DIRECT';
         }

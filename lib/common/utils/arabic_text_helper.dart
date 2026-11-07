@@ -46,10 +46,18 @@ abstract final class ArabicTextHelper {
     return false;
   }
 
+  /// Returns true if the given Unicode code point [rune] is an Arabic Quranic pause mark:
+  /// (U+06D6 to U+06DC: ۖ , ۗ , ۘ , ۙ , ۚ , ۛ , ۜ)
+  static bool isPauseMarkRune(int rune) {
+    return rune >= 0x06D6 && rune <= 0x06DC;
+  }
+
   /// Returns true if the given Unicode code point [rune] is a Quranic annotation sign,
-  /// pause mark, or small high/low auxiliary mark (e.g. Small Low Meem for Iqlab,
-  /// Small High Stop marks, Small High Noon/Yaa, etc.).
-  static bool isAnnotationOrPauseMark(int rune) {
+  /// pause mark, or small high/low auxiliary mark.
+  static bool isAnnotationOrPauseMark(int rune, {bool keepPauseMarks = false}) {
+    if (keepPauseMarks && isPauseMarkRune(rune)) {
+      return false;
+    }
     return rune == 0xFFFD ||
         (rune >= 0x0600 && rune <= 0x0605) ||
         (rune >= 0x0610 && rune <= 0x061A) ||
@@ -64,7 +72,10 @@ abstract final class ArabicTextHelper {
     final buf = StringBuffer();
     for (final rune in text.runes) {
       if (rune == 0xFFFD ||
-          (rune >= 0x0000 && rune <= 0x001F && rune != 0x000A && rune != 0x000D)) {
+          (rune >= 0x0000 &&
+              rune <= 0x001F &&
+              rune != 0x000A &&
+              rune != 0x000D)) {
         continue;
       }
       buf.writeCharCode(rune);
@@ -72,14 +83,18 @@ abstract final class ArabicTextHelper {
     return buf.toString();
   }
 
-  /// Strips Quranic annotation marks, pause signs, and small auxiliary marks
-  /// (e.g. Small Low Meem for Iqlab, Small High Stop marks, etc.) to keep
-  /// the Quranic text clean, modern, and uncluttered.
-  static String removeAnnotationMarks(String text) {
+  /// Strips Quranic annotation marks, pause signs, and small auxiliary marks.
+  /// If [keepPauseMarks] is true, primary pause marks (ۖ ۗ ۚ ۛ ۜ ۘ ۙ) are preserved.
+  static String removeAnnotationMarks(
+    String text, {
+    bool keepPauseMarks = false,
+  }) {
     if (text.isEmpty) return text;
     final buf = StringBuffer();
     for (final rune in text.runes) {
-      if (isAnnotationOrPauseMark(rune)) continue;
+      if (isAnnotationOrPauseMark(rune, keepPauseMarks: keepPauseMarks)) {
+        continue;
+      }
       buf.writeCharCode(rune);
     }
     return buf.toString();
@@ -92,8 +107,12 @@ abstract final class ArabicTextHelper {
     required TextStyle baseStyle,
     required Color baseColor,
     required Color harakatColor,
+    bool keepPauseMarks = false,
   }) {
-    final sanitizedText = removeAnnotationMarks(text);
+    final sanitizedText = removeAnnotationMarks(
+      text,
+      keepPauseMarks: keepPauseMarks,
+    );
     if (sanitizedText.isEmpty) return const [];
 
     final spans = <TextSpan>[];

@@ -37,6 +37,8 @@ class QuranDisplaySettingsController
         prefs.getString(PreferencesKeys.ayahThemeId) ?? 'classic_ivory';
     final ayahThemeSolid =
         prefs.getBool(PreferencesKeys.ayahThemeSolid) ?? false;
+    final showPauseMarks =
+        prefs.getBool(PreferencesKeys.showPauseMarks) ?? true;
 
     return QuranDisplaySettingsState(
       arabicFontSize: arabicFontSize,
@@ -52,6 +54,7 @@ class QuranDisplaySettingsController
       removeTranslationBrackets: removeTranslationBrackets,
       ayahThemeId: ayahThemeId,
       isAyahThemeSolid: ayahThemeSolid,
+      showPauseMarks: showPauseMarks,
     );
   }
 
@@ -92,8 +95,13 @@ class QuranDisplaySettingsController
     );
     prefs.setString(PreferencesKeys.ayahThemeId, state.ayahThemeId);
     prefs.setBool(PreferencesKeys.ayahThemeSolid, state.isAyahThemeSolid);
+    prefs.setBool(PreferencesKeys.showPauseMarks, state.showPauseMarks);
 
     _initialStateOnOpen = state;
+  }
+
+  void togglePauseMarks(bool val) {
+    state = state.copyWith(showPauseMarks: val);
   }
 
   void updateAyahTheme(String themeId) {
@@ -117,7 +125,10 @@ class QuranDisplaySettingsController
     state = state.copyWith(translationFontSize: size);
   }
 
-  void updateFontSizes({required double arabicFontSize, required double translationFontSize}) {
+  void updateFontSizes({
+    required double arabicFontSize,
+    required double translationFontSize,
+  }) {
     state = state.copyWith(
       arabicFontSize: arabicFontSize,
       translationFontSize: translationFontSize,
@@ -198,5 +209,5 @@ class IsInteractivePinchZoomingNotifier extends Notifier<bool> {
 
 final isInteractivePinchZoomingProvider =
     NotifierProvider<IsInteractivePinchZoomingNotifier, bool>(
-  IsInteractivePinchZoomingNotifier.new,
-);
+      IsInteractivePinchZoomingNotifier.new,
+    );

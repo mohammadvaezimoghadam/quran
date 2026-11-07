@@ -11,7 +11,7 @@ final quranAiControllerProvider =
 );
 
 class QuranAiController extends Notifier<QuranAiState> {
-  late final IQuranAiRepository _repository;
+  late IQuranAiRepository _repository;
 
   @override
   QuranAiState build() {

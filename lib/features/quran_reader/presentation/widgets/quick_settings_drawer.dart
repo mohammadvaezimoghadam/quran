@@ -22,20 +22,17 @@ import '../../domain/enums/audio_playback_mode.dart';
 import '../../domain/entities/ayah_theme_entity.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/presentation/widgets/vip_required_dialog.dart';
-import '../utils/reciter_download_helper.dart';
 import 'ayah_number_marker.dart';
 import 'ayah_theme_carousel.dart';
 import 'tashkeel_color_selector_tile.dart';
 import '../../../quick_access/presentation/widgets/bookmarks_manager_bottom_sheet.dart';
+import '../../../app_walkthrough/app_walkthrough.dart';
 
 /// Ultra-modern iOS-style Tabbed Settings Bottom Sheet (Display & Audio).
 class QuickSettingsDrawer extends ConsumerStatefulWidget {
   final int initialTabIndex;
 
-  const QuickSettingsDrawer({
-    super.key,
-    this.initialTabIndex = 0,
-  });
+  const QuickSettingsDrawer({super.key, this.initialTabIndex = 0});
 
   /// Helper method to display settings as a full-screen page on mobile or centered modal on web.
   static Future<void> show(
@@ -43,8 +40,9 @@ class QuickSettingsDrawer extends ConsumerStatefulWidget {
     int initialTabIndex = 0,
   }) async {
     final container = ProviderScope.containerOf(context, listen: false);
-    final notifier =
-        container.read(quranDisplaySettingsControllerProvider.notifier);
+    final notifier = container.read(
+      quranDisplaySettingsControllerProvider.notifier,
+    );
 
     // Record baseline state before user makes changes in settings
     notifier.recordInitialState();
@@ -59,9 +57,7 @@ class QuickSettingsDrawer extends ConsumerStatefulWidget {
               borderRadius: BorderRadius.circular(22),
               child: Material(
                 color: Colors.transparent,
-                child: QuickSettingsDrawer(
-                  initialTabIndex: initialTabIndex,
-                ),
+                child: QuickSettingsDrawer(initialTabIndex: initialTabIndex),
               ),
             ),
           ),
@@ -70,9 +66,8 @@ class QuickSettingsDrawer extends ConsumerStatefulWidget {
     } else {
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => QuickSettingsDrawer(
-            initialTabIndex: initialTabIndex,
-          ),
+          builder: (context) =>
+              QuickSettingsDrawer(initialTabIndex: initialTabIndex),
         ),
       );
     }
@@ -93,6 +88,20 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
   void initState() {
     super.initState();
     _selectedTabIndex = widget.initialTabIndex.clamp(0, 2);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) {
+          AppWalkthrough.showStudySettingsTourIfNeeded(
+            context: context,
+            ref: ref,
+            onSwitchTab: (index) {
+              if (mounted) setState(() => _selectedTabIndex = index);
+            },
+          );
+        }
+      });
+    });
   }
 
   static const List<String> _fontNames = [
@@ -109,17 +118,19 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     final colors = context.colors;
 
     // Notifiers for dispatching actions (does not trigger rebuilds)
-    final displayNotifier =
-        ref.read(quranDisplaySettingsControllerProvider.notifier);
-    final audioController =
-        ref.read(quranAudioControllerProvider.notifier);
+    final displayNotifier = ref.read(
+      quranDisplaySettingsControllerProvider.notifier,
+    );
+    final audioController = ref.read(quranAudioControllerProvider.notifier);
 
     final currentThemeMode = ref.watch(themeControllerProvider);
     final activeThemeMode = currentThemeMode == ThemeMode.system
         ? (isDark ? ThemeMode.dark : ThemeMode.light)
         : currentThemeMode;
 
-    final screenBgColor = isDark ? colorScheme.surface : const Color(0xFFF7F5F0);
+    final screenBgColor = isDark
+        ? colorScheme.surface
+        : const Color(0xFFF7F5F0);
     final cardBgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
     final textPrimary = colorScheme.onSurface;
     final textSecondary = colorScheme.onSurfaceVariant;
@@ -142,10 +153,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
               decoration: BoxDecoration(
                 color: cardBgColor,
                 border: Border(
-                  bottom: BorderSide(
-                    color: colors.cardBorder,
-                    width: 0.8,
-                  ),
+                  bottom: BorderSide(color: colors.cardBorder, width: 0.8),
                 ),
               ),
               child: SafeArea(
@@ -215,7 +223,8 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       AppSegmentedTabItem(title: 'صوت و تلاوت'),
                     ],
                     selectedIndex: _selectedTabIndex,
-                    onTabSelected: (index) => setState(() => _selectedTabIndex = index),
+                    onTabSelected: (index) =>
+                        setState(() => _selectedTabIndex = index),
                   ),
                 ),
 
@@ -238,27 +247,27 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                             colorScheme: colorScheme,
                           )
                         : _selectedTabIndex == 1
-                            ? _buildTranslationTab(
-                                context: context,
-                                ref: ref,
-                                displayNotifier: displayNotifier,
-                                cardBgColor: cardBgColor,
-                                accentColor: accentColor,
-                                textPrimary: textPrimary,
-                                textSecondary: textSecondary,
-                                colorScheme: colorScheme,
-                              )
-                            : _buildAudioTab(
-                                context: context,
-                                ref: ref,
-                                displayNotifier: displayNotifier,
-                                audioController: audioController,
-                                cardBgColor: cardBgColor,
-                                accentColor: accentColor,
-                                textPrimary: textPrimary,
-                                textSecondary: textSecondary,
-                                colorScheme: colorScheme,
-                              ),
+                        ? _buildTranslationTab(
+                            context: context,
+                            ref: ref,
+                            displayNotifier: displayNotifier,
+                            cardBgColor: cardBgColor,
+                            accentColor: accentColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            colorScheme: colorScheme,
+                          )
+                        : _buildAudioTab(
+                            context: context,
+                            ref: ref,
+                            displayNotifier: displayNotifier,
+                            audioController: audioController,
+                            cardBgColor: cardBgColor,
+                            accentColor: accentColor,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            colorScheme: colorScheme,
+                          ),
                   ),
                 ),
               ],
@@ -319,7 +328,8 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                   children: [
                     SettingsSwitchTile(
                       title: 'تفکیک بصری آیات',
-                      subtitle: 'تغییر متناوب رنگ پس‌زمینه جهت تمایز و تفکیک آسان‌تر آیات',
+                      subtitle:
+                          'تغییر متناوب رنگ پس‌زمینه جهت تمایز و تفکیک آسان‌تر آیات',
                       value: !settings.isAyahThemeSolid,
                       accentColor: accentColor,
                       textPrimary: textPrimary,
@@ -417,6 +427,17 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       onChanged: (val) =>
                           displayNotifier.toggleAyahNumbers(val),
                     ),
+                    _buildInnerDivider(colorScheme),
+                    SettingsSwitchTile(
+                      title: 'نمایش علائم وقف',
+                      subtitle:
+                          'نمایش نشانه‌های وقف (ج، ط، ص، قلی، صلی و...) بر روی کلمات',
+                      value: settings.showPauseMarks,
+                      accentColor: accentColor,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      onChanged: (val) => displayNotifier.togglePauseMarks(val),
+                    ),
 
                     _buildInnerDivider(colorScheme),
                     _buildThemeTile(
@@ -452,7 +473,9 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                     ),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                     ),
                   ),
                 ),
@@ -554,7 +577,9 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                     ),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                     ),
                   ),
                 ),
@@ -578,16 +603,15 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     required Color textSecondary,
     required ColorScheme colorScheme,
   }) {
-    final fontFamily =
-        AppTypography.getFontFamilyByScript(settings.fontScript);
-    final harakatColor =
-        ArabicTextHelper.parseHexColor(settings.harakatColor);
+    final fontFamily = AppTypography.getFontFamilyByScript(settings.fontScript);
+    final harakatColor = ArabicTextHelper.parseHexColor(settings.harakatColor);
     const sampleArabicText = 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَالَمِينَ';
 
     final activeTheme = AyahThemePresets.getById(settings.ayahThemeId);
     final isThemeDark = activeTheme.isDark;
-    final effectiveTextColor =
-        isThemeDark ? Colors.white.withValues(alpha: 0.95) : const Color(0xFF1C1B1B);
+    final effectiveTextColor = isThemeDark
+        ? Colors.white.withValues(alpha: 0.95)
+        : const Color(0xFF1C1B1B);
     final previewBgColor = settings.isAyahThemeSolid
         ? activeTheme.evenColor
         : activeTheme.oddColor;
@@ -624,10 +648,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
         textChildren.add(
           const WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: AyahNumberMarker(
-              number: 2,
-              isActive: false,
-            ),
+            child: AyahNumberMarker(number: 2, isActive: false),
           ),
         );
       }
@@ -641,19 +662,13 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
       decoration: BoxDecoration(
         color: previewBgColor,
         borderRadius: BorderRadius.circular(14.0),
-        border: Border.all(
-          color: previewBorderColor,
-          width: 1.2,
-        ),
+        border: Border.all(color: previewBorderColor, width: 1.2),
       ),
       child: settings.showArabicText
           ? RichText(
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
-              text: TextSpan(
-                style: baseArabicStyle,
-                children: textChildren,
-              ),
+              text: TextSpan(style: baseArabicStyle, children: textChildren),
             )
           : Center(
               child: Text(
@@ -707,10 +722,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
       decoration: BoxDecoration(
         color: previewBgColor,
         borderRadius: BorderRadius.circular(14.0),
-        border: Border.all(
-          color: previewBorderColor,
-          width: 1.2,
-        ),
+        border: Border.all(color: previewBorderColor, width: 1.2),
       ),
       child: settings.showTranslation
           ? Text(
@@ -770,8 +782,10 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     );
     final hasVip = ref.watch(hasVipAccessProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final softGreenColor = (isDark ? const Color(0xFF1B6B58) : const Color(0xFF267D69))
-        .withValues(alpha: 0.70);
+    final softGreenColor =
+        (isDark ? const Color(0xFF1B6B58) : const Color(0xFF267D69)).withValues(
+          alpha: 0.70,
+        );
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -781,255 +795,262 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
           // GROUP 0: PLAYBACK MODE SELECTION
           _buildSectionTitle('نحوه پخش صوت', textSecondary),
           6.0.vSpace,
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: cardBgColor,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Row(
-            children: AudioPlaybackMode.values.map((mode) {
-              final isSelected = playbackMode == mode;
-              final isLocked = !hasVip && mode.includesTranslation;
-              
-              String shortTitle;
-              switch (mode) {
-                case AudioPlaybackMode.onlyQuran:
-                  shortTitle = 'تلاوت';
-                  break;
-                case AudioPlaybackMode.onlyTranslation:
-                  shortTitle = 'ترجمه';
-                  break;
-                case AudioPlaybackMode.quranThenTranslation:
-                  shortTitle = 'تلاوت+ترجمه';
-                  break;
-                case AudioPlaybackMode.translationThenQuran:
-                  shortTitle = 'ترجمه+تلاوت';
-                  break;
-              }
+          WalkthroughAnchor(
+            id: WalkthroughTargetId.settingsAudioTranslationMode,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: cardBgColor,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Row(
+                children: AudioPlaybackMode.values.map((mode) {
+                  final isSelected = playbackMode == mode;
+                  final isLocked = !hasVip && mode.includesTranslation;
 
-              final disabledColor = textSecondary.withValues(alpha: 0.45);
+                  String shortTitle;
+                  switch (mode) {
+                    case AudioPlaybackMode.onlyQuran:
+                      shortTitle = 'تلاوت';
+                      break;
+                    case AudioPlaybackMode.onlyTranslation:
+                      shortTitle = 'ترجمه';
+                      break;
+                    case AudioPlaybackMode.quranThenTranslation:
+                      shortTitle = 'تلاوت+ترجمه';
+                      break;
+                    case AudioPlaybackMode.translationThenQuran:
+                      shortTitle = 'ترجمه+تلاوت';
+                      break;
+                  }
 
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 1.5),
-                  child: InkWell(
-                    onTap: () async {
-                      // VIP check first — don't switch mode if user doesn't have VIP
-                      if (isLocked) {
-                        await VipRequiredDialog.show(
-                          context: context,
-                          isTranslation: true,
-                        );
-                        if (!context.mounted) return;
-                        final hasVipNow = ref.read(hasVipAccessProvider);
-                        if (!hasVipNow) return; // User didn't purchase, do nothing
-                      }
+                  final disabledColor = textSecondary.withValues(alpha: 0.45);
 
-                      // If the new mode includes translation, verify download
-                      // readiness BEFORE switching mode
-                      if (mode.includesTranslation && context.mounted) {
-                        // Temporarily set mode so checkAndPromptForPlayback
-                        // evaluates against the TARGET mode
-                        ref
-                            .read(quranAudioControllerProvider.notifier)
-                            .setPlaybackMode(mode);
-                        final isReady = await ReciterDownloadHelper.checkAndPromptForPlayback(
-                          context: context,
-                          ref: ref,
-                        );
-                        if (!isReady) {
-                          // Translation not downloaded → revert to onlyQuran
-                          if (context.mounted) {
-                            ref
-                                .read(quranAudioControllerProvider.notifier)
-                                .setPlaybackMode(AudioPlaybackMode.onlyQuran);
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                      child: InkWell(
+                        onTap: () async {
+                          // VIP check first — don't switch mode if user doesn't have VIP
+                          if (isLocked) {
+                            await VipRequiredDialog.show(
+                              context: context,
+                              isTranslation: true,
+                            );
+                            if (!context.mounted) return;
+                            final hasVipNow = ref.read(hasVipAccessProvider);
+                            if (!hasVipNow) {
+                              return; // User didn't purchase, do nothing
+                            }
                           }
-                          return;
-                        }
-                      } else {
-                        // Mode doesn't include translation, just set it
-                        ref
-                            .read(quranAudioControllerProvider.notifier)
-                            .setPlaybackMode(mode);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? softGreenColor
-                            : Colors.transparent,
+                          // Set playback mode directly — user can then select their desired reciter/translation
+                          // below in the drawer, and downloads will be prompted upon reciter tap or playback start.
+                          ref
+                              .read(quranAudioControllerProvider.notifier)
+                              .setPlaybackMode(mode);
+                        },
                         borderRadius: BorderRadius.circular(20),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? softGreenColor
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (isLocked) ...[
+                                    Icon(
+                                      Icons.lock_rounded,
+                                      size: 13.0,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : disabledColor,
+                                    ),
+                                    const SizedBox(width: 3.5),
+                                  ],
+                                  Text(
+                                    shortTitle,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontFamily,
+                                      fontSize: 12.0,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : (isLocked
+                                                ? disabledColor
+                                                : textSecondary),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      child: Center(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+
+          16.0.vSpace,
+
+          // GROUP 1: ARABIC RECITER SELECTION
+          if (playbackMode.includesQuran) ...[
+            WalkthroughAnchor(
+              id: WalkthroughTargetId.settingsReciterSelector,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildSectionTitle('قاری تلاوت قرآن', textSecondary),
+                      InkWell(
+                        onTap: () => ReciterSelectionBottomSheet.show(
+                          context,
+                          checkDownloadStatus: true,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (isLocked) ...[
-                                Icon(
-                                  Icons.lock_rounded,
-                                  size: 13.0,
-                                  color: isSelected ? Colors.white : disabledColor,
-                                ),
-                                const SizedBox(width: 3.5),
-                              ],
                               Text(
-                                shortTitle,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
+                                'لیست کامل',
                                 style: TextStyle(
                                   fontFamily: AppTypography.fontFamily,
-                                  fontSize: 12.0,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (isLocked ? disabledColor : textSecondary),
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: accentColor,
                                 ),
+                              ),
+                              4.0.hSpace,
+                              Icon(
+                                CupertinoIcons.chevron_left,
+                                size: 13,
+                                color: accentColor,
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-
-        16.0.vSpace,
-
-        // GROUP 1: ARABIC RECITER SELECTION
-        if (playbackMode.includesQuran) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSectionTitle('قاری تلاوت قرآن', textSecondary),
-              InkWell(
-                onTap: () => ReciterSelectionBottomSheet.show(context,
-                    checkDownloadStatus: true),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  child: Row(
-                    children: [
-                      Text(
-                        'لیست کامل',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: accentColor,
-                        ),
-                      ),
-                      4.0.hSpace,
-                      Icon(
-                        CupertinoIcons.chevron_left,
-                        size: 13,
-                        color: accentColor,
-                      ),
                     ],
                   ),
+                  6.0.vSpace,
+                  const HorizontalReciterSelector(
+                    isTranslationMode: false,
+                    checkDownloadStatus: true,
+                  ),
+                ],
+              ),
+            ),
+            16.0.vSpace,
+          ],
+
+          // GROUP 2: AUDIO TRANSLATION SELECTION
+          if (playbackMode.includesTranslation) ...[
+            _buildSectionTitle('گوینده ترجمه گویا', textSecondary),
+            6.0.vSpace,
+            const HorizontalReciterSelector(
+              isTranslationMode: true,
+              checkDownloadStatus: true,
+            ),
+            16.0.vSpace,
+          ],
+
+          // GROUP 3: AUDIO VOLUME (Unified for Recitation & Audio Translation)
+          _buildSectionTitle('بلندی صدای تلاوت و ترجمه', textSecondary),
+          6.0.vSpace,
+          _buildCardGroup(
+            cardBgColor: cardBgColor,
+            children: [
+              _buildSliderTile(
+                context: context,
+                title: 'میزان صدای پخش',
+                valueLabel: '${(audioVolume * 100).round().toPersianDigit()}٪',
+                value: audioVolume,
+                min: 0.0,
+                max: 1.0,
+                divisions: 20,
+                leadingWidget: Icon(
+                  CupertinoIcons.volume_mute,
+                  size: 16,
+                  color: textSecondary,
                 ),
+                trailingWidget: Icon(
+                  CupertinoIcons.volume_up,
+                  size: 17,
+                  color: textSecondary,
+                ),
+                accentColor: accentColor,
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+                onChanged: (val) => audioController.setVolume(val),
               ),
             ],
           ),
-          6.0.vSpace,
-          const HorizontalReciterSelector(
-              isTranslationMode: false, checkDownloadStatus: true),
           16.0.vSpace,
-        ],
 
-        // GROUP 2: AUDIO TRANSLATION SELECTION
-        if (playbackMode.includesTranslation) ...[
-          _buildSectionTitle('گوینده ترجمه گویا', textSecondary),
+          // GROUP 4: AUDIO PLAYBACK OPTIONS
+          _buildSectionTitle('گزینه‌های پخش صوت', textSecondary),
           6.0.vSpace,
-          const HorizontalReciterSelector(
-              isTranslationMode: true, checkDownloadStatus: true),
-          16.0.vSpace,
-        ],
-
-        // GROUP 3: AUDIO VOLUME (Unified for Recitation & Audio Translation)
-        _buildSectionTitle('بلندی صدای تلاوت و ترجمه', textSecondary),
-        6.0.vSpace,
-        _buildCardGroup(
-          cardBgColor: cardBgColor,
-          children: [
-            _buildSliderTile(
-              context: context,
-              title: 'میزان صدای پخش',
-              valueLabel: '${(audioVolume * 100).round().toPersianDigit()}٪',
-              value: audioVolume,
-              min: 0.0,
-              max: 1.0,
-              divisions: 20,
-              leadingWidget: Icon(
-                CupertinoIcons.volume_mute,
-                size: 16,
-                color: textSecondary,
+          _buildCardGroup(
+            cardBgColor: cardBgColor,
+            children: [
+              SettingsSwitchTile(
+                title: 'پخش خودکار آیه بعدی',
+                subtitle: 'ادامه تلاوت خودکار آیه‌ها پس از پایان هر آیه',
+                value: isAutoPlayNext,
+                accentColor: accentColor,
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+                onChanged: (val) => audioController.toggleAutoPlayNext(),
               ),
-              trailingWidget: Icon(
-                CupertinoIcons.volume_up,
-                size: 17,
-                color: textSecondary,
+              _buildInnerDivider(colorScheme),
+              SettingsSwitchTile(
+                title: 'حالت تک آیه‌ای (تکرار)',
+                subtitle: 'پخش مجدد همان آیه و توقف پس از پایان آن',
+                value: isSingleAyahMode,
+                accentColor: accentColor,
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+                onChanged: (val) => audioController.toggleSingleAyahMode(),
               ),
-              accentColor: accentColor,
-              textPrimary: textPrimary,
-              textSecondary: textSecondary,
-              onChanged: (val) => audioController.setVolume(val),
-            ),
-          ],
-        ),
-        16.0.vSpace,
+              _buildInnerDivider(colorScheme),
+              SettingsSwitchTile(
+                title: 'هایلایت خودکار آیه در حال پخش',
+                subtitle: 'هایلایت رنگی و اسکرول همگام آیه در حال تلاوت',
+                value: autoHighlight,
+                accentColor: accentColor,
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+                onChanged: (val) => displayNotifier.toggleAutoHighlight(val),
+              ),
+            ],
+          ),
 
-        // GROUP 4: AUDIO PLAYBACK OPTIONS
-        _buildSectionTitle('گزینه‌های پخش صوت', textSecondary),
-        6.0.vSpace,
-        _buildCardGroup(
-          cardBgColor: cardBgColor,
-          children: [
-            SettingsSwitchTile(
-              title: 'پخش خودکار آیه بعدی',
-              subtitle: 'ادامه تلاوت خودکار آیه‌ها پس از پایان هر آیه',
-              value: isAutoPlayNext,
-              accentColor: accentColor,
-              textPrimary: textPrimary,
-              textSecondary: textSecondary,
-              onChanged: (val) => audioController.toggleAutoPlayNext(),
-            ),
-            _buildInnerDivider(colorScheme),
-            SettingsSwitchTile(
-              title: 'حالت تک آیه‌ای (تکرار)',
-              subtitle: 'پخش مجدد همان آیه و توقف پس از پایان آن',
-              value: isSingleAyahMode,
-              accentColor: accentColor,
-              textPrimary: textPrimary,
-              textSecondary: textSecondary,
-              onChanged: (val) => audioController.toggleSingleAyahMode(),
-            ),
-            _buildInnerDivider(colorScheme),
-            SettingsSwitchTile(
-              title: 'هایلایت خودکار آیه در حال پخش',
-              subtitle: 'هایلایت رنگی و اسکرول همگام آیه در حال تلاوت',
-              value: autoHighlight,
-              accentColor: accentColor,
-              textPrimary: textPrimary,
-              textSecondary: textSecondary,
-              onChanged: (val) => displayNotifier.toggleAutoHighlight(val),
-            ),
-          ],
-        ),
-
-        24.0.vSpace,
+          24.0.vSpace,
         ],
       ),
     );
@@ -1121,8 +1142,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: accentColor.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(6),
@@ -1155,15 +1175,15 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                 child: SliderTheme(
                   data: SliderThemeData(
                     activeTrackColor: accentColor,
-                    inactiveTrackColor: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withValues(alpha: 0.2),
+                    inactiveTrackColor: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                     thumbColor: Colors.white,
                     overlayColor: accentColor.withValues(alpha: 0.15),
                     trackHeight: 4,
-                    thumbShape:
-                        const RoundSliderThumbShape(enabledThumbRadius: 7),
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 7,
+                    ),
                   ),
                   child: Slider(
                     value: value,
@@ -1201,8 +1221,10 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
     required ColorScheme colorScheme,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final softGreenColor = (isDark ? const Color(0xFF1B6B58) : const Color(0xFF267D69))
-        .withValues(alpha: 0.70);
+    final softGreenColor =
+        (isDark ? const Color(0xFF1B6B58) : const Color(0xFF267D69)).withValues(
+          alpha: 0.70,
+        );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
@@ -1237,7 +1259,9 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                         duration: const Duration(milliseconds: 180),
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         decoration: BoxDecoration(
-                          color: isSelected ? softGreenColor : Colors.transparent,
+                          color: isSelected
+                              ? softGreenColor
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(24.0),
                         ),
                         alignment: Alignment.center,
@@ -1247,8 +1271,9 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 12.5,
                             color: isSelected ? Colors.white : textSecondary,
-                            fontWeight:
-                                isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
                           ),
                         ),
                       ),
@@ -1300,9 +1325,7 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
               ),
             ],
           ),
-          const AppThemeToggleButton(
-            iconSize: 22,
-          ),
+          const AppThemeToggleButton(iconSize: 22),
         ],
       ),
     );

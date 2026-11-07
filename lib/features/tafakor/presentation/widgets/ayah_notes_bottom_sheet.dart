@@ -20,6 +20,7 @@ import '../../application/controllers/tafakor_topics_controller.dart';
 import '../../domain/entities/tafakor_post.dart';
 import '../ui/tafakor_login_screen.dart';
 import '../ui/tafakor_single_post_screen.dart';
+import '../../../app_walkthrough/app_walkthrough.dart';
 
 /// Luxury, modular bottom sheet for viewing and creating notes & reflections for a specific Quran Ayah.
 class AyahNotesBottomSheet extends ConsumerStatefulWidget {
@@ -87,6 +88,15 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
             surahNumber: widget.surahNumber,
             ayahNumber: widget.ayahNumber,
           );
+
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) {
+          AppWalkthrough.showTafakorNotesTourIfNeeded(
+            context: context,
+            ref: ref,
+          );
+        }
+      });
     });
   }
 
@@ -390,23 +400,26 @@ class _AyahNotesBottomSheetState extends ConsumerState<AyahNotesBottomSheet> {
                   ),
                   child: SafeArea(
                     top: false,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        elevation: 0,
-                        minimumSize: const Size.fromHeight(46),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    child: WalkthroughAnchor(
+                      id: WalkthroughTargetId.tafakorWriteButton,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          elevation: 0,
+                          minimumSize: const Size.fromHeight(46),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
-                      ),
-                      onPressed: _openEditor,
-                      child: Text(
-                        'نگارش تفکر',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
+                        onPressed: _openEditor,
+                        child: Text(
+                          'نگارش تفکر',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),

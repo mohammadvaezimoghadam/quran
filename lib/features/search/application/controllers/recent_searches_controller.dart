@@ -8,7 +8,7 @@ final recentSearchesProvider =
 );
 
 class RecentSearchesController extends Notifier<List<String>> {
-  late final ISearchRepository _repository;
+  late ISearchRepository _repository;
 
   @override
   List<String> build() {

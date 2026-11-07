@@ -17,7 +17,7 @@ final bookmarkLabelsMapProvider = Provider<Map<String, BookmarkLabel>>((ref) {
 });
 
 class BookmarkLabelsController extends Notifier<List<BookmarkLabel>> {
-  late final IBookmarkLabelLocalDataSource _dataSource;
+  late IBookmarkLabelLocalDataSource _dataSource;
 
   @override
   List<BookmarkLabel> build() {

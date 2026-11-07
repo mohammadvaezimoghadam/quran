@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/widgets/settings_switch_tile.dart';
 import '../../../../core/theme/app_typography.dart';
+import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
 import 'translation_dropdown_selector.dart';/// An encapsulated UI section for Translation Settings (Toggle, Font Size, and Manager).
 /// This can be injected into any settings drawer/menu across the app.
 class TranslationSettingsSection extends StatelessWidget {
@@ -185,10 +186,13 @@ class TranslationSettingsSection extends StatelessWidget {
   }
 
   Widget _buildManagerButton(BuildContext context, ColorScheme colorScheme) {
-    return TranslationDropdownSelector(
-      accentColor: accentColor,
-      textPrimary: textPrimary,
-      textSecondary: textSecondary,
+    return WalkthroughAnchor(
+      id: WalkthroughTargetId.settingsTranslationSelector,
+      child: TranslationDropdownSelector(
+        accentColor: accentColor,
+        textPrimary: textPrimary,
+        textSecondary: textSecondary,
+      ),
     );
   }
 

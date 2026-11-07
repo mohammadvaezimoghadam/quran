@@ -19,6 +19,7 @@ import '../../../quran_home/application/controllers/continue_reading_controller.
 import '../../../study_plan/application/controllers/study_plan_controller.dart';
 import '../../../surah_list/infrastructure/datasources/static_surahs_data.dart';
 import 'ayah_list_item.dart';
+import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
 import 'surah_end_navigation_section.dart';
 
 class SurahAyahPageView extends ConsumerStatefulWidget {
@@ -247,8 +248,8 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
           final alignTarget = (widget.topPadding ?? 0) / MediaQuery.sizeOf(context).height;
           _itemScrollController.scrollTo(
             index: targetIndex,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCubic,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeInOutCubic,
             alignment: alignTarget,
           );
           return;
@@ -510,8 +511,8 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                 final alignTarget = (widget.topPadding ?? 0) / MediaQuery.sizeOf(context).height;
                 _itemScrollController.scrollTo(
                   index: targetIndex,
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutCubic,
+                  duration: const Duration(milliseconds: 650),
+                  curve: Curves.easeInOutCubic,
                   alignment: alignTarget,
                 );
               }
@@ -538,8 +539,8 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                   final alignTarget = (widget.topPadding ?? 0) / MediaQuery.sizeOf(context).height;
                   _itemScrollController.scrollTo(
                     index: targetIndex,
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOutCubic,
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeInOutCubic,
                     alignment: alignTarget,
                   );
                 }
@@ -702,7 +703,13 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                     ? (ayah.hizb != null && previousAyah.hizb != ayah.hizb)
                     : (ayah.hizb != null);
                 
-                return AyahListItem(
+                return WalkthroughAnchor(
+                  id: WalkthroughTargetId.readerFirstAyah,
+                  enabled: widget.isCurrentPage && index == 0,
+                  child: AyahListItem(
+
+
+
                   ayah: ayah,
                   surahName: widget.surahName,
                   totalAyahsInSurah: state.ayahs.length,
@@ -710,6 +717,7 @@ class _SurahAyahPageViewState extends ConsumerState<SurahAyahPageView> {
                   isJuzStart: isJuzStart,
                   isHizbStart: isHizbStart,
                   translationId: widget.translationId,
+                ),
                 );
               },
             ),

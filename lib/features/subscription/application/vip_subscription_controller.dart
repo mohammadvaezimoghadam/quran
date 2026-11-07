@@ -3,6 +3,8 @@ import 'dart:developer' as developer;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/analytics/analytics_providers.dart';
+import '../../../core/services/analytics/i_analytics_service.dart';
 import '../../../core/services/payment/i_payment_service.dart';
 import '../../../core/services/payment/models/payment_product.dart';
 import '../../../core/services/payment/models/purchase_result.dart';
@@ -21,9 +23,10 @@ final vipSecureStorageProvider = Provider<VipSecureStorage>((ref) {
 /// Riverpod Notifier controlling VIP audio subscriptions and license checks.
 /// Architecture: Offline-First with Background Server Revalidation (Stale-While-Revalidate).
 class VipSubscriptionController extends Notifier<VipSubscriptionState> {
-  late final IPaymentService _paymentService;
-  late final VipSecureStorage _storage;
-  late final SubscriptionRemoteDataSource _remoteDataSource;
+  late IPaymentService _paymentService;
+  late VipSecureStorage _storage;
+  late SubscriptionRemoteDataSource _remoteDataSource;
+  late IAnalyticsService _analyticsService;
 
   Timer? _periodicSyncTimer;
   Timer? _exactExpiryTimer;
@@ -39,6 +42,7 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     _paymentService = ref.watch(paymentServiceProvider);
     _storage = ref.watch(vipSecureStorageProvider);
     _remoteDataSource = ref.watch(subscriptionRemoteDataSourceProvider);
+    _analyticsService = ref.watch(analyticsServiceProvider);
 
     _log('🚀 [Init] Initializing VipSubscriptionController (Offline-First)...');
 
@@ -165,17 +169,12 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
         _log('ℹ️ [Expiry Calculation] No active VIP subscription in local storage.');
       }
 
-      final cachedProducts = await _storage.getCachedProducts();
-      final productsToDisplay = (cachedProducts != null && cachedProducts.isNotEmpty)
-          ? cachedProducts
-          : PaymentProduct.allSubscriptions;
-
       // Render local state immediately without waiting for network
       state = state.copyWith(
         isVip: isVipActive,
         vipExpiryDate: vipExpiry,
         activePlanId: activePlanId,
-        availableProducts: productsToDisplay,
+        availableProducts: const [],
         isLoading: false,
       );
 
@@ -196,11 +195,12 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
   bool _isSyncingServer = false;
   bool _isSyncingStore = false;
 
-  /// Fetches subscription plans dynamically from Tafakor Backend (configured in Admin),
-  /// caches them securely for offline rendering, and queries Bazaar for live prices if available.
+  /// Fetches subscription plans dynamically from Tafakor Backend (configured in Admin).
+  /// Plans are strictly loaded live from server without local caching.
   Future<void> fetchLiveProducts() async {
     if (_isFetchingProducts) return;
     _isFetchingProducts = true;
+    state = state.copyWith(isPlansLoading: true, clearPlansError: true);
     try {
       _log('🌐 [Live Products] Querying Tafakor server for subscription plans (plugin=quran)...');
       final serverPlans = await _remoteDataSource.getPlans(plugin: 'quran');
@@ -275,25 +275,27 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
           _log('ℹ️ [Live Products] Cafe Bazaar query skipped or error: $bazaarErr');
         }
 
-        // Cache the plans in secure storage
-        await _storage.setCachedProducts(products);
-        state = state.copyWith(availableProducts: products);
-        _log('✅ [Live Products] Successfully updated and cached ${products.length} plans.');
+        state = state.copyWith(
+          availableProducts: products,
+          isPlansLoading: false,
+          clearPlansError: true,
+        );
+        _log('✅ [Live Products] Successfully fetched and displayed ${products.length} live plans.');
       } else {
-        // If server was unreachable or empty, try reading from cache
-        final cached = await _storage.getCachedProducts();
-        if (cached != null && cached.isNotEmpty) {
-          _log('📱 [Live Products] Using ${cached.length} cached plans from local storage.');
-          state = state.copyWith(availableProducts: cached);
-        }
+        _log('⚠️ [Live Products] Server returned 0 plans.');
+        state = state.copyWith(
+          availableProducts: const [],
+          isPlansLoading: false,
+          plansError: 'طرحی برای اشتراک یافت نشد.',
+        );
       }
     } catch (e, stack) {
-      _log('❌ Error fetching subscription plans: $e', error: e, stackTrace: stack);
-      // Fallback to cached products if network failed
-      final cached = await _storage.getCachedProducts();
-      if (cached != null && cached.isNotEmpty) {
-        state = state.copyWith(availableProducts: cached);
-      }
+      _log('❌ Error fetching subscription plans from server: $e', error: e, stackTrace: stack);
+      state = state.copyWith(
+        availableProducts: const [],
+        isPlansLoading: false,
+        plansError: 'خطا در دریافت لیست اشتراک‌ها از سرور',
+      );
     } finally {
       _isFetchingProducts = false;
     }
@@ -406,6 +408,10 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
   /// 4. Activates VIP upon backend confirmation.
   Future<PurchaseResult> purchaseSubscription(PaymentProduct product) async {
     _log('🛒 [Purchase Flow] User tapped to buy: ${product.id} (${product.title}) - ${product.priceToman} Tomans');
+    _analyticsService.logVipPurchaseStarted(
+      planId: product.id,
+      price: product.priceToman.toDouble(),
+    );
 
     // 1. Guard: User MUST be authenticated in Tafakor to bind subscription to account
     final isAuthenticated = ref.read(isTafakorAuthenticatedProvider);
@@ -433,6 +439,10 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
         state = state.copyWith(
           isLoading: false,
           errorMessage: bazaarResult.errorMessage,
+        );
+        _analyticsService.logVipPurchaseFailed(
+          planId: product.id,
+          error: bazaarResult.errorMessage ?? 'Cafe Bazaar purchase cancelled or failed',
         );
         return bazaarResult;
       }
@@ -475,6 +485,10 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       );
       _scheduleExactExpiryTimer(newExpiry);
 
+      _analyticsService.logVipPurchaseSuccess(
+        planId: product.id,
+        orderId: bazaarResult.orderId,
+      );
       _log('✨ [Purchase Complete] VIP state active for user! Expiry: $newExpiry');
       return PurchaseResult.success(
         productId: product.id,
@@ -485,6 +499,10 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     } catch (e, stack) {
       _log('❌ [Purchase Exception] Error during purchase or verification: $e', error: e, stackTrace: stack);
       final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      _analyticsService.logVipPurchaseFailed(
+        planId: product.id,
+        error: errorMsg,
+      );
       state = state.copyWith(
         isLoading: false,
         errorMessage: errorMsg,
@@ -496,6 +514,7 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
   /// Restores previous active purchases from Bazaar and verifies with backend.
   Future<bool> restorePurchases() async {
     _log('🔄 [Restore Flow] User requested to restore previous purchases...');
+    _analyticsService.logEvent(name: 'vip_restore_attempted');
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {

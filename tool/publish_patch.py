@@ -110,32 +110,6 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
     session = requests.Session()
     session.trust_env = False  # Avoid proxy hanging on Windows
 
-    # Bypass TUN adapters (VPNs/Proxies) by binding to physical network interface if available
-    try:
-        from requests.adapters import HTTPAdapter
-        class SourceAddressAdapter(HTTPAdapter):
-            def __init__(self, source_ip, *args, **kwargs):
-                self.source_ip = source_ip
-                super().__init__(*args, **kwargs)
-
-            def init_poolmanager(self, *args, **kwargs):
-                kwargs['source_address'] = (self.source_ip, 0)
-                return super().init_poolmanager(*args, **kwargs)
-
-        import socket
-        for probe_ip in ['10.254.65.253']:
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.bind((probe_ip, 0))
-                s.close()
-                session.mount("http://", SourceAddressAdapter(probe_ip))
-                session.mount("https://", SourceAddressAdapter(probe_ip))
-                break
-            except Exception:
-                pass
-    except Exception:
-        pass
-
     base_build_num = 1
     if '+' in base_release:
         try:
@@ -152,16 +126,16 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
             'app_id': 'quran_tafakor',
             'version': patch_version,
             'target_version_code': str(base_build_num),
-            'target_abi': 'multi',
+            'target_abi': 'arm64-v8a',
             'is_force': '0',
             'activate': '1',
             'notes': notes,
             'filename': 'patch.zip'
         }
-        pf1 = ProgressFile(patch_path)
         try:
             start_t = time.time()
-            resp1 = session.post(url1, data=data1, files={'file': ('patch.zip', pf1, 'application/zip')}, timeout=900)
+            with open(patch_path, 'rb') as f1:
+                resp1 = session.post(url1, data=data1, files={'file': ('patch.zip', f1, 'application/zip')}, timeout=900)
             elapsed = time.time() - start_t
             if resp1.status_code in (200, 201):
                 print(f"   ✅ Legacy/Admin Deploy Succeeded in {elapsed:.1f}s (HTTP {resp1.status_code}): {resp1.json()}", flush=True)
@@ -169,8 +143,6 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
                 print(f"   ⚠️ Legacy/Admin Deploy status {resp1.status_code}: {resp1.text[:200]}", flush=True)
         except Exception as e:
             print(f"   ❌ Legacy/Admin Upload Error: {e}", flush=True)
-        finally:
-            pf1.close()
 
     # 2. Upload to /api/v1/ota/publish/
     if os.path.exists(bundle_path):
@@ -178,10 +150,10 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
         print(f"\n🌐 [Deploy 2/2] Uploading bundle to Shorebird OTA endpoint ({url2})...", flush=True)
         print(f"   Payload: {bundle_path} ({os.path.getsize(bundle_path)/(1024*1024):.2f} MB)", flush=True)
         data2 = {'channel': channel}
-        pf2 = ProgressFile(bundle_path)
         try:
             start_t = time.time()
-            resp2 = session.post(url2, data=data2, files={'bundle': (os.path.basename(bundle_path), pf2, 'application/zip')}, timeout=900)
+            with open(bundle_path, 'rb') as f2:
+                resp2 = session.post(url2, data=data2, files={'bundle': (os.path.basename(bundle_path), f2, 'application/zip')}, timeout=900)
             elapsed = time.time() - start_t
             if resp2.status_code in (200, 201):
                 print(f"   ✅ Shorebird OTA Deploy Succeeded in {elapsed:.1f}s (HTTP {resp2.status_code}): {resp2.json()}", flush=True)
@@ -189,8 +161,6 @@ def upload_to_server(patch_path, bundle_path, server_url, patch_version, notes, 
                 print(f"   ⚠️ Shorebird OTA Deploy status {resp2.status_code}: {resp2.text[:200]}", flush=True)
         except Exception as e:
             print(f"   ❌ Shorebird OTA Upload Error: {e}", flush=True)
-        finally:
-            pf2.close()
 
 
 def main():
@@ -201,7 +171,7 @@ def main():
     parser.add_argument('--base-release', default='', help="Host Base release (e.g. 1.0.1+2, default from pubspec.yaml)")
     parser.add_argument('--skip-build', action='store_true', help="Skip 'flutter build apk --release' step")
     parser.add_argument('--target-code', type=int, default=0, help="Explicit targetVersionCode (default auto-derived)")
-    parser.add_argument('--server', default='', help="Optional server URL to auto-upload bundle (e.g. http://localhost)")
+    parser.add_argument('--server', default='http://5.202.19.101:8086', help="Optional server URL to auto-upload bundle (default: http://5.202.19.101:8086)")
 
     args = parser.parse_args()
     patch_version = args.version

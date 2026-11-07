@@ -17,7 +17,7 @@ class EchoController extends Notifier<EchoState> {
   static const String _prefKeyPresetId = 'quran_echo_preset_id';
   static const String _prefKeyIntensity = 'quran_echo_intensity';
 
-  late final IEchoService _service;
+  late IEchoService _service;
 
   @override
   EchoState build() {

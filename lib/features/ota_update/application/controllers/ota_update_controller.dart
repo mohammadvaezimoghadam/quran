@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -41,7 +41,7 @@ final appVersionDisplayProvider = Provider<String>((ref) {
 });
 
 class OtaUpdateController extends Notifier<OtaUpdateState> {
-  late final Dio _dio;
+  late Dio _dio;
   StreamSubscription<PatchApplyProgress>? _progressSubscription;
 
   @override

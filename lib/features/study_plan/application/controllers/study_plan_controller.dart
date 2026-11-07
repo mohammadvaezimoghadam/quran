@@ -63,7 +63,7 @@ class TodayGoalCompletedEventNotifier extends Notifier<StudyPlan?> {
 }
 
 class StudyPlanController extends Notifier<StudyPlanState> {
-  late final IStudyPlanLocalDataSource _dataSource;
+  late IStudyPlanLocalDataSource _dataSource;
 
   @override
   StudyPlanState build() {

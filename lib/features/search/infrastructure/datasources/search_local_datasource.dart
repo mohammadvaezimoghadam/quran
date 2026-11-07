@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/extensions/string_extension.dart';
 import '../../../../common/extensions/surah_name_extension.dart';
+import '../../../../common/utils/quran_ayah_repair_helper.dart';
 import '../../../../core/data/local/sqflite/i_sqflite_service.dart';
 import '../../../../core/data/local/sqflite/sqflite_service_provider.dart';
 import '../../domain/entities/search_filter_type.dart';
@@ -309,7 +310,14 @@ class SearchLocalDataSource implements ISearchLocalDataSource {
       final ayahs = <_IndexedAyah>[];
 
       for (final map in ayahMaps) {
-        final arabic = (map['text_uthmani'] as String?) ?? '';
+        final surahNumber = map['surah_number'] as int;
+        final ayahNumber = map['number_in_surah'] as int;
+        final rawArabic = (map['text_uthmani'] as String?) ?? '';
+        final arabic = QuranAyahRepairHelper.getRepairedText(
+          surahNumber,
+          ayahNumber,
+          rawArabic,
+        );
         final translation = (map['translation'] as String?) ?? '';
 
         ayahs.add(_IndexedAyah(

@@ -12,6 +12,7 @@ import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/services/analytics/analytics_providers.dart';
 import '../../../../core/theme/quran_theme_colors.dart';
 import '../../../quran_reader/application/ayah_service.dart';
 import '../../../quran_reader/domain/entities/ayah_entity.dart';
@@ -76,10 +77,23 @@ class _TafsirReaderScreenState extends ConsumerState<TafsirReaderScreen> {
     _currentSurahName = widget.surahId.surahNameFa;
     _currentTafsirId = widget.tafsirId ?? 'tafsir.nemouneh';
     _currentFocusedAyahNumber = widget.initialAyahNumber ?? 1;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(analyticsServiceProvider).logTafsirView(
+        surahNumber: _currentSurahId,
+        ayahNumber: _currentFocusedAyahNumber,
+        tafsirId: _currentTafsirId,
+      );
+    });
   }
 
   void _changeSurah(int newSurahId, [String? newSurahName]) {
     if (newSurahId < 1 || newSurahId > 114) return;
+    ref.read(analyticsServiceProvider).logTafsirView(
+      surahNumber: newSurahId,
+      ayahNumber: 1,
+      tafsirId: _currentTafsirId,
+    );
     setState(() {
       _currentSurahId = newSurahId;
       _currentSurahName = newSurahName ?? newSurahId.surahNameFa;

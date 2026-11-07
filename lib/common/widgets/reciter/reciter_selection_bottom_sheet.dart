@@ -577,7 +577,7 @@ class _ReciterSelectionBottomSheetState
                         final isLocked = !isVip &&
                             (isTranslation
                                 ? true
-                                : !AudioVipPolicy.isDefaultReciter(
+                                : !AudioVipPolicy.isFreeReciter(
                                     activeVariant.identifier));
                         final styleLabel = _getTranslatedVariant(
                             activeVariant.name, activeVariant.styleName);
@@ -744,7 +744,7 @@ class _ReciterSelectionBottomSheetState
                                         final variantIsLocked = !isVip &&
                                             (isVariantTranslation
                                                 ? true
-                                                : !AudioVipPolicy.isDefaultReciter(
+                                                : !AudioVipPolicy.isFreeReciter(
                                                     variant.identifier));
                                         if (variantIsLocked) {
                                           await VipRequiredDialog.show(

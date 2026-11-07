@@ -21,5 +21,6 @@ abstract class QuranDisplaySettingsState with _$QuranDisplaySettingsState {
     @Default(true) bool removeTranslationBrackets,
     @Default('classic_ivory') String ayahThemeId,
     @Default(false) bool isAyahThemeSolid,
+    @Default(true) bool showPauseMarks,
   }) = _QuranDisplaySettingsState;
 }

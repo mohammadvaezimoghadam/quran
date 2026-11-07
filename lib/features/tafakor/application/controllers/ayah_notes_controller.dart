@@ -145,7 +145,7 @@ final ayahNotesControllerProvider =
 );
 
 class AyahNotesController extends Notifier<AyahNotesState> {
-  late final ITafakorPostsRepository _repository;
+  late ITafakorPostsRepository _repository;
 
   @override
   AyahNotesState build() {

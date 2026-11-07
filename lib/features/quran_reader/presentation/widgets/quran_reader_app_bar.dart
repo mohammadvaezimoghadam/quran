@@ -7,6 +7,7 @@ import '../../../../common/extensions/int_extension.dart';
 import '../../../../common/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
 import 'surah_header_title_capsule.dart';
 
 /// Modern Apple-styled AppBar for QuranReaderScreen.
@@ -155,7 +156,10 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         const SizedBox(width: 4),
 
         // 4. Settings Popup Menu (Standard icon button with no artificial circle wrapper)
-        PopupMenuButton<String>(
+        WalkthroughAnchor(
+          id: WalkthroughTargetId.readerSettings,
+          child: PopupMenuButton<String>(
+
           tooltip: '',
           icon: Icon(
             CupertinoIcons.slider_horizontal_3,
@@ -174,6 +178,7 @@ class QuranReaderAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           onSelected: onMenuSelected,
           itemBuilder: menuItemBuilder ?? (_) => const [],
+        ),
         ),
       ],
     );

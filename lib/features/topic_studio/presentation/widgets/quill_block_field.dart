@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
 import '../../../../core/theme/app_typography.dart';
@@ -32,6 +33,7 @@ class _QuillBlockFieldState extends State<QuillBlockField> {
   late final FocusNode _focusNode;
   late final ScrollController _scrollController;
   Timer? _debounceTimer;
+  bool _isInternalUpdate = false;
 
   @override
   void initState() {
@@ -53,12 +55,14 @@ class _QuillBlockFieldState extends State<QuillBlockField> {
   }
 
   void _onFocusChanged() {
+    if (!mounted) return;
     if (!_focusNode.hasFocus) {
       _flush();
     }
   }
 
   void _onTextChanged() {
+    if (_isInternalUpdate) return;
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 350), () {
       if (mounted) {
@@ -70,10 +74,22 @@ class _QuillBlockFieldState extends State<QuillBlockField> {
   void _flush() {
     _debounceTimer?.cancel();
     _debounceTimer = null;
+    if (!mounted) return;
     final raw = _quillController.document.toPlainText();
     final text = raw.endsWith('\n') ? raw.substring(0, raw.length - 1) : raw;
     if (text != widget.initialText) {
-      widget.onChanged(text);
+      // If we are currently inside persistent callbacks (build/layout/paint),
+      // defer notifying parent/Riverpod to the next frame to prevent
+      // "Tried to modify a provider while the widget tree was building."
+      if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && text != widget.initialText) {
+            widget.onChanged(text);
+          }
+        });
+      } else {
+        widget.onChanged(text);
+      }
     }
   }
 
@@ -87,19 +103,30 @@ class _QuillBlockFieldState extends State<QuillBlockField> {
         final replaceLen = _quillController.document.length > 1
             ? _quillController.document.length - 1
             : 0;
-        _quillController.replaceText(
-          0,
-          replaceLen,
-          widget.initialText,
-          null,
-        );
+        _isInternalUpdate = true;
+        try {
+          _quillController.replaceText(
+            0,
+            replaceLen,
+            widget.initialText,
+            null,
+          );
+        } finally {
+          _isInternalUpdate = false;
+        }
       }
     }
   }
 
   @override
   void dispose() {
-    _flush();
+    // CRITICAL FIX: NEVER call _flush() or notify Riverpod/parent during dispose!
+    // The widget is being torn down. Invoking callbacks here mutates Riverpod providers
+    // while the tree is unmounting, triggering:
+    // "Tried to modify a provider while the widget tree was building."
+    // and interrupting unmount, leaving active listeners on inactive renderObjects.
+    _debounceTimer?.cancel();
+    _debounceTimer = null;
     _focusNode.removeListener(_onFocusChanged);
     _quillController.removeListener(_onTextChanged);
     _focusNode.dispose();

@@ -20,6 +20,7 @@ import '../../../quran_reader/application/controllers/quran_audio_controller.dar
 import '../../../quran_reader/application/controllers/quran_reader_controller.dart';
 import '../../../quran_reader/domain/entities/ayah_entity.dart';
 import '../../../surah_list/infrastructure/datasources/static_surahs_data.dart';
+import '../../../app_walkthrough/app_walkthrough.dart';
 
 /// Serene, luxury Sleep Timer screen strictly aligned with the app's sacred theme.
 /// Provides one-tap minute presets, Quranic boundary stops, active hero countdown,
@@ -92,6 +93,15 @@ class _SleepTimerScreenState extends ConsumerState<SleepTimerScreen> {
           }
         }
       }
+
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (mounted) {
+          AppWalkthrough.showSleepTimerTourIfNeeded(
+            context: context,
+            ref: ref,
+          );
+        }
+      });
     });
   }
 
@@ -490,29 +500,32 @@ class _SleepTimerScreenState extends ConsumerState<SleepTimerScreen> {
                   ],
                 ),
               ),
-              Transform.scale(
-                scale: 0.75,
-                child: Switch(
-                  value: isSleepTimerActive,
-                  activeTrackColor: colorScheme.primary,
-                  activeThumbColor: Colors.white,
-                  onChanged: (val) {
-                    HapticFeedback.lightImpact();
-                    if (val) {
-                      if (timerState.isActive && !isTimerCondition) {
-                        ref.read(sleepTimerControllerProvider.notifier).cancel();
+              WalkthroughAnchor(
+                id: WalkthroughTargetId.sleepTimerToggleSwitch,
+                child: Transform.scale(
+                  scale: 0.75,
+                  child: Switch(
+                    value: isSleepTimerActive,
+                    activeTrackColor: colorScheme.primary,
+                    activeThumbColor: Colors.white,
+                    onChanged: (val) {
+                      HapticFeedback.lightImpact();
+                      if (val) {
+                        if (timerState.isActive && !isTimerCondition) {
+                          ref.read(sleepTimerControllerProvider.notifier).cancel();
+                        }
+                        setState(() {
+                          _isTimerConfiguring = true;
+                          _sliderMinutes = 0.0;
+                          _remainingSeconds = 0;
+                          _isWindupActive = false;
+                          _isUserDragging = false;
+                        });
+                      } else {
+                        _cancelTimer(showSnackbar: true);
                       }
-                      setState(() {
-                        _isTimerConfiguring = true;
-                        _sliderMinutes = 0.0;
-                        _remainingSeconds = 0;
-                        _isWindupActive = false;
-                        _isUserDragging = false;
-                      });
-                    } else {
-                      _cancelTimer(showSnackbar: true);
-                    }
-                  },
+                    },
+                  ),
                 ),
               ),
             ],

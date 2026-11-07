@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../core/routes/route_name.dart';
+import '../../../../core/services/analytics/analytics_providers.dart';
 import '../../../../core/services/payment/models/payment_product.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -31,12 +32,9 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      ref.read(analyticsServiceProvider).logVipView();
       ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
-      final state = ref.read(vipSubscriptionControllerProvider);
-      if (state.availableProducts.isEmpty ||
-          state.availableProducts.first.formattedPrice == null) {
-        ref.read(vipSubscriptionControllerProvider.notifier).fetchLiveProducts();
-      }
+      ref.read(vipSubscriptionControllerProvider.notifier).fetchLiveProducts();
     });
   }
 
@@ -197,32 +195,73 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
             await controller.syncWithStore();
             await controller.fetchLiveProducts();
           },
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-            children: [
-              // Borderless Plan Cards with Dedicated Action Buttons
-              ...products.map((product) {
-                final isPurchasing =
-                    state.isLoading && _purchasingProductId == product.id;
-                final isAnyPurchasing = state.isLoading;
-                final isCurrentActivePlan = isVip && state.activePlanId == product.id;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: SubscriptionPlanCard(
-                    product: product,
-                    isLoading: isPurchasing,
-                    isDisabled: isVip || (isAnyPurchasing && !isPurchasing),
-                    isVip: isVip,
-                    buttonText: isVip
-                        ? (isCurrentActivePlan ? 'پلن فعال' : 'فعال')
-                        : null,
-                    onPurchase: isVip ? null : () => _handlePurchase(product, controller),
+          child: state.isPlansLoading && products.isEmpty
+              ? const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                );
-              }),
-            ],
-          ),
+                )
+              : products.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    state.plansError ?? 'خطا در دریافت لیست اشتراک‌ها',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontFamily,
+                                      fontSize: 13.5,
+                                      color: isDark ? Colors.white60 : Colors.black54,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextButton(
+                                    onPressed: () => controller.fetchLiveProducts(),
+                                    child: const Text('تلاش مجدد'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                      children: [
+                        // Borderless Plan Cards with Dedicated Action Buttons
+                        ...products.map((product) {
+                          final isPurchasing =
+                              state.isLoading && _purchasingProductId == product.id;
+                          final isAnyPurchasing = state.isLoading;
+                          final isCurrentActivePlan = isVip && state.activePlanId == product.id;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: SubscriptionPlanCard(
+                              product: product,
+                              isLoading: isPurchasing,
+                              isDisabled: isVip || (isAnyPurchasing && !isPurchasing),
+                              isVip: isVip,
+                              buttonText: isVip
+                                  ? (isCurrentActivePlan ? 'پلن فعال' : 'فعال')
+                                  : null,
+                              onPurchase: isVip ? null : () => _handlePurchase(product, controller),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
         ),
       ),
     );

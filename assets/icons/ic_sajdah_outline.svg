@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Ground Line -->
+  <path d="M3 20.5h18" stroke-opacity="0.45"/>
+  <!-- Head prostrating -->
+  <circle cx="18" cy="16" r="1.75"/>
+  <!-- Arms & Hands on ground -->
+  <path d="M15.5 20.5v-2.2l2.2-.8"/>
+  <!-- Back & Torso -->
+  <path d="M7 16.5c1-3.2 3.5-5.5 7-5.5 2.2 0 3.5 1.5 4 3.5"/>
+  <!-- Leg, Knee & Feet -->
+  <path d="M3.5 20.5l3.5-4"/>
+</svg>

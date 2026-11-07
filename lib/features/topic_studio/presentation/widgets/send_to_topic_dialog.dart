@@ -17,6 +17,7 @@ import '../../../tafakor/application/controllers/ayah_notes_controller.dart';
 import '../../../tafakor/domain/entities/tafakor_topic.dart';
 import '../../../tafakor/infrastructure/datasources/tafakor_local_data_source.dart';
 import '../../../tafakor/infrastructure/repositories/tafakor_posts_repository_impl.dart';
+import '../../../ayah_teaser/infrastructure/repositories/ayah_teaser_repository_impl.dart';
 import '../../application/controllers/in_drawer_editor_controller.dart';
 import '../../domain/entities/topic_block.dart';
 
@@ -194,6 +195,7 @@ class _SendToTopicDialogState extends ConsumerState<SendToTopicDialog> {
       // Auto-refresh AyahNotesController so new post appears immediately in active sheet
       try {
         ref.read(ayahNotesControllerProvider.notifier).refresh();
+        ref.read(ayahTeaserRepositoryProvider).clearCache();
       } catch (_) {}
 
       final targetContext = rootNavigatorKey.currentContext;

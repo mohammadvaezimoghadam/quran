@@ -706,6 +706,7 @@ class _TopicEditorScreenState extends ConsumerState<TopicEditorScreen> {
 
           // Editable content sitting cleanly with zero extra padding powered by flutter_quill
           QuillBlockField(
+            key: ValueKey('quill_topic_block_${block.id}'),
             initialText: block.content,
             hintText: hintText,
             style: contentStyle,

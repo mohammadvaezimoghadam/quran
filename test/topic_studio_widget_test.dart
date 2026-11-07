@@ -11,8 +11,9 @@ import 'package:quran/features/topic_studio/presentation/widgets/new_topic_dialo
 import 'package:quran/features/topic_studio/presentation/widgets/topic_mini_drawer.dart';
 
 void main() {
-  testWidgets('AddToTopicBottomSheet handles 50 topics without overflow',
-      (tester) async {
+  testWidgets('AddToTopicBottomSheet handles 50 topics without overflow', (
+    tester,
+  ) async {
     // Generate 50 topics
     final fiftyTopics = List.generate(
       50,
@@ -56,14 +57,18 @@ void main() {
     final listFinder = find.byType(Scrollbar);
     expect(listFinder, findsOneWidget);
 
-    await tester.drag(find.textContaining('موضوع تفکر شماره 0'), const Offset(0, -300));
+    await tester.drag(
+      find.textContaining('موضوع تفکر شماره 0'),
+      const Offset(0, -300),
+    );
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('NewTopicDialog in edit mode does NOT create a new topic',
-      (tester) async {
+  testWidgets('NewTopicDialog in edit mode does NOT create a new topic', (
+    tester,
+  ) async {
     final fakeRepo = _FakeTopicRepository();
     final controller = TopicsController(fakeRepo);
 
@@ -71,9 +76,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          topicsControllerProvider.overrideWith((ref) => controller),
-        ],
+        overrides: [topicsControllerProvider.overrideWith((ref) => controller)],
         child: MaterialApp(
           home: Scaffold(
             body: Builder(
@@ -118,74 +121,51 @@ void main() {
     expect(controller.state.isEmpty, isTrue);
   });
 
-  testWidgets('TopicMiniDrawer filter toggle hides completed topics',
-      (tester) async {
-    final openTopic = TopicItem(
-      id: 'open-1',
-      title: 'موضوع باز',
-      status: TopicStatus.open,
-      createdAt: 1000,
-      updatedAt: 1000,
-      blocks: const [],
-    );
-    final closedTopic = TopicItem(
-      id: 'closed-1',
-      title: 'موضوع تکمیل‌شده',
-      status: TopicStatus.closed,
-      createdAt: 2000,
-      updatedAt: 2000,
-      blocks: const [],
-    );
-
-    final fakeRepo = _FakeTopicRepository();
-    await fakeRepo.saveTopic(openTopic);
-    await fakeRepo.saveTopic(closedTopic);
-    final topicsController = TopicsController(fakeRepo);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          topicsControllerProvider.overrideWith((ref) => topicsController),
-          topicMiniDrawerControllerProvider.overrideWith(
-            () => _FakeTopicMiniDrawerController(
-              initialState: const TopicMiniDrawerState(
-                isEnabled: true,
-                isOpen: true,
-                hideCompleted: false,
+  testWidgets(
+    'TopicMiniDrawer displays contemplation notebook and allows adding block',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            topicMiniDrawerControllerProvider.overrideWith(
+              () => _FakeTopicMiniDrawerController(
+                initialState: const TopicMiniDrawerState(
+                  isEnabled: true,
+                  isOpen: true,
+                ),
               ),
             ),
-          ),
-        ],
-        child: const MaterialApp(
-          home: Scaffold(
-            body: TopicMiniDrawer(),
-          ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: TopicMiniDrawer())),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    // Both topics should be visible initially
-    expect(find.text('موضوع باز'), findsOneWidget);
-    expect(find.text('موضوع تکمیل‌شده'), findsOneWidget);
-    expect(find.text('مخفی کردن تکمیل‌شده‌ها'), findsOneWidget);
+      // Drawer header should be visible
+      expect(find.text('دفتر تفکر'), findsOneWidget);
+      expect(
+        find.text('هنوز مطلبی در این پیش‌نویس وجود ندارد'),
+        findsOneWidget,
+      );
+      expect(find.text('نوشتن یادداشت'), findsOneWidget);
 
-    // Toggle hideCompleted
-    await tester.tap(find.text('مخفی کردن تکمیل‌شده‌ها'));
-    await tester.pumpAndSettle();
+      // Tap 'نوشتن یادداشت' to add a block
+      await tester.tap(find.text('نوشتن یادداشت'));
+      await tester.pumpAndSettle();
 
-    // Now completed topic should be hidden, only open topic visible
-    expect(find.text('موضوع باز'), findsOneWidget);
-    expect(find.text('موضوع تکمیل‌شده'), findsNothing);
-  });
+      // Empty state should be gone, user text caption should be visible
+      expect(find.text('هنوز مطلبی در این پیش‌نویس وجود ندارد'), findsNothing);
+      expect(find.text('یادداشت / توضیحات'), findsOneWidget);
+    },
+  );
 }
 
 class _FakeTopicMiniDrawerController extends TopicMiniDrawerController {
   final TopicMiniDrawerState _initial;
 
   _FakeTopicMiniDrawerController({required TopicMiniDrawerState initialState})
-      : _initial = initialState;
+    : _initial = initialState;
 
   @override
   TopicMiniDrawerState build() => _initial;
@@ -236,5 +216,3 @@ class _FakeTopicRepository implements ITopicRepository {
     }
   }
 }
-
-

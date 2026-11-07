@@ -1,13 +1,14 @@
-
 abstract class AppConstants {
   // Base URLs
   static const String alQuranCloudBaseUrl = 'https://api.alquran.cloud/v1';
   static const String ummahApiBaseUrl = 'https://ummahapi.com/api';
-  static const String everyAyahAudioBaseUrl = 'https://www.everyayah.com/data';
+  static const String everyAyahAudioBaseUrl = 'http://5.202.19.101:9002/quran-audio';
   // Production (سرور اصلی تفکر):
   // static const String tafakorBaseUrl = 'https://tafakormag.ir/api/';
-  // Staging / Local Wi-Fi (تست و اتصال مستقیم گوشی روی وای‌فای لپ‌تاپ):
-  static const String tafakorBaseUrl = 'http://192.168.1.102:8085/api/';
+  // Staging / Dev Server (سرور تست توسعه روی پورت ۸۰۸۶):
+  static const String tafakorBaseUrl = 'http://5.202.19.101:8086/api/';
+  // Local Wi-Fi (تست لوکال روی وای‌فای):
+  // static const String tafakorBaseUrl = 'http://192.168.1.106:8085/api/';
   // Local Docker (اتصال به داکر لوکال روی پورت 8085):
   // static String get tafakorBaseUrl {
   //   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
@@ -16,11 +17,11 @@ abstract class AppConstants {
   //   return 'http://127.0.0.1:8085/api/';
   // }
 
-  // OTA Patch Server (اتصال به سرور پروداکشن)
+  // OTA Patch Server (اتصال به سرور توسعه و تست تفکر روی پورت ۸۰۸۶)
   // OTA Patch Server (قابلیت تنظیم داینامیک با --dart-define=OTA_SERVER_URL=... یا اتصال پیش‌فرض به سرور)
   static const String patchServerBaseUrl = String.fromEnvironment(
     'OTA_SERVER_URL',
-    defaultValue: 'http://5.22.203.61',
+    defaultValue: 'http://5.202.19.101:8086',
   );
 
   static const String patchAppId = 'quran_tafakor';

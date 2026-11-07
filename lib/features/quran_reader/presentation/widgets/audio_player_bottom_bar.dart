@@ -27,6 +27,7 @@ import '../utils/reciter_download_helper.dart';
 import '../../../../core/services/audio/ambient_sound/ambient_sound_controller.dart';
 import '../../../../core/services/audio/echo/echo_controller.dart';
 import 'audio_ambiance_bottom_sheet.dart';
+import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
 import 'sleep_timer_active_badge.dart';
 
 class AudioPlayerBottomBar extends ConsumerWidget {
@@ -92,7 +93,9 @@ class AudioPlayerBottomBar extends ConsumerWidget {
     final echoState = ref.watch(echoControllerProvider);
     final isAnyActive = ambientState.isEnabled || echoState.isEnabled;
 
-    return Material(
+    return WalkthroughAnchor(
+      id: WalkthroughTargetId.readerAmbientAudio,
+      child: Material(
       color: Colors.transparent,
       child: Tooltip(
         message: 'فضاسازی و افکت‌های صوتی',
@@ -139,6 +142,7 @@ class AudioPlayerBottomBar extends ConsumerWidget {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -494,17 +498,23 @@ class AudioPlayerBottomBar extends ConsumerWidget {
                                                   const SizedBox(width: 4),
 
                                                   // Sleep Timer Active Button
-                                                  const SleepTimerPlayerButton(),
+                                                  WalkthroughAnchor(
+                                                    id: WalkthroughTargetId.readerSleepTimer,
+                                                    child: const SleepTimerPlayerButton(),
+                                                  ),
 
                                                   // Settings Button (Top Left)
-                                                  _buildControlButton(
-                                                    icon: CupertinoIcons.gear,
-                                                    size: 23,
-                                                    width: 40,
-                                                    height: 32,
-                                                    color: colorScheme.onSurfaceVariant,
-                                                    tooltip: 'تنظیمات نمایش',
-                                                    onPressed: () => QuickSettingsDrawer.show(context),
+                                                  WalkthroughAnchor(
+                                                    id: WalkthroughTargetId.readerPlayerSettings,
+                                                    child: _buildControlButton(
+                                                      icon: CupertinoIcons.gear,
+                                                      size: 23,
+                                                      width: 40,
+                                                      height: 32,
+                                                      color: colorScheme.onSurfaceVariant,
+                                                      tooltip: 'تنظیمات نمایش',
+                                                      onPressed: () => QuickSettingsDrawer.show(context),
+                                                    ),
                                                   ),
                                                 ],
                                               ),

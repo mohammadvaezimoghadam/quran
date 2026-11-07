@@ -801,11 +801,17 @@ class _TafakorTopicFeedScreenState
   }
 
   Widget _buildMonochromeFilterBar(bool isDark, TafakorTopicFeedState state) {
-    final allCount = state.posts.length;
+    final allCount = state.totalCount > 0
+        ? state.totalCount
+        : (widget.topic.postCount > 0
+              ? widget.topic.postCount
+              : state.posts.length);
     final withAyahCount = state.posts
         .where((p) => p.quranReferences.isNotEmpty)
         .length;
-    final withoutAyahCount = allCount - withAyahCount;
+    final withoutAyahCount = state.hasMore
+        ? state.posts.where((p) => p.quranReferences.isEmpty).length
+        : (allCount - withAyahCount).clamp(0, allCount);
 
     Widget buildItem(String title, int count, int index) {
       final isSelected = _feedFilterIndex == index;
@@ -859,7 +865,7 @@ class _TafakorTopicFeedScreenState
                       : (isDark ? Colors.white60 : Colors.black54),
                 ),
               ),
-              if (state.posts.isNotEmpty) ...[
+              if (state.posts.isNotEmpty || allCount > 0) ...[
                 5.hSpace,
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -2436,4 +2442,3 @@ class _MenuActionTile extends StatelessWidget {
     );
   }
 }
-

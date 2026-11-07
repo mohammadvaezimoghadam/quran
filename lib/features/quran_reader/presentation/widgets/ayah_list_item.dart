@@ -16,9 +16,11 @@ import '../../application/controllers/quran_reader_controller.dart';
 import '../../application/controllers/selected_ayah_action_provider.dart';
 import '../../domain/entities/ayah_entity.dart';
 import '../../domain/entities/ayah_theme_entity.dart';
+import '../../../../common/utils/sajdah_helper.dart';
 import '../utils/reciter_download_helper.dart';
 import 'ayah_arabic_text.dart';
 import 'quran_ornamental_divider.dart';
+import 'sajdah_badge.dart';
 import 'single_ayah_action_bottom_sheet.dart';
 
 /// Clean component for displaying an individual Ayah card with Telegram-style selection.
@@ -59,6 +61,25 @@ class AyahListItem extends ConsumerWidget {
       ),
     );
 
+    // Audio session is active in this surah (playing, buffering/loading next track, or completing track)
+    final isSurahAudioActive = ref.watch(
+      quranAudioControllerProvider.select((s) {
+        if (s.currentSurahId != ayah.surahId) return false;
+        return s.status == AudioStatus.playing ||
+            s.status == AudioStatus.loading ||
+            s.status == AudioStatus.completed;
+      }),
+    );
+
+    // This specific Ayah is actively being recited right now (playing, not merely buffering/transitioning)
+    final isThisAyahReciting = ref.watch(
+      quranAudioControllerProvider.select((s) {
+        return s.status == AudioStatus.playing &&
+            s.currentSurahId == ayah.surahId &&
+            s.currentAyahNumber == ayah.ayahNumber;
+      }),
+    );
+
     // Active playing Ayah subscription (gated by surah match)
     final isPlayingAyah =
         isAudioForThisSurah &&
@@ -89,8 +110,26 @@ class AyahListItem extends ConsumerWidget {
       selectedAyahActionProvider.select((s) => s.contains(ayah.ayahNumber)),
     );
 
-    final isAudioActive = isPlayingAyah && autoHighlight;
+    final isAudioPaused = ref.watch(
+      quranAudioControllerProvider.select(
+        (s) =>
+            s.status == AudioStatus.paused && s.currentSurahId == ayah.surahId,
+      ),
+    );
+
+    // Show right-edge indicator when actively reciting or paused on this ayah
+    final showActiveIndicator =
+        autoHighlight &&
+        (isThisAyahReciting || (isAudioPaused && isPlayingAyah));
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Focus mode dimming during audio playback:
+    // When audio is actively in progress in this surah, dim other verses (0.35).
+    // During verse-to-verse transitions, all verses stay dimmed until the next verse actually begins playing.
+    final shouldDimForFocus =
+        isSurahAudioActive && !isSelectionMode && !isThisAyahReciting;
+    final focusOpacity = shouldDimForFocus ? 0.35 : 1.0;
 
     final ayahThemeId = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.ayahThemeId),
@@ -104,25 +143,25 @@ class AyahListItem extends ConsumerWidget {
       isSolid: isAyahThemeSolid,
     );
 
-    final Color effectiveBgColor = isAudioActive
+    // Background color: Clean default background! (No full-green tint during audio playback)
+    final Color effectiveBgColor = isSelectedForAction
         ? Color.alphaBlend(
             colorScheme.primary.withValues(
-              alpha: isDark || activeTheme.isDark ? 0.36 : 0.22,
+              alpha: isDark || activeTheme.isDark ? 0.28 : 0.14,
             ),
             defaultBgColor,
           )
-        : (isSelectedForAction
-            ? Color.alphaBlend(
-                colorScheme.primary.withValues(
-                  alpha: isDark || activeTheme.isDark ? 0.28 : 0.14,
-                ),
-                defaultBgColor,
-              )
-            : defaultBgColor);
+        : defaultBgColor;
 
-    final hasHeader = isPageStart ||
+    final hasHeader =
+        isPageStart ||
         (isJuzStart && ayah.juz != null) ||
         (isHizbStart && ayah.hizb != null);
+
+    final sajdahType = SajdahHelper.getSajdahType(
+      ayah.surahId,
+      ayah.ayahNumber,
+    );
 
     Future<void> handleDoubleTap() async {
       final currentSelected = ref.read(selectedAyahActionProvider);
@@ -133,7 +172,8 @@ class AyahListItem extends ConsumerWidget {
       HapticFeedback.lightImpact();
 
       final audioState = ref.read(quranAudioControllerProvider);
-      final isAudioPlayingNow = audioState.status == AudioStatus.playing &&
+      final isAudioPlayingNow =
+          audioState.status == AudioStatus.playing &&
           audioState.currentSurahId == ayah.surahId &&
           audioState.currentAyahNumber == ayah.ayahNumber;
 
@@ -173,7 +213,7 @@ class AyahListItem extends ConsumerWidget {
       }
 
       // On Mobile: single tap toggles between full-screen distraction-free mode and normal controls
-      ref.read(readerControlsProvider.notifier).toggleFullScreenOrControls();
+      // ref.read(readerControlsProvider.notifier).toggleFullScreenOrControls();
     }
 
     final ayahWidget = RepaintBoundary(
@@ -222,9 +262,7 @@ class AyahListItem extends ConsumerWidget {
                 top: AppDimens.stackSmMd,
                 bottom: AppDimens.stackSmMd,
               ),
-              decoration: BoxDecoration(
-                color: effectiveBgColor,
-              ),
+              decoration: BoxDecoration(color: effectiveBgColor),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -240,7 +278,7 @@ class AyahListItem extends ConsumerWidget {
                           ),
                           child: Row(
                             children: [
-                               // Page Number (Right in RTL)
+                              // Page Number (Right in RTL)
                               Expanded(
                                 child: Align(
                                   alignment: Alignment.centerRight,
@@ -248,7 +286,8 @@ class AyahListItem extends ConsumerWidget {
                                       ? Text(
                                           'صفحه ${ayah.page?.toPersianDigit() ?? ''}',
                                           style: TextStyle(
-                                            fontFamily: AppTypography.fontFamily,
+                                            fontFamily:
+                                                AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
                                             color: activeTheme.headerTextColor,
@@ -267,7 +306,8 @@ class AyahListItem extends ConsumerWidget {
                                       ? Text(
                                           'جزء ${ayah.juz!.toPersianDigit()}',
                                           style: TextStyle(
-                                            fontFamily: AppTypography.fontFamily,
+                                            fontFamily:
+                                                AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
                                             color: activeTheme.headerTextColor,
@@ -286,10 +326,12 @@ class AyahListItem extends ConsumerWidget {
                                       ? Text(
                                           'حزب ${ayah.hizb!.toPersianDigit()}',
                                           style: TextStyle(
-                                            fontFamily: AppTypography.fontFamily,
+                                            fontFamily:
+                                                AppTypography.fontFamily,
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: (isDark || activeTheme.isDark)
+                                            color:
+                                                (isDark || activeTheme.isDark)
                                                 ? const Color(0xFFFF5252)
                                                 : const Color(0xFFD32F2F),
                                           ),
@@ -311,60 +353,64 @@ class AyahListItem extends ConsumerWidget {
                       ],
                     ),
 
-                  if (context.isWideScreen)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (showArabicText)
-                          Expanded(
-                            child: AyahArabicText(
-                              text: ayah.arabicText,
-                              ayahNumber: ayah.ayahNumber,
-                              isActive: isAudioActive,
-                              surahId: ayah.surahId,
-                            ),
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOutCubic,
+                    opacity: focusOpacity,
+                    child: context.isWideScreen
+                        ? Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (showArabicText)
+                                Expanded(
+                                  child: AyahArabicText(
+                                    text: ayah.arabicText,
+                                    ayahNumber: ayah.ayahNumber,
+                                    isActive: showActiveIndicator,
+                                    surahId: ayah.surahId,
+                                  ),
+                                ),
+                              if (showArabicText && showTranslation)
+                                const SizedBox(width: 24),
+                              if (showTranslation)
+                                Expanded(
+                                  child: AyahTranslationText(
+                                    surahId: ayah.surahId,
+                                    ayahNumber: ayah.ayahNumber,
+                                    fallbackText: ayah.translationText ?? '',
+                                    isActive: showActiveIndicator,
+                                    isVisible: showTranslation,
+                                    fontSize: translationFontSize,
+                                    translationId: translationId,
+                                  ),
+                                ),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Main Arabic Ayah Text with Embedded Ayah Marker
+                              if (showArabicText)
+                                AyahArabicText(
+                                  text: ayah.arabicText,
+                                  ayahNumber: ayah.ayahNumber,
+                                  isActive: showActiveIndicator,
+                                  surahId: ayah.surahId,
+                                ),
+                              // Ayah Persian Translation
+                              if (showTranslation)
+                                AyahTranslationText(
+                                  surahId: ayah.surahId,
+                                  ayahNumber: ayah.ayahNumber,
+                                  fallbackText: ayah.translationText ?? '',
+                                  isActive: showActiveIndicator,
+                                  isVisible: showTranslation,
+                                  fontSize: translationFontSize,
+                                  translationId: translationId,
+                                ),
+                            ],
                           ),
-                        if (showArabicText && showTranslation)
-                          const SizedBox(width: 24),
-                        if (showTranslation)
-                          Expanded(
-                            child: AyahTranslationText(
-                              surahId: ayah.surahId,
-                              ayahNumber: ayah.ayahNumber,
-                              fallbackText: ayah.translationText ?? '',
-                              isActive: isAudioActive,
-                              isVisible: showTranslation,
-                              fontSize: translationFontSize,
-                              translationId: translationId,
-                            ),
-                          ),
-                      ],
-                    )
-                  else
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Main Arabic Ayah Text with Embedded Ayah Marker
-                        if (showArabicText)
-                          AyahArabicText(
-                            text: ayah.arabicText,
-                            ayahNumber: ayah.ayahNumber,
-                            isActive: isAudioActive,
-                            surahId: ayah.surahId,
-                          ),
-                        // Ayah Persian Translation
-                        if (showTranslation)
-                          AyahTranslationText(
-                            surahId: ayah.surahId,
-                            ayahNumber: ayah.ayahNumber,
-                            fallbackText: ayah.translationText ?? '',
-                            isActive: isAudioActive,
-                            isVisible: showTranslation,
-                            fontSize: translationFontSize,
-                            translationId: translationId,
-                          ),
-                      ],
-                    ),
+                  ),
                 ],
               ),
             ),
@@ -384,7 +430,8 @@ class AyahListItem extends ConsumerWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: effectiveBgColor, // Matches row background seamlessly
+                        color:
+                            effectiveBgColor, // Matches row background seamlessly
                         boxShadow: [
                           if (isSelectionMode)
                             BoxShadow(
@@ -400,7 +447,9 @@ class AyahListItem extends ConsumerWidget {
                             : CupertinoIcons.circle,
                         color: isSelectedForAction
                             ? colorScheme.primary
-                            : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                            : colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.5,
+                              ),
                         size: 24,
                       ),
                     ),
@@ -408,6 +457,13 @@ class AyahListItem extends ConsumerWidget {
                 ),
               ),
             ),
+            // 3. Outlined Sajdah Badge Overlay (Placed directly ON TOP of the Ayah card)
+            if (sajdahType != SajdahType.none)
+              Positioned(
+                top: hasHeader ? 48 : 10,
+                left: 14,
+                child: SajdahBadge(type: sajdahType),
+              ),
           ],
         ),
       ),

@@ -86,8 +86,8 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
 
     // Check subscription & reciter access
     final hasVip = ref.watch(hasVipAccessProvider);
-    final isParhizgar = displayReciter == null ||
-        AudioVipPolicy.isDefaultReciter(displayReciter.identifier);
+    final isFreeReciter = displayReciter == null ||
+        AudioVipPolicy.isFreeReciter(displayReciter.identifier);
 
     final avatarSize = widget.radius * 2;
 
@@ -106,7 +106,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
     } else {
       final defaultName = 'استاد پرهیزگار';
       final nameStr = reciterName.isEmpty ? defaultName : reciterName;
-      if (hasVip || isParhizgar) {
+      if (hasVip || isFreeReciter) {
         tooltipMessage = 'انتخاب قاری ($nameStr)';
       } else {
         tooltipMessage = 'انتخاب قاری ($nameStr - نیازمند اشتراک)';
@@ -279,7 +279,7 @@ class _ReciterAvatarButtonState extends ConsumerState<ReciterAvatarButton>
                 ),
 
               // 5. VIP Status Badges (Only shown when user has NO VIP, not in play button mode, and not free default)
-              if (!hasVip && !widget.isPlayButton && !isParhizgar && !isTranslationTrack) ...[
+              if (!hasVip && !widget.isPlayButton && !isFreeReciter && !isTranslationTrack) ...[
                 Positioned(
                     top: -3,
                     right: -3,

@@ -146,6 +146,10 @@ class QuranInfoBar extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref, AyahEntity currentAyah, List<SurahEntity> surahs) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(currentReadingAyahProvider.notifier).updateAyah(currentAyah.surahId, currentAyah.ayahNumber);
+    });
+
     final surah = surahs.where((s) => s.number == currentAyah.surahId).firstOrNull;
     final totalAyahsStr = surah != null ? surah.numberOfAyahs.toPersianDigit() : '؟';
 

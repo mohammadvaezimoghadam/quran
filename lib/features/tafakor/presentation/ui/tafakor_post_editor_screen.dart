@@ -80,6 +80,7 @@ class _TafakorPostEditorScreenState
   late final QuillController _quillController;
   late final FocusNode _quillFocusNode;
   late final ScrollController _scrollController;
+  late final ScrollController _quillScrollController;
 
   String? _attachedMediaPath;
   bool _isAttachedVideo = false;
@@ -115,6 +116,7 @@ class _TafakorPostEditorScreenState
     );
     _quillFocusNode = FocusNode();
     _scrollController = ScrollController();
+    _quillScrollController = ScrollController();
 
     _attachedMediaPath = widget.initialMediaPath;
     _isAttachedVideo = widget.isAttachedVideo;
@@ -139,6 +141,7 @@ class _TafakorPostEditorScreenState
     _quillController.dispose();
     _quillFocusNode.dispose();
     _scrollController.dispose();
+    _quillScrollController.dispose();
     super.dispose();
   }
 
@@ -309,7 +312,7 @@ class _TafakorPostEditorScreenState
                                 QuillEditor.basic(
                                   controller: _quillController,
                                   focusNode: _quillFocusNode,
-                                  scrollController: _scrollController,
+                                  scrollController: _quillScrollController,
                                   config: QuillEditorConfig(
                                     placeholder: _isEditing
                                         ? 'متن یادداشت را ویرایش کنید...'

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/utils/quran_ayah_repair_helper.dart';
 import '../../../../core/data/local/sqflite/i_sqflite_service.dart';
 import '../../../../core/data/local/sqflite/sqflite_service_provider.dart';
 import '../../infrastructure/data_sources/remote/home_remote_data_source.dart';
@@ -22,11 +23,19 @@ class DailyAyahItem {
   });
 
   factory DailyAyahItem.fromMap(Map<String, dynamic> map) {
+    final surahNumber = map['surah_number'] as int? ?? 1;
+    final ayahNumber = map['number_in_surah'] as int? ?? 1;
+    final rawArabic = map['text_uthmani'] as String? ?? '';
+
     return DailyAyahItem(
-      surahNumber: map['surah_number'] as int? ?? 1,
+      surahNumber: surahNumber,
       surahName: map['surah_name'] as String? ?? '',
-      ayahNumber: map['number_in_surah'] as int? ?? 1,
-      arabicText: map['text_uthmani'] as String? ?? '',
+      ayahNumber: ayahNumber,
+      arabicText: QuranAyahRepairHelper.getRepairedText(
+        surahNumber,
+        ayahNumber,
+        rawArabic,
+      ),
       translation: map['translation'] as String? ?? '',
     );
   }

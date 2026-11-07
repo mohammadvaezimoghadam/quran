@@ -15,7 +15,7 @@ class ThemeRepositoryImpl implements IThemeRepository {
     if (themeIndex != null && themeIndex < ThemeMode.values.length) {
       return ThemeMode.values[themeIndex];
     }
-    return ThemeMode.system;
+    return ThemeMode.light;
   }
 
   @override

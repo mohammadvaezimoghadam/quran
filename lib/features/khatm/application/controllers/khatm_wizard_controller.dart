@@ -8,6 +8,8 @@ import 'package:quran/features/khatm/domain/entities/khatm_plan.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_session_item.dart';
 import 'package:quran/features/khatm/domain/services/khatm_date_engine.dart';
 import 'package:quran/features/khatm/domain/services/khatm_slicing_engine.dart';
+import '../../../../core/services/analytics/analytics_providers.dart';
+import '../../../../core/services/analytics/i_analytics_service.dart';
 import 'package:quran/features/khatm/infrastructure/datasources/khatm_local_datasource.dart';
 
 /// Immutable state holding the creation wizard form inputs and calculations.
@@ -145,8 +147,9 @@ class KhatmWizardState {
 /// Controller managing state and logic for the 3-step Khatm wizard.
 class KhatmWizardController extends StateNotifier<KhatmWizardState> {
   final IKhatmLocalDataSource _localDataSource;
+  final IAnalyticsService _analyticsService;
 
-  KhatmWizardController(this._localDataSource)
+  KhatmWizardController(this._localDataSource, this._analyticsService)
       : super(KhatmWizardState.initial());
 
   void setTitle(String value) {
@@ -310,6 +313,12 @@ class KhatmWizardController extends StateNotifier<KhatmWizardState> {
       );
 
       await _localDataSource.savePlan(plan);
+      _analyticsService.logKhatmAction(
+        action: 'create_plan',
+        khatmId: plan.id,
+        khatmType: plan.unitType.name,
+        sessionCount: sessionItems.length,
+      );
       state = state.copyWith(isSubmitting: false);
       return plan;
     } catch (e) {
@@ -326,6 +335,7 @@ final khatmWizardControllerProvider =
     StateNotifierProvider.autoDispose<KhatmWizardController, KhatmWizardState>(
   (ref) {
     final localDataSource = ref.read(khatmLocalDataSourceProvider);
-    return KhatmWizardController(localDataSource);
+    final analytics = ref.read(analyticsServiceProvider);
+    return KhatmWizardController(localDataSource, analytics);
   },
 );

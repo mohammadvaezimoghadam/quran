@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../common/utils/quran_ayah_repair_helper.dart';
 import '../../domain/entities/ayah_entity.dart';
 
 part 'ayah_dto.freezed.dart';
@@ -24,11 +25,19 @@ abstract class AyahDto with _$AyahDto {
 
   // Mapping from SQLite raw map
   factory AyahDto.fromSqlite(Map<String, dynamic> map) {
+    final surahNumber = map['surah_number'] as int;
+    final ayahNumber = map['number_in_surah'] as int;
+    final rawArabic = map['text_uthmani'] as String;
+
     return AyahDto(
       id: map['id'] as int,
-      surahId: map['surah_number'] as int,
-      ayahNumber: map['number_in_surah'] as int,
-      arabicText: map['text_uthmani'] as String,
+      surahId: surahNumber,
+      ayahNumber: ayahNumber,
+      arabicText: QuranAyahRepairHelper.getRepairedText(
+        surahNumber,
+        ayahNumber,
+        rawArabic,
+      ),
       translationText: map['translation'] as String?, // Note: May not be in this table
       page: map['page'] as int?,
       juz: map['juz'] as int?,

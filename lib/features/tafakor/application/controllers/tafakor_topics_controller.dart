@@ -62,7 +62,7 @@ final tafakorTopicsControllerProvider =
 );
 
 class TafakorTopicsController extends Notifier<TafakorTopicsState> {
-  late final ITafakorTopicsRepository _repository;
+  late ITafakorTopicsRepository _repository;
 
   @override
   TafakorTopicsState build() {

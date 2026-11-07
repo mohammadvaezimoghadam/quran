@@ -236,7 +236,7 @@ class _HorizontalReciterSelectorState
                 final isLocked = !isVip &&
                     (widget.isTranslationMode
                         ? true
-                        : !AudioVipPolicy.isDefaultReciter(
+                        : !AudioVipPolicy.isFreeReciter(
                             activeVariant.identifier));
                 
 

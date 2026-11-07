@@ -20,6 +20,7 @@ import '../../domain/entities/topic_block.dart';
 import '../widgets/quill_block_field.dart';
 import '../widgets/send_to_topic_dialog.dart';
 import '../widgets/topic_media_picker_sheet.dart';
+import '../../../app_walkthrough/app_walkthrough.dart';
 
 /// Fullscreen Editor for Contemplation Notebook («دفتر تفکر»).
 /// Provides reorderable, live-editable blocks with direct publication to Tafakor channels.
@@ -44,6 +45,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
   late final FocusNode _inputFocusNode;
   late final ScrollController _scrollController;
   late final ScrollController _compactScrollController;
+  late final ScrollController _expandedQuillScrollController;
   bool _isExpanded = false;
 
   String get _currentText {
@@ -60,8 +62,17 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     _inputFocusNode = FocusNode();
     _scrollController = ScrollController();
     _compactScrollController = ScrollController();
+    _expandedQuillScrollController = ScrollController();
     _quillController.addListener(() {
       if (mounted) setState(() {});
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 450), () {
+        if (mounted) {
+          AppWalkthrough.showEditorTourIfNeeded(context: context, ref: ref);
+        }
+      });
     });
   }
 
@@ -71,6 +82,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     _inputFocusNode.dispose();
     _scrollController.dispose();
     _compactScrollController.dispose();
+    _expandedQuillScrollController.dispose();
     super.dispose();
   }
 
@@ -509,7 +521,10 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     return Container(
       key: key,
       margin: const EdgeInsets.only(bottom: 8),
-      child: Column(
+      child: WalkthroughAnchor(
+        id: WalkthroughTargetId.editorAttachedAyah,
+        enabled: index == 0,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -567,6 +582,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -674,6 +690,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
 
           // Editable content sitting cleanly with zero extra padding powered by flutter_quill
           QuillBlockField(
+            key: ValueKey('quill_block_${block.id}'),
             initialText: block.content,
             hintText: hintText,
             style: contentStyle,
@@ -795,9 +812,11 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
         ],
 
         // 2. Text Field at top powered by flutter_quill
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: ConstrainedBox(
+        WalkthroughAnchor(
+          id: WalkthroughTargetId.editorInputField,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 36, maxHeight: 110),
             child: QuillEditor.basic(
               controller: _quillController,
@@ -838,6 +857,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
                 ),
               ),
             ),
+          ),
           ),
         ),
 
@@ -915,7 +935,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
                   QuillEditor.basic(
                     controller: _quillController,
                     focusNode: _inputFocusNode,
-                    scrollController: _scrollController,
+                    scrollController: _expandedQuillScrollController,
                     config: QuillEditorConfig(
                       placeholder:
                           'متن، تأملات و یادداشت‌های خود را با خیال راحت بنویسید...',
@@ -1181,9 +1201,11 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
     ColorScheme colorScheme, {
     VoidCallback? onPressedOverride,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    return WalkthroughAnchor(
+      id: WalkthroughTargetId.editorSendButton,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: canSend ? (onPressedOverride ?? _handleSend) : null,
         child: AnimatedContainer(
@@ -1218,6 +1240,7 @@ class _TafakorEditorScreenState extends ConsumerState<TafakorEditorScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }
