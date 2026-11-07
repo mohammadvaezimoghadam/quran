@@ -18,9 +18,17 @@ abstract class BazaarErrorDialogHelper {
     required WidgetRef ref,
     required String errorMessage,
     required PaymentProduct product,
+    String? title,
     VoidCallback? onSuccess,
   }) async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final dialogTitle = title ??
+        (errorMessage.contains('سرور') ||
+                errorMessage.contains('تایید') ||
+                errorMessage.contains('فعال‌سازی')
+            ? 'خطا در فعال‌سازی اشتراک'
+            : 'عدم اتصال به کافه بازار');
 
     await showDialog(
       context: context,
@@ -50,7 +58,7 @@ abstract class BazaarErrorDialogHelper {
 
               // Title
               Text(
-                'عدم اتصال به کافه بازار',
+                dialogTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,

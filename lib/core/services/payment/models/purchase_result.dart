@@ -34,6 +34,7 @@ class PurchaseResult {
 
   bool get isSuccess => status == PurchaseStatus.success;
   bool get isCancelled => status == PurchaseStatus.userCancelled;
+  bool get isAlreadyOwned => status == PurchaseStatus.alreadyOwned;
 
   factory PurchaseResult.success({
     required String productId,

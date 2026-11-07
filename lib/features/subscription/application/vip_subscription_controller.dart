@@ -452,6 +452,9 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
         throw Exception('توکن خرید از درگاه کافه‌بازار دریافت نشد.');
       }
 
+      // Save token in local storage immediately so it can always be recovered
+      await _storage.setPurchaseToken(purchaseToken);
+
       // 3. Verify purchase token with Tafakor Backend
       _log('🌐 [Purchase Flow] Verifying purchase token with Tafakor Backend: POST /api/subscriptions/verify/...');
       final verifyResponse = await _remoteDataSource.verifyPurchase(
@@ -474,7 +477,6 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       await _storage.setIsVip(true);
       await _storage.setVipExpiryDate(newExpiry);
       await _storage.setActivePlanId(product.id);
-      await _storage.setPurchaseToken(purchaseToken);
 
       // 6. Update state and schedule exact timer
       state = state.copyWith(
@@ -498,7 +500,10 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
 
     } catch (e, stack) {
       _log('❌ [Purchase Exception] Error during purchase or verification: $e', error: e, stackTrace: stack);
-      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      final rawError = e.toString().replaceFirst('Exception: ', '');
+      final errorMsg = rawError.startsWith('خطا')
+          ? rawError
+          : 'خطا در تایید خرید با سرور: $rawError';
       _analyticsService.logVipPurchaseFailed(
         planId: product.id,
         error: errorMsg,

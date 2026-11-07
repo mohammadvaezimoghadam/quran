@@ -115,6 +115,24 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
       if (result.isSuccess) {
         _showSnackBar('اشتراک شما با موفقیت فعال شد!');
         Navigator.of(context).pop();
+      } else if (result.isAlreadyOwned) {
+        _showSnackBar('این اشتراک قبلاً خریداری شده است. در حال همگام‌سازی...');
+        final restored = await controller.restorePurchases();
+        if (mounted) {
+          if (restored) {
+            _showSnackBar('اشتراک شما با موفقیت بازیابی و فعال شد!');
+            Navigator.of(context).pop();
+          } else {
+            await BazaarErrorDialogHelper.show(
+              context: context,
+              ref: ref,
+              title: 'اشتراک قبلاً خریداری شده',
+              errorMessage:
+                  'این اشتراک در حساب بازار شما ثبت است اما با سرور همگام نشد. لطفاً گزینه «بازیابی خریدهای قبلی» را لمس کنید.',
+              product: product,
+            );
+          }
+        }
       } else if (result.isCancelled) {
         _showSnackBar('فرآیند خرید لغو شد.');
       } else if (result.errorMessage != null) {
