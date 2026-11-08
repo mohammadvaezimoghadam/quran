@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/widgets/app_modal_header.dart';
+import '../../../../core/routes/go_router_provider.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../ui/vip_subscription_sheet.dart';
 
 /// Minimal, clean VIP Subscription Required dialog.
 /// Simple short text without icons, directing user to the subscriptions screen.
@@ -31,8 +33,13 @@ class VipRequiredDialog extends StatelessWidget {
     String? customTitle,
     String? customMessage,
   }) async {
+    final navContext =
+        (context.mounted ? context : null) ?? rootNavigatorKey.currentContext;
+    if (navContext == null) return false;
+
     final result = await showDialog<bool>(
-      context: context,
+      context: navContext,
+      useRootNavigator: true,
       barrierDismissible: true,
       builder: (dialogContext) => VipRequiredDialog(
         reciterName: reciterName,
@@ -42,9 +49,19 @@ class VipRequiredDialog extends StatelessWidget {
       ),
     );
 
-    if (result == true && context.mounted) {
-      await context.pushNamed(vipSubscriptionRoute);
-      return true;
+    if (result == true) {
+      final rootCtx = rootNavigatorKey.currentContext;
+      if (rootCtx != null && rootCtx.mounted) {
+        try {
+          await rootCtx.pushNamed(vipSubscriptionRoute);
+          return true;
+        } catch (_) {
+          if (rootCtx.mounted) {
+            await VipSubscriptionSheet.show(rootCtx);
+            return true;
+          }
+        }
+      }
     }
     return false;
   }

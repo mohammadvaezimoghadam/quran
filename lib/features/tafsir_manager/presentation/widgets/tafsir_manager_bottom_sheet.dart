@@ -53,8 +53,14 @@ class _TafsirManagerBottomSheetState extends ConsumerState<TafsirManagerBottomSh
     TafsirEntity tafsir,
   ) async {
     if (!ref.read(hasVipAccessProvider)) {
+      final rootCtx = rootNavigatorKey.currentContext ?? context;
       Navigator.of(context).pop();
-      VipRequiredDialog.show(context: context);
+      VipRequiredDialog.show(
+        context: rootCtx,
+        customTitle: 'نیاز به اشتراک ویژه',
+        customMessage:
+            'برای مطالعه و دریافت تفاسیر معتبر قرآن کریم، نیاز به تهیه اشتراک ویژه دارید.',
+      );
       return;
     }
 

@@ -247,8 +247,14 @@ class TafsirSelectionDialog extends ConsumerWidget {
               onPressed: () async {
                 HapticFeedback.lightImpact();
                 if (!ref.read(hasVipAccessProvider)) {
+                  final rootCtx = rootNavigatorKey.currentContext ?? context;
                   Navigator.of(context).pop();
-                  VipRequiredDialog.show(context: context);
+                  VipRequiredDialog.show(
+                    context: rootCtx,
+                    customTitle: 'نیاز به اشتراک ویژه',
+                    customMessage:
+                        'برای مطالعه و دسترسی به تفاسیر معتبر قرآن کریم، نیاز به تهیه اشتراک ویژه دارید.',
+                  );
                   return;
                 }
                 final nav = Navigator.of(context);
@@ -291,8 +297,14 @@ class TafsirSelectionDialog extends ConsumerWidget {
               onPressed: () {
                 HapticFeedback.lightImpact();
                 if (!ref.read(hasVipAccessProvider)) {
+                  final rootCtx = rootNavigatorKey.currentContext ?? context;
                   Navigator.of(context).pop();
-                  VipRequiredDialog.show(context: context);
+                  VipRequiredDialog.show(
+                    context: rootCtx,
+                    customTitle: 'نیاز به اشتراک ویژه',
+                    customMessage:
+                        'برای دانلود و دسترسی به تفاسیر معتبر قرآن کریم، نیاز به تهیه اشتراک ویژه دارید.',
+                  );
                   return;
                 }
                 // Download starts in the background and will NOT be cancelled on dialog close

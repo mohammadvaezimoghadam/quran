@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../common/extensions/context_extension.dart';
+import '../../../../core/routes/go_router_provider.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/services/payment/models/payment_product.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -19,8 +20,12 @@ class VipSubscriptionSheet extends ConsumerStatefulWidget {
 
   /// Convenient static helper to show this bottom sheet from anywhere in the app.
   static Future<void> show(BuildContext context) {
+    final navContext = (context.mounted ? context : null) ??
+        rootNavigatorKey.currentContext ??
+        context;
     return showModalBottomSheet(
-      context: context,
+      context: navContext,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => const VipSubscriptionSheet(),
