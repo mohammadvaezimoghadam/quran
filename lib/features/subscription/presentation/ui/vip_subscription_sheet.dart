@@ -323,35 +323,7 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
                                     ),
                                   );
                                 }),
-                                const SizedBox(height: 8),
-                                // Restore Purchases button
-                                Center(
-                                  child: TextButton(
-                                    onPressed: state.isLoading
-                                        ? null
-                                        : () async {
-                                            final restored =
-                                                await controller.restorePurchases();
-                                            if (!context.mounted) return;
-                                            if (restored) {
-                                              _showSnackBar(
-                                                  'خریدهای شما با موفقیت بازیابی شد!');
-                                              Navigator.of(context).pop();
-                                            } else {
-                                              _showSnackBar(
-                                                  'خریدی برای بازیابی یافت نشد.');
-                                            }
-                                          },
-                                    child: Text(
-                                      'بازیابی خرید قبلی',
-                                      style: TextStyle(
-                                        fontFamily: AppTypography.fontFamily,
-                                        fontSize: 12.5,
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+
                               ],
                             ),
                 ),
