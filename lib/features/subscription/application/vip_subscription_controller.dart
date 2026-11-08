@@ -242,13 +242,20 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
             subscriptionPlan = SubscriptionPlan.monthly;
           }
 
+          final features = plan['features'];
           String? discountBadge;
           bool isRecommended = false;
-          if (durationDays == 90) {
-            discountBadge = 'تخفیف فصلی';
-          } else if (durationDays == 180) {
-            discountBadge = 'محبوب‌ترین (۳۰٪ تخفیف)';
-            isRecommended = true;
+          if (features is Map) {
+            discountBadge = features['discount_badge']?.toString();
+            isRecommended = features['is_recommended'] == true;
+          }
+          if (discountBadge == null) {
+            if (durationDays == 90) {
+              discountBadge = 'تخفیف فصلی';
+            } else if (durationDays == 180) {
+              discountBadge = 'محبوب‌ترین (۳۰٪ تخفیف)';
+              isRecommended = true;
+            }
           }
 
           return PaymentProduct(
@@ -263,37 +270,15 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
         }).toList();
       }
 
-      // If server returned plans, optionally enrich with Bazaar localized prices
+      // Plans and prices are strictly loaded from Tafakor Server (Django Admin).
+      // We do NOT overwrite prices with Cafe Bazaar test/developer prices.
       if (products.isNotEmpty) {
-        try {
-          final isConnected = await _paymentService.isConnected();
-          if (isConnected) {
-            final skuIds = products.map((p) => p.id).toList();
-            _log('🔍 [Live Products] Checking Cafe Bazaar prices for server SKUs: $skuIds');
-            final bazaarProducts = await _paymentService.getSubscriptionProducts(skuIds);
-            if (bazaarProducts.isNotEmpty) {
-              products = products.map((sp) {
-                final match = bazaarProducts.where((bp) => bp.id == sp.id).firstOrNull;
-                if (match != null && match.formattedPrice != null) {
-                  return sp.copyWith(
-                    formattedPrice: match.formattedPrice,
-                    priceToman: match.priceToman > 0 ? match.priceToman : sp.priceToman,
-                  );
-                }
-                return sp;
-              }).toList();
-            }
-          }
-        } catch (bazaarErr) {
-          _log('ℹ️ [Live Products] Cafe Bazaar query skipped or error: $bazaarErr');
-        }
-
         state = state.copyWith(
           availableProducts: products,
           isPlansLoading: false,
           clearPlansError: true,
         );
-        _log('✅ [Live Products] Successfully fetched and displayed ${products.length} live plans.');
+        _log('✅ [Live Products] Successfully loaded ${products.length} live plans strictly from Tafakor server.');
       } else {
         _log('⚠️ [Live Products] Server returned 0 plans.');
         state = state.copyWith(
