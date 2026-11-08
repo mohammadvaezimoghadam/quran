@@ -34,7 +34,7 @@ abstract class AudioVipHelper {
     final isVip = container.read(hasVipAccessProvider);
     if (isVip) {
       // Opportunistic verification to catch expirations in near real-time
-      container.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
+      container.read(vipSubscriptionControllerProvider.notifier).syncWithTafakorBackend();
     }
 
     // If playbackMode requires translation and user is non-VIP, immediately revert to onlyQuran
@@ -92,7 +92,7 @@ abstract class AudioVipHelper {
     final container = ProviderScope.containerOf(targetContext, listen: false);
     final isVip = container.read(hasVipAccessProvider);
     if (isVip) {
-      container.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
+      container.read(vipSubscriptionControllerProvider.notifier).syncWithTafakorBackend();
     }
     if (!isVip) {
       container

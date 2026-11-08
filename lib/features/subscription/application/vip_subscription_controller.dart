@@ -51,6 +51,9 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       if (current && previous != true) {
         _log('🔑 [Auth Event] User logged into Tafakor! Triggering backend subscription sync...');
         syncWithTafakorBackend();
+      } else if (!current && previous == true) {
+        _log('🚪 [Auth Event] User logged out of Tafakor! Clearing local VIP subscription...');
+        _handleLogout();
       }
     });
 
@@ -128,6 +131,13 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     await _storage.setIsVip(false);
     await _storage.setActivePlanId(null);
     state = state.copyWith(isVip: false, activePlanId: null);
+  }
+
+  Future<void> _handleLogout() async {
+    _log('🔒 [Logout Cleanup] Wiping local VIP subscription storage on user logout.');
+    _exactExpiryTimer?.cancel();
+    await _storage.clear();
+    state = state.copyWith(isVip: false, activePlanId: null, vipExpiryDate: null);
   }
 
   /// Loads subscription status securely from device storage (Offline-First).
