@@ -164,7 +164,10 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
           _log('⏳ [Expiry Calculation] Local subscription is ACTIVE! Remaining: ${days}d ${hours}h ${mins}m (Expires at $vipExpiry)');
         }
       } else if (isVip) {
-        _log('⏳ [Expiry Calculation] Subscription is Lifetime / Open-ended active.');
+        // Subscriptions in Tafakor are time-bound; if expiry is missing, do not assume lifetime.
+        _log('⚠️ [Expiry Calculation] isVip was true but expiryDate is null. Revalidating with server...');
+        isVipActive = false;
+        await _storage.setIsVip(false);
       } else {
         _log('ℹ️ [Expiry Calculation] No active VIP subscription in local storage.');
       }
@@ -353,12 +356,14 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     }
   }
 
-  /// Background sync to verify active subscriptions with Cafe Bazaar.
+  /// Background sync to check active subscriptions with Cafe Bazaar.
+  /// 🔒 SECURITY: This method NEVER activates VIP locally without backend validation.
+  /// Authoritative VIP status is strictly determined by Tafakor backend.
   Future<void> syncWithStore() async {
     if (_isSyncingStore) return;
     _isSyncingStore = true;
     try {
-      _log('🔄 [Bazaar Sync] Querying Cafe Bazaar for live active subscriptions...');
+      _log('🔄 [Bazaar Sync] Checking Cafe Bazaar connection and subscriptions...');
       final isConnected = await _paymentService.isConnected();
       if (!isConnected) {
         _log('ℹ️ [Bazaar Sync] Cafe Bazaar not connected.');
@@ -368,30 +373,11 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
       final purchasedIds = await _paymentService.getPurchasedProductIds();
       _log('📥 [Bazaar Sync Response] Subscribed product IDs from Bazaar: $purchasedIds');
 
-      final now = DateTime.now();
       if (purchasedIds.isNotEmpty) {
-        final activeId = purchasedIds.first;
-        _log('✅ [Bazaar Sync] Active subscription confirmed by Cafe Bazaar: $purchasedIds');
-
-        final matchedProduct = PaymentProduct.allSubscriptions
-            .where((p) => p.id == activeId)
-            .firstOrNull;
-        final planDays = matchedProduct?.durationDays ?? 30;
-
-        DateTime? targetExpiry = state.vipExpiryDate;
-        if (targetExpiry == null || targetExpiry.difference(now).inDays > planDays) {
-          targetExpiry = now.add(Duration(days: planDays));
-          await _storage.setVipExpiryDate(targetExpiry);
-        }
-
-        if (!state.isVip || state.activePlanId != activeId) {
-          await _storage.setIsVip(true);
-          await _storage.setActivePlanId(activeId);
-          state = state.copyWith(
-            isVip: true,
-            activePlanId: activeId,
-            vipExpiryDate: targetExpiry,
-          );
+        _log('ℹ️ [Bazaar Sync] Bazaar reports purchased products: $purchasedIds. Verifying with backend...');
+        // If user is authenticated, ensure backend status is in sync
+        if (ref.read(isTafakorAuthenticatedProvider)) {
+          await syncWithTafakorBackend();
         }
       }
     } catch (e, stack) {
@@ -516,11 +502,20 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
     }
   }
 
-  /// Restores previous active purchases from Bazaar and verifies with backend.
+  /// Restores previous active purchases from Bazaar and verifies with Tafakor backend.
+  /// 🔒 SECURITY: VIP is ONLY activated after backend verifies the purchase token.
   Future<bool> restorePurchases() async {
     _log('🔄 [Restore Flow] User requested to restore previous purchases...');
     _analyticsService.logEvent(name: 'vip_restore_attempted');
     state = state.copyWith(isLoading: true, errorMessage: null);
+
+    // Guard: user must be logged in to Tafakor so subscription can be bound to account
+    final isAuthenticated = ref.read(isTafakorAuthenticatedProvider);
+    if (!isAuthenticated) {
+      const msg = 'برای بازیابی خرید، لطفاً ابتدا وارد حساب کاربری تفکر شوید.';
+      state = state.copyWith(isLoading: false, errorMessage: msg);
+      return false;
+    }
 
     try {
       final results = await _paymentService.restorePurchases();
@@ -530,42 +525,49 @@ class VipSubscriptionController extends Notifier<VipSubscriptionState> {
         _log('   ↳ Product: ${r.productId}, OrderId: ${r.orderId}, Token: ${r.purchaseToken}');
       }
 
-      if (results.isNotEmpty) {
-        final activeProduct = results.first;
+      if (results.isEmpty) {
+        _log('ℹ️ [Restore Result] No active purchases found in Cafe Bazaar to restore.');
+        state = state.copyWith(isLoading: false);
+        return false;
+      }
+
+      bool anyVerified = false;
+      String? lastError;
+
+      for (final activeProduct in results) {
+        final sku = activeProduct.productId;
         final token = activeProduct.purchaseToken;
 
-        final sku = activeProduct.productId;
-        if (sku != null && token != null && token.isNotEmpty && ref.read(isTafakorAuthenticatedProvider)) {
+        if (sku != null && token != null && token.isNotEmpty) {
           try {
-            await _remoteDataSource.verifyPurchase(
+            _log('🌐 [Restore] Verifying restored token with backend: $sku...');
+            final verifyResponse = await _remoteDataSource.verifyPurchase(
               sku: sku,
               purchaseToken: token,
               marketplace: 'cafebazaar',
             );
-            await syncWithTafakorBackend();
+            _log('🎉 [Restore] Backend verified token: $verifyResponse');
+            anyVerified = true;
+            await _storage.setPurchaseToken(token);
+            break; // Successfully verified an active subscription
           } catch (e) {
-            _log('⚠️ [Restore] Backend verification on restore failed ($e), falling back to local restore.');
+            _log('⚠️ [Restore] Backend verification failed for $sku: $e');
+            lastError = e.toString().replaceFirst('Exception: ', '');
           }
         }
-
-        await _storage.setIsVip(true);
-        await _storage.setActivePlanId(activeProduct.productId);
-        if (token != null) {
-          await _storage.setPurchaseToken(token);
-        }
-
-        state = state.copyWith(
-          isVip: true,
-          activePlanId: activeProduct.productId,
-          isLoading: false,
-        );
-        _log('🎉 [Restore Complete] Local storage updated and VIP access restored!');
-        return true;
       }
 
-      _log('ℹ️ [Restore Result] No active purchases found in Cafe Bazaar to restore.');
-      state = state.copyWith(isLoading: false);
-      return false;
+      if (anyVerified) {
+        // Authoritatively refresh state from backend
+        await syncWithTafakorBackend();
+        state = state.copyWith(isLoading: false);
+        _log('✨ [Restore Complete] Subscription verified and synced with backend! isVip=${state.isVip}');
+        return state.isVip;
+      } else {
+        final err = lastError ?? 'اشتراک معتبری در سرور برای بازیابی یافت نشد یا منقضی شده است.';
+        state = state.copyWith(isLoading: false, errorMessage: err);
+        return false;
+      }
     } catch (e, stack) {
       _log('❌ [Restore Exception] Error restoring purchases: $e', error: e, stackTrace: stack);
       state = state.copyWith(

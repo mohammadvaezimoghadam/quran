@@ -45,6 +45,7 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      ref.read(vipSubscriptionControllerProvider.notifier).syncWithTafakorBackend();
       ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
       ref.read(vipSubscriptionControllerProvider.notifier).fetchLiveProducts();
     });

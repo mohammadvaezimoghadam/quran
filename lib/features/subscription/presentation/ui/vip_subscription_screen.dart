@@ -33,6 +33,7 @@ class _VipSubscriptionScreenState extends ConsumerState<VipSubscriptionScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(analyticsServiceProvider).logVipView();
+      ref.read(vipSubscriptionControllerProvider.notifier).syncWithTafakorBackend();
       ref.read(vipSubscriptionControllerProvider.notifier).syncWithStore();
       ref.read(vipSubscriptionControllerProvider.notifier).fetchLiveProducts();
     });
