@@ -36,6 +36,7 @@ class SubscriptionRemoteDataSource {
           'sku': sku,
           'purchase_token': purchaseToken,
           'marketplace': marketplace,
+          'package_name': 'com.qurantafakor.app',
         },
       );
 
