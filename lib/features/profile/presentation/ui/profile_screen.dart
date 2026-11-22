@@ -62,10 +62,7 @@ class ProfileScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: colors.cardBackground,
                     border: Border(
-                      bottom: BorderSide(
-                        color: colors.cardBorder,
-                        width: 0.8,
-                      ),
+                      bottom: BorderSide(color: colors.cardBorder, width: 0.8),
                     ),
                   ),
                   child: Row(
@@ -106,11 +103,15 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       IconButton(
                         tooltip: 'همگام‌سازی وضعیت',
-                        icon: const Icon(CupertinoIcons.arrow_2_circlepath, size: 20),
+                        icon: const Icon(
+                          CupertinoIcons.arrow_2_circlepath,
+                          size: 20,
+                        ),
                         splashRadius: 22,
                         onPressed: () async {
-                          final controller =
-                              ref.read(vipSubscriptionControllerProvider.notifier);
+                          final controller = ref.read(
+                            vipSubscriptionControllerProvider.notifier,
+                          );
                           await controller.syncWithStore();
                           await controller.fetchLiveProducts();
                           if (!context.mounted) return;
@@ -133,153 +134,135 @@ class ProfileScreen extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               children: [
-            // Clean User Header without decorative icons
-            const _UserHeader(),
-            16.vSpace,
+                // Clean User Header without decorative icons
+                const _UserHeader(),
+                16.vSpace,
 
-            // Subscription Section
-            _buildSectionHeader('اشتراک تفکر', isDark),
-            8.vSpace,
-            _buildGroupCard(
-              context: context,
-              children: [
-                _buildInfoRow(
+                // Subscription Section
+                _buildSectionHeader('اشتراک تفکر', isDark),
+                8.vSpace,
+                _buildGroupCard(
                   context: context,
-                  label: 'نوع عضویت',
-                  valueWidget: Text(
-                    isVip ? 'عضویت ویژه تفکر' : 'کاربر عادی',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: isVip
-                          ? primaryColor
-                          : colorScheme.onSurfaceVariant,
+                  children: [
+                    _buildInfoRow(
+                      context: context,
+                      label: 'نوع عضویت',
+                      valueWidget: Text(
+                        isVip ? 'عضویت ویژه تفکر' : 'کاربر عادی',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isVip
+                              ? primaryColor
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (isVip) ...[
+                      _buildDivider(isDark),
+                      _buildInfoRow(
+                        context: context,
+                        label: 'اعتبار اشتراک',
+                        valueWidget: Text(
+                          vipState.vipExpiryDate != null
+                              ? '${vipState.remainingDays.toPersianDigit()} روز باقی‌مانده'
+                                    ' (${JalaliDate.fromDateTime(vipState.vipExpiryDate!).format().toPersianDigit()})'
+                              : 'دائمی و نامحدود',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                    _buildDivider(isDark),
+                    _buildProfileTile(
+                      context: context,
+                      title: isVip ? 'تمدید اشتراک تفکر' : 'خرید اشتراک تفکر',
+                      subtitle: isVip
+                          ? 'مشاهده پلن‌ها و افزایش مدت اعتبار'
+                          : 'دسترسی به تمامی قاریان، تفاسیر و اصوات پس‌زمینه',
+                      onTap: () => context.pushNamed(vipSubscriptionRoute),
+                    ),
+                  ],
                 ),
-                if (isVip) ...[
-                  _buildDivider(isDark),
-                  _buildInfoRow(
-                    context: context,
-                    label: 'اعتبار اشتراک',
-                    valueWidget: Text(
-                      vipState.vipExpiryDate != null
-                          ? '${vipState.remainingDays.toPersianDigit()} روز باقی‌مانده'
-                              ' (${JalaliDate.fromDateTime(vipState.vipExpiryDate!).format().toPersianDigit()})'
-                          : 'دائمی و نامحدود',
+                20.vSpace,
+
+                // Tafakor Platform Integration Section
+                _buildSectionHeader(
+                  'پلتفرم تفکر',
+                  isDark,
+                  trailing: TextButton.icon(
+                    onPressed: () => _showAboutTafakorDialog(context),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 0,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      foregroundColor: colorScheme.primary,
+                    ),
+                    icon: const Icon(CupertinoIcons.info_circle, size: 14),
+                    label: const Text(
+                      'درباره تفکر',
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
                       ),
                     ),
                   ),
-                ],
-                _buildDivider(isDark),
-                _buildProfileTile(
-                  context: context,
-                  title: isVip ? 'تمدید اشتراک تفکر' : 'خرید اشتراک تفکر',
-                  subtitle: isVip
-                      ? 'مشاهده پلن‌ها و افزایش مدت اعتبار'
-                      : 'دسترسی به تمامی قاریان، تفاسیر و اصوات پس‌زمینه',
-                  onTap: () => VipSubscriptionSheet.show(context),
                 ),
+                8.vSpace,
+                const TafakorProfileStatusCard(),
+                20.vSpace,
+
+                // Khatm Plans Section
+                _buildSectionHeader('برنامه و ختم قرآن', isDark),
+                8.vSpace,
+                _buildGroupCard(
+                  context: context,
+                  children: [
+                    _buildProfileTile(
+                      context: context,
+                      title: 'ختم‌های قرآن من',
+                      subtitle: 'مدیریت و پیگیری برنامه‌های شخصی ختم قرآن کریم',
+                      onTap: () => context.pushNamed(khatmListRoute),
+                    ),
+                  ],
+                ),
+                20.vSpace,
+
+                // OTA Update Navigation Item
+                const _OtaUpdateSection(),
+                20.vSpace,
+
+                // App Information Section
+                _buildSectionHeader('اطلاعات برنامه', isDark),
+                8.vSpace,
+                _buildGroupCard(
+                  context: context,
+                  children: [
+                    _buildProfileTile(
+                      context: context,
+                      title: 'درباره قرآن تفکر',
+                      subtitle: 'معرفی و شناسنامه نرم‌افزار',
+                      onTap: () => _showAboutDialog(context),
+                    ),
+                  ],
+                ),
+                24.vSpace,
               ],
             ),
-            20.vSpace,
-
-
-            // Tafakor Platform Integration Section
-            _buildSectionHeader(
-              'پلتفرم تفکر',
-              isDark,
-              trailing: TextButton.icon(
-                onPressed: () => _showAboutTafakorDialog(context),
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  foregroundColor: colorScheme.primary,
-                ),
-                icon: const Icon(CupertinoIcons.info_circle, size: 14),
-                label: const Text(
-                  'درباره تفکر',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            8.vSpace,
-            const TafakorProfileStatusCard(),
-            20.vSpace,
-
-
-
-            // Khatm Plans Section
-            _buildSectionHeader('برنامه و ختم قرآن', isDark),
-            8.vSpace,
-            _buildGroupCard(
-              context: context,
-              children: [
-                _buildProfileTile(
-                  context: context,
-                  title: 'ختم‌های قرآن من',
-                  subtitle: 'مدیریت و پیگیری برنامه‌های شخصی ختم قرآن کریم',
-                  onTap: () => context.pushNamed(khatmListRoute),
-                ),
-              ],
-            ),
-            20.vSpace,
-
-            // Settings Navigation Item
-            _buildSectionHeader('تنظیمات', isDark),
-            8.vSpace,
-            _buildGroupCard(
-              context: context,
-              children: [
-                _buildProfileTile(
-                  context: context,
-                  title: 'تنظیمات برنامه',
-                  subtitle: 'قلم، تم، مدیریت ترجمه‌ها و برچسب‌ها',
-                  onTap: () => context.pushNamed(settingsRoute),
-                ),
-              ],
-            ),
-            20.vSpace,
-
-            // OTA Update Navigation Item
-            const _OtaUpdateSection(),
-            20.vSpace,
-
-            // App Information Section
-            _buildSectionHeader('اطلاعات برنامه', isDark),
-            8.vSpace,
-            _buildGroupCard(
-              context: context,
-              children: [
-                _buildProfileTile(
-                  context: context,
-                  title: 'درباره قرآن تفکر',
-                  subtitle: 'معرفی و شناسنامه نرم‌افزار',
-                  onTap: () => _showAboutDialog(context),
-                ),
-              ],
-            ),
-            24.vSpace,
-          ],
+          ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
-
-
 
   void _showAboutDialog(BuildContext context) {
     final colors = context.colors;
@@ -289,9 +272,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) => Dialog(
         backgroundColor: colors.dialogSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: Padding(
@@ -368,9 +349,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (dialogCtx) => Dialog(
         backgroundColor: colors.dialogSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: Padding(
@@ -386,12 +365,19 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4.5,
+                    ),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: isDark ? 0.16 : 0.08),
+                      color: colorScheme.primary.withValues(
+                        alpha: isDark ? 0.16 : 0.08,
+                      ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: colorScheme.primary.withValues(alpha: isDark ? 0.30 : 0.20),
+                        color: colorScheme.primary.withValues(
+                          alpha: isDark ? 0.30 : 0.20,
+                        ),
                         width: 0.8,
                       ),
                     ),
@@ -429,7 +415,10 @@ class ProfileScreen extends ConsumerWidget {
                             mode: LaunchMode.externalApplication,
                           );
                           if (!launched) {
-                            await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.inAppBrowserView,
+                            );
                           }
                         } catch (_) {
                           if (context.mounted) {
@@ -442,7 +431,10 @@ class ProfileScreen extends ConsumerWidget {
                       },
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: colorScheme.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
@@ -553,11 +545,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(
-    String title,
-    bool isDark, {
-    Widget? trailing,
-  }) {
+  Widget _buildSectionHeader(String title, bool isDark, {Widget? trailing}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6.0),
       child: Row(
@@ -589,16 +577,10 @@ class ProfileScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: colors.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.cardBorder,
-          width: 0.8,
-        ),
+        border: Border.all(color: colors.cardBorder, width: 0.8),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: children,
-      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: children),
     );
   }
 
@@ -643,18 +625,16 @@ class ProfileScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: AppTypography.fontFamily,
                         fontSize: 11.5,
-                        color: colorScheme.onSurfaceVariant
-                            .withValues(alpha: 0.75),
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.75,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
               8.hSpace,
-              if (trailing != null) ...[
-                trailing,
-                6.hSpace,
-              ],
+              if (trailing != null) ...[trailing, 6.hSpace],
               Icon(
                 CupertinoIcons.chevron_left,
                 size: 13,
@@ -761,24 +741,31 @@ class _OtaUpdateSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasUpdate =
-        ref.watch(otaUpdateControllerProvider.select((s) => s.hasUpdate));
+    final hasUpdate = ref.watch(
+      otaUpdateControllerProvider.select((s) => s.hasUpdate),
+    );
     final isReadyToRestart = ref.watch(
-        otaUpdateControllerProvider.select((s) => s.isReadyToRestart));
-    final patchVersion =
-        ref.watch(otaUpdateControllerProvider.select((s) => s.patch?.version));
+      otaUpdateControllerProvider.select((s) => s.isReadyToRestart),
+    );
+    final patchVersion = ref.watch(
+      otaUpdateControllerProvider.select((s) => s.patch?.version),
+    );
     final isStoreRequired = ref.watch(
-        otaUpdateControllerProvider.select((s) => s.isStoreUpdateRequired));
+      otaUpdateControllerProvider.select((s) => s.isStoreUpdateRequired),
+    );
     final storeLatestVersion = ref.watch(
-        otaUpdateControllerProvider.select((s) => s.storeLatestVersion));
+      otaUpdateControllerProvider.select((s) => s.storeLatestVersion),
+    );
     final isNativeApk = ref.watch(
-        otaUpdateControllerProvider.select((s) => s.patch?.isNativeApk == true));
+      otaUpdateControllerProvider.select((s) => s.patch?.isNativeApk == true),
+    );
     final currentPatch = ref.watch(
-        otaUpdateControllerProvider.select((s) => s.currentPatchVersion));
-    final patch =
-        ref.watch(otaUpdateControllerProvider.select((s) => s.patch));
+      otaUpdateControllerProvider.select((s) => s.currentPatchVersion),
+    );
+    final patch = ref.watch(otaUpdateControllerProvider.select((s) => s.patch));
     final lastNotes = ref.watch(
-        otaUpdateControllerProvider.select((s) => s.lastReleaseNotes));
+      otaUpdateControllerProvider.select((s) => s.lastReleaseNotes),
+    );
     final baseVersion = ref.watch(appVersionNameProvider);
 
     final colors = context.colors;
@@ -823,10 +810,7 @@ class _OtaUpdateSection extends ConsumerWidget {
           decoration: BoxDecoration(
             color: colors.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: colors.cardBorder,
-              width: 0.8,
-            ),
+            border: Border.all(color: colors.cardBorder, width: 0.8),
           ),
           clipBehavior: Clip.antiAlias,
           child: Material(
@@ -835,14 +819,16 @@ class _OtaUpdateSection extends ConsumerWidget {
               onTap: () async {
                 HapticFeedback.lightImpact();
                 debugPrint(
-                    '👆 [Profile/OTA] User tapped "بررسی به‌روزرسانی نرم‌افزار"');
+                  '👆 [Profile/OTA] User tapped "بررسی به‌روزرسانی نرم‌افزار"',
+                );
                 if (isReadyToRestart) {
                   _showApplyConfirmDialog(context, patchVersion ?? '');
                   return;
                 }
                 if (hasUpdate || isStoreRequired) {
                   debugPrint(
-                      '📱 [Profile/OTA] Showing OtaUpdateDialog (hasUpdate=$hasUpdate, isStoreRequired=$isStoreRequired)');
+                    '📱 [Profile/OTA] Showing OtaUpdateDialog (hasUpdate=$hasUpdate, isStoreRequired=$isStoreRequired)',
+                  );
                   OtaUpdateDialog.show(context);
                   return;
                 }
@@ -851,12 +837,15 @@ class _OtaUpdateSection extends ConsumerWidget {
                     .read(otaUpdateControllerProvider.notifier)
                     .checkForUpdate(manual: true);
                 debugPrint(
-                    '🔍 [Profile/OTA] Manual check finished. foundUpdate=$found');
+                  '🔍 [Profile/OTA] Manual check finished. foundUpdate=$found',
+                );
                 if (!context.mounted) return;
                 if (found) {
                   OtaUpdateDialog.show(context);
                 } else {
-                  final err = ref.read(otaUpdateControllerProvider).errorMessage;
+                  final err = ref
+                      .read(otaUpdateControllerProvider)
+                      .errorMessage;
                   if (err != null && err.isNotEmpty) {
                     AppSnackBar.showError(context, err);
                   } else {
@@ -868,8 +857,10 @@ class _OtaUpdateSection extends ConsumerWidget {
                 }
               },
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 13,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -894,8 +885,9 @@ class _OtaUpdateSection extends ConsumerWidget {
                               fontSize: 11.5,
                               color: isReadyToRestart
                                   ? Colors.green
-                                  : colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.75),
+                                  : colorScheme.onSurfaceVariant.withValues(
+                                      alpha: 0.75,
+                                    ),
                               fontWeight: isReadyToRestart
                                   ? FontWeight.w600
                                   : FontWeight.normal,
@@ -908,23 +900,25 @@ class _OtaUpdateSection extends ConsumerWidget {
                     if (isReadyToRestart || hasUpdate || isStoreRequired) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 3),
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: isReadyToRestart
                               ? Colors.green
                               : (isStoreRequired
-                                  ? Colors.amber.shade800
-                                  : (isNativeApk
-                                      ? colorScheme.primary
-                                      : Colors.redAccent)),
+                                    ? Colors.amber.shade800
+                                    : (isNativeApk
+                                          ? colorScheme.primary
+                                          : Colors.redAccent)),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           isReadyToRestart
                               ? 'آماده اعمال'
                               : (isStoreRequired
-                                  ? 'کافه‌بازار'
-                                  : (isNativeApk ? 'فایل APK' : 'نسخه جدید')),
+                                    ? 'کافه‌بازار'
+                                    : (isNativeApk ? 'فایل APK' : 'نسخه جدید')),
                           style: const TextStyle(
                             fontFamily: AppTypography.fontFamily,
                             fontSize: 10,
@@ -949,7 +943,9 @@ class _OtaUpdateSection extends ConsumerWidget {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: colorScheme.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
@@ -1071,4 +1067,3 @@ class _OtaUpdateSection extends ConsumerWidget {
     );
   }
 }
-

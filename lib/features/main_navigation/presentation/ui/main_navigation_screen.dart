@@ -7,6 +7,7 @@ import '../../../../common/widgets/app_snackbar.dart';
 import '../../../mini_audio_player/presentation/widgets/mini_audio_player_bar.dart';
 import '../../../quran_home/presentation/ui/quran_home_screen.dart';
 import '../../../profile/presentation/ui/profile_screen.dart';
+import '../../../quran_games/presentation/screens/quran_games_hub_screen.dart';
 import '../../../search/presentation/ui/search_screen.dart';
 import '../../../surah_list/presentation/ui/surah_list_screen.dart';
 import '../../../ota_update/application/controllers/ota_update_controller.dart';
@@ -99,6 +100,15 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
                   .handleBackPress();
             },
           );
+        case 4:
+          return QuranGamesHubScreen(
+            showBackButton: true,
+            onBackPressed: () {
+              ref
+                  .read(tabNavigationControllerProvider.notifier)
+                  .handleBackPress();
+            },
+          );
         default:
           return const SizedBox.shrink();
       }
@@ -172,6 +182,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         _buildTab(1, activeIndex == 1),
         _buildTab(2, activeIndex == 2),
         _buildTab(3, activeIndex == 3),
+        _buildTab(4, activeIndex == 4),
       ],
     );
 

@@ -187,5 +187,64 @@ void main() {
       state = container.read(ayahTeaserControllerProvider);
       expect(state.isVisible, isFalse);
     });
+
+    test('Initial state has isEnabled = true by default', () {
+      final state = container.read(ayahTeaserControllerProvider);
+      expect(state.isEnabled, isTrue);
+    });
+
+    test('Disabling teaser hides visible card immediately and cancels timers', () async {
+      final controller = container.read(ayahTeaserControllerProvider.notifier);
+
+      await controller.onReadingPositionChanged(49, 2);
+      await Future.delayed(const Duration(milliseconds: 1100));
+
+      var state = container.read(ayahTeaserControllerProvider);
+      expect(state.isVisible, isTrue);
+
+      // User mutes / disables teasers
+      await controller.toggleEnabled(false);
+      state = container.read(ayahTeaserControllerProvider);
+      expect(state.isEnabled, isFalse);
+      expect(state.isVisible, isFalse);
+      expect(state.activeTeaser, isNull);
+
+      // Fast forward and ensure it stays hidden
+      await Future.delayed(const Duration(milliseconds: 1200));
+      state = container.read(ayahTeaserControllerProvider);
+      expect(state.isVisible, isFalse);
+    });
+
+    test('When disabled, advancing across Ayahs does not show teasers', () async {
+      final controller = container.read(ayahTeaserControllerProvider.notifier);
+
+      await controller.toggleEnabled(false);
+
+      await controller.onReadingPositionChanged(49, 2);
+      await Future.delayed(const Duration(milliseconds: 1200));
+
+      final state = container.read(ayahTeaserControllerProvider);
+      expect(state.isEnabled, isFalse);
+      expect(state.isVisible, isFalse);
+      expect(state.activeTeaser, isNull);
+    });
+
+    test('Re-enabling teaser re-evaluates and shows teaser for current Ayah', () async {
+      final controller = container.read(ayahTeaserControllerProvider.notifier);
+
+      await controller.toggleEnabled(false);
+      await controller.onReadingPositionChanged(49, 2);
+      await Future.delayed(const Duration(milliseconds: 1200));
+
+      var state = container.read(ayahTeaserControllerProvider);
+      expect(state.isVisible, isFalse);
+
+      // Re-enable
+      await controller.toggleEnabled(true);
+      state = container.read(ayahTeaserControllerProvider);
+      expect(state.isEnabled, isTrue);
+      expect(state.isVisible, isTrue);
+      expect(state.activeTeaser?.ayah, 2);
+    });
   });
 }

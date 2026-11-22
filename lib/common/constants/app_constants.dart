@@ -2,7 +2,8 @@ abstract class AppConstants {
   // Base URLs
   static const String alQuranCloudBaseUrl = 'https://api.alquran.cloud/v1';
   static const String ummahApiBaseUrl = 'https://ummahapi.com/api';
-  static const String everyAyahAudioBaseUrl = 'https://www.everyayah.com/data';
+  static const String everyAyahAudioBaseUrl =
+      'https://quran-tafakor-audio.s3.ir-central1.arvanstorage.ir';
   // Production (سرور اصلی تفکر):
   static const String tafakorBaseUrl = 'https://tafakormag.ir/api/';
   // Staging / Dev Server (سرور تست توسعه روی پورت ۸۰۸۶):

@@ -53,11 +53,11 @@ class VipRequiredDialog extends StatelessWidget {
       final rootCtx = rootNavigatorKey.currentContext;
       if (rootCtx != null && rootCtx.mounted) {
         try {
-          await rootCtx.pushNamed(vipSubscriptionRoute);
+          await VipSubscriptionSheet.show(rootCtx);
           return true;
         } catch (_) {
           if (rootCtx.mounted) {
-            await VipSubscriptionSheet.show(rootCtx);
+            await rootCtx.pushNamed(vipSubscriptionRoute);
             return true;
           }
         }
@@ -97,14 +97,16 @@ class VipRequiredDialog extends StatelessWidget {
         backgroundColor: colorScheme.surface,
         elevation: 8,
         child: Padding(
-          padding: const EdgeInsets.only(top: 12, bottom: 18, left: 16, right: 16),
+          padding: const EdgeInsets.only(
+            top: 12,
+            bottom: 18,
+            left: 16,
+            right: 16,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AppModalHeader(
-                title: titleText,
-                bottomSpacing: 8,
-              ),
+              AppModalHeader(title: titleText, bottomSpacing: 8),
 
               // Body Message (Short & Concise)
               Text(

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/data/remote/network_service.dart';
@@ -25,31 +27,39 @@ class TranslationRemoteDataSource implements ITranslationRemoteDataSource {
       onReceiveProgress: onReceiveProgress,
       cancelToken: cancelToken,
     );
-    final data = response.data;
-    
-    Map<String, String> parsedAyahs = {};
-    
-    // Parse AlQuran Cloud JSON format
-    if (sourceUrl.contains('api.alquran.cloud')) {
-      final surahs = data['data']['surahs'];
-      for (var surah in surahs) {
+    final dynamic rawData = response.data;
+    final dynamic data = rawData is String ? jsonDecode(rawData) : rawData;
+
+    final Map<String, String> parsedAyahs = {};
+
+    if (data is! Map) {
+      throw FormatException(
+        'Unexpected translation response payload for $sourceUrl',
+      );
+    }
+
+    // Parse AlQuran Cloud JSON structure (supports both origin and S3 mirror URLs)
+    final nestedData = data['data'];
+    if (nestedData is Map && nestedData['surahs'] is List) {
+      for (final surah in nestedData['surahs'] as List) {
         final surahNumber = surah['number'];
-        for (var ayah in surah['ayahs']) {
+        for (final ayah in surah['ayahs'] as List) {
           final ayahNumber = ayah['numberInSurah'];
           parsedAyahs['${surahNumber}_$ayahNumber'] = ayah['text'].toString();
         }
       }
-    } 
-    // Parse Fawaz Ahmed (jsdelivr) JSON format
-    else if (sourceUrl.contains('jsdelivr')) {
-      final quranList = data['quran'] as List;
-      for (var item in quranList) {
+    }
+    // Parse Fawaz Ahmed JSON structure (supports both origin and S3 mirror URLs)
+    else if (data['quran'] is List) {
+      for (final item in data['quran'] as List) {
         final surahNumber = item['chapter'];
         final ayahNumber = item['verse'];
         parsedAyahs['${surahNumber}_$ayahNumber'] = item['text'].toString();
       }
+    } else {
+      throw FormatException('Unsupported translation schema for $sourceUrl');
     }
-    
+
     return parsedAyahs;
   }
 }

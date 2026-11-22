@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../features/quran_reader/application/controllers/quran_reader_controller.dart';
 import '../../../../features/tafakor/presentation/widgets/ayah_notes_bottom_sheet.dart';
+import '../../application/controllers/ayah_teaser_controller.dart';
 import '../../domain/entities/ayah_teaser_item.dart';
 
 /// Floating teaser card (speech bubble tooltip) that notifies users about latest community notes on an Ayah.
@@ -14,6 +15,7 @@ class AyahTeaserCard extends ConsumerWidget {
   final int surahId;
   final String? surahName;
   final VoidCallback? onDismiss;
+  final VoidCallback? onDisable;
 
   static const double beakHeight = 6.5;
   static const double beakWidth = 10.0;
@@ -26,6 +28,7 @@ class AyahTeaserCard extends ConsumerWidget {
     required this.surahId,
     this.surahName,
     this.onDismiss,
+    this.onDisable,
   });
 
   @override
@@ -93,7 +96,7 @@ class AyahTeaserCard extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Row 1: Author Avatar + Name + Dismiss Button
+                  // Row 1: Author Avatar + Name + Mute/Disable + Dismiss Button
                   Row(
                     children: [
                       _buildAvatar(item.author.avatar, isDark),
@@ -111,6 +114,29 @@ class AyahTeaserCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      // Mute / Disable notification button
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          if (onDisable != null) {
+                            onDisable!();
+                          } else {
+                            ref
+                                .read(ayahTeaserControllerProvider.notifier)
+                                .toggleEnabled(false);
+                          }
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Icon(
+                            CupertinoIcons.bell_slash,
+                            size: 12.5,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
                       if (onDismiss != null)
                         GestureDetector(
                           onTap: onDismiss,

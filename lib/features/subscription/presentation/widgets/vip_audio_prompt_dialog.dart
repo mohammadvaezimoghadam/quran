@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:go_router/go_router.dart';
-
 import '../../../../common/widgets/app_modal_header.dart';
-import '../../../../core/routes/route_name.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../ui/vip_subscription_sheet.dart';
 
 /// Clean, minimal VIP prompt dialog when user requests a VIP reciter on a non-demo Surah.
 class VipAudioPromptDialog extends StatelessWidget {
@@ -48,15 +46,17 @@ class VipAudioPromptDialog extends StatelessWidget {
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
         child: Padding(
-          padding: const EdgeInsets.only(top: 12, bottom: 16, left: 16, right: 16),
+          padding: const EdgeInsets.only(
+            top: 12,
+            bottom: 16,
+            left: 16,
+            right: 16,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppModalHeader(
-                title: 'نیاز به اشتراک',
-                bottomSpacing: 8,
-              ),
+              const AppModalHeader(title: 'نیاز به اشتراک', bottomSpacing: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
@@ -89,13 +89,16 @@ class VipAudioPromptDialog extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      context.pushNamed(vipSubscriptionRoute);
+                      VipSubscriptionSheet.show(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),

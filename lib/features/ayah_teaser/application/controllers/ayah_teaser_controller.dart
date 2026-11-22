@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/data/local/preferences/preferences_keys.dart';
+import '../../../../core/data/local/preferences/preferences_service_provider.dart';
 import '../../../../features/quran_reader/application/controllers/quran_reader_controller.dart';
 import '../../domain/entities/ayah_teaser_item.dart';
 import '../../domain/entities/surah_teasers_result.dart';
@@ -15,6 +17,7 @@ class AyahTeaserState {
   final AyahTeaserItem? activeTeaser;
   final bool isVisible;
   final bool isLoading;
+  final bool isEnabled;
   final Set<int> dismissedAyahs;
 
   const AyahTeaserState({
@@ -24,6 +27,7 @@ class AyahTeaserState {
     this.activeTeaser,
     this.isVisible = false,
     this.isLoading = false,
+    this.isEnabled = true,
     this.dismissedAyahs = const {},
   });
 
@@ -32,17 +36,20 @@ class AyahTeaserState {
     int? activeAyahNumber,
     SurahTeasersResult? surahTeasers,
     AyahTeaserItem? activeTeaser,
+    bool clearActiveTeaser = false,
     bool? isVisible,
     bool? isLoading,
+    bool? isEnabled,
     Set<int>? dismissedAyahs,
   }) {
     return AyahTeaserState(
       currentSurahId: currentSurahId ?? this.currentSurahId,
       activeAyahNumber: activeAyahNumber ?? this.activeAyahNumber,
       surahTeasers: surahTeasers ?? this.surahTeasers,
-      activeTeaser: activeTeaser ?? this.activeTeaser,
+      activeTeaser: clearActiveTeaser ? null : (activeTeaser ?? this.activeTeaser),
       isVisible: isVisible ?? this.isVisible,
       isLoading: isLoading ?? this.isLoading,
+      isEnabled: isEnabled ?? this.isEnabled,
       dismissedAyahs: dismissedAyahs ?? this.dismissedAyahs,
     );
   }
@@ -56,6 +63,14 @@ class AyahTeaserController extends Notifier<AyahTeaserState> {
 
   @override
   AyahTeaserState build() {
+    bool isEnabled = true;
+    try {
+      final prefs = ref.watch(preferencesServiceProvider);
+      isEnabled = prefs.getBool(PreferencesKeys.ayahTeaserEnabled) ?? true;
+    } catch (_) {
+      isEnabled = true;
+    }
+
     // Listen to changes in reading position from the reader's top info bar
     ref.listen<ReadingAyahInfo?>(currentReadingAyahProvider, (prev, next) {
       if (next != null) {
@@ -63,7 +78,7 @@ class AyahTeaserController extends Notifier<AyahTeaserState> {
       } else {
         _debounceTimer?.cancel();
         _autoDismissTimer?.cancel();
-        state = state.copyWith(isVisible: false, activeTeaser: null);
+        state = state.copyWith(isVisible: false, clearActiveTeaser: true);
       }
     });
 
@@ -74,18 +89,65 @@ class AyahTeaserController extends Notifier<AyahTeaserState> {
 
     // Check if initial reading position is already set when controller initializes
     final initialPos = ref.read(currentReadingAyahProvider);
-    if (initialPos != null) {
+    if (initialPos != null && isEnabled) {
       Future.microtask(() {
         onReadingPositionChanged(initialPos.surahId, initialPos.ayahNumber);
       });
     }
 
-    return const AyahTeaserState();
+    return AyahTeaserState(isEnabled: isEnabled);
+  }
+
+  /// Toggle whether Ayah teaser notifications are enabled or muted.
+  /// Persists the setting in local preferences.
+  Future<void> toggleEnabled([bool? enable]) async {
+    final target = enable ?? !state.isEnabled;
+    if (state.isEnabled == target) return;
+
+    try {
+      final prefs = ref.read(preferencesServiceProvider);
+      await prefs.setBool(PreferencesKeys.ayahTeaserEnabled, target);
+    } catch (_) {}
+
+    if (!target) {
+      _debounceTimer?.cancel();
+      _autoDismissTimer?.cancel();
+      state = state.copyWith(
+        isEnabled: false,
+        isVisible: false,
+        clearActiveTeaser: true,
+      );
+    } else {
+      state = state.copyWith(isEnabled: true);
+      // Immediately evaluate for current position if available
+      final curAyah = state.activeAyahNumber ?? ref.read(currentReadingAyahProvider)?.ayahNumber;
+      final curSurah = state.currentSurahId ?? ref.read(currentReadingAyahProvider)?.surahId;
+      if (curSurah != null && curAyah != null) {
+        if (state.surahTeasers == null) {
+          await _loadSurahTeasers(curSurah);
+        }
+        _debounceTimer?.cancel();
+        _autoDismissTimer?.cancel();
+        _evaluateAyahTeaser(curSurah, curAyah);
+      }
+    }
   }
 
   /// Called whenever user changes Surah or scrolls/listens to a specific Ayah.
   Future<void> onReadingPositionChanged(int surahId, int ayahNumber) async {
     debugPrint('[AyahTeaser] onReadingPositionChanged: surah $surahId, ayah $ayahNumber');
+
+    if (!state.isEnabled) {
+      _debounceTimer?.cancel();
+      _autoDismissTimer?.cancel();
+      state = state.copyWith(
+        currentSurahId: surahId,
+        activeAyahNumber: ayahNumber,
+        isVisible: false,
+        clearActiveTeaser: true,
+      );
+      return;
+    }
 
     final ayahChanged = state.activeAyahNumber != ayahNumber || state.currentSurahId != surahId;
 
@@ -103,7 +165,7 @@ class AyahTeaserController extends Notifier<AyahTeaserState> {
         currentSurahId: surahId,
         activeAyahNumber: ayahNumber,
         surahTeasers: state.currentSurahId == surahId ? state.surahTeasers : null,
-        activeTeaser: null,
+        clearActiveTeaser: true,
         isVisible: false,
         dismissedAyahs: state.currentSurahId == surahId ? state.dismissedAyahs : {},
       );
@@ -140,6 +202,16 @@ class AyahTeaserController extends Notifier<AyahTeaserState> {
     result.when(
       (teasers) {
         debugPrint('[AyahTeaser] Loaded ${teasers.items.length} teasers for Surah $surahId');
+        if (!state.isEnabled) {
+          state = state.copyWith(
+            currentSurahId: surahId,
+            surahTeasers: teasers,
+            isLoading: false,
+            isVisible: false,
+            clearActiveTeaser: true,
+          );
+          return;
+        }
         state = state.copyWith(
           currentSurahId: surahId,
           surahTeasers: teasers,
@@ -158,6 +230,15 @@ class AyahTeaserController extends Notifier<AyahTeaserState> {
   }
 
   void _evaluateAyahTeaser(int surahId, int ayahNumber) {
+    if (!state.isEnabled) {
+      if (state.isVisible || state.activeTeaser != null) {
+        state = state.copyWith(
+          isVisible: false,
+          clearActiveTeaser: true,
+        );
+      }
+      return;
+    }
     if (state.currentSurahId != null && state.currentSurahId != surahId) {
       return;
     }
@@ -196,7 +277,7 @@ class AyahTeaserController extends Notifier<AyahTeaserState> {
     state = state.copyWith(
       currentSurahId: surahId,
       activeAyahNumber: ayahNumber,
-      activeTeaser: null,
+      clearActiveTeaser: true,
       isVisible: false,
     );
   }
@@ -221,15 +302,17 @@ class AyahTeaserController extends Notifier<AyahTeaserState> {
     _debounceTimer = null;
     _autoDismissTimer?.cancel();
     _autoDismissTimer = null;
-    if (state != const AyahTeaserState()) {
+    final currentEnabled = state.isEnabled;
+    if (state.isVisible || state.activeTeaser != null || state.currentSurahId != null) {
       Future.microtask(() {
-        state = const AyahTeaserState();
+        state = AyahTeaserState(isEnabled: currentEnabled);
       });
     }
   }
 
   /// Explicitly pre-load teasers for a Surah (defaults to fresh fetch when opening a Surah)
   Future<void> prefetchSurah(int surahId, {bool forceRefresh = true}) async {
+    if (!state.isEnabled) return;
     debugPrint('[AyahTeaser] prefetchSurah $surahId called (forceRefresh: $forceRefresh)');
     if (forceRefresh || state.currentSurahId != surahId || state.surahTeasers == null) {
       await _loadSurahTeasers(surahId, forceRefresh: forceRefresh);

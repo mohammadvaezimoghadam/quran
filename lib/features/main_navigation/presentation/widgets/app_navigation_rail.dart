@@ -84,6 +84,17 @@ class AppNavigationRail extends ConsumerWidget {
                   const SizedBox(height: 4),
                   _buildNavItem(
                     context: context,
+                    index: 4,
+                    label: 'بازی‌ها',
+                    activeIcon: CupertinoIcons.gamecontroller_fill,
+                    inactiveIcon: CupertinoIcons.gamecontroller,
+                    primaryColor: primaryColor,
+                    inactiveColor: inactiveColor,
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 4),
+                  _buildNavItem(
+                    context: context,
                     index: 2,
                     label: 'جستجو',
                     activeIcon: CupertinoIcons.search,

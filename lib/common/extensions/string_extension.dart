@@ -5,7 +5,10 @@ extension StringSearchNormalizeExtension on String {
     final regex = RegExp(r'[\(\[\{\（\［\｛].*?[\)\]\}\）\］\｝]');
     String cleanText = replaceAll(regex, '');
     // Clean up orphan spaces before punctuation (e.g. " ." -> ".")
-    cleanText = cleanText.replaceAllMapped(RegExp(r'\s+([.,;:؛،!؟])'), (match) => match[1]!);
+    cleanText = cleanText.replaceAllMapped(
+      RegExp(r'\s+([.,;:؛،!؟])'),
+      (match) => match[1]!,
+    );
     return cleanText.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
@@ -48,8 +51,16 @@ extension StringSearchNormalizeExtension on String {
     const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     // Persian digits ۰-۹ represented as Unicode escapes to ensure safe encoding across all environments
     const persian = [
-      '\u06F0', '\u06F1', '\u06F2', '\u06F3', '\u06F4',
-      '\u06F5', '\u06F6', '\u06F7', '\u06F8', '\u06F9',
+      '\u06F0',
+      '\u06F1',
+      '\u06F2',
+      '\u06F3',
+      '\u06F4',
+      '\u06F5',
+      '\u06F6',
+      '\u06F7',
+      '\u06F8',
+      '\u06F9',
     ];
 
     String text = this;
@@ -63,12 +74,28 @@ extension StringSearchNormalizeExtension on String {
   String toEnglishDigit() {
     // Arabic digits ٠-٩ and Persian digits ۰-۹
     const arabic = [
-      '\u0660', '\u0661', '\u0662', '\u0663', '\u0664',
-      '\u0665', '\u0666', '\u0667', '\u0668', '\u0669',
+      '\u0660',
+      '\u0661',
+      '\u0662',
+      '\u0663',
+      '\u0664',
+      '\u0665',
+      '\u0666',
+      '\u0667',
+      '\u0668',
+      '\u0669',
     ];
     const persian = [
-      '\u06F0', '\u06F1', '\u06F2', '\u06F3', '\u06F4',
-      '\u06F5', '\u06F6', '\u06F7', '\u06F8', '\u06F9',
+      '\u06F0',
+      '\u06F1',
+      '\u06F2',
+      '\u06F3',
+      '\u06F4',
+      '\u06F5',
+      '\u06F6',
+      '\u06F7',
+      '\u06F8',
+      '\u06F9',
     ];
 
     String text = this;
@@ -77,5 +104,24 @@ extension StringSearchNormalizeExtension on String {
       text = text.replaceAll(persian[i], i.toString());
     }
     return text;
+  }
+
+  /// Formats numeric string into 3-digit comma-separated groups with Persian digits (e.g. "149000" -> "۱۴۹٬۰۰۰").
+  String toPersianFormatted() {
+    final clean = toEnglishDigit().replaceAll(RegExp(r'[^0-9]'), '');
+    final numVal = int.tryParse(clean);
+    if (numVal != null) {
+      final str = numVal.toString();
+      final buffer = StringBuffer();
+      final length = str.length;
+      for (int i = 0; i < length; i++) {
+        if (i > 0 && (length - i) % 3 == 0) {
+          buffer.write('\u066C'); // Persian comma ٬
+        }
+        buffer.write(str[i]);
+      }
+      return buffer.toString().toPersianDigit();
+    }
+    return toPersianDigit();
   }
 }

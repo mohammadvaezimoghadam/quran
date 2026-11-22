@@ -27,6 +27,7 @@ import 'ayah_theme_carousel.dart';
 import 'tashkeel_color_selector_tile.dart';
 import '../../../quick_access/presentation/widgets/bookmarks_manager_bottom_sheet.dart';
 import '../../../app_walkthrough/app_walkthrough.dart';
+import '../../../ayah_teaser/application/controllers/ayah_teaser_controller.dart';
 
 /// Ultra-modern iOS-style Tabbed Settings Bottom Sheet (Display & Audio).
 class QuickSettingsDrawer extends ConsumerStatefulWidget {
@@ -437,6 +438,28 @@ class _QuickSettingsDrawerState extends ConsumerState<QuickSettingsDrawer> {
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       onChanged: (val) => displayNotifier.togglePauseMarks(val),
+                    ),
+                    _buildInnerDivider(colorScheme),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final isTeaserEnabled = ref.watch(
+                          ayahTeaserControllerProvider.select((s) => s.isEnabled),
+                        );
+                        return SettingsSwitchTile(
+                          title: 'اعلان تدبر و نکات آیات',
+                          subtitle:
+                              'نمایش کارت شناور هنگام رسیدن به آیات دارای نکته یا تدبر',
+                          value: isTeaserEnabled,
+                          accentColor: accentColor,
+                          textPrimary: textPrimary,
+                          textSecondary: textSecondary,
+                          onChanged: (val) {
+                            ref
+                                .read(ayahTeaserControllerProvider.notifier)
+                                .toggleEnabled(val);
+                          },
+                        );
+                      },
                     ),
 
                     _buildInnerDivider(colorScheme),

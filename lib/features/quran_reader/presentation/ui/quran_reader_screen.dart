@@ -1215,12 +1215,28 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                                     !current,
                                   );
                                   notifier.saveSettingsIfChanged();
+                                } else if (value == 'toggle_teaser') {
+                                  final isCurrentlyEnabled = ref
+                                      .read(ayahTeaserControllerProvider)
+                                      .isEnabled;
+                                  final nextState = !isCurrentlyEnabled;
+                                  ref
+                                      .read(
+                                        ayahTeaserControllerProvider.notifier,
+                                      )
+                                      .toggleEnabled(nextState);
+                                  HapticFeedback.lightImpact();
                                 }
                               },
                               menuItemBuilder: (context) {
                                 final removeBrackets = ref.watch(
                                   quranDisplaySettingsControllerProvider.select(
                                     (s) => s.removeTranslationBrackets,
+                                  ),
+                                );
+                                final isTeaserEnabled = ref.watch(
+                                  ayahTeaserControllerProvider.select(
+                                    (s) => s.isEnabled,
                                   ),
                                 );
                                 return [
@@ -1297,6 +1313,31 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                                           removeBrackets
                                               ? 'نمایش متن داخل پرانتز'
                                               : 'مخفی کردن متن داخل پرانتز',
+                                          style: const TextStyle(
+                                            fontFamily:
+                                                AppTypography.fontFamily,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem<String>(
+                                    value: 'toggle_teaser',
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isTeaserEnabled
+                                              ? CupertinoIcons.bell_slash
+                                              : CupertinoIcons.bell,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          isTeaserEnabled
+                                              ? 'غیرفعال‌سازی اعلان تدبر آیات'
+                                              : 'فعال‌سازی اعلان تدبر آیات',
                                           style: const TextStyle(
                                             fontFamily:
                                                 AppTypography.fontFamily,

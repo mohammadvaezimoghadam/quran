@@ -492,6 +492,7 @@ class ReciterCatalog {
       styleName: 'ترتیل',
       imageUrl: 'assets/images/reciters/muhsin_al_qasim.jpg',
     ),
+    /* Disabled: source EveryAyah archive is missing 4,220 ayahs (Surahs 3-45).
     ReciterEntity(
       id: 88,
       identifier: 'mustafa_ismail_48kbps',
@@ -504,6 +505,7 @@ class ReciterCatalog {
       styleName: 'ترتیل',
       imageUrl: 'assets/images/reciters/mustafa_ismail.jpg',
     ),
+    */
     ReciterEntity(
       id: 89,
       identifier: 'nabil_rifa3i_48kbps',

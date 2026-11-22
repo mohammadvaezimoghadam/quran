@@ -27,4 +27,7 @@ abstract final class PreferencesKeys {
   static const String topicMiniDrawerEnabled = 'topic_mini_drawer_enabled';
   static const String topicMiniDrawerHideCompleted =
       'topic_mini_drawer_hide_completed';
+
+  // Ayah Teaser Floating Notifications
+  static const String ayahTeaserEnabled = 'ayah_teaser_enabled';
 }

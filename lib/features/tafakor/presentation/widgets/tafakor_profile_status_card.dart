@@ -303,35 +303,69 @@ class _TafakorProfileStatusCardState extends ConsumerState<TafakorProfileStatusC
   void _showLogoutDialog(BuildContext context, TafakorAuthController controller) {
     showCupertinoDialog(
       context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: const Text(
-          'خروج از حساب تفکر',
-          style: TextStyle(fontFamily: AppTypography.fontFamily),
-        ),
-        content: const Text(
-          'آیا از خروج از حساب کاربری تفکر اطمینان دارید؟',
-          style: TextStyle(fontFamily: AppTypography.fontFamily),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text(
-              'انصراف',
-              style: TextStyle(fontFamily: AppTypography.fontFamily),
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: CupertinoAlertDialog(
+          title: const Text(
+            'خروج از حساب تفکر',
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
-            onPressed: () => Navigator.of(ctx).pop(),
           ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            child: const Text(
-              'خروج',
-              style: TextStyle(fontFamily: AppTypography.fontFamily),
+          content: const Padding(
+            padding: EdgeInsets.only(top: 8.0),
+            child: Text(
+              'آیا از خروج از حساب کاربری تفکر اطمینان دارید؟',
+              style: TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 13,
+                height: 1.5,
+              ),
             ),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              controller.logout();
-            },
           ),
-        ],
+          actions: [
+            CupertinoDialogAction(
+              textStyle: const TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 14.5,
+                fontWeight: FontWeight.w500,
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text(
+                'انصراف',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              textStyle: const TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontSize: 14.5,
+                fontWeight: FontWeight.bold,
+                color: CupertinoColors.destructiveRed,
+              ),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                controller.logout();
+              },
+              child: const Text(
+                'خروج',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.bold,
+                  color: CupertinoColors.destructiveRed,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

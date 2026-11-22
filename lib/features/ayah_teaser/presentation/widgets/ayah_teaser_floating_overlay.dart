@@ -20,7 +20,8 @@ class AyahTeaserFloatingOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final teaserState = ref.watch(ayahTeaserControllerProvider);
-    final isVisible = teaserState.isVisible &&
+    final isVisible = teaserState.isEnabled &&
+        teaserState.isVisible &&
         teaserState.activeTeaser != null &&
         teaserState.currentSurahId == surahId;
 
