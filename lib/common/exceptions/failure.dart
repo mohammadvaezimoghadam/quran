@@ -7,6 +7,7 @@ abstract class Failure with _$Failure implements Exception {
   const factory Failure({
     required String message,
     int? statusCode,
+    String? code,
     Exception? exception,
     @Default(StackTrace.empty) StackTrace stackTrace,
   }) = _Failure;

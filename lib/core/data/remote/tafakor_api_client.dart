@@ -32,6 +32,9 @@ abstract class TafakorApiClient {
   @GET('auth/profile/')
   Future<HttpResponse<dynamic>> getProfile();
 
+  @PATCH('auth/profile/')
+  Future<HttpResponse<dynamic>> updateProfile(@Body() Map<String, dynamic> body);
+
   @GET('notes/topics/')
   Future<List<TafakorTopicDto>> getTopics();
 

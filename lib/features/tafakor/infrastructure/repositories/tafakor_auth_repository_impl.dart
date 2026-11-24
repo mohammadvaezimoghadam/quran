@@ -114,6 +114,47 @@ class TafakorAuthRepositoryImpl
   }
 
   @override
+  Future<Result<TafakorUser, Failure>> updateProfile({
+    required String firstName,
+    required String lastName,
+  }) async {
+    try {
+      final token = await _local.getToken();
+      if (token == null || token.isEmpty) {
+        return const Error(
+          Failure(message: AppConstants.tafakorUserNotLoggedIn),
+        );
+      }
+      debugPrint(
+        '[TafakorAuth] Updating profile via PATCH /api/auth/profile/...',
+      );
+      final dto = await _remote.updateProfile(
+        firstName: firstName,
+        lastName: lastName,
+      );
+      final updatedUser = dto.toDomain(token: token);
+      await _local.saveUser(updatedUser);
+      debugPrint(
+        '[TafakorAuth] Profile updated: fullName=${updatedUser.fullName}',
+      );
+      return Success(updatedUser);
+    } on DioException catch (e, stackTrace) {
+      debugPrint(
+        '[TafakorAuth] DioException during updateProfile: ${e.message}, status: ${e.response?.statusCode}, data: ${e.response?.data}',
+      );
+      return Error(_extractBackendErrorOrMap(e, stackTrace));
+    } catch (e, stackTrace) {
+      debugPrint('[TafakorAuth] Unexpected error during updateProfile: $e');
+      return Error(
+        Failure(
+          message: AppConstants.unexpectedError,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
+  @override
   Future<Result<void, Failure>> logout() async {
     try {
       await _local.clear();

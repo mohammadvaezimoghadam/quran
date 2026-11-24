@@ -83,6 +83,49 @@ class TafakorAuthController extends Notifier<TafakorAuthState> {
     );
   }
 
+  /// Updates user's first_name and last_name on server (PATCH /api/auth/profile/)
+  Future<bool> updateProfile({
+    required String firstName,
+    required String lastName,
+  }) async {
+    final cleanFirst = firstName.trim();
+    final cleanLast = lastName.trim();
+    if (cleanFirst.isEmpty || cleanLast.isEmpty) {
+      state = state.copyWith(
+        error: const Failure(
+          message: 'لطفاً نام و نام خانوادگی خود را به‌طور کامل وارد کنید.',
+        ),
+      );
+      return false;
+    }
+
+    state = state.copyWith(isLoading: true, error: null);
+    final result = await _repository.updateProfile(
+      firstName: cleanFirst,
+      lastName: cleanLast,
+    );
+
+    return result.when(
+      (updatedUser) {
+        state = state.copyWith(
+          isLoading: false,
+          user: updatedUser,
+          error: null,
+        );
+        return true;
+      },
+      (failure) {
+        if (failure.statusCode == 401) {
+          state = state.copyWith(isLoading: false, error: failure);
+          logout();
+          return false;
+        }
+        state = state.copyWith(isLoading: false, error: failure);
+        return false;
+      },
+    );
+  }
+
   /// Converts Persian and Arabic digits to English
   String normalizeDigits(String input) {
     return input.toEnglishDigit().trim();

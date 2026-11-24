@@ -24,3 +24,5 @@ const String audioSleepTimerRoute = "audio_sleep_timer";
 const String khatmListRoute = "khatm_list";
 const String createKhatmWizardRoute = "create_khatm_wizard";
 const String khatmDetailRoute = "khatm_detail";
+const String createGroupKhatmRoute = "create_group_khatm";
+const String groupKhatmDetailRoute = "group_khatm_detail";

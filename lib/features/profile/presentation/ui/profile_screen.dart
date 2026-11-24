@@ -21,6 +21,7 @@ import '../../../ota_update/domain/entities/ota_patch.dart';
 import '../../../ota_update/presentation/widgets/ota_update_dialog.dart';
 import '../../../subscription/application/vip_subscription_controller.dart';
 import '../../../subscription/presentation/ui/vip_subscription_sheet.dart';
+import '../../../tafakor/application/controllers/tafakor_auth_controller.dart';
 
 /// Dedicated Profile Screen featuring user status, subscription details card,
 /// and direct navigation to VIP Subscription checkout.
@@ -649,16 +650,21 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 /// Clean, typography-driven user header without decorative icons
-class _UserHeader extends StatelessWidget {
+class _UserHeader extends ConsumerWidget {
   const _UserHeader();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(tafakorUserProvider);
+    final displayName = (user != null && user.fullName.isNotEmpty)
+        ? user.fullName
+        : 'کاربر قرآن تفکر';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Center(
         child: Text(
-          'کاربر قرآن تفکر',
+          displayName,
           style: TextStyle(
             fontFamily: AppTypography.fontFamily,
             fontSize: 18,

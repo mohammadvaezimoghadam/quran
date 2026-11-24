@@ -19,6 +19,7 @@ class AppModalHeader extends StatelessWidget {
   final double bottomSpacing;
   final bool showDivider;
   final Color? dividerColor;
+  final bool showCloseButton;
 
   const AppModalHeader({
     super.key,
@@ -31,6 +32,7 @@ class AppModalHeader extends StatelessWidget {
     this.bottomSpacing = 12.0,
     this.showDivider = false,
     this.dividerColor,
+    this.showCloseButton = false,
   });
 
   @override
@@ -64,16 +66,17 @@ class AppModalHeader extends StatelessWidget {
           child: Row(
             children: [
               // 1. Right side (in RTL): Leading action or balanced spacer for 100% centering
-              SizedBox(
-                width: leadingWidth,
-                height: actionSize,
-                child: leadingAction != null
-                    ? Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: leadingAction,
-                      )
-                    : null,
-              ),
+              if (leadingAction != null)
+                SizedBox(
+                  width: leadingWidth,
+                  height: actionSize,
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: leadingAction,
+                  ),
+                )
+              else if (showCloseButton)
+                SizedBox(width: leadingWidth),
 
               // 2. Center: Title
               Expanded(
@@ -92,25 +95,28 @@ class AppModalHeader extends StatelessWidget {
                     ),
               ),
 
-              // 3. Left side (in RTL): Uniform close button (ضربدر)
-              SizedBox(
-                width: trailingWidth,
-                height: actionSize,
-                child: Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: IconButton(
-                    tooltip: 'بستن',
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                    icon: Icon(
-                      CupertinoIcons.xmark_circle_fill,
-                      size: 24,
-                      color: isDark ? Colors.white38 : Colors.black26,
+              // 3. Left side (in RTL): Close button (disabled by default)
+              if (showCloseButton)
+                SizedBox(
+                  width: trailingWidth,
+                  height: actionSize,
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: IconButton(
+                      tooltip: 'بستن',
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        CupertinoIcons.xmark_circle_fill,
+                        size: 24,
+                        color: isDark ? Colors.white38 : Colors.black26,
+                      ),
+                      onPressed: onClose ?? () => Navigator.of(context).pop(),
                     ),
-                    onPressed: onClose ?? () => Navigator.of(context).pop(),
                   ),
-                ),
-              ),
+                )
+              else if (leadingAction != null)
+                SizedBox(width: leadingWidth),
             ],
           ),
         ),

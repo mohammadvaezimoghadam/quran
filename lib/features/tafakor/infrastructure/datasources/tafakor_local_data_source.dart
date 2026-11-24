@@ -5,7 +5,12 @@ import '../../../../core/data/local/preferences/preferences_service_provider.dar
 import '../../domain/entities/tafakor_user.dart';
 
 final tafakorLocalDataSourceProvider = Provider<TafakorLocalDataSource>((ref) {
-  final prefs = ref.watch(sharedPreferencesInstanceProvider);
+  SharedPreferences? prefs;
+  try {
+    prefs = ref.watch(sharedPreferencesInstanceProvider);
+  } catch (_) {
+    prefs = null;
+  }
   return TafakorLocalDataSource(prefs: prefs);
 });
 
@@ -17,8 +22,11 @@ class TafakorLocalDataSource {
 
   static const String _keyToken = 'tafakor_auth_token';
   static const String _keyPhone = 'tafakor_user_phone';
+  static const String _keyFirstName = 'tafakor_user_first_name';
+  static const String _keyLastName = 'tafakor_user_last_name';
   static const String _keyTelegram = 'tafakor_is_telegram';
   static const String _keyBale = 'tafakor_is_bale';
+  static const String _keyPersonalKhatmLastSyncedAt = 'personal_khatm_last_synced_at';
 
   const TafakorLocalDataSource({
     FlutterSecureStorage? storage,
@@ -35,11 +43,15 @@ class TafakorLocalDataSource {
       return null;
     }
     inMemoryToken = token;
+    final firstName = prefs?.getString(_keyFirstName) ?? '';
+    final lastName = prefs?.getString(_keyLastName) ?? '';
     final telegram = prefs?.getBool(_keyTelegram) ?? false;
     final bale = prefs?.getBool(_keyBale) ?? false;
 
     return TafakorUser(
       phone: phone,
+      firstName: firstName,
+      lastName: lastName,
       token: token,
       isTelegramConnected: telegram,
       isBaleConnected: bale,
@@ -54,6 +66,10 @@ class TafakorLocalDataSource {
     }
     await _storage.write(key: _keyPhone, value: user.phone);
     await prefs?.setString(_keyPhone, user.phone);
+    await _storage.write(key: _keyFirstName, value: user.firstName);
+    await prefs?.setString(_keyFirstName, user.firstName);
+    await _storage.write(key: _keyLastName, value: user.lastName);
+    await prefs?.setString(_keyLastName, user.lastName);
     await _storage.write(key: _keyTelegram, value: user.isTelegramConnected ? 'true' : 'false');
     await prefs?.setBool(_keyTelegram, user.isTelegramConnected);
     await _storage.write(key: _keyBale, value: user.isBaleConnected ? 'true' : 'false');
@@ -71,16 +87,22 @@ class TafakorLocalDataSource {
     inMemoryToken = token;
     if (token == null || phone == null) return null;
 
+    final firstName = await _storage.read(key: _keyFirstName) ?? '';
+    final lastName = await _storage.read(key: _keyLastName) ?? '';
     final telegram = await _storage.read(key: _keyTelegram);
     final bale = await _storage.read(key: _keyBale);
 
     await prefs?.setString(_keyToken, token);
     await prefs?.setString(_keyPhone, phone);
+    await prefs?.setString(_keyFirstName, firstName);
+    await prefs?.setString(_keyLastName, lastName);
     await prefs?.setBool(_keyTelegram, telegram == 'true');
     await prefs?.setBool(_keyBale, bale == 'true');
 
     return TafakorUser(
       phone: phone,
+      firstName: firstName,
+      lastName: lastName,
       token: token,
       isTelegramConnected: telegram == 'true',
       isBaleConnected: bale == 'true',
@@ -104,11 +126,16 @@ class TafakorLocalDataSource {
     inMemoryToken = null;
     await prefs?.remove(_keyToken);
     await prefs?.remove(_keyPhone);
+    await prefs?.remove(_keyFirstName);
+    await prefs?.remove(_keyLastName);
     await prefs?.remove(_keyTelegram);
     await prefs?.remove(_keyBale);
+    await prefs?.remove(_keyPersonalKhatmLastSyncedAt);
 
     await _storage.delete(key: _keyToken);
     await _storage.delete(key: _keyPhone);
+    await _storage.delete(key: _keyFirstName);
+    await _storage.delete(key: _keyLastName);
     await _storage.delete(key: _keyTelegram);
     await _storage.delete(key: _keyBale);
   }

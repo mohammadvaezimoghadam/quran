@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Failure {
 
- String get message; int? get statusCode; Exception? get exception; StackTrace get stackTrace;
+ String get message; int? get statusCode; String? get code; Exception? get exception; StackTrace get stackTrace;
 /// Create a copy of Failure
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $FailureCopyWith<Failure> get copyWith => _$FailureCopyWithImpl<Failure>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Failure&&(identical(other.message, message) || other.message == message)&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode)&&(identical(other.exception, exception) || other.exception == exception)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Failure&&(identical(other.message, message) || other.message == message)&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode)&&(identical(other.code, code) || other.code == code)&&(identical(other.exception, exception) || other.exception == exception)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,message,statusCode,exception,stackTrace);
+int get hashCode => Object.hash(runtimeType,message,statusCode,code,exception,stackTrace);
 
 @override
 String toString() {
-  return 'Failure(message: $message, statusCode: $statusCode, exception: $exception, stackTrace: $stackTrace)';
+  return 'Failure(message: $message, statusCode: $statusCode, code: $code, exception: $exception, stackTrace: $stackTrace)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $FailureCopyWith<$Res>  {
   factory $FailureCopyWith(Failure value, $Res Function(Failure) _then) = _$FailureCopyWithImpl;
 @useResult
 $Res call({
- String message, int? statusCode, Exception? exception, StackTrace stackTrace
+ String message, int? statusCode, String? code, Exception? exception, StackTrace stackTrace
 });
 
 
@@ -62,11 +62,12 @@ class _$FailureCopyWithImpl<$Res>
 
 /// Create a copy of Failure
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? message = null,Object? statusCode = freezed,Object? exception = freezed,Object? stackTrace = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? message = null,Object? statusCode = freezed,Object? code = freezed,Object? exception = freezed,Object? stackTrace = null,}) {
   return _then(_self.copyWith(
 message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,statusCode: freezed == statusCode ? _self.statusCode : statusCode // ignore: cast_nullable_to_non_nullable
-as int?,exception: freezed == exception ? _self.exception : exception // ignore: cast_nullable_to_non_nullable
+as int?,code: freezed == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String?,exception: freezed == exception ? _self.exception : exception // ignore: cast_nullable_to_non_nullable
 as Exception?,stackTrace: null == stackTrace ? _self.stackTrace : stackTrace // ignore: cast_nullable_to_non_nullable
 as StackTrace,
   ));
@@ -153,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String message,  int? statusCode,  Exception? exception,  StackTrace stackTrace)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String message,  int? statusCode,  String? code,  Exception? exception,  StackTrace stackTrace)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Failure() when $default != null:
-return $default(_that.message,_that.statusCode,_that.exception,_that.stackTrace);case _:
+return $default(_that.message,_that.statusCode,_that.code,_that.exception,_that.stackTrace);case _:
   return orElse();
 
 }
@@ -174,10 +175,10 @@ return $default(_that.message,_that.statusCode,_that.exception,_that.stackTrace)
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String message,  int? statusCode,  Exception? exception,  StackTrace stackTrace)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String message,  int? statusCode,  String? code,  Exception? exception,  StackTrace stackTrace)  $default,) {final _that = this;
 switch (_that) {
 case _Failure():
-return $default(_that.message,_that.statusCode,_that.exception,_that.stackTrace);case _:
+return $default(_that.message,_that.statusCode,_that.code,_that.exception,_that.stackTrace);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +195,10 @@ return $default(_that.message,_that.statusCode,_that.exception,_that.stackTrace)
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String message,  int? statusCode,  Exception? exception,  StackTrace stackTrace)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String message,  int? statusCode,  String? code,  Exception? exception,  StackTrace stackTrace)?  $default,) {final _that = this;
 switch (_that) {
 case _Failure() when $default != null:
-return $default(_that.message,_that.statusCode,_that.exception,_that.stackTrace);case _:
+return $default(_that.message,_that.statusCode,_that.code,_that.exception,_that.stackTrace);case _:
   return null;
 
 }
@@ -209,11 +210,12 @@ return $default(_that.message,_that.statusCode,_that.exception,_that.stackTrace)
 
 
 class _Failure implements Failure {
-  const _Failure({required this.message, this.statusCode, this.exception, this.stackTrace = StackTrace.empty});
+  const _Failure({required this.message, this.statusCode, this.code, this.exception, this.stackTrace = StackTrace.empty});
   
 
 @override final  String message;
 @override final  int? statusCode;
+@override final  String? code;
 @override final  Exception? exception;
 @override@JsonKey() final  StackTrace stackTrace;
 
@@ -227,16 +229,16 @@ _$FailureCopyWith<_Failure> get copyWith => __$FailureCopyWithImpl<_Failure>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Failure&&(identical(other.message, message) || other.message == message)&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode)&&(identical(other.exception, exception) || other.exception == exception)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Failure&&(identical(other.message, message) || other.message == message)&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode)&&(identical(other.code, code) || other.code == code)&&(identical(other.exception, exception) || other.exception == exception)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,message,statusCode,exception,stackTrace);
+int get hashCode => Object.hash(runtimeType,message,statusCode,code,exception,stackTrace);
 
 @override
 String toString() {
-  return 'Failure(message: $message, statusCode: $statusCode, exception: $exception, stackTrace: $stackTrace)';
+  return 'Failure(message: $message, statusCode: $statusCode, code: $code, exception: $exception, stackTrace: $stackTrace)';
 }
 
 
@@ -247,7 +249,7 @@ abstract mixin class _$FailureCopyWith<$Res> implements $FailureCopyWith<$Res> {
   factory _$FailureCopyWith(_Failure value, $Res Function(_Failure) _then) = __$FailureCopyWithImpl;
 @override @useResult
 $Res call({
- String message, int? statusCode, Exception? exception, StackTrace stackTrace
+ String message, int? statusCode, String? code, Exception? exception, StackTrace stackTrace
 });
 
 
@@ -264,11 +266,12 @@ class __$FailureCopyWithImpl<$Res>
 
 /// Create a copy of Failure
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? statusCode = freezed,Object? exception = freezed,Object? stackTrace = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? statusCode = freezed,Object? code = freezed,Object? exception = freezed,Object? stackTrace = null,}) {
   return _then(_Failure(
 message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,statusCode: freezed == statusCode ? _self.statusCode : statusCode // ignore: cast_nullable_to_non_nullable
-as int?,exception: freezed == exception ? _self.exception : exception // ignore: cast_nullable_to_non_nullable
+as int?,code: freezed == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String?,exception: freezed == exception ? _self.exception : exception // ignore: cast_nullable_to_non_nullable
 as Exception?,stackTrace: null == stackTrace ? _self.stackTrace : stackTrace // ignore: cast_nullable_to_non_nullable
 as StackTrace,
   ));

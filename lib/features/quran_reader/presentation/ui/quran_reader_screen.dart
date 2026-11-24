@@ -44,6 +44,7 @@ import '../../../bookmarks/presentation/widgets/ayah_bookmark_editor_bottom_shee
 import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../quran_home/application/controllers/continue_reading_controller.dart';
 import '../../../khatm/presentation/widgets/reader/khatm_reader_bar.dart';
+import '../../../khatm/presentation/widgets/reader/group_khatm_reader_bar.dart';
 import '../../../khatm/presentation/widgets/reader/khatm_quick_bottom_sheet.dart';
 import '../../../khatm/application/controllers/khatm_detail_controller.dart';
 import '../../../khatm/domain/services/khatm_quran_resolver.dart';
@@ -64,6 +65,9 @@ class QuranReaderScreen extends ConsumerStatefulWidget {
   final bool isStudyPlan;
   final String? khatmId;
   final int? khatmSession;
+  final String? groupKhatmCode;
+  final int? groupSlotUnit;
+  final int? groupSlotId;
 
   const QuranReaderScreen({
     super.key,
@@ -75,6 +79,9 @@ class QuranReaderScreen extends ConsumerStatefulWidget {
     this.isStudyPlan = false,
     this.khatmId,
     this.khatmSession,
+    this.groupKhatmCode,
+    this.groupSlotUnit,
+    this.groupSlotId,
   });
 
   @override
@@ -105,6 +112,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
   // Active Khatm session tracking
   String? _activeKhatmId;
   int? _activeKhatmSession;
+  String? _activeGroupKhatmCode;
+  int? _activeGroupSlotUnit;
+  int? _activeGroupSlotId;
   late final ActiveKhatmSessionNotifier _activeKhatmSessionNotifier;
 
   static const Duration _exitButtonFadeDelay = Duration(milliseconds: 3500);
@@ -115,6 +125,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
     _activePageSurahId = widget.surahId;
     _activeKhatmId = widget.khatmId;
     _activeKhatmSession = widget.khatmSession;
+    _activeGroupKhatmCode = widget.groupKhatmCode;
+    _activeGroupSlotUnit = widget.groupSlotUnit;
+    _activeGroupSlotId = widget.groupSlotId;
     _continueReadingNotifier = ref.read(
       continueReadingControllerProvider.notifier,
     );
@@ -215,6 +228,11 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
       } else {
         _activeKhatmSessionNotifier.clear();
       }
+    }
+    if (oldWidget.groupKhatmCode != widget.groupKhatmCode) {
+      _activeGroupKhatmCode = widget.groupKhatmCode;
+      _activeGroupSlotUnit = widget.groupSlotUnit;
+      _activeGroupSlotId = widget.groupSlotId;
     }
   }
 
@@ -1374,6 +1392,17 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                         ),
                       ),
                       QuranInfoBar(onTargetSelected: _handleTargetSelected),
+                      if (_activeGroupKhatmCode != null)
+                        GroupKhatmReaderBar(
+                          inviteCode: _activeGroupKhatmCode!,
+                          unitNumber: _activeGroupSlotUnit,
+                          slotId: _activeGroupSlotId,
+                          onClose: () {
+                            setState(() {
+                              _activeGroupKhatmCode = null;
+                            });
+                          },
+                        ),
                       if (activeKhatmSession != null)
                         KhatmReaderBar(
                           khatmId: activeKhatmSession.khatmId,

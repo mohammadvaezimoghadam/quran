@@ -190,10 +190,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  double speed,  String? errorMessage,  int? lastAttemptedAyahNumber)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  double speed,  double volume,  String? errorMessage,  int? lastAttemptedAyahNumber)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QuranAudioState() when $default != null:
-return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.speed,_that.errorMessage,_that.lastAttemptedAyahNumber);case _:
+return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.speed,_that.volume,_that.errorMessage,_that.lastAttemptedAyahNumber);case _:
   return orElse();
 
 }
@@ -211,10 +211,10 @@ return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.pla
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  double speed,  String? errorMessage,  int? lastAttemptedAyahNumber)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  double speed,  double volume,  String? errorMessage,  int? lastAttemptedAyahNumber)  $default,) {final _that = this;
 switch (_that) {
 case _QuranAudioState():
-return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.speed,_that.errorMessage,_that.lastAttemptedAyahNumber);case _:
+return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.speed,_that.volume,_that.errorMessage,_that.lastAttemptedAyahNumber);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -231,10 +231,10 @@ return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.pla
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  double speed,  String? errorMessage,  int? lastAttemptedAyahNumber)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ReciterEntity? selectedReciter,  ReciterEntity? selectedTranslationReciter,  AudioPlaybackMode playbackMode,  CurrentTrackType currentTrackType,  int? currentSurahId,  int? currentAyahNumber,  int? totalAyahsInSurah,  AudioStatus status,  Duration position,  Duration duration,  bool isAutoPlayNext,  bool isSingleAyahMode,  bool isAutoScrollSuspended,  double speed,  double volume,  String? errorMessage,  int? lastAttemptedAyahNumber)?  $default,) {final _that = this;
 switch (_that) {
 case _QuranAudioState() when $default != null:
-return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.speed,_that.errorMessage,_that.lastAttemptedAyahNumber);case _:
+return $default(_that.selectedReciter,_that.selectedTranslationReciter,_that.playbackMode,_that.currentTrackType,_that.currentSurahId,_that.currentAyahNumber,_that.totalAyahsInSurah,_that.status,_that.position,_that.duration,_that.isAutoPlayNext,_that.isSingleAyahMode,_that.isAutoScrollSuspended,_that.speed,_that.volume,_that.errorMessage,_that.lastAttemptedAyahNumber);case _:
   return null;
 
 }

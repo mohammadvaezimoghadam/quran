@@ -111,6 +111,9 @@ class _FakeDatasource implements IKhatmLocalDataSource {
   Future<void> deletePlan(String id) async {}
 
   @override
+  Future<void> hardDeletePlan(String id) async {}
+
+  @override
   Future<List<KhatmPlan>> getAllPlans() async => [];
 
   @override

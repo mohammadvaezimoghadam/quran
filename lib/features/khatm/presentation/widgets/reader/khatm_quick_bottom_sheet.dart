@@ -99,7 +99,8 @@ class KhatmQuickBottomSheet extends ConsumerWidget {
     }
 
     // Otherwise, resume from lastReadUnit if available and within session range, or fromUnit
-    final int resumeUnit = (nextSession.lastReadUnit != null &&
+    final int resumeUnit =
+        (nextSession.lastReadUnit != null &&
             nextSession.lastReadUnit! >= nextSession.fromUnit &&
             nextSession.lastReadUnit! <= nextSession.toUnit)
         ? nextSession.lastReadUnit!
@@ -177,7 +178,7 @@ class KhatmQuickBottomSheet extends ConsumerWidget {
             if (state.isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 36),
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(child: CupertinoActivityIndicator()),
               )
             else if (plans.isEmpty)
               _buildEmptyState(context, colorScheme)
@@ -269,7 +270,8 @@ class KhatmQuickBottomSheet extends ConsumerWidget {
     required dynamic colors,
     required ColorScheme colorScheme,
   }) {
-    final nextSession = plan.nextPendingSession ??
+    final nextSession =
+        plan.nextPendingSession ??
         (plan.sessions.isNotEmpty ? plan.sessions.first : null);
     final isAllCompleted = plan.isCompleted;
 

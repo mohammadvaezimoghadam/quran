@@ -24,21 +24,46 @@ Object? _readBaleConnected(Map json, String key) {
   return false;
 }
 
+Object? _readFirstName(Map json, String key) {
+  return (json['first_name'] ?? json['firstName'])?.toString() ?? '';
+}
+
+Object? _readLastName(Map json, String key) {
+  return (json['last_name'] ?? json['lastName'])?.toString() ?? '';
+}
+
 @freezed
 abstract class TafakorUserDto with _$TafakorUserDto {
   const TafakorUserDto._();
 
   const factory TafakorUserDto({
     required String phone,
-    @JsonKey(readValue: _readTelegramConnected) @Default(false) bool isTelegramConnected,
-    @JsonKey(readValue: _readBaleConnected) @Default(false) bool isBaleConnected,
+    @JsonKey(name: 'first_name', readValue: _readFirstName)
+    @Default('')
+    String firstName,
+    @JsonKey(name: 'last_name', readValue: _readLastName)
+    @Default('')
+    String lastName,
+    @JsonKey(readValue: _readTelegramConnected)
+    @Default(false)
+    bool isTelegramConnected,
+    @JsonKey(readValue: _readBaleConnected)
+    @Default(false)
+    bool isBaleConnected,
   }) = _TafakorUserDto;
 
   factory TafakorUserDto.fromJson(Map<String, dynamic> json) =>
       _$TafakorUserDtoFromJson(json);
 
+  String get fullName => '${firstName.trim()} ${lastName.trim()}'.trim();
+
+  bool get hasFullName =>
+      firstName.trim().isNotEmpty && lastName.trim().isNotEmpty;
+
   TafakorUser toDomain({String? token}) => TafakorUser(
         phone: phone,
+        firstName: firstName,
+        lastName: lastName,
         isTelegramConnected: isTelegramConnected,
         isBaleConnected: isBaleConnected,
         token: token,

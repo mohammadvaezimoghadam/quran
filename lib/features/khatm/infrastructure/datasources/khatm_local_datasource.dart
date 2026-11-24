@@ -9,6 +9,7 @@ import 'package:quran/features/khatm/domain/entities/khatm_plan.dart';
 abstract class IKhatmLocalDataSource {
   Future<void> savePlan(KhatmPlan plan);
   Future<void> deletePlan(String id);
+  Future<void> hardDeletePlan(String id);
   Future<KhatmPlan?> getPlan(String id);
   Future<List<KhatmPlan>> getAllPlans();
   Future<List<KhatmPlan>> getActivePlans();
@@ -80,10 +81,29 @@ class KhatmLocalDataSource implements IKhatmLocalDataSource {
   Future<void> deletePlan(String id) async {
     try {
       await _ensureBoxOpen();
+      final existing = await getPlan(id);
+      if (existing == null) return;
+      final nowUtc = DateTime.now().toUtc();
+      await savePlan(
+        existing.copyWith(
+          deletedAt: nowUtc,
+          clientUpdatedAt: nowUtc,
+          isDirty: true,
+        ),
+      );
+    } catch (e) {
+      debugPrint('⚠️ [KhatmLocalDataSource] Error soft-deleting plan: $e');
+    }
+  }
+
+  @override
+  Future<void> hardDeletePlan(String id) async {
+    try {
+      await _ensureBoxOpen();
       await _hiveService.delete(id, boxName: boxName);
       _notifyListeners();
     } catch (e) {
-      debugPrint('⚠️ [KhatmLocalDataSource] Error deleting plan: $e');
+      debugPrint('⚠️ [KhatmLocalDataSource] Error hard-deleting plan: $e');
     }
   }
 
@@ -133,7 +153,7 @@ class KhatmLocalDataSource implements IKhatmLocalDataSource {
   @override
   Future<List<KhatmPlan>> getActivePlans() async {
     final all = await getAllPlans();
-    return all.where((p) => !p.isArchived).toList();
+    return all.where((p) => !p.isArchived && p.deletedAt == null).toList();
   }
 
   @override
@@ -157,7 +177,11 @@ class KhatmLocalDataSource implements IKhatmLocalDataSource {
       return session;
     }).toList();
 
-    final updatedPlan = plan.copyWith(sessions: updatedSessions);
+    final updatedPlan = plan.copyWith(
+      sessions: updatedSessions,
+      clientUpdatedAt: DateTime.now().toUtc(),
+      isDirty: true,
+    );
     await savePlan(updatedPlan);
   }
 
@@ -185,7 +209,11 @@ class KhatmLocalDataSource implements IKhatmLocalDataSource {
       return session;
     }).toList();
 
-    final updatedPlan = plan.copyWith(sessions: updatedSessions);
+    final updatedPlan = plan.copyWith(
+      sessions: updatedSessions,
+      clientUpdatedAt: DateTime.now().toUtc(),
+      isDirty: true,
+    );
     await savePlan(updatedPlan);
   }
 

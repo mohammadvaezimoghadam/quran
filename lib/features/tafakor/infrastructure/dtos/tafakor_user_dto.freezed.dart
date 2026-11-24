@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TafakorUserDto {
 
- String get phone;@JsonKey(readValue: _readTelegramConnected) bool get isTelegramConnected;@JsonKey(readValue: _readBaleConnected) bool get isBaleConnected;
+ String get phone;@JsonKey(name: 'first_name', readValue: _readFirstName) String get firstName;@JsonKey(name: 'last_name', readValue: _readLastName) String get lastName;@JsonKey(readValue: _readTelegramConnected) bool get isTelegramConnected;@JsonKey(readValue: _readBaleConnected) bool get isBaleConnected;
 /// Create a copy of TafakorUserDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TafakorUserDtoCopyWith<TafakorUserDto> get copyWith => _$TafakorUserDtoCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TafakorUserDto&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.isTelegramConnected, isTelegramConnected) || other.isTelegramConnected == isTelegramConnected)&&(identical(other.isBaleConnected, isBaleConnected) || other.isBaleConnected == isBaleConnected));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TafakorUserDto&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.isTelegramConnected, isTelegramConnected) || other.isTelegramConnected == isTelegramConnected)&&(identical(other.isBaleConnected, isBaleConnected) || other.isBaleConnected == isBaleConnected));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,phone,isTelegramConnected,isBaleConnected);
+int get hashCode => Object.hash(runtimeType,phone,firstName,lastName,isTelegramConnected,isBaleConnected);
 
 @override
 String toString() {
-  return 'TafakorUserDto(phone: $phone, isTelegramConnected: $isTelegramConnected, isBaleConnected: $isBaleConnected)';
+  return 'TafakorUserDto(phone: $phone, firstName: $firstName, lastName: $lastName, isTelegramConnected: $isTelegramConnected, isBaleConnected: $isBaleConnected)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $TafakorUserDtoCopyWith<$Res>  {
   factory $TafakorUserDtoCopyWith(TafakorUserDto value, $Res Function(TafakorUserDto) _then) = _$TafakorUserDtoCopyWithImpl;
 @useResult
 $Res call({
- String phone,@JsonKey(readValue: _readTelegramConnected) bool isTelegramConnected,@JsonKey(readValue: _readBaleConnected) bool isBaleConnected
+ String phone,@JsonKey(name: 'first_name', readValue: _readFirstName) String firstName,@JsonKey(name: 'last_name', readValue: _readLastName) String lastName,@JsonKey(readValue: _readTelegramConnected) bool isTelegramConnected,@JsonKey(readValue: _readBaleConnected) bool isBaleConnected
 });
 
 
@@ -65,9 +65,11 @@ class _$TafakorUserDtoCopyWithImpl<$Res>
 
 /// Create a copy of TafakorUserDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? phone = null,Object? isTelegramConnected = null,Object? isBaleConnected = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? phone = null,Object? firstName = null,Object? lastName = null,Object? isTelegramConnected = null,Object? isBaleConnected = null,}) {
   return _then(_self.copyWith(
 phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String,firstName: null == firstName ? _self.firstName : firstName // ignore: cast_nullable_to_non_nullable
+as String,lastName: null == lastName ? _self.lastName : lastName // ignore: cast_nullable_to_non_nullable
 as String,isTelegramConnected: null == isTelegramConnected ? _self.isTelegramConnected : isTelegramConnected // ignore: cast_nullable_to_non_nullable
 as bool,isBaleConnected: null == isBaleConnected ? _self.isBaleConnected : isBaleConnected // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -155,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String phone, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String phone, @JsonKey(name: 'first_name', readValue: _readFirstName)  String firstName, @JsonKey(name: 'last_name', readValue: _readLastName)  String lastName, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TafakorUserDto() when $default != null:
-return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);case _:
+return $default(_that.phone,_that.firstName,_that.lastName,_that.isTelegramConnected,_that.isBaleConnected);case _:
   return orElse();
 
 }
@@ -176,10 +178,10 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String phone, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String phone, @JsonKey(name: 'first_name', readValue: _readFirstName)  String firstName, @JsonKey(name: 'last_name', readValue: _readLastName)  String lastName, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)  $default,) {final _that = this;
 switch (_that) {
 case _TafakorUserDto():
-return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);case _:
+return $default(_that.phone,_that.firstName,_that.lastName,_that.isTelegramConnected,_that.isBaleConnected);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +198,10 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String phone, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String phone, @JsonKey(name: 'first_name', readValue: _readFirstName)  String firstName, @JsonKey(name: 'last_name', readValue: _readLastName)  String lastName, @JsonKey(readValue: _readTelegramConnected)  bool isTelegramConnected, @JsonKey(readValue: _readBaleConnected)  bool isBaleConnected)?  $default,) {final _that = this;
 switch (_that) {
 case _TafakorUserDto() when $default != null:
-return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);case _:
+return $default(_that.phone,_that.firstName,_that.lastName,_that.isTelegramConnected,_that.isBaleConnected);case _:
   return null;
 
 }
@@ -211,10 +213,12 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected);cas
 @JsonSerializable()
 
 class _TafakorUserDto extends TafakorUserDto {
-  const _TafakorUserDto({required this.phone, @JsonKey(readValue: _readTelegramConnected) this.isTelegramConnected = false, @JsonKey(readValue: _readBaleConnected) this.isBaleConnected = false}): super._();
+  const _TafakorUserDto({required this.phone, @JsonKey(name: 'first_name', readValue: _readFirstName) this.firstName = '', @JsonKey(name: 'last_name', readValue: _readLastName) this.lastName = '', @JsonKey(readValue: _readTelegramConnected) this.isTelegramConnected = false, @JsonKey(readValue: _readBaleConnected) this.isBaleConnected = false}): super._();
   factory _TafakorUserDto.fromJson(Map<String, dynamic> json) => _$TafakorUserDtoFromJson(json);
 
 @override final  String phone;
+@override@JsonKey(name: 'first_name', readValue: _readFirstName) final  String firstName;
+@override@JsonKey(name: 'last_name', readValue: _readLastName) final  String lastName;
 @override@JsonKey(readValue: _readTelegramConnected) final  bool isTelegramConnected;
 @override@JsonKey(readValue: _readBaleConnected) final  bool isBaleConnected;
 
@@ -231,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TafakorUserDto&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.isTelegramConnected, isTelegramConnected) || other.isTelegramConnected == isTelegramConnected)&&(identical(other.isBaleConnected, isBaleConnected) || other.isBaleConnected == isBaleConnected));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TafakorUserDto&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.isTelegramConnected, isTelegramConnected) || other.isTelegramConnected == isTelegramConnected)&&(identical(other.isBaleConnected, isBaleConnected) || other.isBaleConnected == isBaleConnected));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,phone,isTelegramConnected,isBaleConnected);
+int get hashCode => Object.hash(runtimeType,phone,firstName,lastName,isTelegramConnected,isBaleConnected);
 
 @override
 String toString() {
-  return 'TafakorUserDto(phone: $phone, isTelegramConnected: $isTelegramConnected, isBaleConnected: $isBaleConnected)';
+  return 'TafakorUserDto(phone: $phone, firstName: $firstName, lastName: $lastName, isTelegramConnected: $isTelegramConnected, isBaleConnected: $isBaleConnected)';
 }
 
 
@@ -251,7 +255,7 @@ abstract mixin class _$TafakorUserDtoCopyWith<$Res> implements $TafakorUserDtoCo
   factory _$TafakorUserDtoCopyWith(_TafakorUserDto value, $Res Function(_TafakorUserDto) _then) = __$TafakorUserDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String phone,@JsonKey(readValue: _readTelegramConnected) bool isTelegramConnected,@JsonKey(readValue: _readBaleConnected) bool isBaleConnected
+ String phone,@JsonKey(name: 'first_name', readValue: _readFirstName) String firstName,@JsonKey(name: 'last_name', readValue: _readLastName) String lastName,@JsonKey(readValue: _readTelegramConnected) bool isTelegramConnected,@JsonKey(readValue: _readBaleConnected) bool isBaleConnected
 });
 
 
@@ -268,9 +272,11 @@ class __$TafakorUserDtoCopyWithImpl<$Res>
 
 /// Create a copy of TafakorUserDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? phone = null,Object? isTelegramConnected = null,Object? isBaleConnected = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? phone = null,Object? firstName = null,Object? lastName = null,Object? isTelegramConnected = null,Object? isBaleConnected = null,}) {
   return _then(_TafakorUserDto(
 phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String,firstName: null == firstName ? _self.firstName : firstName // ignore: cast_nullable_to_non_nullable
+as String,lastName: null == lastName ? _self.lastName : lastName // ignore: cast_nullable_to_non_nullable
 as String,isTelegramConnected: null == isTelegramConnected ? _self.isTelegramConnected : isTelegramConnected // ignore: cast_nullable_to_non_nullable
 as bool,isBaleConnected: null == isBaleConnected ? _self.isBaleConnected : isBaleConnected // ignore: cast_nullable_to_non_nullable
 as bool,

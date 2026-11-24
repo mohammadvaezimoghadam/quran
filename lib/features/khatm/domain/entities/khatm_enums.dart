@@ -94,3 +94,110 @@ enum KhatmSessionStatus {
     }
   }
 }
+
+/// Status of a collective Group Khatm Campaign.
+enum GroupKhatmStatus {
+  active,
+  completed,
+  expired,
+  cancelled;
+
+  String get labelFa {
+    switch (this) {
+      case GroupKhatmStatus.active:
+        return 'در حال برگزاری';
+      case GroupKhatmStatus.completed:
+        return 'تکمیل شده';
+      case GroupKhatmStatus.expired:
+        return 'پایان مهلت';
+      case GroupKhatmStatus.cancelled:
+        return 'متوقف شده';
+    }
+  }
+
+  static GroupKhatmStatus fromString(String? val) {
+    switch (val?.toLowerCase()) {
+      case 'completed':
+        return GroupKhatmStatus.completed;
+      case 'expired':
+        return GroupKhatmStatus.expired;
+      case 'cancelled':
+        return GroupKhatmStatus.cancelled;
+      case 'active':
+      default:
+        return GroupKhatmStatus.active;
+    }
+  }
+}
+
+/// Status of an individual slot in a Group Khatm Campaign.
+enum GroupKhatmSlotStatus {
+  available,
+  reserved,
+  completed;
+
+  String get labelFa {
+    switch (this) {
+      case GroupKhatmSlotStatus.available:
+        return 'آزاد';
+      case GroupKhatmSlotStatus.reserved:
+        return 'در حال قرائت';
+      case GroupKhatmSlotStatus.completed:
+        return 'تکمیل شده';
+    }
+  }
+
+  static GroupKhatmSlotStatus fromString(String? val) {
+    switch (val?.toLowerCase()) {
+      case 'reserved':
+        return GroupKhatmSlotStatus.reserved;
+      case 'completed':
+        return GroupKhatmSlotStatus.completed;
+      case 'available':
+      default:
+        return GroupKhatmSlotStatus.available;
+    }
+  }
+}
+
+/// Unit division for Group Khatm (30 Juz, 120 Ahzab, or specific Surah).
+enum GroupKhatmUnitType {
+  juz,
+  hizb,
+  surah;
+
+  String get labelFa {
+    switch (this) {
+      case GroupKhatmUnitType.juz:
+        return '۳۰ جزء';
+      case GroupKhatmUnitType.hizb:
+        return '۱۲۰ حزب';
+      case GroupKhatmUnitType.surah:
+        return 'سوره مشخص';
+    }
+  }
+
+  String get serverValue {
+    switch (this) {
+      case GroupKhatmUnitType.juz:
+        return 'juz';
+      case GroupKhatmUnitType.hizb:
+        return 'hizb';
+      case GroupKhatmUnitType.surah:
+        return 'surah';
+    }
+  }
+
+  static GroupKhatmUnitType fromString(String? val) {
+    switch (val?.toLowerCase()) {
+      case 'hizb':
+        return GroupKhatmUnitType.hizb;
+      case 'surah':
+        return GroupKhatmUnitType.surah;
+      case 'juz':
+      default:
+        return GroupKhatmUnitType.juz;
+    }
+  }
+}
+

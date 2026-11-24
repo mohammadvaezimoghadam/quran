@@ -23,10 +23,23 @@ class InMemoryKhatmDataSource implements IKhatmLocalDataSource {
   Future<void> clearAll() async => plans.clear();
 
   @override
-  Future<void> deletePlan(String id) async => plans.remove(id);
+  Future<void> deletePlan(String id) async {
+    final p = plans[id];
+    if (p == null) return;
+    final nowUtc = DateTime.now().toUtc();
+    plans[id] = p.copyWith(
+      deletedAt: nowUtc,
+      clientUpdatedAt: nowUtc,
+      isDirty: true,
+    );
+  }
 
   @override
-  Future<List<KhatmPlan>> getActivePlans() async => plans.values.toList();
+  Future<void> hardDeletePlan(String id) async => plans.remove(id);
+
+  @override
+  Future<List<KhatmPlan>> getActivePlans() async =>
+      plans.values.where((p) => !p.isArchived && p.deletedAt == null).toList();
 
   @override
   Future<List<KhatmPlan>> getAllPlans() async => plans.values.toList();
@@ -56,7 +69,11 @@ class InMemoryKhatmDataSource implements IKhatmLocalDataSource {
       }
       return s;
     }).toList();
-    plans[planId] = p.copyWith(sessions: updated);
+    plans[planId] = p.copyWith(
+      sessions: updated,
+      clientUpdatedAt: DateTime.now().toUtc(),
+      isDirty: true,
+    );
   }
 
   @override
@@ -80,7 +97,11 @@ class InMemoryKhatmDataSource implements IKhatmLocalDataSource {
       }
       return s;
     }).toList();
-    plans[planId] = p.copyWith(sessions: updated);
+    plans[planId] = p.copyWith(
+      sessions: updated,
+      clientUpdatedAt: DateTime.now().toUtc(),
+      isDirty: true,
+    );
   }
   @override
   void addListener(VoidCallback listener) {}

@@ -54,4 +54,16 @@ class TafakorRemoteDataSource {
     final data = response.data as Map<String, dynamic>;
     return TafakorUserDto.fromJson(data);
   }
+
+  Future<TafakorUserDto> updateProfile({
+    required String firstName,
+    required String lastName,
+  }) async {
+    final response = await _client.updateProfile({
+      'first_name': firstName.trim(),
+      'last_name': lastName.trim(),
+    });
+    final data = response.data as Map<String, dynamic>;
+    return TafakorUserDto.fromJson(data);
+  }
 }

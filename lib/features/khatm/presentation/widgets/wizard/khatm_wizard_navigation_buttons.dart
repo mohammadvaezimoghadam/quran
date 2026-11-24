@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:quran/common/extensions/context_extension.dart';
@@ -79,13 +80,9 @@ class KhatmWizardNavigationButtons extends StatelessWidget {
                   ),
                 ),
                 child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                    ? const CupertinoActivityIndicator(
+                        color: Colors.white,
+                        radius: 10,
                       )
                     : Text(
                         nextLabel,

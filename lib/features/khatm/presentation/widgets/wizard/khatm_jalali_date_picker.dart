@@ -12,11 +12,13 @@ import 'package:quran/core/theme/app_typography.dart';
 class KhatmJalaliDatePicker extends StatelessWidget {
   final JalaliDate selectedDate;
   final ValueChanged<JalaliDate> onDateChanged;
+  final String label;
 
   const KhatmJalaliDatePicker({
     super.key,
     required this.selectedDate,
     required this.onDateChanged,
+    this.label = 'تاریخ شروع',
   });
 
   Future<void> _pickDate(BuildContext context) async {
@@ -60,7 +62,7 @@ class KhatmJalaliDatePicker extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'انتخاب تاریخ شروع',
+                        'انتخاب $label',
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
                           fontSize: 15.5,
@@ -210,7 +212,7 @@ class KhatmJalaliDatePicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'تاریخ شروع',
+          label,
           style: TextStyle(
             fontFamily: AppTypography.fontFamily,
             fontSize: 13,

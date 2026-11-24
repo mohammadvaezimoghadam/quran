@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TafakorUser {
 
- String get phone; bool get isTelegramConnected; bool get isBaleConnected; String? get token;
+ String get phone; String get firstName; String get lastName; bool get isTelegramConnected; bool get isBaleConnected; String? get token;
 /// Create a copy of TafakorUser
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $TafakorUserCopyWith<TafakorUser> get copyWith => _$TafakorUserCopyWithImpl<Tafa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TafakorUser&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.isTelegramConnected, isTelegramConnected) || other.isTelegramConnected == isTelegramConnected)&&(identical(other.isBaleConnected, isBaleConnected) || other.isBaleConnected == isBaleConnected)&&(identical(other.token, token) || other.token == token));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TafakorUser&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.isTelegramConnected, isTelegramConnected) || other.isTelegramConnected == isTelegramConnected)&&(identical(other.isBaleConnected, isBaleConnected) || other.isBaleConnected == isBaleConnected)&&(identical(other.token, token) || other.token == token));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,phone,isTelegramConnected,isBaleConnected,token);
+int get hashCode => Object.hash(runtimeType,phone,firstName,lastName,isTelegramConnected,isBaleConnected,token);
 
 @override
 String toString() {
-  return 'TafakorUser(phone: $phone, isTelegramConnected: $isTelegramConnected, isBaleConnected: $isBaleConnected, token: $token)';
+  return 'TafakorUser(phone: $phone, firstName: $firstName, lastName: $lastName, isTelegramConnected: $isTelegramConnected, isBaleConnected: $isBaleConnected, token: $token)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $TafakorUserCopyWith<$Res>  {
   factory $TafakorUserCopyWith(TafakorUser value, $Res Function(TafakorUser) _then) = _$TafakorUserCopyWithImpl;
 @useResult
 $Res call({
- String phone, bool isTelegramConnected, bool isBaleConnected, String? token
+ String phone, String firstName, String lastName, bool isTelegramConnected, bool isBaleConnected, String? token
 });
 
 
@@ -62,9 +62,11 @@ class _$TafakorUserCopyWithImpl<$Res>
 
 /// Create a copy of TafakorUser
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? phone = null,Object? isTelegramConnected = null,Object? isBaleConnected = null,Object? token = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? phone = null,Object? firstName = null,Object? lastName = null,Object? isTelegramConnected = null,Object? isBaleConnected = null,Object? token = freezed,}) {
   return _then(_self.copyWith(
 phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String,firstName: null == firstName ? _self.firstName : firstName // ignore: cast_nullable_to_non_nullable
+as String,lastName: null == lastName ? _self.lastName : lastName // ignore: cast_nullable_to_non_nullable
 as String,isTelegramConnected: null == isTelegramConnected ? _self.isTelegramConnected : isTelegramConnected // ignore: cast_nullable_to_non_nullable
 as bool,isBaleConnected: null == isBaleConnected ? _self.isBaleConnected : isBaleConnected // ignore: cast_nullable_to_non_nullable
 as bool,token: freezed == token ? _self.token : token // ignore: cast_nullable_to_non_nullable
@@ -153,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String phone,  bool isTelegramConnected,  bool isBaleConnected,  String? token)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String phone,  String firstName,  String lastName,  bool isTelegramConnected,  bool isBaleConnected,  String? token)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TafakorUser() when $default != null:
-return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected,_that.token);case _:
+return $default(_that.phone,_that.firstName,_that.lastName,_that.isTelegramConnected,_that.isBaleConnected,_that.token);case _:
   return orElse();
 
 }
@@ -174,10 +176,10 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String phone,  bool isTelegramConnected,  bool isBaleConnected,  String? token)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String phone,  String firstName,  String lastName,  bool isTelegramConnected,  bool isBaleConnected,  String? token)  $default,) {final _that = this;
 switch (_that) {
 case _TafakorUser():
-return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected,_that.token);case _:
+return $default(_that.phone,_that.firstName,_that.lastName,_that.isTelegramConnected,_that.isBaleConnected,_that.token);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +196,10 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String phone,  bool isTelegramConnected,  bool isBaleConnected,  String? token)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String phone,  String firstName,  String lastName,  bool isTelegramConnected,  bool isBaleConnected,  String? token)?  $default,) {final _that = this;
 switch (_that) {
 case _TafakorUser() when $default != null:
-return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected,_that.token);case _:
+return $default(_that.phone,_that.firstName,_that.lastName,_that.isTelegramConnected,_that.isBaleConnected,_that.token);case _:
   return null;
 
 }
@@ -208,11 +210,13 @@ return $default(_that.phone,_that.isTelegramConnected,_that.isBaleConnected,_tha
 /// @nodoc
 
 
-class _TafakorUser implements TafakorUser {
-  const _TafakorUser({required this.phone, this.isTelegramConnected = false, this.isBaleConnected = false, this.token});
+class _TafakorUser extends TafakorUser {
+  const _TafakorUser({required this.phone, this.firstName = '', this.lastName = '', this.isTelegramConnected = false, this.isBaleConnected = false, this.token}): super._();
   
 
 @override final  String phone;
+@override@JsonKey() final  String firstName;
+@override@JsonKey() final  String lastName;
 @override@JsonKey() final  bool isTelegramConnected;
 @override@JsonKey() final  bool isBaleConnected;
 @override final  String? token;
@@ -227,16 +231,16 @@ _$TafakorUserCopyWith<_TafakorUser> get copyWith => __$TafakorUserCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TafakorUser&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.isTelegramConnected, isTelegramConnected) || other.isTelegramConnected == isTelegramConnected)&&(identical(other.isBaleConnected, isBaleConnected) || other.isBaleConnected == isBaleConnected)&&(identical(other.token, token) || other.token == token));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TafakorUser&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.isTelegramConnected, isTelegramConnected) || other.isTelegramConnected == isTelegramConnected)&&(identical(other.isBaleConnected, isBaleConnected) || other.isBaleConnected == isBaleConnected)&&(identical(other.token, token) || other.token == token));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,phone,isTelegramConnected,isBaleConnected,token);
+int get hashCode => Object.hash(runtimeType,phone,firstName,lastName,isTelegramConnected,isBaleConnected,token);
 
 @override
 String toString() {
-  return 'TafakorUser(phone: $phone, isTelegramConnected: $isTelegramConnected, isBaleConnected: $isBaleConnected, token: $token)';
+  return 'TafakorUser(phone: $phone, firstName: $firstName, lastName: $lastName, isTelegramConnected: $isTelegramConnected, isBaleConnected: $isBaleConnected, token: $token)';
 }
 
 
@@ -247,7 +251,7 @@ abstract mixin class _$TafakorUserCopyWith<$Res> implements $TafakorUserCopyWith
   factory _$TafakorUserCopyWith(_TafakorUser value, $Res Function(_TafakorUser) _then) = __$TafakorUserCopyWithImpl;
 @override @useResult
 $Res call({
- String phone, bool isTelegramConnected, bool isBaleConnected, String? token
+ String phone, String firstName, String lastName, bool isTelegramConnected, bool isBaleConnected, String? token
 });
 
 
@@ -264,9 +268,11 @@ class __$TafakorUserCopyWithImpl<$Res>
 
 /// Create a copy of TafakorUser
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? phone = null,Object? isTelegramConnected = null,Object? isBaleConnected = null,Object? token = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? phone = null,Object? firstName = null,Object? lastName = null,Object? isTelegramConnected = null,Object? isBaleConnected = null,Object? token = freezed,}) {
   return _then(_TafakorUser(
 phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String,firstName: null == firstName ? _self.firstName : firstName // ignore: cast_nullable_to_non_nullable
+as String,lastName: null == lastName ? _self.lastName : lastName // ignore: cast_nullable_to_non_nullable
 as String,isTelegramConnected: null == isTelegramConnected ? _self.isTelegramConnected : isTelegramConnected // ignore: cast_nullable_to_non_nullable
 as bool,isBaleConnected: null == isBaleConnected ? _self.isBaleConnected : isBaleConnected // ignore: cast_nullable_to_non_nullable
 as bool,token: freezed == token ? _self.token : token // ignore: cast_nullable_to_non_nullable

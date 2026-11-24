@@ -23,6 +23,8 @@ import '../../features/splash/presentation/ui/splash_screen.dart';
 import '../../features/subscription/presentation/ui/vip_subscription_screen.dart';
 import '../../features/surah_list/presentation/ui/surah_list_screen.dart';
 import '../../features/khatm/presentation/ui/create_khatm_wizard_screen.dart';
+import '../../features/khatm/presentation/ui/create_group_khatm_screen.dart';
+import '../../features/khatm/presentation/ui/group_khatm_detail_screen.dart';
 import '../../features/khatm/presentation/ui/khatm_detail_report_screen.dart';
 import '../../features/khatm/presentation/ui/khatm_list_screen.dart';
 import '../../features/study_plan/presentation/ui/create_study_plan_screen.dart';
@@ -134,6 +136,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final khatmId = state.uri.queryParameters['khatmId'];
           final khatmSession =
               int.tryParse(state.uri.queryParameters['khatmSession'] ?? '');
+          final groupKhatmCode = state.uri.queryParameters['groupKhatmCode'];
+          final groupSlotUnit =
+              int.tryParse(state.uri.queryParameters['groupSlotUnit'] ?? '');
+          final groupSlotId =
+              int.tryParse(state.uri.queryParameters['groupSlotId'] ?? '');
           return QuranReaderScreen(
             surahId: surahId,
             surahName: surahName,
@@ -143,6 +150,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             isStudyPlan: isStudyPlan,
             khatmId: khatmId,
             khatmSession: khatmSession,
+            groupKhatmCode: groupKhatmCode,
+            groupSlotUnit: groupSlotUnit,
+            groupSlotId: groupSlotId,
           );
         },
       ),
@@ -223,6 +233,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final planId = state.pathParameters['id'] ?? '';
           return KhatmDetailReportScreen(planId: planId);
+        },
+      ),
+      GoRoute(
+        path: '/create-group-khatm',
+        name: createGroupKhatmRoute,
+        builder: (context, state) => const CreateGroupKhatmScreen(),
+      ),
+      GoRoute(
+        path: '/group-khatm-detail/:code',
+        name: groupKhatmDetailRoute,
+        builder: (context, state) {
+          final code = state.pathParameters['code'] ?? '';
+          return GroupKhatmDetailScreen(inviteCode: code);
         },
       ),
     ],

@@ -1,7 +1,11 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:quran/features/khatm/domain/entities/khatm_plan.dart';
 import 'package:quran/features/khatm/infrastructure/datasources/khatm_local_datasource.dart';
+import 'package:quran/features/tafakor/application/controllers/tafakor_auth_controller.dart';
+import 'personal_khatm_sync_controller.dart';
 
 class KhatmListState {
   final List<KhatmPlan> plans;
@@ -29,10 +33,35 @@ class KhatmListState {
 
 class KhatmListController extends StateNotifier<KhatmListState> {
   final IKhatmLocalDataSource _localDataSource;
+  final Ref? _ref;
 
-  KhatmListController(this._localDataSource) : super(const KhatmListState()) {
+  KhatmListController(this._localDataSource, [this._ref]) : super(const KhatmListState()) {
     _localDataSource.addListener(_onDataSourceChanged);
+    _initSyncController();
     loadPlans();
+  }
+
+  void _initSyncController() {
+    if (_ref != null) {
+      try {
+        _ref.read(personalKhatmSyncControllerProvider);
+      } catch (e) {
+        debugPrint('⚠️ [KhatmListController] Sync controller init skipped: $e');
+      }
+    }
+  }
+
+  void _syncIfAuthenticated() {
+    if (_ref != null) {
+      try {
+        final isAuth = _ref.read(isTafakorAuthenticatedProvider);
+        if (isAuth) {
+          _ref.read(personalKhatmSyncControllerProvider.notifier).syncWithBackend();
+        }
+      } catch (e) {
+        debugPrint('⚠️ [KhatmListController] Auto-sync call skipped: $e');
+      }
+    }
   }
 
   void _onDataSourceChanged() {
@@ -64,7 +93,11 @@ class KhatmListController extends StateNotifier<KhatmListState> {
           }
           return s;
         }).toList();
-        return p.copyWith(sessions: updatedSessions);
+        return p.copyWith(
+          sessions: updatedSessions,
+          clientUpdatedAt: DateTime.now().toUtc(),
+          isDirty: true,
+        );
       }
       return p;
     }).toList();
@@ -76,8 +109,9 @@ class KhatmListController extends StateNotifier<KhatmListState> {
       state = state.copyWith(isLoading: true, errorMessage: null);
     }
     try {
-      final plans = await _localDataSource.getAllPlans();
-      state = state.copyWith(plans: plans, isLoading: false);
+      final allPlans = await _localDataSource.getAllPlans();
+      final activePlans = allPlans.where((p) => p.deletedAt == null).toList();
+      state = state.copyWith(plans: activePlans, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -90,6 +124,7 @@ class KhatmListController extends StateNotifier<KhatmListState> {
     try {
       await _localDataSource.deletePlan(id);
       await loadPlans();
+      _syncIfAuthenticated();
     } catch (e) {
       state = state.copyWith(errorMessage: 'خطا در حذف ختم: $e');
     }
@@ -111,6 +146,7 @@ class KhatmListController extends StateNotifier<KhatmListState> {
         sessionIndex: sessionIndex,
         isCompleted: isCompleted,
       );
+      _syncIfAuthenticated();
     } catch (e) {
       state = state.copyWith(errorMessage: 'خطا در به‌روزرسانی جلسه: $e');
     }
@@ -121,6 +157,6 @@ final khatmListControllerProvider =
     StateNotifierProvider<KhatmListController, KhatmListState>(
   (ref) {
     final localDataSource = ref.read(khatmLocalDataSourceProvider);
-    return KhatmListController(localDataSource);
+    return KhatmListController(localDataSource, ref);
   },
 );

@@ -24,10 +24,7 @@ import '../widgets/report/khatm_session_timeline_header.dart';
 class KhatmDetailReportScreen extends ConsumerStatefulWidget {
   final String planId;
 
-  const KhatmDetailReportScreen({
-    super.key,
-    required this.planId,
-  });
+  const KhatmDetailReportScreen({super.key, required this.planId});
 
   @override
   ConsumerState<KhatmDetailReportScreen> createState() =>
@@ -86,9 +83,8 @@ class _KhatmDetailReportScreenState
     // To position the item completely below the sticky header without being obscured,
     // we scroll topCardsHeight + item offset, with a comfortable 14px margin so it's
     // clearly visible below the header divider.
-    final targetOffset =
-        (topCardsHeight + (index * tileEstimatedHeight) - 14.0)
-            .clamp(0.0, _scrollController.position.maxScrollExtent);
+    final targetOffset = (topCardsHeight + (index * tileEstimatedHeight) - 14.0)
+        .clamp(0.0, _scrollController.position.maxScrollExtent);
 
     final currentOffset = _scrollController.offset;
     final distance = (targetOffset - currentOffset).abs();
@@ -119,9 +115,7 @@ class _KhatmDetailReportScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: colors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(
           'حذف ختم',
           textAlign: TextAlign.center,
@@ -204,7 +198,8 @@ class _KhatmDetailReportScreenState
       return;
     }
 
-    final unitToNavigate = (nextSession.lastReadUnit != null &&
+    final unitToNavigate =
+        (nextSession.lastReadUnit != null &&
             nextSession.lastReadUnit! >= nextSession.fromUnit &&
             nextSession.lastReadUnit! <= nextSession.toUnit)
         ? nextSession.lastReadUnit!
@@ -215,23 +210,28 @@ class _KhatmDetailReportScreenState
       unitNumber: unitToNavigate,
     );
 
-    context.pushNamed(
-      quranReaderRoute,
-      pathParameters: {'id': target.surahId.toString()},
-      queryParameters: {
-        'ayah': target.ayahNumber.toString(),
-        'khatmId': plan.id,
-        'khatmSession': nextSession.sessionIndex.toString(),
-      },
-    ).then((_) {
-      if (!mounted) return;
-      ref.read(khatmDetailControllerProvider(widget.planId).notifier).loadPlan();
-      ref.read(khatmListControllerProvider.notifier).loadPlans();
-    });
+    context
+        .pushNamed(
+          quranReaderRoute,
+          pathParameters: {'id': target.surahId.toString()},
+          queryParameters: {
+            'ayah': target.ayahNumber.toString(),
+            'khatmId': plan.id,
+            'khatmSession': nextSession.sessionIndex.toString(),
+          },
+        )
+        .then((_) {
+          if (!mounted) return;
+          ref
+              .read(khatmDetailControllerProvider(widget.planId).notifier)
+              .loadPlan();
+          ref.read(khatmListControllerProvider.notifier).loadPlans();
+        });
   }
 
   void _onSessionTap(KhatmPlan plan, KhatmSessionItem session) {
-    final unitToNavigate = (!session.isCompleted &&
+    final unitToNavigate =
+        (!session.isCompleted &&
             session.lastReadUnit != null &&
             session.lastReadUnit! >= session.fromUnit &&
             session.lastReadUnit! <= session.toUnit)
@@ -243,25 +243,25 @@ class _KhatmDetailReportScreenState
       unitNumber: unitToNavigate,
     );
 
-    context.pushNamed(
-      quranReaderRoute,
-      pathParameters: {'id': target.surahId.toString()},
-      queryParameters: {
-        'ayah': target.ayahNumber.toString(),
-        if (!session.isCompleted) ...{
-          'khatmId': plan.id,
-          'khatmSession': session.sessionIndex.toString(),
-        },
-      },
-    ).then((_) {
-      if (!mounted) return;
-      ref
-          .read(khatmDetailControllerProvider(widget.planId).notifier)
-          .loadPlan();
-      ref
-          .read(khatmListControllerProvider.notifier)
-          .loadPlans();
-    });
+    context
+        .pushNamed(
+          quranReaderRoute,
+          pathParameters: {'id': target.surahId.toString()},
+          queryParameters: {
+            'ayah': target.ayahNumber.toString(),
+            if (!session.isCompleted) ...{
+              'khatmId': plan.id,
+              'khatmSession': session.sessionIndex.toString(),
+            },
+          },
+        )
+        .then((_) {
+          if (!mounted) return;
+          ref
+              .read(khatmDetailControllerProvider(widget.planId).notifier)
+              .loadPlan();
+          ref.read(khatmListControllerProvider.notifier).loadPlans();
+        });
   }
 
   @override
@@ -271,12 +271,14 @@ class _KhatmDetailReportScreenState
     final isDark = context.isDark;
 
     final state = ref.watch(khatmDetailControllerProvider(widget.planId));
-    final controller =
-        ref.read(khatmDetailControllerProvider(widget.planId).notifier);
+    final controller = ref.read(
+      khatmDetailControllerProvider(widget.planId).notifier,
+    );
 
     if (state.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: colors.cardBackground,
+        body: const Center(child: CupertinoActivityIndicator()),
       );
     }
 
@@ -313,10 +315,7 @@ class _KhatmDetailReportScreenState
           ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(0.8),
-            child: Container(
-              color: colors.cardBorder,
-              height: 0.8,
-            ),
+            child: Container(color: colors.cardBorder, height: 0.8),
           ),
         ),
         body: Center(
@@ -387,10 +386,7 @@ class _KhatmDetailReportScreenState
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(0.8),
-          child: Container(
-            color: colors.cardBorder,
-            height: 0.8,
-          ),
+          child: Container(color: colors.cardBorder, height: 0.8),
         ),
         actions: [
           Padding(
@@ -450,13 +446,11 @@ class _KhatmDetailReportScreenState
                     pinned: true,
                     delegate: _KhatmTimelineStickyHeaderDelegate(
                       plan: plan,
-                      onJumpToToday: !plan.isCompleted && plan.sessions.isNotEmpty
+                      onJumpToToday:
+                          !plan.isCompleted && plan.sessions.isNotEmpty
                           ? () {
                               final targetIdx = _findTargetIndex(plan);
-                              _scrollToSession(
-                                targetIdx,
-                                plan.sessions.length,
-                              );
+                              _scrollToSession(targetIdx, plan.sessions.length);
                             }
                           : null,
                     ),
@@ -523,10 +517,7 @@ class _KhatmTimelineStickyHeaderDelegate
   final KhatmPlan plan;
   final VoidCallback? onJumpToToday;
 
-  _KhatmTimelineStickyHeaderDelegate({
-    required this.plan,
-    this.onJumpToToday,
-  });
+  _KhatmTimelineStickyHeaderDelegate({required this.plan, this.onJumpToToday});
 
   @override
   double get minExtent => 74.0;
@@ -643,8 +634,7 @@ class _KhatmTimelineStickyHeaderDelegate
   }
 
   @override
-  bool shouldRebuild(
-      covariant _KhatmTimelineStickyHeaderDelegate oldDelegate) {
+  bool shouldRebuild(covariant _KhatmTimelineStickyHeaderDelegate oldDelegate) {
     return oldDelegate.plan != plan ||
         oldDelegate.onJumpToToday != onJumpToToday;
   }

@@ -97,14 +97,6 @@ class AmbientSoundBottomSheet extends ConsumerWidget {
                     ),
                   ],
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(
-                    CupertinoIcons.xmark,
-                    size: 19,
-                    color: isDark ? Colors.white54 : Colors.black45,
-                  ),
-                ),
               ],
             ),
             14.vSpace,

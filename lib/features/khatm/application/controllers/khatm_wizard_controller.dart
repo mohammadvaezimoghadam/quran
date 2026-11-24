@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:quran/common/utils/jalali_date.dart';
@@ -8,9 +10,11 @@ import 'package:quran/features/khatm/domain/entities/khatm_plan.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_session_item.dart';
 import 'package:quran/features/khatm/domain/services/khatm_date_engine.dart';
 import 'package:quran/features/khatm/domain/services/khatm_slicing_engine.dart';
+import 'package:quran/features/tafakor/application/controllers/tafakor_auth_controller.dart';
 import '../../../../core/services/analytics/analytics_providers.dart';
 import '../../../../core/services/analytics/i_analytics_service.dart';
 import 'package:quran/features/khatm/infrastructure/datasources/khatm_local_datasource.dart';
+import 'personal_khatm_sync_controller.dart';
 
 /// Immutable state holding the creation wizard form inputs and calculations.
 class KhatmWizardState {
@@ -148,9 +152,13 @@ class KhatmWizardState {
 class KhatmWizardController extends StateNotifier<KhatmWizardState> {
   final IKhatmLocalDataSource _localDataSource;
   final IAnalyticsService _analyticsService;
+  final Ref? _ref;
 
-  KhatmWizardController(this._localDataSource, this._analyticsService)
-      : super(KhatmWizardState.initial());
+  KhatmWizardController(
+    this._localDataSource,
+    this._analyticsService, [
+    this._ref,
+  ]) : super(KhatmWizardState.initial());
 
   void setTitle(String value) {
     state = state.copyWith(title: value, errorMessage: null);
@@ -295,6 +303,7 @@ class KhatmWizardController extends StateNotifier<KhatmWizardState> {
       final planId =
           'khatm_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(9999)}';
 
+      final nowLocal = DateTime.now();
       final plan = KhatmPlan(
         id: planId,
         title: state.title.trim(),
@@ -309,7 +318,9 @@ class KhatmWizardController extends StateNotifier<KhatmWizardState> {
         startDateTime: actualStartGregorian,
         endDateTime: endGregorian,
         sessions: sessionItems,
-        createdAt: DateTime.now(),
+        createdAt: nowLocal,
+        clientUpdatedAt: nowLocal.toUtc(),
+        isDirty: true,
       );
 
       await _localDataSource.savePlan(plan);
@@ -319,6 +330,19 @@ class KhatmWizardController extends StateNotifier<KhatmWizardState> {
         khatmType: plan.unitType.name,
         sessionCount: sessionItems.length,
       );
+
+      // Auto-sync with server if user is authenticated
+      if (_ref != null) {
+        try {
+          final isAuth = _ref.read(isTafakorAuthenticatedProvider);
+          if (isAuth) {
+            _ref.read(personalKhatmSyncControllerProvider.notifier).syncWithBackend();
+          }
+        } catch (e) {
+          debugPrint('⚠️ [KhatmWizard] Cloud sync skipped: $e');
+        }
+      }
+
       state = state.copyWith(isSubmitting: false);
       return plan;
     } catch (e) {
@@ -336,6 +360,6 @@ final khatmWizardControllerProvider =
   (ref) {
     final localDataSource = ref.read(khatmLocalDataSourceProvider);
     final analytics = ref.read(analyticsServiceProvider);
-    return KhatmWizardController(localDataSource, analytics);
+    return KhatmWizardController(localDataSource, analytics, ref);
   },
 );

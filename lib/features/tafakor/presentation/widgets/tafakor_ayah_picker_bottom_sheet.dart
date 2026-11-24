@@ -141,21 +141,6 @@ class _TafakorAyahPickerBottomSheetState extends State<TafakorAyahPickerBottomSh
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        CupertinoIcons.xmark,
-                        size: 13,
-                        color: secondaryTextColor,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

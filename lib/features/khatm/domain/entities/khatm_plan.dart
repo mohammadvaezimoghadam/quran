@@ -19,8 +19,11 @@ class KhatmPlan {
   final List<KhatmSessionItem> sessions;
   final DateTime createdAt;
   final bool isArchived;
+  final DateTime clientUpdatedAt;
+  final DateTime? deletedAt;
+  final bool isDirty;
 
-  const KhatmPlan({
+  KhatmPlan({
     required this.id,
     required this.title,
     required this.unitType,
@@ -36,7 +39,11 @@ class KhatmPlan {
     required this.sessions,
     required this.createdAt,
     this.isArchived = false,
-  });
+    DateTime? clientUpdatedAt,
+    DateTime? deletedAt,
+    this.isDirty = true,
+  })  : clientUpdatedAt = (clientUpdatedAt ?? createdAt).toUtc(),
+        deletedAt = deletedAt?.toUtc();
 
   // ── Computed Properties ──────────────────────────────────────────────────
 
@@ -119,6 +126,10 @@ class KhatmPlan {
     List<KhatmSessionItem>? sessions,
     DateTime? createdAt,
     bool? isArchived,
+    DateTime? clientUpdatedAt,
+    DateTime? deletedAt,
+    bool clearDeletedAt = false,
+    bool? isDirty,
   }) {
     return KhatmPlan(
       id: id ?? this.id,
@@ -136,6 +147,9 @@ class KhatmPlan {
       sessions: sessions ?? this.sessions,
       createdAt: createdAt ?? this.createdAt,
       isArchived: isArchived ?? this.isArchived,
+      clientUpdatedAt: (clientUpdatedAt ?? this.clientUpdatedAt).toUtc(),
+      deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt)?.toUtc(),
+      isDirty: isDirty ?? this.isDirty,
     );
   }
 
@@ -156,7 +170,116 @@ class KhatmPlan {
       'sessions': sessions.map((s) => s.toMap()).toList(),
       'createdAt': createdAt.toIso8601String(),
       'isArchived': isArchived,
+      'clientUpdatedAt': clientUpdatedAt.toUtc().toIso8601String(),
+      'deletedAt': deletedAt?.toUtc().toIso8601String(),
+      'isDirty': isDirty,
     };
+  }
+
+  /// Maps entity to Django DRF PersonalKhatmPlanSerializer schema for cloud sync
+  Map<String, dynamic> toServerMap() {
+    final startStr =
+        '${startDateTime.year.toString().padLeft(4, '0')}-${startDateTime.month.toString().padLeft(2, '0')}-${startDateTime.day.toString().padLeft(2, '0')}';
+    final endStr =
+        '${endDateTime.year.toString().padLeft(4, '0')}-${endDateTime.month.toString().padLeft(2, '0')}-${endDateTime.day.toString().padLeft(2, '0')}';
+
+    return {
+      'client_id': id,
+      'title': title,
+      'unit_type': unitType.name,
+      'range_from': rangeFrom,
+      'range_to': rangeTo,
+      'planning_mode': planningMode.name,
+      'session_count': sessionCount,
+      'quota_per_session': quotaPerSession,
+      'cadence': cadence.name,
+      'selected_weekdays': selectedWeekdays,
+      'start_date': startStr,
+      'end_date': endStr,
+      'sessions_progress': sessions.map((s) => s.toMap()).toList(),
+      'completed_sessions': completedSessionsCount,
+      'is_completed': isCompleted,
+      'is_archived': isArchived,
+      'client_updated_at': clientUpdatedAt.toUtc().toIso8601String(),
+      'deleted_at': deletedAt?.toUtc().toIso8601String(),
+    };
+  }
+
+  /// Parses server plan from Django REST Framework into local Flutter domain entity
+  factory KhatmPlan.fromServerMap(Map<String, dynamic> map) {
+    final unitTypeName = map['unit_type'] as String? ?? 'page';
+    final planningModeName =
+        map['planning_mode'] as String? ?? 'bySessionCount';
+    final cadenceName = map['cadence'] as String? ?? 'daily';
+
+    final unitType = KhatmUnitType.values.firstWhere(
+      (e) => e.name == unitTypeName,
+      orElse: () => KhatmUnitType.page,
+    );
+    final planningMode = KhatmPlanningMode.values.firstWhere(
+      (e) => e.name == planningModeName,
+      orElse: () => KhatmPlanningMode.bySessionCount,
+    );
+    final cadence = KhatmCadence.values.firstWhere(
+      (e) => e.name == cadenceName,
+      orElse: () => KhatmCadence.daily,
+    );
+
+    final rawSessions = (map['sessions_progress'] as List<dynamic>?) ?? [];
+    final sessions = rawSessions
+        .map((s) => KhatmSessionItem.fromMap(s as Map<dynamic, dynamic>))
+        .toList();
+
+    final startDate =
+        DateTime.tryParse(map['start_date']?.toString() ?? '') ??
+        DateTime.now();
+    final endDate =
+        DateTime.tryParse(map['end_date']?.toString() ?? '') ?? DateTime.now();
+    final createdAt =
+        DateTime.tryParse(map['created_at']?.toString() ?? '') ??
+        DateTime.now();
+
+    final clientUpdatedAt =
+        (map['client_updated_at'] != null
+            ? DateTime.tryParse(map['client_updated_at'].toString())?.toUtc()
+            : null) ??
+        (map['updated_at'] != null
+            ? DateTime.tryParse(map['updated_at'].toString())?.toUtc()
+            : null) ??
+        createdAt.toUtc();
+
+    final deletedAt = map['deleted_at'] != null
+        ? DateTime.tryParse(map['deleted_at'].toString())?.toUtc()
+        : null;
+
+    final rawClientId = map['client_id']?.toString();
+    final resolvedId = (rawClientId != null && rawClientId.isNotEmpty)
+        ? rawClientId
+        : (map['id']?.toString() ?? '');
+
+    return KhatmPlan(
+      id: resolvedId,
+      title: map['title']?.toString() ?? '',
+      unitType: unitType,
+      rangeFrom: map['range_from'] as int? ?? 1,
+      rangeTo: map['range_to'] as int? ?? unitType.maxUnits,
+      planningMode: planningMode,
+      sessionCount: map['session_count'] as int? ?? 30,
+      quotaPerSession: (map['quota_per_session'] as num?)?.toInt() ?? 1,
+      cadence: cadence,
+      selectedWeekdays:
+          ((map['selected_weekdays'] as List<dynamic>?) ?? [6, 1, 3])
+              .map((e) => (e as num).toInt())
+              .toList(),
+      startDateTime: startDate,
+      endDateTime: endDate,
+      sessions: sessions,
+      createdAt: createdAt,
+      isArchived: map['is_archived'] as bool? ?? false,
+      clientUpdatedAt: clientUpdatedAt,
+      deletedAt: deletedAt,
+      isDirty: false,
+    );
   }
 
   factory KhatmPlan.fromMap(Map<dynamic, dynamic> map) {
@@ -188,6 +311,27 @@ class KhatmPlan {
     final selectedWeekdays =
         rawWeekdays.map((e) => (e as num).toInt()).toList();
 
+    final createdAt = map['createdAt'] != null
+        ? DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now()
+        : DateTime.now();
+
+    // Legacy Hive compatibility: infer clientUpdatedAt from latest completion/creation time
+    DateTime fallbackUpdatedAt = createdAt.toUtc();
+    for (final s in sessions) {
+      final completedAt = s.completedAt?.toUtc();
+      if (completedAt != null && completedAt.isAfter(fallbackUpdatedAt)) {
+        fallbackUpdatedAt = completedAt;
+      }
+    }
+
+    final parsedClientUpdatedAt = map['clientUpdatedAt'] != null
+        ? DateTime.tryParse(map['clientUpdatedAt'].toString())?.toUtc()
+        : null;
+    final parsedDeletedAt = map['deletedAt'] != null
+        ? DateTime.tryParse(map['deletedAt'].toString())?.toUtc()
+        : null;
+    final parsedIsDirty = map['isDirty'] is bool ? map['isDirty'] as bool : true;
+
     return KhatmPlan(
       id: map['id'] as String? ?? '',
       title: map['title'] as String? ?? 'ختم شخصی',
@@ -206,10 +350,11 @@ class KhatmPlan {
           ? DateTime.tryParse(map['endDateTime'].toString()) ?? DateTime.now()
           : DateTime.now(),
       sessions: sessions,
-      createdAt: map['createdAt'] != null
-          ? DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now()
-          : DateTime.now(),
+      createdAt: createdAt,
       isArchived: map['isArchived'] == true,
+      clientUpdatedAt: parsedClientUpdatedAt ?? fallbackUpdatedAt,
+      deletedAt: parsedDeletedAt,
+      isDirty: parsedIsDirty,
     );
   }
 }

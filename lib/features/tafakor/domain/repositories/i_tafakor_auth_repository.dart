@@ -8,5 +8,9 @@ abstract class ITafakorAuthRepository {
   Future<Result<TafakorUser?, Failure>> getCurrentUser();
   TafakorUser? getCurrentUserSync();
   Future<Result<TafakorUser, Failure>> refreshProfile();
+  Future<Result<TafakorUser, Failure>> updateProfile({
+    required String firstName,
+    required String lastName,
+  });
   Future<Result<void, Failure>> logout();
 }

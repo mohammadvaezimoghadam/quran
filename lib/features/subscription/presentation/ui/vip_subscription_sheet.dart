@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -235,15 +234,6 @@ class _VipSubscriptionSheetState extends ConsumerState<VipSubscriptionSheet> {
                           ),
                         ],
                       ),
-                    ),
-                    IconButton(
-                      tooltip: 'بستن',
-                      icon: Icon(
-                        CupertinoIcons.xmark_circle_fill,
-                        size: 24,
-                        color: isDark ? Colors.white38 : Colors.black26,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),

@@ -1,14 +1,17 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:quran/common/extensions/context_extension.dart';
 import 'package:quran/common/extensions/int_extension.dart';
 import 'package:quran/core/theme/app_typography.dart';
+import 'package:quran/features/tafakor/application/controllers/tafakor_auth_controller.dart';
+import 'package:quran/features/tafakor/presentation/ui/tafakor_login_screen.dart';
 
 /// Donut chart card displaying reading progress, styled cleanly to match
 /// the app's minimal Apple-style design system with Tafakor Mint theme.
-class KhatmProgressDonutChart extends StatelessWidget {
+class KhatmProgressDonutChart extends ConsumerWidget {
   final String title;
   final int totalUnits;
   final int completedUnits;
@@ -23,10 +26,11 @@ class KhatmProgressDonutChart extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
     final isDark = context.isDark;
+    final isAuthenticated = ref.watch(isTafakorAuthenticatedProvider);
 
     final remainingUnits = (totalUnits - completedUnits).clamp(0, totalUnits);
     final double completedFraction =
@@ -133,6 +137,50 @@ class KhatmProgressDonutChart extends StatelessWidget {
               ),
             ],
           ),
+          if (!isAuthenticated) ...[
+            const SizedBox(height: 12),
+            Container(
+              height: 0.6,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.06),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'برای ذخیره ابری و حفظ پیشرفت ختم، وارد شوید.',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11.5,
+                      color: isDark ? Colors.white54 : const Color(0xFF7A756D),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => TafakorLoginScreen.push(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: colorScheme.primary,
+                  ),
+                  child: const Text(
+                    'ورود',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
