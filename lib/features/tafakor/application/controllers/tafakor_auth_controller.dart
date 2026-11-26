@@ -154,7 +154,7 @@ class TafakorAuthController extends Notifier<TafakorAuthState> {
           isCodeSent: true,
           phone: phone,
           error: null,
-          resendCountdown: 120,
+          resendCountdown: 60,
         );
         _startCountdown();
         return true;

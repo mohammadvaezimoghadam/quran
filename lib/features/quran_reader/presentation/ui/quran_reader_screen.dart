@@ -46,7 +46,10 @@ import '../../../quran_home/application/controllers/continue_reading_controller.
 import '../../../khatm/presentation/widgets/reader/khatm_reader_bar.dart';
 import '../../../khatm/presentation/widgets/reader/group_khatm_reader_bar.dart';
 import '../../../khatm/presentation/widgets/reader/khatm_quick_bottom_sheet.dart';
+import '../../../khatm/application/controllers/group_khatm_detail_controller.dart';
+import '../../../khatm/application/controllers/group_khatm_reading_controller.dart';
 import '../../../khatm/application/controllers/khatm_detail_controller.dart';
+import '../../../khatm/domain/entities/khatm_enums.dart';
 import '../../../khatm/domain/services/khatm_quran_resolver.dart';
 import '../../../khatm/infrastructure/datasources/khatm_quran_data.dart';
 import '../../../study_plan/domain/entities/study_plan.dart';
@@ -68,6 +71,8 @@ class QuranReaderScreen extends ConsumerStatefulWidget {
   final String? groupKhatmCode;
   final int? groupSlotUnit;
   final int? groupSlotId;
+  final GroupKhatmUnitType? groupUnitType;
+  final int? groupSlotQuantity;
 
   const QuranReaderScreen({
     super.key,
@@ -82,6 +87,8 @@ class QuranReaderScreen extends ConsumerStatefulWidget {
     this.groupKhatmCode,
     this.groupSlotUnit,
     this.groupSlotId,
+    this.groupUnitType,
+    this.groupSlotQuantity,
   });
 
   @override
@@ -112,12 +119,25 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
   // Active Khatm session tracking
   String? _activeKhatmId;
   int? _activeKhatmSession;
+  KhatmDetailController? _activeKhatmController;
   String? _activeGroupKhatmCode;
   int? _activeGroupSlotUnit;
   int? _activeGroupSlotId;
+  GroupKhatmUnitType? _activeGroupUnitType;
+  int? _activeGroupSlotQuantity;
   late final ActiveKhatmSessionNotifier _activeKhatmSessionNotifier;
+  late final ActiveGroupKhatmSlotNotifier _activeGroupKhatmSlotNotifier;
+  ProviderSubscription<AudioStatus>? _audioStatusSub;
+  AudioStatus _lastAudioStatus = AudioStatus.initial;
 
   static const Duration _exitButtonFadeDelay = Duration(milliseconds: 3500);
+
+  bool _isAudioSessionActive([AudioStatus? status]) {
+    final s = status ?? _lastAudioStatus;
+    return s == AudioStatus.playing ||
+        s == AudioStatus.loading ||
+        s == AudioStatus.paused;
+  }
 
   @override
   void initState() {
@@ -128,6 +148,8 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
     _activeGroupKhatmCode = widget.groupKhatmCode;
     _activeGroupSlotUnit = widget.groupSlotUnit;
     _activeGroupSlotId = widget.groupSlotId;
+    _activeGroupUnitType = widget.groupUnitType;
+    _activeGroupSlotQuantity = widget.groupSlotQuantity;
     _continueReadingNotifier = ref.read(
       continueReadingControllerProvider.notifier,
     );
@@ -137,7 +159,20 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
       isStudyPlanSessionActiveProvider.notifier,
     );
     _activeKhatmSessionNotifier = ref.read(activeKhatmSessionProvider.notifier);
+    _activeGroupKhatmSlotNotifier = ref.read(
+      activeGroupKhatmSlotProvider.notifier,
+    );
+    _audioStatusSub = ref.listenManual<AudioStatus>(
+      quranAudioControllerProvider.select((s) => s.status),
+      (_, next) {
+        _lastAudioStatus = next;
+      },
+      fireImmediately: true,
+    );
     _ayahTeaserNotifier = ref.read(ayahTeaserControllerProvider.notifier);
+    if (_activeKhatmId != null) {
+      _syncActivePersonalKhatmController(_activeKhatmId);
+    }
     _pageController = PageController(initialPage: widget.surahId - 1);
 
     // Fetch ayahs when screen loads & ensure clean normal controls state
@@ -157,22 +192,13 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
           khatmId: _activeKhatmId!,
           sessionIndex: _activeKhatmSession!,
         );
-        final initialAyah = widget.initialAyahNumber ?? 1;
-        final initialPage = KhatmQuranData.getPageForAyah(
-          widget.surahId,
-          initialAyah,
-        );
-        ref
-            .read(khatmDetailControllerProvider(_activeKhatmId!).notifier)
-            .recordReadingProgress(
-              sessionIndex: _activeKhatmSession!,
-              surahId: widget.surahId,
-              ayahNumber: initialAyah,
-              page: initialPage,
-              isEndOfPage: false,
-              pageFraction: 0.0,
-            );
+        if (_activeGroupKhatmCode == null) {
+          _activeGroupKhatmSlotNotifier.clear();
+        }
+      } else if (_activeGroupKhatmCode != null && _activeGroupSlotId != null) {
+        _activeKhatmSessionNotifier.clear();
       }
+      _activateGroupKhatmIfPresent();
       _readerControlsNotifier.reset();
       ref
           .read(quranReaderControllerProvider.notifier)
@@ -220,24 +246,95 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
         oldWidget.khatmSession != widget.khatmSession) {
       _activeKhatmId = widget.khatmId;
       _activeKhatmSession = widget.khatmSession;
+      _syncActivePersonalKhatmController(_activeKhatmId);
       if (_activeKhatmId != null && _activeKhatmSession != null) {
         _activeKhatmSessionNotifier.setActive(
           khatmId: _activeKhatmId!,
           sessionIndex: _activeKhatmSession!,
         );
-      } else {
+      } else if (!_isAudioSessionActive() || _activeGroupKhatmCode != null) {
         _activeKhatmSessionNotifier.clear();
       }
     }
-    if (oldWidget.groupKhatmCode != widget.groupKhatmCode) {
+    if (oldWidget.groupKhatmCode != widget.groupKhatmCode ||
+        oldWidget.groupSlotId != widget.groupSlotId ||
+        oldWidget.groupUnitType != widget.groupUnitType ||
+        oldWidget.groupSlotQuantity != widget.groupSlotQuantity) {
       _activeGroupKhatmCode = widget.groupKhatmCode;
       _activeGroupSlotUnit = widget.groupSlotUnit;
       _activeGroupSlotId = widget.groupSlotId;
+      _activeGroupUnitType = widget.groupUnitType;
+      _activeGroupSlotQuantity = widget.groupSlotQuantity;
+      _activateGroupKhatmIfPresent();
     }
+  }
+
+  void _activateGroupKhatmIfPresent() {
+    if (_activeGroupKhatmCode == null || _activeGroupSlotId == null) {
+      if (!_isAudioSessionActive() || _activeKhatmId != null) {
+        _activeGroupKhatmSlotNotifier.clear();
+      }
+      return;
+    }
+    final campaign = ref
+        .read(groupKhatmDetailControllerProvider(_activeGroupKhatmCode!))
+        .campaign;
+    final slot = campaign?.slots
+        .where((s) => s.id == _activeGroupSlotId)
+        .firstOrNull;
+    final resolvedType =
+        _activeGroupUnitType ??
+        campaign?.unitTypeEnum ??
+        GroupKhatmUnitType.juz;
+    final resolvedUnit =
+        _activeGroupSlotUnit ?? campaign?.targetSurah ?? widget.surahId;
+    final resolvedQuantity = _activeGroupSlotQuantity ?? slot?.quantity ?? 1;
+
+    _activeGroupKhatmSlotNotifier.setActive(
+      ActiveGroupKhatmSlot(
+        inviteCode: _activeGroupKhatmCode!,
+        slotId: _activeGroupSlotId!,
+        unitType: resolvedType,
+        unitNumber: resolvedUnit,
+        targetQuantity: resolvedQuantity,
+      ),
+    );
+  }
+
+  void _syncActivePersonalKhatmController(String? khatmId) {
+    if (khatmId == null) {
+      _activeKhatmController = null;
+      return;
+    }
+    try {
+      _activeKhatmController = ref.read(
+        khatmDetailControllerProvider(khatmId).notifier,
+      );
+    } catch (_) {}
+  }
+
+  void _flushActivePersonalKhatmIfAny() {
+    final ctrl = _activeKhatmController;
+    if (ctrl != null && ctrl.mounted) {
+      try {
+        unawaited(ctrl.flushPendingSave());
+      } catch (_) {}
+      return;
+    }
+    final khatmId = _activeKhatmId;
+    if (khatmId == null || !mounted) return;
+    try {
+      unawaited(
+        ref.read(khatmDetailControllerProvider(khatmId).notifier).flushPendingSave(),
+      );
+    } catch (_) {}
   }
 
   @override
   void dispose() {
+    final keepDetachedAudio = _isAudioSessionActive();
+    _audioStatusSub?.close();
+    _audioStatusSub = null;
     _exitButtonFadeTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
@@ -248,10 +345,19 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
     // Save reading progress when leaving screen
     _continueReadingNotifier.saveStateToStorage();
     _studyPlanNotifier.flushPendingSave();
+    _flushActivePersonalKhatmIfAny();
     Future.microtask(() {
-      _activeKhatmSessionNotifier.clear();
-      _studyPlanSessionNotifier.set(false);
-      _ayahTeaserNotifier.reset();
+      try {
+        if (keepDetachedAudio) {
+          _activeKhatmSessionNotifier.detachFromReader();
+          _activeGroupKhatmSlotNotifier.detachFromReader();
+        } else {
+          _activeKhatmSessionNotifier.clear();
+          _activeGroupKhatmSlotNotifier.clear();
+        }
+        _studyPlanSessionNotifier.set(false);
+        _ayahTeaserNotifier.reset();
+      } catch (_) {}
     });
     super.dispose();
   }
@@ -263,6 +369,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
         state == AppLifecycleState.inactive) {
       _continueReadingNotifier.saveStateToStorage();
       _studyPlanNotifier.flushPendingSave();
+      _flushActivePersonalKhatmIfAny();
     }
   }
 
@@ -364,18 +471,6 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
     ref.read(quranReaderControllerProvider.notifier).fetchAyahs(newSurahId);
     ref.read(selectedAyahActionProvider.notifier).clearSelection();
     _ayahTeaserNotifier.prefetchSurah(newSurahId);
-
-    if (_activeKhatmId != null && _activeKhatmSession != null) {
-      final startPage = kStaticQuranSurahs[newSurahId - 1].startPage;
-      ref
-          .read(khatmDetailControllerProvider(_activeKhatmId!).notifier)
-          .recordReadingProgress(
-            sessionIndex: _activeKhatmSession!,
-            surahId: newSurahId,
-            ayahNumber: 1,
-            page: startPage,
-          );
-    }
   }
 
   void _handleTargetSelected(AyahTarget target) {
@@ -399,23 +494,6 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
     }
 
     ref.read(navigationTargetProvider.notifier).forceTarget(target);
-
-    // Track active Khatm session progress upon navigation target
-    if (_activeKhatmId != null && _activeKhatmSession != null) {
-      final targetPage = KhatmQuranData.getPageForAyah(
-        target.surahId,
-        target.ayahNumber,
-      );
-      ref
-          .read(khatmDetailControllerProvider(_activeKhatmId!).notifier)
-          .recordReadingProgress(
-            sessionIndex: _activeKhatmSession!,
-            surahId: target.surahId,
-            ayahNumber: target.ayahNumber,
-            page: targetPage,
-            isEndOfPage: false,
-          );
-    }
   }
 
   String _getSurahName(WidgetRef ref, int surahId) {
@@ -449,13 +527,27 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
     List<AyahEntity> ayahs,
     int currentSurahId,
   ) {
+    final readingAyah = ref.read(currentReadingAyahProvider);
+    if (readingAyah != null && readingAyah.surahId == currentSurahId) {
+      return readingAyah.ayahNumber;
+    }
+
     if (ayahs.isNotEmpty && positions != null && positions.isNotEmpty) {
-      const topCutoff = 0.18;
-      const readingBaseline = 0.22;
+      final screenHeight = MediaQuery.sizeOf(context).height;
+      final safeTop = MediaQuery.paddingOf(context).top;
+      final hasPersonal = ref.read(activeKhatmSessionProvider) != null;
+      final hasGroup =
+          ref.read(activeGroupKhatmSlotProvider) != null ||
+          _activeGroupKhatmCode != null;
+      final khatmH = hasPersonal
+          ? KhatmReaderBar.barHeight
+          : (hasGroup ? GroupKhatmReaderBar.barHeight : 0.0);
+      final headerBottom = safeTop + 60.0 + 40.0 + khatmH + 8.0;
+      final topCutoff =
+          screenHeight > 0 ? (headerBottom / screenHeight).clamp(0.0, 0.6) : 0.18;
+      final readingBaseline =
+          topCutoff + (18.0 / (screenHeight > 0 ? screenHeight : 800.0));
       final lastAyahIndex = ayahs.length - 1;
-      final endCardPos = positions
-          .where((p) => p.index == ayahs.length)
-          .firstOrNull;
       final lastPos = positions
           .where((p) => p.index == lastAyahIndex)
           .firstOrNull;
@@ -471,8 +563,6 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
       if (targetPos != null) {
         final clampedIndex = targetPos.index.clamp(0, lastAyahIndex);
         return ayahs[clampedIndex].ayahNumber;
-      } else if (endCardPos != null && endCardPos.itemTrailingEdge <= 1.0) {
-        return ayahs[lastAyahIndex].ayahNumber;
       } else if (lastPos != null &&
           lastPos.itemTrailingEdge <= readingBaseline) {
         return ayahs[lastAyahIndex].ayahNumber;
@@ -765,13 +855,14 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
           ),
         );
     ref.listen<ActiveKhatmSession?>(activeKhatmSessionProvider, (prev, next) {
-      if (next != null) {
+      if (next != null && !next.isDetachedFromReader) {
         if (_activeKhatmId != next.khatmId ||
             _activeKhatmSession != next.sessionIndex) {
           setState(() {
             _activeKhatmId = next.khatmId;
             _activeKhatmSession = next.sessionIndex;
           });
+          _syncActivePersonalKhatmController(next.khatmId);
         }
       } else {
         if (_activeKhatmId != null || _activeKhatmSession != null) {
@@ -779,17 +870,33 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
             _activeKhatmId = null;
             _activeKhatmSession = null;
           });
+          _syncActivePersonalKhatmController(null);
         }
       }
     });
 
     final activeKhatmSession = ref.watch(activeKhatmSessionProvider);
-    final bool hasKhatmSession = activeKhatmSession != null;
+    final visiblePersonalKhatmSession =
+        (activeKhatmSession != null && !activeKhatmSession.isDetachedFromReader)
+            ? activeKhatmSession
+            : null;
+    final activeGroupSlot = ref.watch(activeGroupKhatmSlotProvider);
+    final visibleGroupSlot =
+        (activeGroupSlot != null && !activeGroupSlot.isDetachedFromReader)
+            ? activeGroupSlot
+            : null;
+    final bool hasKhatmSession =
+        visiblePersonalKhatmSession != null ||
+        visibleGroupSlot != null ||
+        _activeGroupKhatmCode != null;
     final bool isKhatmCollapsed = ref.watch(isKhatmReaderBarCollapsedProvider);
+    final double expandedKhatmHeight = visiblePersonalKhatmSession != null
+        ? KhatmReaderBar.barHeight
+        : GroupKhatmReaderBar.barHeight;
     final double khatmBarHeight = hasKhatmSession
         ? (isKhatmCollapsed
               ? KhatmReaderBar.collapsedHeight
-              : KhatmReaderBar.barHeight)
+              : expandedKhatmHeight)
         : 0.0;
     final double studyPlanBarHeight = (hasActivePlan && !hasKhatmSession)
         ? 36.0
@@ -800,7 +907,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
         appBarHeight +
         infoBarHeight +
         studyPlanBarHeight +
-        (hasKhatmSession ? KhatmReaderBar.barHeight : 0.0);
+        (hasKhatmSession ? expandedKhatmHeight : 0.0);
 
     final ayahThemeId = ref.watch(
       quranDisplaySettingsControllerProvider.select((s) => s.ayahThemeId),
@@ -823,9 +930,19 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
             SystemUiMode.manual,
             overlays: SystemUiOverlay.values,
           );
+          _flushActivePersonalKhatmIfAny();
           ref.read(readerControlsProvider.notifier).reset();
           ref.read(isStudyPlanSessionActiveProvider.notifier).set(false);
-          ref.read(activeKhatmSessionProvider.notifier).clear();
+          final keepDetachedAudio = _isAudioSessionActive(
+            ref.read(quranAudioControllerProvider).status,
+          );
+          if (keepDetachedAudio) {
+            ref.read(activeKhatmSessionProvider.notifier).detachFromReader();
+            ref.read(activeGroupKhatmSlotProvider.notifier).detachFromReader();
+          } else {
+            ref.read(activeKhatmSessionProvider.notifier).clear();
+            ref.read(activeGroupKhatmSlotProvider.notifier).clear();
+          }
           ref
               .read(isKhatmReaderBarCollapsedProvider.notifier)
               .setCollapsed(false);
@@ -1163,12 +1280,22 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                                   QuickSettingsDrawer.show(context);
                                 } else if (value == 'khatm_plan' ||
                                     value == 'study_plan') {
+                                  final livePos = ref.read(
+                                    currentReadingAyahProvider,
+                                  );
                                   final readingState = ref.read(
                                     continueReadingControllerProvider,
                                   );
                                   final curSurah =
-                                      readingState?.surahId ?? currentSurahId;
-                                  final curAyah = readingState?.ayahNumber ?? 1;
+                                      livePos?.surahId ??
+                                      (readingState?.surahId == currentSurahId
+                                          ? currentSurahId
+                                          : currentSurahId);
+                                  final curAyah =
+                                      (livePos?.surahId == curSurah
+                                          ? livePos?.ayahNumber
+                                          : null) ??
+                                      _getActiveOrVisibleAyahNumber();
                                   final curPage = KhatmQuranData.getPageForAyah(
                                     curSurah,
                                     curAyah,
@@ -1189,6 +1316,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                                         _activeKhatmSession =
                                             result.sessionIndex;
                                       });
+                                      _syncActivePersonalKhatmController(
+                                        result.khatmId,
+                                      );
                                       ref
                                           .read(
                                             activeKhatmSessionProvider.notifier,
@@ -1200,19 +1330,6 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                                       if (result.shouldJump &&
                                           result.target != null) {
                                         _handleTargetSelected(result.target!);
-                                      } else {
-                                        ref
-                                            .read(
-                                              khatmDetailControllerProvider(
-                                                result.khatmId,
-                                              ).notifier,
-                                            )
-                                            .recordReadingProgress(
-                                              sessionIndex: result.sessionIndex,
-                                              surahId: curSurah,
-                                              ayahNumber: curAyah,
-                                              page: curPage,
-                                            );
                                       }
                                     }
                                   });
@@ -1397,23 +1514,39 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                           inviteCode: _activeGroupKhatmCode!,
                           unitNumber: _activeGroupSlotUnit,
                           slotId: _activeGroupSlotId,
+                          unitType: _activeGroupUnitType,
+                          targetQuantity: _activeGroupSlotQuantity,
+                          onJumpToAyah: (surahId, ayahNumber) {
+                            _handleTargetSelected(
+                              AyahTarget(
+                                surahId: surahId,
+                                ayahNumber: ayahNumber,
+                              ),
+                            );
+                          },
                           onClose: () {
+                            _activeGroupKhatmSlotNotifier.clear();
                             setState(() {
                               _activeGroupKhatmCode = null;
+                              _activeGroupSlotId = null;
                             });
                           },
                         ),
-                      if (activeKhatmSession != null)
+                      if (visiblePersonalKhatmSession != null)
                         KhatmReaderBar(
-                          khatmId: activeKhatmSession.khatmId,
-                          sessionIndex: activeKhatmSession.sessionIndex,
+                          khatmId: visiblePersonalKhatmSession.khatmId,
+                          sessionIndex:
+                              visiblePersonalKhatmSession.sessionIndex,
                           onTap: () {
-                            final readingState = ref.read(
-                              continueReadingControllerProvider,
+                            final livePos = ref.read(
+                              currentReadingAyahProvider,
                             );
-                            final curSurah =
-                                readingState?.surahId ?? currentSurahId;
-                            final curAyah = readingState?.ayahNumber ?? 1;
+                            final curSurah = livePos?.surahId ?? currentSurahId;
+                            final curAyah =
+                                (livePos?.surahId == curSurah
+                                    ? livePos?.ayahNumber
+                                    : null) ??
+                                _getActiveOrVisibleAyahNumber();
                             final curPage = KhatmQuranData.getPageForAyah(
                               curSurah,
                               curAyah,
@@ -1421,7 +1554,8 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
 
                             KhatmQuickBottomSheet.show(
                               context,
-                              activeKhatmId: activeKhatmSession.khatmId,
+                              activeKhatmId:
+                                  visiblePersonalKhatmSession.khatmId,
                               currentSurahId: curSurah,
                               currentAyahNumber: curAyah,
                               currentPage: curPage,
@@ -1431,6 +1565,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                                   _activeKhatmId = result.khatmId;
                                   _activeKhatmSession = result.sessionIndex;
                                 });
+                                _syncActivePersonalKhatmController(
+                                  result.khatmId,
+                                );
                                 ref
                                     .read(activeKhatmSessionProvider.notifier)
                                     .setActive(
@@ -1440,28 +1577,17 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                                 if (result.shouldJump &&
                                     result.target != null) {
                                   _handleTargetSelected(result.target!);
-                                } else {
-                                  ref
-                                      .read(
-                                        khatmDetailControllerProvider(
-                                          result.khatmId,
-                                        ).notifier,
-                                      )
-                                      .recordReadingProgress(
-                                        sessionIndex: result.sessionIndex,
-                                        surahId: curSurah,
-                                        ayahNumber: curAyah,
-                                        page: curPage,
-                                      );
                                 }
                               }
                             });
                           },
                           onClose: () {
+                            _flushActivePersonalKhatmIfAny();
                             setState(() {
                               _activeKhatmId = null;
                               _activeKhatmSession = null;
                             });
+                            _syncActivePersonalKhatmController(null);
                             ref
                                 .read(activeKhatmSessionProvider.notifier)
                                 .clear();
@@ -1475,35 +1601,29 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen>
                             final plan = ref
                                 .read(
                                   khatmDetailControllerProvider(
-                                    activeKhatmSession.khatmId,
+                                    visiblePersonalKhatmSession.khatmId,
                                   ),
                                 )
                                 .plan;
                             if (plan != null &&
-                                activeKhatmSession.sessionIndex + 1 <
+                                visiblePersonalKhatmSession.sessionIndex + 1 <
                                     plan.sessions.length) {
                               final nextIndex =
-                                  activeKhatmSession.sessionIndex + 1;
+                                  visiblePersonalKhatmSession.sessionIndex + 1;
                               final nextSession = plan.sessions[nextIndex];
-                              final unitToNavigate =
-                                  (nextSession.lastReadUnit != null &&
-                                      nextSession.lastReadUnit! >=
-                                          nextSession.fromUnit &&
-                                      nextSession.lastReadUnit! <=
-                                          nextSession.toUnit)
-                                  ? nextSession.lastReadUnit!
-                                  : nextSession.fromUnit;
-                              final target = KhatmQuranResolver.resolveUnit(
-                                unitType: plan.unitType,
-                                unitNumber: unitToNavigate,
-                              );
+                              final target =
+                                  KhatmQuranResolver.resolveSessionResumeTarget(
+                                    unitType: plan.unitType,
+                                    session: nextSession,
+                                  );
                               setState(() {
                                 _activeKhatmSession = nextIndex;
                               });
                               ref
                                   .read(activeKhatmSessionProvider.notifier)
                                   .setActive(
-                                    khatmId: activeKhatmSession.khatmId,
+                                    khatmId:
+                                        visiblePersonalKhatmSession.khatmId,
                                     sessionIndex: nextIndex,
                                   );
                               _handleTargetSelected(

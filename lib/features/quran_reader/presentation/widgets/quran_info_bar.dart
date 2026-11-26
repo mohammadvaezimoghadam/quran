@@ -15,7 +15,9 @@ import '../../domain/entities/ayah_entity.dart';
 import 'quran_quick_jump_bottom_sheet.dart';
 import '../../../study_plan/application/controllers/study_plan_controller.dart';
 import '../../../study_plan/domain/entities/study_plan.dart';
+import '../../../khatm/application/controllers/group_khatm_reading_controller.dart';
 import '../../../khatm/application/controllers/khatm_detail_controller.dart';
+import '../../../khatm/presentation/widgets/reader/group_khatm_reader_bar.dart';
 import '../../../khatm/presentation/widgets/reader/khatm_reader_bar.dart';
 
 /// A sticky info bar displayed below the AppBar that shows the current
@@ -23,23 +25,25 @@ import '../../../khatm/presentation/widgets/reader/khatm_reader_bar.dart';
 class QuranInfoBar extends ConsumerWidget {
   final ValueChanged<AyahTarget>? onTargetSelected;
 
-  const QuranInfoBar({
-    super.key,
-    this.onTargetSelected,
-  });
+  const QuranInfoBar({super.key, this.onTargetSelected});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ayahs = ref.watch(quranReaderControllerProvider.select((s) => s.ayahs));
+    final ayahs = ref.watch(
+      quranReaderControllerProvider.select((s) => s.ayahs),
+    );
     if (ayahs.isEmpty) return const SizedBox.shrink();
 
-    final surahs = ref.watch(surahListControllerProvider.select((s) => s.surahs));
+    final surahs = ref.watch(
+      surahListControllerProvider.select((s) => s.surahs),
+    );
 
     // 1. Audio is the Single Source of Truth ONLY if actively reciting this surah AND auto-scroll is not suspended!
     // If audio is paused or user manually scrolls (isAutoScrollSuspended == true),
     // the info bar must follow the user's viewport so it doesn't freeze.
     final audioState = ref.watch(quranAudioControllerProvider);
-    final isAudioRecitingThisSurah = (audioState.status == AudioStatus.playing ||
+    final isAudioRecitingThisSurah =
+        (audioState.status == AudioStatus.playing ||
             audioState.status == AudioStatus.loading) &&
         !audioState.isAutoScrollSuspended &&
         audioState.currentSurahId != null &&
@@ -55,12 +59,18 @@ class QuranInfoBar extends ConsumerWidget {
       return _buildContent(context, ref, playingAyah, surahs);
     }
 
-    final itemPositionsListener = ref.watch(activeItemPositionsListenerProvider);
+    final itemPositionsListener = ref.watch(
+      activeItemPositionsListenerProvider,
+    );
 
     if (itemPositionsListener == null) {
-      final fallbackAyahNum = audioState.currentAyahNumber ?? ref.read(activeAyahProvider);
+      final fallbackAyahNum =
+          audioState.currentAyahNumber ?? ref.read(activeAyahProvider);
       final fallbackAyah = fallbackAyahNum != null
-          ? ayahs.firstWhere((a) => a.ayahNumber == fallbackAyahNum, orElse: () => ayahs.first)
+          ? ayahs.firstWhere(
+              (a) => a.ayahNumber == fallbackAyahNum,
+              orElse: () => ayahs.first,
+            )
           : ayahs.first;
       return _buildContent(context, ref, fallbackAyah, surahs);
     }
@@ -68,23 +78,33 @@ class QuranInfoBar extends ConsumerWidget {
     final screenHeight = MediaQuery.sizeOf(context).height;
     final safeTop = MediaQuery.paddingOf(context).top;
     final isSessionActive = ref.watch(isStudyPlanSessionActiveProvider);
-    final activePlan = ref.watch(studyPlanControllerProvider.select((s) => s.activePlan));
-    final hasStudyBar = isSessionActive && activePlan != null && activePlan.status == StudyPlanStatus.active;
-    final hasKhatmBar = ref.watch(activeKhatmSessionProvider) != null;
-    final isKhatmCollapsed = ref.watch(isKhatmReaderBarCollapsedProvider);
-    final double khatmBarHeight = hasKhatmBar
-        ? (isKhatmCollapsed ? KhatmReaderBar.collapsedHeight : KhatmReaderBar.barHeight)
-        : 0.0;
-    
-    // Header bottom: safeTop + AppBar (60) + InfoBar (40) + StudyBar (36 if active and no khatm) + KhatmBar + topPadding offset (8)
-    final headerBottom = safeTop +
+    final activePlan = ref.watch(
+      studyPlanControllerProvider.select((s) => s.activePlan),
+    );
+    final hasStudyBar =
+        isSessionActive &&
+        activePlan != null &&
+        activePlan.status == StudyPlanStatus.active;
+    final hasPersonalKhatmBar = ref.watch(activeKhatmSessionProvider) != null;
+    final hasGroupKhatmBar = ref.watch(activeGroupKhatmSlotProvider) != null;
+    final hasKhatmBar = hasPersonalKhatmBar || hasGroupKhatmBar;
+    final expandedBarHeight = hasPersonalKhatmBar
+        ? KhatmReaderBar.barHeight
+        : GroupKhatmReaderBar.barHeight;
+    final double khatmBarHeight = hasKhatmBar ? expandedBarHeight : 0.0;
+
+    // Header bottom uses expanded Khatm bar height (matching SurahAyahPageView's stableTopCutoff)
+    // so collapsing/expanding the Khatm bar never bounces the active ayah reading baseline.
+    final headerBottom =
+        safeTop +
         60.0 +
         40.0 +
         (!hasKhatmBar && hasStudyBar ? 36.0 : 0.0) +
         khatmBarHeight +
         8.0;
     final topCutoff = screenHeight > 0 ? (headerBottom / screenHeight) : 0.18;
-    final readingBaseline = topCutoff + (18.0 / (screenHeight > 0 ? screenHeight : 800.0));
+    final readingBaseline =
+        topCutoff + (18.0 / (screenHeight > 0 ? screenHeight : 800.0));
 
     return ValueListenableBuilder<Iterable<ItemPosition>>(
       valueListenable: itemPositionsListener.itemPositions,
@@ -92,12 +112,14 @@ class QuranInfoBar extends ConsumerWidget {
         int currentIndex = 0;
         if (positions.isNotEmpty) {
           final lastAyahIndex = ayahs.length - 1;
-          final endCardPos = positions.where((p) => p.index == ayahs.length).firstOrNull;
-          final lastPos = positions.where((p) => p.index == lastAyahIndex).firstOrNull;
+          final lastPos = positions
+              .where((p) => p.index == lastAyahIndex)
+              .firstOrNull;
 
           ItemPosition? targetPosition;
           for (final p in positions) {
-            if (p.itemLeadingEdge <= readingBaseline && p.itemTrailingEdge > readingBaseline) {
+            if (p.itemLeadingEdge <= readingBaseline &&
+                p.itemTrailingEdge > readingBaseline) {
               targetPosition = p;
               break;
             }
@@ -105,23 +127,26 @@ class QuranInfoBar extends ConsumerWidget {
 
           if (targetPosition != null) {
             if (targetPosition.index >= ayahs.length) {
-              // EndCard is crossing readingBaseline -> user completed the surah!
+              // EndCard is crossing readingBaseline -> user scrolled to end of surah
               currentIndex = lastAyahIndex;
             } else {
               currentIndex = targetPosition.index;
             }
-          } else if (endCardPos != null && endCardPos.itemTrailingEdge <= 1.0) {
-            // EndCard is visible in the viewport
-            currentIndex = lastAyahIndex;
-          } else if (lastPos != null && lastPos.itemTrailingEdge <= readingBaseline) {
+          } else if (lastPos != null &&
+              lastPos.itemTrailingEdge <= readingBaseline) {
             // User has scrolled past the reading baseline all the way to the end of the surah!
             currentIndex = lastAyahIndex;
           } else {
             final visible = positions
-                .where((p) => p.itemTrailingEdge > topCutoff && p.index < ayahs.length)
+                .where(
+                  (p) =>
+                      p.itemTrailingEdge > topCutoff && p.index < ayahs.length,
+                )
                 .toList();
             if (visible.isNotEmpty) {
-              targetPosition = visible.reduce((min, cur) => cur.index < min.index ? cur : min);
+              targetPosition = visible.reduce(
+                (min, cur) => cur.index < min.index ? cur : min,
+              );
               currentIndex = targetPosition.index;
             } else {
               currentIndex = lastAyahIndex;
@@ -129,9 +154,12 @@ class QuranInfoBar extends ConsumerWidget {
           }
         } else {
           // If positions are temporarily empty, prioritize active/audio ayah instead of defaulting to 0
-          final fallbackAyahNum = audioState.currentAyahNumber ?? ref.read(activeAyahProvider);
+          final fallbackAyahNum =
+              audioState.currentAyahNumber ?? ref.read(activeAyahProvider);
           if (fallbackAyahNum != null) {
-            final foundIndex = ayahs.indexWhere((a) => a.ayahNumber == fallbackAyahNum);
+            final foundIndex = ayahs.indexWhere(
+              (a) => a.ayahNumber == fallbackAyahNum,
+            );
             if (foundIndex != -1) {
               currentIndex = foundIndex;
             }
@@ -145,13 +173,25 @@ class QuranInfoBar extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, AyahEntity currentAyah, List<SurahEntity> surahs) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    AyahEntity currentAyah,
+    List<SurahEntity> surahs,
+  ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(currentReadingAyahProvider.notifier).updateAyah(currentAyah.surahId, currentAyah.ayahNumber);
+      if (!context.mounted) return;
+      ref
+          .read(currentReadingAyahProvider.notifier)
+          .updateAyah(currentAyah.surahId, currentAyah.ayahNumber);
     });
 
-    final surah = surahs.where((s) => s.number == currentAyah.surahId).firstOrNull;
-    final totalAyahsStr = surah != null ? surah.numberOfAyahs.toPersianDigit() : '؟';
+    final surah = surahs
+        .where((s) => s.number == currentAyah.surahId)
+        .firstOrNull;
+    final totalAyahsStr = surah != null
+        ? surah.numberOfAyahs.toPersianDigit()
+        : '؟';
 
     final ayahStr = currentAyah.ayahNumber.toPersianDigit();
     final juzStr = currentAyah.juz?.toPersianDigit() ?? '؟';
@@ -172,12 +212,7 @@ class QuranInfoBar extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
       decoration: BoxDecoration(
         color: bgColor,
-        border: Border(
-          bottom: BorderSide(
-            color: borderColor,
-            width: 0.8,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: borderColor, width: 0.8)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -269,4 +304,3 @@ class QuranInfoBar extends ConsumerWidget {
     );
   }
 }
-

@@ -3,6 +3,7 @@ import '../../../../common/extensions/surah_name_extension.dart';
 import '../../../../common/utils/jalali_date.dart';
 import '../../../study_plan/domain/entities/study_plan.dart'
     show getSurahAndAyahFromGlobalIndex;
+import 'khatm_ayah_span.dart';
 import 'khatm_enums.dart';
 
 /// Represents a single scheduled reading session within a [KhatmPlan].
@@ -15,6 +16,9 @@ class KhatmSessionItem {
   final DateTime? completedAt;
   final double progress; // 0.0 to 1.0
   final int? lastReadUnit;
+  final int? lastSurahId;
+  final int? lastAyahNumber;
+  final List<KhatmAyahSpan> coveredSpans;
 
   const KhatmSessionItem({
     required this.sessionIndex,
@@ -25,6 +29,9 @@ class KhatmSessionItem {
     this.completedAt,
     this.progress = 0.0,
     this.lastReadUnit,
+    this.lastSurahId,
+    this.lastAyahNumber,
+    this.coveredSpans = const [],
   });
 
   /// Total count of units allocated to this session.
@@ -34,7 +41,11 @@ class KhatmSessionItem {
   double get effectiveProgress => isCompleted ? 1.0 : progress.clamp(0.0, 1.0);
 
   /// Progress formatted as integer (0 to 100).
-  int get progressPercentInt => (effectiveProgress * 100).toInt().clamp(0, 100);
+  /// Never returns 100 until the session is actually completed.
+  int get progressPercentInt {
+    if (isCompleted) return 100;
+    return (effectiveProgress * 100).floor().clamp(0, 99);
+  }
 
   /// Display title for the timeline.
   String computeTitle(KhatmUnitType unitType) {
@@ -101,6 +112,10 @@ class KhatmSessionItem {
     DateTime? completedAt,
     double? progress,
     int? lastReadUnit,
+    int? lastSurahId,
+    int? lastAyahNumber,
+    List<KhatmAyahSpan>? coveredSpans,
+    bool clearResumeCoordinates = false,
   }) {
     return KhatmSessionItem(
       sessionIndex: sessionIndex ?? this.sessionIndex,
@@ -110,7 +125,14 @@ class KhatmSessionItem {
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
       progress: progress ?? this.progress,
-      lastReadUnit: lastReadUnit ?? this.lastReadUnit,
+      lastReadUnit:
+          clearResumeCoordinates ? null : (lastReadUnit ?? this.lastReadUnit),
+      lastSurahId:
+          clearResumeCoordinates ? null : (lastSurahId ?? this.lastSurahId),
+      lastAyahNumber: clearResumeCoordinates
+          ? null
+          : (lastAyahNumber ?? this.lastAyahNumber),
+      coveredSpans: coveredSpans ?? this.coveredSpans,
     );
   }
 
@@ -124,6 +146,9 @@ class KhatmSessionItem {
       'completedAt': completedAt?.toIso8601String(),
       'progress': progress,
       'lastReadUnit': lastReadUnit,
+      'lastSurahId': lastSurahId,
+      'lastAyahNumber': lastAyahNumber,
+      'coveredSpans': coveredSpans.map((s) => s.toList()).toList(),
     };
   }
 
@@ -143,6 +168,9 @@ class KhatmSessionItem {
           : null,
       progress: rawProgress ?? (isCompleted ? 1.0 : 0.0),
       lastReadUnit: (map['lastReadUnit'] as num?)?.toInt(),
+      lastSurahId: (map['lastSurahId'] as num?)?.toInt(),
+      lastAyahNumber: (map['lastAyahNumber'] as num?)?.toInt(),
+      coveredSpans: KhatmAyahSpan.listFromDynamic(map['coveredSpans']),
     );
   }
 
@@ -158,7 +186,10 @@ class KhatmSessionItem {
           isCompleted == other.isCompleted &&
           completedAt == other.completedAt &&
           progress == other.progress &&
-          lastReadUnit == other.lastReadUnit;
+          lastReadUnit == other.lastReadUnit &&
+          lastSurahId == other.lastSurahId &&
+          lastAyahNumber == other.lastAyahNumber &&
+          KhatmAyahSpan.listEquals(coveredSpans, other.coveredSpans);
 
   @override
   int get hashCode =>
@@ -169,5 +200,8 @@ class KhatmSessionItem {
       isCompleted.hashCode ^
       completedAt.hashCode ^
       progress.hashCode ^
-      lastReadUnit.hashCode;
+      lastReadUnit.hashCode ^
+      lastSurahId.hashCode ^
+      lastAyahNumber.hashCode ^
+      Object.hashAll(coveredSpans);
 }

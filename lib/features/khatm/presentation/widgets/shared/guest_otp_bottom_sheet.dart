@@ -7,7 +7,8 @@ import 'package:pinput/pinput.dart';
 import 'package:quran/common/extensions/context_extension.dart';
 import 'package:quran/common/extensions/int_extension.dart';
 import 'package:quran/common/extensions/string_extension.dart';
-import 'package:quran/common/widgets/app_snackbar.dart';
+import 'package:quran/common/utils/persian_number_formatter.dart';
+import 'package:quran/core/theme/app_typography.dart';
 import 'package:quran/features/tafakor/application/controllers/tafakor_auth_controller.dart';
 import 'complete_name_bottom_sheet.dart';
 
@@ -53,6 +54,7 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
   bool _isCodeSent = false;
   bool _isCompletingName = false;
   bool _isLoading = false;
+  String? _errorText;
 
   @override
   void dispose() {
@@ -66,52 +68,92 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
   Future<void> _handleRequestOtp() async {
     final phone = _phoneController.text.toEnglishDigit().trim();
     if (phone.length != 11 || !phone.startsWith('09')) {
-      AppSnackBar.showError(context, 'شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود');
+      HapticFeedback.heavyImpact();
+      setState(() {
+        _errorText = 'شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود';
+      });
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
     final notifier = ref.read(tafakorAuthControllerProvider.notifier);
     final success = await notifier.requestOtp(phone);
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (success && mounted) {
-      setState(() => _isCodeSent = true);
+    if (success) {
+      setState(() {
+        _isCodeSent = true;
+        _errorText = null;
+      });
       _otpFocus.requestFocus();
-    } else if (mounted) {
+    } else {
+      HapticFeedback.heavyImpact();
       final error = ref.read(tafakorAuthControllerProvider).error?.message;
-      if (error != null) {
-        AppSnackBar.showError(context, error);
-      }
+      setState(() {
+        _errorText =
+            error ?? 'خطا در ارسال کد تأیید؛ لطفاً دوباره تلاش کنید';
+      });
     }
   }
 
   Future<void> _handleVerifyOtp() async {
     final otp = _otpController.text.toEnglishDigit().trim();
     if (otp.length != 4) {
-      AppSnackBar.showError(context, 'کد تأیید باید ۴ رقم باشد');
+      HapticFeedback.heavyImpact();
+      setState(() {
+        _errorText = 'کد تأیید باید ۴ رقم باشد';
+      });
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
     final notifier = ref.read(tafakorAuthControllerProvider.notifier);
     final success = await notifier.verifyOtp(otp);
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (success && mounted) {
+    if (success) {
       HapticFeedback.mediumImpact();
       final user = ref.read(tafakorUserProvider);
       if (user != null && user.hasFullName) {
         Navigator.of(context).pop(true);
       } else {
-        setState(() => _isCompletingName = true);
+        setState(() {
+          _isCompletingName = true;
+          _errorText = null;
+        });
       }
-    } else if (mounted) {
+    } else {
+      HapticFeedback.heavyImpact();
       final error = ref.read(tafakorAuthControllerProvider).error?.message;
-      if (error != null) {
-        AppSnackBar.showError(context, error);
-      }
+      setState(() {
+        _errorText = error ?? 'کد تأیید اشتباه است یا منقضی شده';
+      });
     }
+  }
+
+  Widget _buildInlineError(ColorScheme colorScheme) {
+    if (_errorText == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Text(
+        _errorText!,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 12,
+          color: colorScheme.error,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
   }
 
   @override
@@ -124,8 +166,11 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
     final defaultPinTheme = PinTheme(
       width: 48,
       height: 48,
-      textStyle: theme.textTheme.titleMedium?.copyWith(
+      textStyle: TextStyle(
+        fontFamily: AppTypography.fontFamily,
+        fontSize: 20,
         fontWeight: FontWeight.bold,
+        color: colorScheme.onSurface,
       ),
       decoration: BoxDecoration(
         color: colors.cardBackgroundSubtle,
@@ -198,13 +243,33 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
                       focusNode: _phoneFocus,
                       keyboardType: TextInputType.phone,
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[0-9\u0660-\u0669\u06F0-\u06F9]'),
+                        ),
+                        PersianNumberFormatter(),
+                        LengthLimitingTextInputFormatter(11),
+                      ],
+                      onChanged: (_) {
+                        if (_errorText != null) {
+                          setState(() => _errorText = null);
+                        }
+                      },
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                         letterSpacing: 2,
+                        color: colorScheme.onSurface,
                       ),
                       decoration: InputDecoration(
                         hintText: '۰۹xxxxxxxxx',
-                        hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                        hintStyle: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 14,
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         filled: true,
                         fillColor: colors.cardBackgroundSubtle,
@@ -225,6 +290,7 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
                       onSubmitted: (_) => _handleRequestOtp(),
                     ),
                   ),
+                  _buildInlineError(colorScheme),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
@@ -247,6 +313,7 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
                           : Text(
                               'دریافت کد تأیید',
                               style: theme.textTheme.labelLarge?.copyWith(
+                                fontFamily: AppTypography.fontFamily,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -260,6 +327,18 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
                       controller: _otpController,
                       focusNode: _otpFocus,
                       length: 4,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[0-9\u0660-\u0669\u06F0-\u06F9]'),
+                        ),
+                        PersianNumberFormatter(),
+                      ],
+                      onChanged: (_) {
+                        if (_errorText != null) {
+                          setState(() => _errorText = null);
+                        }
+                      },
                       defaultPinTheme: defaultPinTheme,
                       focusedPinTheme: defaultPinTheme.copyWith(
                         decoration: defaultPinTheme.decoration!.copyWith(
@@ -269,6 +348,7 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
                       onCompleted: (_) => _handleVerifyOtp(),
                     ),
                   ),
+                  _buildInlineError(colorScheme),
                   const SizedBox(height: 14),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -282,6 +362,7 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
                               ? 'ارسال مجدد کد (${authState.resendCountdown.toPersianDigit()} ثانیه)'
                               : 'ارسال مجدد کد',
                           style: theme.textTheme.bodySmall?.copyWith(
+                            fontFamily: AppTypography.fontFamily,
                             color: authState.resendCountdown > 0
                                 ? colorScheme.onSurfaceVariant
                                 : colorScheme.primary,
@@ -293,12 +374,14 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
                         onPressed: () {
                           setState(() {
                             _isCodeSent = false;
+                            _errorText = null;
                             _otpController.clear();
                           });
                         },
                         child: Text(
                           'تغییر شماره',
                           style: theme.textTheme.bodySmall?.copyWith(
+                            fontFamily: AppTypography.fontFamily,
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
@@ -327,6 +410,7 @@ class _GuestOtpBottomSheetState extends ConsumerState<GuestOtpBottomSheet> {
                           : Text(
                               'تأیید و ادامه',
                               style: theme.textTheme.labelLarge?.copyWith(
+                                fontFamily: AppTypography.fontFamily,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),

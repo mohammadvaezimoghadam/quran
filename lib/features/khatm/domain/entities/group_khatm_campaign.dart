@@ -1,3 +1,4 @@
+import '../../../../common/extensions/int_extension.dart';
 import 'group_khatm_category.dart';
 import 'group_khatm_slot.dart';
 import 'khatm_enums.dart';
@@ -70,6 +71,34 @@ class GroupKhatmCampaign {
   /// Slots claimed or completed by current authenticated user
   List<GroupKhatmSlot> get mySlots => slots.where((s) => s.isMine).toList();
 
+  /// Human-readable Persian remaining time until [deadline], or null if unset.
+  String? remainingTimeLabel({DateTime? now, bool short = false}) {
+    if (deadline == null) return null;
+    final diff = deadline!.difference(now ?? DateTime.now());
+    if (diff.isNegative || diff.inMinutes < 1) {
+      return short ? 'پایان‌یافته' : 'زمان باقی‌مانده: پایان‌یافته';
+    }
+    if (diff.inDays >= 1) {
+      final days = diff.inDays;
+      final hours = diff.inHours % 24;
+      if (short) {
+        return '${days.toPersianDigit()} روز باقی‌مانده';
+      }
+      if (days < 3 && hours > 0) {
+        return 'زمان باقی‌مانده: ${days.toPersianDigit()} روز و ${hours.toPersianDigit()} ساعت';
+      }
+      return 'زمان باقی‌مانده: ${days.toPersianDigit()} روز';
+    }
+    if (diff.inHours >= 1) {
+      return short
+          ? '${diff.inHours.toPersianDigit()} ساعت باقی‌مانده'
+          : 'زمان باقی‌مانده: ${diff.inHours.toPersianDigit()} ساعت';
+    }
+    return short
+        ? '${diff.inMinutes.toPersianDigit()} دقیقه باقی‌مانده'
+        : 'زمان باقی‌مانده: ${diff.inMinutes.toPersianDigit()} دقیقه';
+  }
+
   factory GroupKhatmCampaign.fromJson(Map<String, dynamic> json) {
     return GroupKhatmCampaign(
       id: json['id'] as int? ?? 0,
@@ -99,9 +128,10 @@ class GroupKhatmCampaign {
           : DateTime.now(),
       isCreator: json['is_creator'] as bool? ?? false,
       slots: json['slots'] != null && json['slots'] is List
-          ? (json['slots'] as List)
+          ? ((json['slots'] as List)
               .map((s) => GroupKhatmSlot.fromJson(s as Map<String, dynamic>))
               .toList()
+            ..sort(GroupKhatmSlot.compareByUnitOrder))
           : const [],
       inviteUrl: json['invite_url'] as String?,
       myActiveSlotsCount: json['my_active_slots_count'] as int? ?? 0,
@@ -137,4 +167,17 @@ class GroupKhatmCampaign {
       'my_active_slots_count': myActiveSlotsCount,
     };
   }
+}
+
+/// Paginated page response for collective Group Khatm campaigns.
+class PaginatedCampaignsPage {
+  final List<GroupKhatmCampaign> items;
+  final int totalCount;
+  final bool hasNext;
+
+  const PaginatedCampaignsPage({
+    required this.items,
+    required this.totalCount,
+    required this.hasNext,
+  });
 }

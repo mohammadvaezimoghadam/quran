@@ -1,16 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/misc.dart';
 
-import 'package:quran/features/khatm/domain/entities/khatm_enums.dart';
+import 'package:quran/features/khatm/domain/entities/khatm_ayah_span.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_plan.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_session_item.dart';
+import 'package:quran/features/khatm/domain/services/khatm_progress_calculator.dart';
 import 'package:quran/features/khatm/infrastructure/datasources/khatm_local_datasource.dart';
 import 'package:quran/features/khatm/infrastructure/datasources/khatm_mock_data.dart';
-import 'package:quran/features/khatm/infrastructure/datasources/khatm_quran_data.dart';
 import 'package:quran/features/study_plan/domain/entities/study_plan.dart'
     show getGlobalAyahIndex;
-import 'package:quran/features/surah_list/infrastructure/datasources/static_surahs_data.dart';
 import 'package:quran/features/tafakor/application/controllers/tafakor_auth_controller.dart';
 import 'khatm_list_controller.dart';
 import 'personal_khatm_sync_controller.dart';
@@ -19,18 +21,36 @@ import 'personal_khatm_sync_controller.dart';
 class ActiveKhatmSession {
   final String khatmId;
   final int sessionIndex;
+  final bool isDetachedFromReader;
 
-  const ActiveKhatmSession({required this.khatmId, required this.sessionIndex});
+  const ActiveKhatmSession({
+    required this.khatmId,
+    required this.sessionIndex,
+    this.isDetachedFromReader = false,
+  });
+
+  ActiveKhatmSession copyWith({
+    String? khatmId,
+    int? sessionIndex,
+    bool? isDetachedFromReader,
+  }) {
+    return ActiveKhatmSession(
+      khatmId: khatmId ?? this.khatmId,
+      sessionIndex: sessionIndex ?? this.sessionIndex,
+      isDetachedFromReader: isDetachedFromReader ?? this.isDetachedFromReader,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ActiveKhatmSession &&
           other.khatmId == khatmId &&
-          other.sessionIndex == sessionIndex;
+          other.sessionIndex == sessionIndex &&
+          other.isDetachedFromReader == isDetachedFromReader;
 
   @override
-  int get hashCode => khatmId.hashCode ^ sessionIndex.hashCode;
+  int get hashCode => Object.hash(khatmId, sessionIndex, isDetachedFromReader);
 }
 
 /// Manages the currently active Khatm session in the Quran reader.
@@ -38,15 +58,29 @@ class ActiveKhatmSessionNotifier extends StateNotifier<ActiveKhatmSession?> {
   ActiveKhatmSessionNotifier() : super(null);
 
   void setActive({required String khatmId, required int sessionIndex}) {
-    state = ActiveKhatmSession(khatmId: khatmId, sessionIndex: sessionIndex);
+    state = ActiveKhatmSession(
+      khatmId: khatmId,
+      sessionIndex: sessionIndex,
+      isDetachedFromReader: false,
+    );
   }
 
   void updateSessionIndex(int sessionIndex) {
     if (state != null) {
-      state = ActiveKhatmSession(
-        khatmId: state!.khatmId,
-        sessionIndex: sessionIndex,
-      );
+      state = state!.copyWith(sessionIndex: sessionIndex);
+    }
+  }
+
+  void detachFromReader() {
+    final current = state;
+    if (current != null && !current.isDetachedFromReader) {
+      state = current.copyWith(isDetachedFromReader: true);
+    }
+  }
+
+  void clearIfDetached() {
+    if (state?.isDetachedFromReader == true) {
+      state = null;
     }
   }
 
@@ -106,7 +140,13 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
   final IKhatmLocalDataSource _localDataSource;
   final String planId;
   final Ref? _ref;
-  bool _isAutoCompleting = false;
+
+  Timer? _saveDebounceTimer;
+  KhatmPlan? _pendingPlanToSave;
+  Future<void>? _inFlightSave;
+  Future<void>? _pendingOperation;
+  KeepAliveLink? _keepAliveLink;
+  bool _isDisposing = false;
 
   KhatmDetailController(
     this._localDataSource,
@@ -121,7 +161,121 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
     }
   }
 
-  Future<void> loadPlan() async {
+  void _syncKeepAlive() {
+    if (_isDisposing || !mounted) {
+      _keepAliveLink?.close();
+      _keepAliveLink = null;
+      return;
+    }
+    final ref = _ref;
+    if (ref == null) return;
+    final shouldKeepAlive =
+        _pendingOperation != null ||
+        _pendingPlanToSave != null ||
+        _inFlightSave != null;
+    if (shouldKeepAlive) {
+      try {
+        _keepAliveLink ??= ref.keepAlive();
+      } catch (_) {}
+    } else {
+      _keepAliveLink?.close();
+      _keepAliveLink = null;
+    }
+  }
+
+  Future<T> _serialized<T>(Future<T> Function() action) {
+    final prev = _pendingOperation ?? Future<void>.value();
+    final completer = Completer<T>();
+    final next = prev.catchError((_) {}).then((_) async {
+      try {
+        final result = await action();
+        if (!completer.isCompleted) completer.complete(result);
+      } catch (e, st) {
+        if (!completer.isCompleted) completer.completeError(e, st);
+      }
+    });
+    _pendingOperation = next;
+    _syncKeepAlive();
+    next.whenComplete(() {
+      if (identical(_pendingOperation, next)) {
+        _pendingOperation = null;
+      }
+      _syncKeepAlive();
+    });
+    return completer.future;
+  }
+
+  Future<void> _savePlanTracked(KhatmPlan plan) {
+    final prev = _inFlightSave ?? Future<void>.value();
+    late final Future<void> current;
+    current = prev
+        .catchError((_) {})
+        .then((_) async {
+          await _localDataSource.savePlan(plan);
+        })
+        .whenComplete(() {
+          if (identical(_inFlightSave, current)) {
+            _inFlightSave = null;
+          }
+          _syncKeepAlive();
+        });
+    _inFlightSave = current;
+    _syncKeepAlive();
+    return current;
+  }
+
+  void _scheduleSavePlan(KhatmPlan plan) {
+    _pendingPlanToSave = plan;
+    _syncKeepAlive();
+    _saveDebounceTimer?.cancel();
+    _saveDebounceTimer = Timer(const Duration(milliseconds: 600), () {
+      final toSave = _pendingPlanToSave;
+      _pendingPlanToSave = null;
+      if (toSave != null) {
+        unawaited(_savePlanTracked(toSave));
+      }
+      _syncKeepAlive();
+    });
+  }
+
+  /// Flushes any pending debounced Hive write (and awaits any in-flight write)
+  /// immediately to disk.
+  Future<void> flushPendingSave() async {
+    _saveDebounceTimer?.cancel();
+    _saveDebounceTimer = null;
+    final toSave = _pendingPlanToSave;
+    _pendingPlanToSave = null;
+    if (toSave != null) {
+      await _savePlanTracked(toSave);
+    } else {
+      _syncKeepAlive();
+      if (_inFlightSave != null) {
+        await _inFlightSave;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _isDisposing = true;
+    _saveDebounceTimer?.cancel();
+    _saveDebounceTimer = null;
+    final toSave = _pendingPlanToSave;
+    _pendingPlanToSave = null;
+    if (toSave != null) {
+      unawaited(_savePlanTracked(toSave));
+    }
+    _keepAliveLink?.close();
+    _keepAliveLink = null;
+    super.dispose();
+  }
+
+  Future<void> loadPlan() {
+    return _serialized(_loadPlanInternal);
+  }
+
+  Future<void> _loadPlanInternal() async {
+    await flushPendingSave();
     if (!mounted) return;
     state = state.copyWith(isLoading: true, errorMessage: null);
     if (planId == 'test-personal-khatm' || planId.startsWith('test')) {
@@ -152,20 +306,54 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
   }
 
   /// Toggles manual completion status for a specific session.
-  Future<void> toggleSession(int sessionIndex, bool isCompleted) async {
+  Future<void> toggleSession(int sessionIndex, bool isCompleted) {
+    return _serialized(() => _toggleSessionInternal(sessionIndex, isCompleted));
+  }
+
+  Future<void> _toggleSessionInternal(
+    int sessionIndex,
+    bool isCompleted, {
+    List<KhatmAyahSpan>? coveredSpans,
+    int? lastSurahId,
+    int? lastAyahNumber,
+    int? lastReadUnit,
+  }) async {
     if (!mounted) return;
     final currentPlan = state.plan;
     if (currentPlan == null) return;
 
-    // Optimistic UI update in detail state
+    _saveDebounceTimer?.cancel();
+    _saveDebounceTimer = null;
+    _pendingPlanToSave = null;
+
     final updatedSessions = currentPlan.sessions.map((s) {
       if (s.sessionIndex == sessionIndex) {
-        return s.copyWith(
-          isCompleted: isCompleted,
-          completedAt: isCompleted ? DateTime.now() : null,
-          progress: isCompleted ? 1.0 : 0.0,
-          lastReadUnit: isCompleted ? s.toUnit : null,
-        );
+        if (isCompleted) {
+          final range = KhatmProgressCalculator.resolveGlobalAyahRange(
+            unitType: currentPlan.unitType,
+            fromUnit: s.fromUnit,
+            toUnit: s.toUnit,
+          );
+          return s.copyWith(
+            isCompleted: true,
+            completedAt: DateTime.now(),
+            progress: 1.0,
+            lastReadUnit: lastReadUnit ?? s.toUnit,
+            lastSurahId: lastSurahId ?? s.lastSurahId,
+            lastAyahNumber: lastAyahNumber ?? s.lastAyahNumber,
+            coveredSpans:
+                coveredSpans ??
+                [KhatmAyahSpan(start: range.startGlobal, end: range.endGlobal)],
+          );
+        } else {
+          return s.copyWith(
+            isCompleted: false,
+            completedAt: null,
+            progress: 0.0,
+            coveredSpans: const [],
+            clearResumeCoordinates: true,
+          );
+        }
       }
       return s;
     }).toList();
@@ -187,19 +375,17 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
           isCompleted: isCompleted,
         );
 
-    // Persist to Hive (this triggers listeners as well)
-    await _localDataSource.updateSessionStatus(
-      planId: planId,
-      sessionIndex: sessionIndex,
-      isCompleted: isCompleted,
-    );
+    // Persist immediately on explicit completion/uncompletion
+    await _savePlanTracked(updatedPlan);
 
     // Auto-sync in background if authenticated
     if (_ref != null) {
       try {
         final isAuth = _ref.read(isTafakorAuthenticatedProvider);
         if (isAuth) {
-          _ref.read(personalKhatmSyncControllerProvider.notifier).syncWithBackend();
+          _ref
+              .read(personalKhatmSyncControllerProvider.notifier)
+              .syncWithBackend();
         }
       } catch (e) {
         debugPrint('⚠️ [KhatmDetail] Background sync skipped: $e');
@@ -207,7 +393,8 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
     }
   }
 
-  /// Records user reading position and automatically completes the session if the end is reached.
+  /// Records user reading position and automatically completes the session if 100%
+  /// of its `[startGlobal..endGlobal]` ayahs are covered.
   /// Returns true if the session was completed by this invocation.
   Future<bool> recordReadingProgress({
     required int sessionIndex,
@@ -218,126 +405,207 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
     int? hizb,
     bool isEndOfPage = false,
     double pageFraction = 0.0,
-  }) async {
-    if (!mounted || _isAutoCompleting) return false;
+    int? coverStartGlobal,
+    int? coverEndGlobal,
+    bool isAudio = false,
+    bool recordCoverage = true,
+  }) {
+    return _serialized(() async {
+      if (!mounted) return false;
 
-    // If state.plan is still loading asynchronously, await plan loading first
-    if (state.plan == null && state.isLoading) {
-      await loadPlan();
-    }
-
-    final currentPlan = state.plan;
-    if (currentPlan == null) return false;
-
-    KhatmSessionItem? session;
-    for (final s in currentPlan.sessions) {
-      if (s.sessionIndex == sessionIndex) {
-        session = s;
-        break;
+      if (state.plan == null && state.isLoading) {
+        await _loadPlanInternal();
       }
-    }
+      if (!mounted) return false;
 
-    // If current session is completed or not found, do not track or touch other sessions!
-    if (session == null || session.isCompleted) {
-      return false;
-    }
+      final currentPlan = state.plan;
+      if (currentPlan == null) return false;
 
-    final computedProgress = _calculateSessionProgress(
-      plan: currentPlan,
-      session: session,
-      surahId: surahId,
-      ayahNumber: ayahNumber,
-      page: page,
-      juz: juz,
-      hizb: hizb,
-      isEndOfPage: isEndOfPage,
-      pageFraction: pageFraction,
-    );
-
-    final shouldComplete = _checkIfSessionEndReached(
-      plan: currentPlan,
-      session: session,
-      surahId: surahId,
-      ayahNumber: ayahNumber,
-      page: page,
-      juz: juz,
-      hizb: hizb,
-      isEndOfPage: isEndOfPage,
-      pageFraction: pageFraction,
-      computedProgress: computedProgress,
-    );
-
-    if (shouldComplete) {
-      _isAutoCompleting = true;
-      try {
-        await toggleSession(sessionIndex, true);
-        return true;
-      } finally {
-        _isAutoCompleting = false;
-      }
-    } else if (computedProgress > session.progress) {
-      final int unitValue;
-      switch (currentPlan.unitType) {
-        case KhatmUnitType.page:
-          unitValue =
-              page ?? KhatmQuranData.getPageForAyah(surahId, ayahNumber);
+      var activeSessionIndex = sessionIndex;
+      KhatmSessionItem? session;
+      for (final s in currentPlan.sessions) {
+        if (s.sessionIndex == activeSessionIndex) {
+          session = s;
           break;
-        case KhatmUnitType.surah:
-          unitValue = surahId;
-          break;
-        case KhatmUnitType.juz:
-          final p = page ?? KhatmQuranData.getPageForAyah(surahId, ayahNumber);
-          unitValue = juz ?? KhatmQuranData.getJuzForPage(p);
-          break;
-        case KhatmUnitType.hizb:
-          final p = page ?? KhatmQuranData.getPageForAyah(surahId, ayahNumber);
-          unitValue = hizb ?? KhatmQuranData.getHizbForPage(p);
-          break;
-        case KhatmUnitType.ayah:
-          unitValue = getGlobalAyahIndex(surahId, ayahNumber);
-          break;
-      }
-
-      final updatedSessions = currentPlan.sessions.map((s) {
-        if (s.sessionIndex == sessionIndex) {
-          return s.copyWith(
-            progress: computedProgress,
-            lastReadUnit: unitValue,
-          );
         }
-        return s;
-      }).toList();
+      }
 
-      final updatedPlan = currentPlan.copyWith(
-        sessions: updatedSessions,
-        clientUpdatedAt: DateTime.now().toUtc(),
-        isDirty: true,
-      );
-      state = state.copyWith(plan: updatedPlan);
+      if (session == null) {
+        return false;
+      }
 
-      await _localDataSource.updateSessionProgress(
-        planId: planId,
-        sessionIndex: sessionIndex,
-        progress: computedProgress,
-        lastReadUnit: unitValue,
-      );
+      if (session.isCompleted) {
+        // Manual scrolling past a completed session must NOT auto-advance into
+        // later sessions (preserving session boundaries during free browsing).
+        if (!isAudio) {
+          return false;
+        }
 
-      // Schedule debounced background sync (4s) during active reading progress
-      if (_ref != null) {
-        try {
-          final isAuth = _ref.read(isTafakorAuthenticatedProvider);
-          if (isAuth) {
-            _ref
-                .read(personalKhatmSyncControllerProvider.notifier)
-                .scheduleSync();
+        final stillInsideCompleted = isPositionInSession(
+          plan: currentPlan,
+          session: session,
+          surahId: surahId,
+          ayahNumber: ayahNumber,
+          page: page,
+          juz: juz,
+          hizb: hizb,
+        );
+        if (stillInsideCompleted) {
+          return false;
+        }
+
+        // Continuous audio playback moved past a completed session into a later
+        // incomplete session in the same Khatm: auto-advance active tracking.
+        KhatmSessionItem? nextSession;
+        for (final s in currentPlan.sessions) {
+          if (!s.isCompleted &&
+              isPositionInSession(
+                plan: currentPlan,
+                session: s,
+                surahId: surahId,
+                ayahNumber: ayahNumber,
+                page: page,
+                juz: juz,
+                hizb: hizb,
+              )) {
+            nextSession = s;
+            break;
           }
-        } catch (e) {
-          debugPrint('⚠️ [KhatmDetail] Debounced sync skipped: $e');
+        }
+        if (nextSession == null) {
+          return false;
+        }
+        session = nextSession;
+        activeSessionIndex = nextSession.sessionIndex;
+        try {
+          _ref
+              ?.read(activeKhatmSessionProvider.notifier)
+              .updateSessionIndex(activeSessionIndex);
+        } catch (_) {}
+      }
+
+      final eval = recordCoverage
+          ? KhatmProgressCalculator.evaluateProgress(
+              unitType: currentPlan.unitType,
+              fromUnit: session.fromUnit,
+              toUnit: session.toUnit,
+              existingSpans: session.coveredSpans,
+              existingProgress: session.progress,
+              surahId: surahId,
+              ayahNumber: ayahNumber,
+              coverStartGlobal: coverStartGlobal,
+              coverEndGlobal: coverEndGlobal,
+              isAlreadyCompleted: session.isCompleted,
+            )
+          : KhatmProgressEvaluation(
+              coveredSpans: session.coveredSpans,
+              progress: session.progress,
+              isCompleted: false,
+              hasNewCoverage: false,
+              isPositionInRange: KhatmProgressCalculator.isPositionInRange(
+                unitType: currentPlan.unitType,
+                fromUnit: session.fromUnit,
+                toUnit: session.toUnit,
+                surahId: surahId,
+                ayahNumber: ayahNumber,
+                page: page,
+              ),
+              coveredAyahsCount: KhatmAyahSpan.countUniqueAyahs(
+                session.coveredSpans,
+              ),
+              totalAyahsCount: 1,
+            );
+
+      final unitValue = eval.isPositionInRange
+          ? KhatmProgressCalculator.resolveUnitValue(
+              unitType: currentPlan.unitType,
+              surahId: surahId,
+              ayahNumber: ayahNumber,
+              page: page,
+              juz: juz,
+              hizb: hizb,
+            )
+          : session.lastReadUnit;
+
+      if (eval.isCompleted) {
+        await _toggleSessionInternal(
+          activeSessionIndex,
+          true,
+          coveredSpans: eval.coveredSpans,
+          lastSurahId: eval.isPositionInRange ? surahId : session.lastSurahId,
+          lastAyahNumber: eval.isPositionInRange
+              ? ayahNumber
+              : session.lastAyahNumber,
+          lastReadUnit: unitValue ?? session.toUnit,
+        );
+        return true;
+      }
+
+      final currentGlobal = getGlobalAyahIndex(surahId, ayahNumber);
+      final savedGlobal =
+          (session.lastSurahId != null && session.lastAyahNumber != null)
+          ? getGlobalAyahIndex(session.lastSurahId!, session.lastAyahNumber!)
+          : null;
+      final isAtOrBeyondResumePoint =
+          eval.isPositionInRange &&
+          (savedGlobal == null || currentGlobal >= savedGlobal);
+      final positionMovedForwardInRange =
+          isAtOrBeyondResumePoint &&
+          (session.lastSurahId != surahId ||
+              session.lastAyahNumber != ayahNumber ||
+              session.lastReadUnit != unitValue);
+
+      if (eval.hasNewCoverage || positionMovedForwardInRange) {
+        final updatedSessions = currentPlan.sessions.map((s) {
+          if (s.sessionIndex == activeSessionIndex) {
+            return s.copyWith(
+              progress: eval.progress,
+              coveredSpans: eval.coveredSpans,
+              lastReadUnit: isAtOrBeyondResumePoint
+                  ? unitValue
+                  : s.lastReadUnit,
+              lastSurahId: isAtOrBeyondResumePoint ? surahId : s.lastSurahId,
+              lastAyahNumber: isAtOrBeyondResumePoint
+                  ? ayahNumber
+                  : s.lastAyahNumber,
+            );
+          }
+          return s;
+        }).toList();
+
+        final updatedPlan = currentPlan.copyWith(
+          sessions: updatedSessions,
+          clientUpdatedAt: DateTime.now().toUtc(),
+          isDirty: true,
+        );
+        if (!mounted) return false;
+        state = state.copyWith(plan: updatedPlan);
+
+        try {
+          _ref
+              ?.read(khatmListControllerProvider.notifier)
+              .optimisticUpdatePlan(updatedPlan);
+        } catch (_) {}
+
+        // Debounce Hive writes during active reading scroll; flushed on dispose/pause/completion.
+        _scheduleSavePlan(updatedPlan);
+
+        if (_ref != null) {
+          try {
+            final isAuth = _ref.read(isTafakorAuthenticatedProvider);
+            if (isAuth) {
+              _ref
+                  .read(personalKhatmSyncControllerProvider.notifier)
+                  .scheduleSync();
+            }
+          } catch (e) {
+            debugPrint('⚠️ [KhatmDetail] Debounced sync skipped: $e');
+          }
         }
       }
-    }
 
-    return false;
+      return false;
+    });
   }
 
   /// Checks if a given Quran position is within a Khatm session's boundaries.
@@ -350,292 +618,23 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
     int? juz,
     int? hizb,
   }) {
-    final resolvedPage =
-        page ?? KhatmQuranData.getPageForAyah(surahId, ayahNumber);
-
-    switch (plan.unitType) {
-      case KhatmUnitType.page:
-        return resolvedPage >= session.fromUnit &&
-            resolvedPage <= session.toUnit;
-      case KhatmUnitType.surah:
-        return surahId >= session.fromUnit && surahId <= session.toUnit;
-      case KhatmUnitType.juz:
-        final startPage = KhatmQuranData.juzToStartPage[session.fromUnit]!;
-        final endPage = session.toUnit < 30
-            ? (KhatmQuranData.juzToStartPage[session.toUnit + 1]! - 1)
-            : 604;
-        return resolvedPage >= startPage && resolvedPage <= endPage;
-      case KhatmUnitType.hizb:
-        final startPage = KhatmQuranData.hizb120ToStartPage[session.fromUnit]!;
-        final endPage = session.toUnit < 120
-            ? (KhatmQuranData.hizb120ToStartPage[session.toUnit + 1]! - 1)
-            : 604;
-        return resolvedPage >= startPage && resolvedPage <= endPage;
-      case KhatmUnitType.ayah:
-        final globalAyah = getGlobalAyahIndex(surahId, ayahNumber);
-        return globalAyah >= session.fromUnit && globalAyah <= session.toUnit;
-    }
-  }
-
-  /// Calculates the fraction (0.0 to 1.0) of session progress based on current reading position.
-  double _calculateSessionProgress({
-    required KhatmPlan plan,
-    required KhatmSessionItem session,
-    required int surahId,
-    required int ayahNumber,
-    int? page,
-    int? juz,
-    int? hizb,
-    bool isEndOfPage = false,
-    double pageFraction = 0.0,
-  }) {
-    if (session.isCompleted) return 1.0;
-
-    final resolvedPage =
-        page ?? KhatmQuranData.getPageForAyah(surahId, ayahNumber);
-    final currentGlobalAyah = getGlobalAyahIndex(surahId, ayahNumber);
-
-    switch (plan.unitType) {
-      case KhatmUnitType.page:
-        if (resolvedPage < session.fromUnit) return session.progress;
-        if (resolvedPage > session.toUnit) {
-          return (resolvedPage == session.toUnit + 1) ? 1.0 : session.progress;
-        }
-        final fractionOnPage = isEndOfPage
-            ? 1.0
-            : (pageFraction > 0 ? pageFraction : 0.0);
-        final pagesRead = (resolvedPage - session.fromUnit) + fractionOnPage;
-        final rawProgress = (pagesRead / session.unitCount).clamp(0.0, 1.0);
-        // If reached the target page and substantially progressed (or end of page reached), mark 100%
-        if (resolvedPage == session.toUnit) {
-          if (isEndOfPage) return 1.0;
-          if (session.unitCount > 1 &&
-              (pageFraction >= 0.75 || rawProgress >= 0.96)) {
-            return 1.0;
-          }
-        }
-        return rawProgress;
-
-      case KhatmUnitType.surah:
-        if (surahId < session.fromUnit) return session.progress;
-        if (surahId > session.toUnit) {
-          return (surahId == session.toUnit + 1) ? 1.0 : session.progress;
-        }
-        int totalAyahsInSession = 0;
-        int ayahsReadBeforeCurrent = 0;
-        for (int s = session.fromUnit; s <= session.toUnit; s++) {
-          final count = kStaticQuranSurahs[s - 1].numberOfAyahs;
-          totalAyahsInSession += count;
-          if (s < surahId) {
-            ayahsReadBeforeCurrent += count;
-          }
-        }
-        final ayahsRead = ayahsReadBeforeCurrent + ayahNumber;
-        final rawProgress = totalAyahsInSession > 0
-            ? (ayahsRead / totalAyahsInSession).clamp(0.0, 1.0)
-            : 0.0;
-        if (surahId == session.toUnit &&
-            ayahNumber >= kStaticQuranSurahs[surahId - 1].numberOfAyahs) {
-          if (isEndOfPage) return 1.0;
-          if (session.unitCount > 1) return 1.0;
-        }
-        return rawProgress;
-
-      case KhatmUnitType.juz:
-        final int targetStartPage =
-            KhatmQuranData.juzToStartPage[session.fromUnit]!;
-        final int targetEndPage = session.toUnit < 30
-            ? (KhatmQuranData.juzToStartPage[session.toUnit + 1]! - 1)
-            : 604;
-        if (resolvedPage < targetStartPage) return session.progress;
-        if (resolvedPage > targetEndPage) {
-          return (resolvedPage == targetEndPage + 1) ? 1.0 : session.progress;
-        }
-        final totalPages = targetEndPage - targetStartPage + 1;
-        final fractionOnPage = isEndOfPage
-            ? 1.0
-            : (pageFraction > 0 ? pageFraction : 0.0);
-        final pagesRead = (resolvedPage - targetStartPage) + fractionOnPage;
-        final rawProgress = (pagesRead / totalPages).clamp(0.0, 1.0);
-        if (resolvedPage == targetEndPage) {
-          if (isEndOfPage) return 1.0;
-          if (session.unitCount > 1 &&
-              (pageFraction >= 0.75 || rawProgress >= 0.96)) {
-            return 1.0;
-          }
-        }
-        return rawProgress;
-
-      case KhatmUnitType.hizb:
-        final int targetStartPage =
-            KhatmQuranData.hizb120ToStartPage[session.fromUnit]!;
-        final int targetEndPage = session.toUnit < 120
-            ? (KhatmQuranData.hizb120ToStartPage[session.toUnit + 1]! - 1)
-            : 604;
-        if (resolvedPage < targetStartPage) return session.progress;
-        if (resolvedPage > targetEndPage) {
-          return (resolvedPage == targetEndPage + 1) ? 1.0 : session.progress;
-        }
-        final totalPages = targetEndPage - targetStartPage + 1;
-        final fractionOnPage = isEndOfPage
-            ? 1.0
-            : (pageFraction > 0 ? pageFraction : 0.0);
-        final pagesRead = (resolvedPage - targetStartPage) + fractionOnPage;
-        final rawProgress = (pagesRead / totalPages).clamp(0.0, 1.0);
-        if (resolvedPage == targetEndPage) {
-          if (isEndOfPage) return 1.0;
-          if (session.unitCount > 1 &&
-              (pageFraction >= 0.75 || rawProgress >= 0.96)) {
-            return 1.0;
-          }
-        }
-        return rawProgress;
-
-      case KhatmUnitType.ayah:
-        if (currentGlobalAyah < session.fromUnit) return session.progress;
-        if (currentGlobalAyah > session.toUnit) {
-          return (currentGlobalAyah == session.toUnit + 1)
-              ? 1.0
-              : session.progress;
-        }
-        final ayahsRead = (currentGlobalAyah - session.fromUnit);
-        final fraction = (ayahsRead / session.unitCount).clamp(0.0, 1.0);
-        if (currentGlobalAyah == session.toUnit && isEndOfPage) {
-          return 1.0;
-        }
-        return fraction;
-    }
-  }
-
-  bool _checkIfSessionEndReached({
-    required KhatmPlan plan,
-    required KhatmSessionItem session,
-    required int surahId,
-    required int ayahNumber,
-    int? page,
-    int? juz,
-    int? hizb,
-    bool isEndOfPage = false,
-    double pageFraction = 0.0,
-    double? computedProgress,
-  }) {
-    if (session.isCompleted) return false;
-
-    final resolvedPage =
-        page ?? KhatmQuranData.getPageForAyah(surahId, ayahNumber);
-    final currentGlobalAyah = getGlobalAyahIndex(surahId, ayahNumber);
-
-    if (computedProgress != null && computedProgress >= 0.985) {
-      if (session.unitCount > 1 &&
-          isPositionInSession(
-            plan: plan,
-            session: session,
-            surahId: surahId,
-            ayahNumber: ayahNumber,
-            page: page,
-            juz: juz,
-            hizb: hizb,
-          )) {
-        return true;
-      }
-      if (plan.unitType == KhatmUnitType.page &&
-          resolvedPage == session.toUnit + 1) {
-        return true;
-      }
-    }
-
-    switch (plan.unitType) {
-      case KhatmUnitType.page:
-        // Position is outside session's vicinity (before start or more than 1 page past the end):
-        if (resolvedPage < session.fromUnit ||
-            resolvedPage > session.toUnit + 1) {
-          return false;
-        }
-        // Flipped to the immediate next page after session:
-        if (resolvedPage == session.toUnit + 1) return true;
-        // Reached end of the target page:
-        if (resolvedPage == session.toUnit) {
-          if (isEndOfPage) return true;
-          if (session.unitCount > 1 &&
-              (pageFraction >= 0.75 ||
-                  (computedProgress != null && computedProgress >= 0.95))) {
-            return true;
-          }
-        }
-        return false;
-
-      case KhatmUnitType.surah:
-        if (surahId < session.fromUnit || surahId > session.toUnit + 1) {
-          return false;
-        }
-        if (surahId == session.toUnit + 1) return true;
-        if (surahId == session.toUnit) {
-          final totalAyahs = kStaticQuranSurahs[surahId - 1].numberOfAyahs;
-          if (ayahNumber >= totalAyahs) {
-            if (isEndOfPage) return true;
-            if (session.unitCount > 1) return true;
-          }
-        }
-        return false;
-
-      case KhatmUnitType.juz:
-        final int targetStartPage =
-            KhatmQuranData.juzToStartPage[session.fromUnit]!;
-        final int targetEndPage = session.toUnit < 30
-            ? (KhatmQuranData.juzToStartPage[session.toUnit + 1]! - 1)
-            : 604;
-        if (resolvedPage < targetStartPage ||
-            resolvedPage > targetEndPage + 1) {
-          return false;
-        }
-        if (resolvedPage == targetEndPage + 1) return true;
-        if (resolvedPage == targetEndPage) {
-          if (isEndOfPage) return true;
-          if (session.unitCount > 1 &&
-              (pageFraction >= 0.75 ||
-                  (computedProgress != null && computedProgress >= 0.95))) {
-            return true;
-          }
-        }
-        return false;
-
-      case KhatmUnitType.hizb:
-        final int targetStartPage =
-            KhatmQuranData.hizb120ToStartPage[session.fromUnit]!;
-        final int targetEndPage = session.toUnit < 120
-            ? (KhatmQuranData.hizb120ToStartPage[session.toUnit + 1]! - 1)
-            : 604;
-        if (resolvedPage < targetStartPage ||
-            resolvedPage > targetEndPage + 1) {
-          return false;
-        }
-        if (resolvedPage == targetEndPage + 1) return true;
-        if (resolvedPage == targetEndPage) {
-          if (isEndOfPage) return true;
-          if (session.unitCount > 1 &&
-              (pageFraction >= 0.75 ||
-                  (computedProgress != null && computedProgress >= 0.95))) {
-            return true;
-          }
-        }
-        return false;
-
-      case KhatmUnitType.ayah:
-        if (currentGlobalAyah < session.fromUnit ||
-            currentGlobalAyah > session.toUnit + 1) {
-          return false;
-        }
-        // Completed when scrolled to the ayah after target:
-        if (currentGlobalAyah == session.toUnit + 1) return true;
-        // Or reached target ayah and end of page/item:
-        if (currentGlobalAyah == session.toUnit && isEndOfPage) return true;
-        return false;
-    }
+    return KhatmProgressCalculator.isPositionInRange(
+      unitType: plan.unitType,
+      fromUnit: session.fromUnit,
+      toUnit: session.toUnit,
+      surahId: surahId,
+      ayahNumber: ayahNumber,
+      page: page,
+    );
   }
 
   /// Deletes the current plan (soft delete) and triggers background sync.
   Future<bool> deletePlan() async {
     try {
+      _saveDebounceTimer?.cancel();
+      _saveDebounceTimer = null;
+      _pendingPlanToSave = null;
+      _syncKeepAlive();
       await _localDataSource.deletePlan(planId);
       _ref?.read(khatmListControllerProvider.notifier).loadPlans();
       if (_ref != null) {
@@ -652,7 +651,9 @@ class KhatmDetailController extends StateNotifier<KhatmDetailState> {
       }
       return true;
     } catch (e) {
-      state = state.copyWith(errorMessage: 'خطا در حذف ختم: $e');
+      if (mounted) {
+        state = state.copyWith(errorMessage: 'خطا در حذف ختم: $e');
+      }
       return false;
     }
   }

@@ -9,6 +9,8 @@ import 'package:quran/features/khatm/domain/entities/khatm_session_item.dart';
 import 'package:quran/features/khatm/infrastructure/datasources/khatm_local_datasource.dart';
 import 'package:quran/features/khatm/presentation/widgets/reader/khatm_reader_bar.dart';
 import 'package:quran/features/khatm/presentation/widgets/shared/khatm_home_section.dart';
+import 'package:quran/features/study_plan/domain/entities/study_plan.dart'
+    show getGlobalAyahIndex;
 
 class InMemoryKhatmDataSource implements IKhatmLocalDataSource {
   final Map<String, KhatmPlan> plans = {};
@@ -241,37 +243,46 @@ void main() {
         container.read(khatmDetailControllerProvider('khatm-auto-1').notifier);
     await container.pump();
 
-    // 1. Reading on page 3 (not yet the end of session 0): should NOT complete, but progress is 40%
+    // Pages 1..5 contain 36 ayahs: 1:1..1:7 (7) + 2:1..2:29 (29) = global 1..36.
+    // 1. Reading pages 1..3 (global 1..20): should NOT complete, progress ~55% (never 100%)
     final res1 = await controller.recordReadingProgress(
       sessionIndex: 0,
       surahId: 2,
       ayahNumber: 10,
       page: 3,
       isEndOfPage: false,
+      coverStartGlobal: getGlobalAyahIndex(1, 1),
+      coverEndGlobal: getGlobalAyahIndex(2, 10),
     );
     expect(res1, isFalse);
-    expect(container.read(khatmDetailControllerProvider('khatm-auto-1')).plan!.sessions[0].isCompleted, isFalse);
-    expect(container.read(khatmDetailControllerProvider('khatm-auto-1')).plan!.sessions[0].progressPercentInt, equals(40));
+    final s1 = container.read(khatmDetailControllerProvider('khatm-auto-1')).plan!.sessions[0];
+    expect(s1.isCompleted, isFalse);
+    expect(s1.progressPercentInt, inInclusiveRange(40, 60));
 
-    // 2. Reading on page 5 but not yet end of page: should NOT complete, but progress is 80%
+    // 2. Reading up to 2:26 on page 5 (global 1..33): should NOT complete, progress ~91%
     final res2 = await controller.recordReadingProgress(
       sessionIndex: 0,
       surahId: 2,
       ayahNumber: 26,
       page: 5,
       isEndOfPage: false,
+      coverStartGlobal: getGlobalAyahIndex(2, 11),
+      coverEndGlobal: getGlobalAyahIndex(2, 26),
     );
     expect(res2, isFalse);
-    expect(container.read(khatmDetailControllerProvider('khatm-auto-1')).plan!.sessions[0].isCompleted, isFalse);
-    expect(container.read(khatmDetailControllerProvider('khatm-auto-1')).plan!.sessions[0].progressPercentInt, equals(80));
+    final s2 = container.read(khatmDetailControllerProvider('khatm-auto-1')).plan!.sessions[0];
+    expect(s2.isCompleted, isFalse);
+    expect(s2.progressPercentInt, inInclusiveRange(85, 95));
 
-    // 3. User reaches end of page 5: should AUTO-COMPLETE session 0!
+    // 3. User finishes the rest of page 5 (2:27..2:29): should AUTO-COMPLETE session 0!
     final res3 = await controller.recordReadingProgress(
       sessionIndex: 0,
       surahId: 2,
       ayahNumber: 29,
       page: 5,
       isEndOfPage: true,
+      coverStartGlobal: getGlobalAyahIndex(2, 27),
+      coverEndGlobal: getGlobalAyahIndex(2, 29),
     );
     expect(res3, isTrue);
     expect(container.read(khatmDetailControllerProvider('khatm-auto-1')).plan!.sessions[0].isCompleted, isTrue);
@@ -457,14 +468,31 @@ void main() {
         container.read(khatmDetailControllerProvider('khatm-page-60').notifier);
     await container.pump();
 
-    // User is on page 60 with substantial reading (pageFraction 0.75): must complete, not trap at 97%
-    final res = await controller.recordReadingProgress(
+    // Jumping straight to page 60 without covering pages 41..59 must NOT auto-complete!
+    final jumpRes = await controller.recordReadingProgress(
       sessionIndex: 0,
       surahId: 3,
       ayahNumber: 82,
       page: 60,
       pageFraction: 0.75,
       isEndOfPage: false,
+    );
+    expect(jumpRes, isFalse);
+    expect(
+      container.read(khatmDetailControllerProvider('khatm-page-60')).plan!.sessions[0].isCompleted,
+      isFalse,
+    );
+
+    // Reading all ayahs of pages 41..60 (2:249..3:83) completes session cleanly with 100%, never trapped at 97%!
+    final res = await controller.recordReadingProgress(
+      sessionIndex: 0,
+      surahId: 3,
+      ayahNumber: 83,
+      page: 60,
+      pageFraction: 1.0,
+      isEndOfPage: true,
+      coverStartGlobal: getGlobalAyahIndex(2, 249),
+      coverEndGlobal: getGlobalAyahIndex(3, 83),
     );
 
     expect(res, isTrue);
@@ -753,7 +781,7 @@ void main() {
     expect(res1, isFalse);
     expect(container.read(khatmDetailControllerProvider('khatm-single-page')).plan!.sessions[0].isCompleted, isFalse);
 
-    // 2. User finishes reading page 5 (isEndOfPage: true): must complete!
+    // 2. User finishes reading all ayahs of page 5 (2:25..2:29): must complete!
     final res2 = await controller.recordReadingProgress(
       sessionIndex: 0,
       surahId: 2,
@@ -761,6 +789,8 @@ void main() {
       page: 5,
       pageFraction: 1.0,
       isEndOfPage: true,
+      coverStartGlobal: getGlobalAyahIndex(2, 25),
+      coverEndGlobal: getGlobalAyahIndex(2, 29),
     );
     expect(res2, isTrue);
     expect(container.read(khatmDetailControllerProvider('khatm-single-page')).plan!.sessions[0].isCompleted, isTrue);
@@ -823,7 +853,7 @@ void main() {
     expect(res1, isFalse);
     expect(container.read(khatmDetailControllerProvider('khatm-single-surah')).plan!.sessions[0].isCompleted, isFalse);
 
-    // 2. User reaches last ayah 7 with isEndOfPage: true: must complete!
+    // 2. User finishes all ayahs 1..7 of Surah 1: must complete!
     final res2 = await controller.recordReadingProgress(
       sessionIndex: 0,
       surahId: 1,
@@ -831,6 +861,8 @@ void main() {
       page: 1,
       pageFraction: 1.0,
       isEndOfPage: true,
+      coverStartGlobal: getGlobalAyahIndex(1, 1),
+      coverEndGlobal: getGlobalAyahIndex(1, 7),
     );
     expect(res2, isTrue);
     expect(container.read(khatmDetailControllerProvider('khatm-single-surah')).plan!.sessions[0].isCompleted, isTrue);

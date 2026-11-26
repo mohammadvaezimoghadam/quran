@@ -149,14 +149,62 @@ void main() {
       expect(target.ayahNumber, equals(1));
     });
 
-    test('resolves hizb correctly (120 Ahzab)', () {
+    test('resolves hizb correctly (120 Ahzab, including mid-page starts)', () {
+      // Hizb 2 starts mid-page on page 7 at Baqarah ayah 44 (not page start ayah 38)
       final target = KhatmQuranResolver.resolveUnit(
         unitType: KhatmUnitType.hizb,
         unitNumber: 2,
       );
       expect(target.pageNumber, equals(7));
       expect(target.surahId, equals(2));
-      expect(target.ayahNumber, equals(38));
+      expect(target.ayahNumber, equals(44));
+
+      // Hizb 3 starts mid-page on page 11 at Baqarah ayah 75
+      final h3 = KhatmQuranResolver.resolveUnit(
+        unitType: KhatmUnitType.hizb,
+        unitNumber: 3,
+      );
+      expect(h3.pageNumber, equals(11));
+      expect(h3.surahId, equals(2));
+      expect(h3.ayahNumber, equals(75));
+    });
+
+    test('resolves all 4 mid-page Juz starts accurately from quran.db', () {
+      // Juz 4 starts mid-page on page 62 at Aal-i-Imraan (3:93)
+      final j4 = KhatmQuranResolver.resolveUnit(
+        unitType: KhatmUnitType.juz,
+        unitNumber: 4,
+      );
+      expect(j4.pageNumber, equals(62));
+      expect(j4.surahId, equals(3));
+      expect(j4.ayahNumber, equals(93));
+
+      // Juz 7 starts mid-page on page 121 at Al-Ma'idah (5:82)
+      final j7 = KhatmQuranResolver.resolveUnit(
+        unitType: KhatmUnitType.juz,
+        unitNumber: 7,
+      );
+      expect(j7.pageNumber, equals(121));
+      expect(j7.surahId, equals(5));
+      expect(j7.ayahNumber, equals(82));
+
+      // Juz 11 starts mid-page on page 201 at At-Tawbah (9:93)
+      final j11 = KhatmQuranResolver.resolveUnit(
+        unitType: KhatmUnitType.juz,
+        unitNumber: 11,
+      );
+      expect(j11.pageNumber, equals(201));
+      expect(j11.surahId, equals(9));
+      expect(j11.ayahNumber, equals(93));
+
+      // Juz 26 starts on page 502 at Al-Ahqaf (46:1) while page 502 begins at 45:33
+      final j26 = KhatmQuranResolver.resolveUnit(
+        unitType: KhatmUnitType.juz,
+        unitNumber: 26,
+      );
+      expect(j26.pageNumber, equals(502));
+      expect(j26.surahId, equals(46));
+      expect(j26.ayahNumber, equals(1));
     });
   });
 

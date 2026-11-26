@@ -57,6 +57,9 @@ class JustAudioPlayerService implements IAudioPlayerService {
             processingState == ProcessingState.buffering) {
           status = AudioStatus.loading;
         } else if (processingState == ProcessingState.completed) {
+          if (_state.status == AudioStatus.completed) {
+            return;
+          }
           status = AudioStatus.completed;
           _echoService?.onPlaybackStopped();
         } else if (processingState == ProcessingState.idle) {
@@ -86,13 +89,17 @@ class JustAudioPlayerService implements IAudioPlayerService {
     );
 
     _positionSubscription = _audioPlayer.positionStream.listen((position) {
+      if (_isInternalTransition && position > Duration.zero) {
+        return;
+      }
       if (_state.status == AudioStatus.completed) {
         _state = _state.copyWith(position: position);
         return;
       }
       final dur = _state.duration;
       final remaining = dur - position;
-      final isNearOrAtEnd = dur > const Duration(seconds: 1) &&
+      final isNearOrAtEnd = !_isInternalTransition &&
+          dur > const Duration(seconds: 1) &&
           (position >= dur || (remaining <= const Duration(milliseconds: 250) && remaining >= Duration.zero));
 
       if (isNearOrAtEnd && _state.status == AudioStatus.playing) {
@@ -137,6 +144,8 @@ class JustAudioPlayerService implements IAudioPlayerService {
       _state.copyWith(
         status: AudioStatus.loading,
         currentUrl: url,
+        position: Duration.zero,
+        duration: Duration.zero,
         errorMessage: null,
       ),
     );

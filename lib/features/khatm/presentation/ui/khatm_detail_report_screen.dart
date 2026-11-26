@@ -198,16 +198,9 @@ class _KhatmDetailReportScreenState
       return;
     }
 
-    final unitToNavigate =
-        (nextSession.lastReadUnit != null &&
-            nextSession.lastReadUnit! >= nextSession.fromUnit &&
-            nextSession.lastReadUnit! <= nextSession.toUnit)
-        ? nextSession.lastReadUnit!
-        : nextSession.fromUnit;
-
-    final target = KhatmQuranResolver.resolveUnit(
+    final target = KhatmQuranResolver.resolveSessionResumeTarget(
       unitType: plan.unitType,
-      unitNumber: unitToNavigate,
+      session: nextSession,
     );
 
     context
@@ -230,17 +223,9 @@ class _KhatmDetailReportScreenState
   }
 
   void _onSessionTap(KhatmPlan plan, KhatmSessionItem session) {
-    final unitToNavigate =
-        (!session.isCompleted &&
-            session.lastReadUnit != null &&
-            session.lastReadUnit! >= session.fromUnit &&
-            session.lastReadUnit! <= session.toUnit)
-        ? session.lastReadUnit!
-        : session.fromUnit;
-
-    final target = KhatmQuranResolver.resolveUnit(
+    final target = KhatmQuranResolver.resolveSessionResumeTarget(
       unitType: plan.unitType,
-      unitNumber: unitToNavigate,
+      session: session,
     );
 
     context
@@ -428,6 +413,8 @@ class _KhatmDetailReportScreenState
                             totalUnits: plan.totalUnits,
                             completedUnits: plan.completedUnits,
                             unitLabel: plan.unitLabel,
+                            completedFractionOverride: plan.progressPercentage,
+                            isCompletedOverride: plan.isCompleted,
                           ),
                           const SizedBox(height: 12),
 

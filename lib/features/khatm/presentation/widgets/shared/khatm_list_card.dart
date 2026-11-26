@@ -8,11 +8,13 @@ import 'package:quran/common/extensions/context_extension.dart';
 import 'package:quran/common/extensions/int_extension.dart';
 import 'package:quran/common/extensions/size_extension.dart';
 import 'package:quran/common/widgets/app_snackbar.dart';
+import 'package:quran/common/widgets/auto_scroll_text.dart';
 import 'package:quran/core/routes/route_name.dart';
 import 'package:quran/core/theme/app_typography.dart';
 import 'package:quran/features/khatm/application/controllers/khatm_list_controller.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_plan.dart';
 import 'package:quran/features/khatm/domain/services/khatm_quran_resolver.dart';
+import 'khatm_circular_progress_ring.dart';
 
 /// Clean Apple-style unified card for Khatm plans, matching the exact styling
 /// of the Quran app's study cards with circular progress indicator and quick-action menu.
@@ -123,15 +125,9 @@ class KhatmListCard extends ConsumerWidget {
       return;
     }
 
-    final unitToNavigate = (nextSession.lastReadUnit != null &&
-            nextSession.lastReadUnit! >= nextSession.fromUnit &&
-            nextSession.lastReadUnit! <= nextSession.toUnit)
-        ? nextSession.lastReadUnit!
-        : nextSession.fromUnit;
-
-    final target = KhatmQuranResolver.resolveUnit(
+    final target = KhatmQuranResolver.resolveSessionResumeTarget(
       unitType: plan.unitType,
-      unitNumber: unitToNavigate,
+      session: nextSession,
     );
 
     context.pushNamed(
@@ -200,47 +196,9 @@ class KhatmListCard extends ConsumerWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Circular Progress Indicator (دقیقاً مشابه استایل قدیم)
-                    TweenAnimationBuilder<double>(
-                      tween: Tween<double>(end: plan.progressPercentage),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, animatedProgress, child) {
-                        final int animatedPercent =
-                            (animatedProgress * 100).toInt();
-                        return SizedBox(
-                          width: 38,
-                          height: 38,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SizedBox(
-                                width: 38,
-                                height: 38,
-                                child: CircularProgressIndicator(
-                                  value: animatedProgress.clamp(0.0, 1.0),
-                                  strokeWidth: 3.2,
-                                  backgroundColor: isDark
-                                      ? Colors.white.withValues(alpha: 0.08)
-                                      : colors.cardBorder,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                '${animatedPercent.toPersianDigit()}٪',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    KhatmCircularProgressRing(
+                      progress: plan.progressPercentage,
+                      isCompleted: plan.isCompleted,
                     ),
                     12.hSpace,
 
@@ -250,7 +208,7 @@ class KhatmListCard extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
+                          AutoScrollText(
                             plan.title,
                             style: TextStyle(
                               fontFamily: AppTypography.fontFamily,
@@ -258,11 +216,9 @@ class KhatmListCard extends ConsumerWidget {
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           3.vSpace,
-                          Text(
+                          AutoScrollText(
                             nextSession != null
                                 ? 'جلسه ${(nextSession.sessionIndex + 1).toPersianDigit()} از ${plan.sessionCount.toPersianDigit()} • ${nextSession.computeTitle(plan.unitType)}'
                                 : 'تمام جلسات ختم تکمیل شد',
@@ -272,8 +228,6 @@ class KhatmListCard extends ConsumerWidget {
                               fontWeight: FontWeight.w600,
                               color: colorScheme.primary,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

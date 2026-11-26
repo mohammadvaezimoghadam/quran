@@ -127,6 +127,8 @@ class KhatmSkeletonRing extends StatelessWidget {
       alpha: baseAlpha * pulse,
     );
 
+    final innerSize = (size - strokeWidth * 2).clamp(0.0, double.infinity);
+
     return Container(
       width: size,
       height: size,
@@ -138,14 +140,28 @@ class KhatmSkeletonRing extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            KhatmSkeletonBox(width: size * 0.34, height: 22, borderRadius: 6),
-            const SizedBox(height: 6),
-            KhatmSkeletonBox(width: size * 0.26, height: 11, borderRadius: 4),
-          ],
-        ),
+        child: innerSize >= 48
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  KhatmSkeletonBox(
+                    width: size * 0.34,
+                    height: (innerSize * 0.16).clamp(8.0, 22.0),
+                    borderRadius: 6,
+                  ),
+                  SizedBox(height: (innerSize * 0.05).clamp(3.0, 6.0)),
+                  KhatmSkeletonBox(
+                    width: size * 0.26,
+                    height: (innerSize * 0.09).clamp(5.0, 11.0),
+                    borderRadius: 4,
+                  ),
+                ],
+              )
+            : KhatmSkeletonBox(
+                width: (size * 0.34).clamp(6.0, innerSize * 0.7),
+                height: (innerSize * 0.24).clamp(4.0, 8.0),
+                borderRadius: 4,
+              ),
       ),
     );
   }

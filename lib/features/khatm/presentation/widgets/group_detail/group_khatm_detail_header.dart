@@ -55,7 +55,7 @@ class GroupKhatmDetailHeader extends StatelessWidget {
     final pillBg = isDark ? const Color(0xFF222224) : const Color(0xFFF3F1EC);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: colors.cardBackground,
         borderRadius: BorderRadius.circular(20),
@@ -68,159 +68,178 @@ class GroupKhatmDetailHeader extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ── ۱. نشان دسته‌بندی و نیت ختم (بدون رنگ زرد) ──
-          if (campaign.categoryTitle != null &&
-              campaign.categoryTitle!.trim().isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                campaign.categoryTitle!,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.primary,
+          // ── ۱. سمت راست در RTL: نشان دسته + عنوان + توضیحات + باکس آمار ۳ ستونه ──
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (campaign.categoryTitle != null &&
+                    campaign.categoryTitle!.trim().isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 3.5),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      campaign.categoryTitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  campaign.title,
+                  textAlign: TextAlign.start,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                    height: 1.35,
+                  ),
                 ),
-              ),
+                if (campaign.description != null &&
+                    campaign.description!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    campaign.description!,
+                    textAlign: TextAlign.start,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11.5,
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: pillBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.04)
+                          : Colors.black.withValues(alpha: 0.03),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCol(
+                          dotColor: colorScheme.primary,
+                          label: 'قرائت شده',
+                          value: campaign.completedUnits.toPersianDigit(),
+                          colorScheme: colorScheme,
+                        ),
+                      ),
+                      Container(
+                        width: 0.6,
+                        height: 22,
+                        color: colorScheme.onSurface.withValues(alpha: 0.08),
+                      ),
+                      Expanded(
+                        child: _buildStatCol(
+                          dotColor: inProgressColor,
+                          label: 'در حال قرائت',
+                          value: campaign.reservedUnits.toPersianDigit(),
+                          colorScheme: colorScheme,
+                        ),
+                      ),
+                      Container(
+                        width: 0.6,
+                        height: 22,
+                        color: colorScheme.onSurface.withValues(alpha: 0.08),
+                      ),
+                      Expanded(
+                        child: _buildStatCol(
+                          dotColor:
+                              colorScheme.onSurface.withValues(alpha: 0.28),
+                          label: 'باقی‌مانده',
+                          value: campaign.remainingUnits.toPersianDigit(),
+                          colorScheme: colorScheme,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
+          const SizedBox(width: 14),
 
-          // ── ۲. نمودار دایره‌ای بزرگ پیشرفت (Donut Chart) ──
+          // ── ۲. سمت چپ در RTL: نمودار دایره‌ای درصد پیشرفت ──
           SizedBox(
-            width: 154,
-            height: 154,
+            width: 100,
+            height: 100,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 CustomPaint(
-                  size: const Size(154, 154),
+                  size: const Size(100, 100),
                   painter: _GroupDonutRingPainter(
                     completedFraction: completedFraction,
                     reservedFraction: reservedFraction,
                     completedColor: colorScheme.primary,
                     inProgressColor: inProgressColor,
                     backgroundColor: trackBgColor,
-                    strokeWidth: 9.5,
+                    strokeWidth: 7.5,
                   ),
                 ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${campaign.progressPercent.toInt().toPersianDigit()}٪',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                        letterSpacing: -0.5,
-                        height: 1.1,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${(campaign.isCompleted ? 100 : campaign.progressPercent.floor().clamp(0, 99)).toPersianDigit()}٪',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            letterSpacing: -0.5,
+                            height: 1.1,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${campaign.completedUnits.toPersianDigit()} از ${targetUnits.toPersianDigit()}',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${campaign.completedUnits.toPersianDigit()} از ${targetUnits.toPersianDigit()}',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.75),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-
-          // ── ۳. عنوان ختم و توضیحات نیت ──
-          Text(
-            campaign.title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 17.5,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-              height: 1.35,
-            ),
-          ),
-          if (campaign.description != null &&
-              campaign.description!.trim().isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                campaign.description!,
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 12.5,
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
-                  height: 1.5,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 20),
-
-          // ── ۴. کادر آمار ۳ ستونه سهم‌ها ──
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            decoration: BoxDecoration(
-              color: pillBg,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.04)
-                    : Colors.black.withValues(alpha: 0.03),
-                width: 0.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildStatCol(
-                    dotColor: colorScheme.primary,
-                    label: 'قرائت شده',
-                    value: campaign.completedUnits.toPersianDigit(),
-                    colorScheme: colorScheme,
-                  ),
-                ),
-                Container(
-                  width: 0.6,
-                  height: 26,
-                  color: colorScheme.onSurface.withValues(alpha: 0.08),
-                ),
-                Expanded(
-                  child: _buildStatCol(
-                    dotColor: inProgressColor,
-                    label: 'در حال قرائت',
-                    value: campaign.reservedUnits.toPersianDigit(),
-                    colorScheme: colorScheme,
-                  ),
-                ),
-                Container(
-                  width: 0.6,
-                  height: 26,
-                  color: colorScheme.onSurface.withValues(alpha: 0.08),
-                ),
-                Expanded(
-                  child: _buildStatCol(
-                    dotColor: colorScheme.onSurface.withValues(alpha: 0.28),
-                    label: 'باقی‌مانده',
-                    value: campaign.remainingUnits.toPersianDigit(),
-                    colorScheme: colorScheme,
+                    ],
                   ),
                 ),
               ],
@@ -237,43 +256,52 @@ class GroupKhatmDetailHeader extends StatelessWidget {
     required String value,
     required ColorScheme colorScheme,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 6.5,
-              height: 6.5,
-              decoration: BoxDecoration(
-                color: dotColor,
-                shape: BoxShape.circle,
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 5.5,
+                  height: 5.5,
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
           ),
-        ),
-      ],
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

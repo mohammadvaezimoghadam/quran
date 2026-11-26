@@ -6,6 +6,16 @@ import '../entities/group_khatm_category.dart';
 import '../entities/khatm_plan.dart';
 
 abstract class IKhatmRepository {
+  /// Paginated public campaigns list with optional filtering
+  Future<Result<PaginatedCampaignsPage, Failure>> getCampaignsPage({
+    int? categoryId,
+    String? unitType,
+    String? status,
+    String? search,
+    int page = 1,
+    int pageSize = 10,
+  });
+
   /// Public campaigns list with optional filtering
   Future<Result<List<GroupKhatmCampaign>, Failure>> getCampaigns({
     int? categoryId,
@@ -13,6 +23,13 @@ abstract class IKhatmRepository {
     String? status,
     String? search,
     int page = 1,
+  });
+
+  /// Paginated user's own campaigns ('created', 'participated', or 'all')
+  Future<Result<PaginatedCampaignsPage, Failure>> getMyCampaignsPage({
+    required String tab,
+    int page = 1,
+    int pageSize = 10,
   });
 
   /// User's own campaigns ('created', 'participated', or 'all')

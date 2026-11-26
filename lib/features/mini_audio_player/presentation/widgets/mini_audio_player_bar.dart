@@ -8,6 +8,8 @@ import '../../../../common/extensions/int_extension.dart';
 import '../../../../core/services/audio/audio_player_state.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../khatm/application/controllers/group_khatm_reading_controller.dart';
+import '../../../khatm/application/controllers/khatm_detail_controller.dart';
 import '../../../quran_reader/application/controllers/quran_audio_controller.dart';
 import '../../../quran_reader/application/controllers/quran_display_settings_controller.dart';
 import '../../../quran_reader/presentation/ui/quran_reader_screen.dart';
@@ -105,12 +107,27 @@ class MiniAudioPlayerBar extends ConsumerWidget {
                         child: InkWell(
                           onTap: onTap ??
                               () {
+                                final activePersonal = ref.read(
+                                  activeKhatmSessionProvider,
+                                );
+                                final activeGroup = ref.read(
+                                  activeGroupKhatmSlotProvider,
+                                );
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => QuranReaderScreen(
                                       surahId: currentSurahId,
                                       surahName: 'سوره $surahName',
                                       initialAyahNumber: currentAyahNumber,
+                                      khatmId: activePersonal?.khatmId,
+                                      khatmSession:
+                                          activePersonal?.sessionIndex,
+                                      groupKhatmCode: activeGroup?.inviteCode,
+                                      groupSlotUnit: activeGroup?.unitNumber,
+                                      groupSlotId: activeGroup?.slotId,
+                                      groupUnitType: activeGroup?.unitType,
+                                      groupSlotQuantity:
+                                          activeGroup?.targetQuantity,
                                     ),
                                   ),
                                 );

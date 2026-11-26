@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:quran/common/extensions/context_extension.dart';
 import 'package:quran/common/extensions/int_extension.dart';
+import 'package:quran/common/widgets/auto_scroll_text.dart';
 import 'package:quran/core/theme/app_typography.dart';
 import '../../../domain/entities/group_khatm_campaign.dart';
 import '../../../domain/entities/group_khatm_slot.dart';
@@ -93,29 +94,37 @@ class _GroupKhatmParticipantsSheetState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'همراهان و سهم‌های این ختم',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'همراهان و سهم‌های این ختم',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${takenSlots.length.toPersianDigit()} سهم توسط همراهان برداشته شده است',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${takenSlots.length.toPersianDigit()} سهم توسط همراهان برداشته شده است',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant
+                            .withValues(alpha: 0.8),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 splashRadius: 20,
@@ -134,25 +143,33 @@ class _GroupKhatmParticipantsSheetState
           const SizedBox(height: 14),
 
           // Quick Filter Chips
-          Row(
-            children: [
-              _buildFilterChip('all', 'همه (${takenSlots.length.toPersianDigit()})',
-                  pillBg, colorScheme, isDark),
-              const SizedBox(width: 8),
-              _buildFilterChip(
-                  'completed',
-                  'قرائت شده (${campaign.completedUnits.toPersianDigit()})',
-                  pillBg,
-                  colorScheme,
-                  isDark),
-              const SizedBox(width: 8),
-              _buildFilterChip(
-                  'reserved',
-                  'در حال قرائت (${campaign.reservedUnits.toPersianDigit()})',
-                  pillBg,
-                  colorScheme,
-                  isDark),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                _buildFilterChip(
+                    'all',
+                    'همه (${takenSlots.length.toPersianDigit()})',
+                    pillBg,
+                    colorScheme,
+                    isDark),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                    'completed',
+                    'قرائت شده (${campaign.completedUnits.toPersianDigit()})',
+                    pillBg,
+                    colorScheme,
+                    isDark),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                    'reserved',
+                    'در حال قرائت (${campaign.reservedUnits.toPersianDigit()})',
+                    pillBg,
+                    colorScheme,
+                    isDark),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
 
@@ -310,7 +327,7 @@ class _GroupKhatmParticipantsSheetState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AutoScrollText(
                         displayName ?? unitLabel,
                         style: TextStyle(
                           fontFamily: AppTypography.fontFamily,
@@ -322,7 +339,7 @@ class _GroupKhatmParticipantsSheetState
                       ),
                       if (displayName != null) ...[
                         const SizedBox(height: 2),
-                        Text(
+                        AutoScrollText(
                           unitLabel,
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
@@ -338,20 +355,25 @@ class _GroupKhatmParticipantsSheetState
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusBg,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              isDone ? 'قرائت شده' : 'در حال قرائت',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: statusTextColor,
+          const SizedBox(width: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 108),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusBg,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                isDone ? 'قرائت شده' : 'در حال قرائت',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: statusTextColor,
+                ),
               ),
             ),
           ),

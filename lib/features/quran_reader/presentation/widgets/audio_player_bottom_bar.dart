@@ -27,6 +27,12 @@ import '../utils/reciter_download_helper.dart';
 import '../../../../core/services/audio/ambient_sound/ambient_sound_controller.dart';
 import '../../../../core/services/audio/echo/echo_controller.dart';
 import 'audio_ambiance_bottom_sheet.dart';
+import '../../../khatm/application/controllers/group_khatm_reading_controller.dart';
+import '../../../khatm/application/controllers/khatm_detail_controller.dart';
+import '../../../khatm/domain/entities/khatm_enums.dart';
+import '../../../khatm/presentation/widgets/reader/group_khatm_reader_bar.dart';
+import '../../../khatm/presentation/widgets/reader/khatm_reader_bar.dart';
+import '../../../study_plan/application/controllers/study_plan_controller.dart';
 import 'package:quran/features/app_walkthrough/app_walkthrough.dart';
 import 'sleep_timer_active_badge.dart';
 
@@ -219,15 +225,47 @@ class AudioPlayerBottomBar extends ConsumerWidget {
         if (!isReady) return;
         if (!context.mounted) return;
 
+        final activePersonal = ref.read(activeKhatmSessionProvider);
+        final activeGroup = ref.read(activeGroupKhatmSlotProvider);
+        final hasVisiblePersonal =
+            activePersonal != null && !activePersonal.isDetachedFromReader;
+        final hasVisibleGroup =
+            activeGroup != null && !activeGroup.isDetachedFromReader;
+
         final ayahs = ref.read(quranReaderControllerProvider).ayahs;
-        
+        final readingAyah = ref.read(currentReadingAyahProvider);
+        int? visibleAyahNumber =
+            (readingAyah != null && readingAyah.surahId == surahId)
+                ? readingAyah.ayahNumber
+                : null;
         final itemPositionsListener = ref.read(activeItemPositionsListenerProvider);
-        int? visibleAyahNumber;
-        if (itemPositionsListener != null && ayahs.isNotEmpty) {
+        if (visibleAyahNumber == null &&
+            itemPositionsListener != null &&
+            ayahs.isNotEmpty) {
           final positions = itemPositionsListener.itemPositions.value;
           if (positions.isNotEmpty) {
-            final screenHeight = MediaQuery.sizeOf(context).height;
-            final topCutoff = screenHeight > 0 ? (140.0 / screenHeight) : 0.18;
+            final mediaQuery = MediaQuery.of(context);
+            final screenHeight = mediaQuery.size.height;
+            final topPadding = mediaQuery.padding.top;
+            final isKhatmCollapsed = ref.read(isKhatmReaderBarCollapsedProvider);
+            final khatmBarHeight = (hasVisiblePersonal || hasVisibleGroup)
+                ? (isKhatmCollapsed
+                    ? KhatmReaderBar.collapsedHeight
+                    : (hasVisiblePersonal
+                        ? KhatmReaderBar.barHeight
+                        : GroupKhatmReaderBar.barHeight))
+                : 0.0;
+            final studyPlanHeight =
+                (!hasVisiblePersonal &&
+                        !hasVisibleGroup &&
+                        ref.read(isStudyPlanSessionActiveProvider))
+                    ? 36.0
+                    : 0.0;
+            final headerHeight =
+                topPadding + 60.0 + 40.0 + studyPlanHeight + khatmBarHeight;
+            final topCutoff = screenHeight > 0
+                ? (headerHeight / screenHeight).clamp(0.05, 0.75)
+                : 0.18;
             final readingBaseline = topCutoff + 0.02;
             ItemPosition? topPosition;
             for (final p in positions) {
@@ -251,9 +289,20 @@ class AudioPlayerBottomBar extends ConsumerWidget {
 
         final currentAyah = audioState.currentAyahNumber;
         final totalAyahs = ayahs.isNotEmpty ? ayahs.length : (audioState.totalAyahsInSurah ?? 1);
+        final isAwaitingGroupSurahNextPass = hasVisibleGroup &&
+            activeGroup.unitType == GroupKhatmUnitType.surah &&
+            activeGroup.unitNumber == surahId &&
+            (ref.read(groupKhatmReadingControllerProvider)[activeGroup.storageKey]
+                    ?.awaitingNextPass ??
+                false);
 
         int startAyah;
-        if (isCompleted && currentAyah != null) {
+        if (isAwaitingGroupSurahNextPass) {
+          await ref
+              .read(groupKhatmReadingControllerProvider.notifier)
+              .beginNextPass(activeGroup.inviteCode, activeGroup.slotId);
+          startAyah = ayahs.isNotEmpty ? ayahs.first.ayahNumber : 1;
+        } else if (isCompleted && currentAyah != null) {
           // Track completed or reached end: advance to next ayah
           startAyah = currentAyah < totalAyahs ? currentAyah + 1 : 1;
         } else {

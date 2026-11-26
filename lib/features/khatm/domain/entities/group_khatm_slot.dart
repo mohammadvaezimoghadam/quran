@@ -45,6 +45,14 @@ class GroupKhatmSlot {
   bool get isReserved => status == GroupKhatmSlotStatus.reserved;
   bool get isCompleted => status == GroupKhatmSlotStatus.completed;
 
+  /// Canonical ascending order by unitNumber (1..30 for Juz, 1..120 for Hizb),
+  /// falling back to slot id when unitNumber is null.
+  static int compareByUnitOrder(GroupKhatmSlot a, GroupKhatmSlot b) {
+    final unitCmp = (a.unitNumber ?? a.id).compareTo(b.unitNumber ?? b.id);
+    if (unitCmp != 0) return unitCmp;
+    return a.id.compareTo(b.id);
+  }
+
   factory GroupKhatmSlot.fromJson(Map<String, dynamic> json) {
     return GroupKhatmSlot(
       id: json['id'] as int? ?? 0,

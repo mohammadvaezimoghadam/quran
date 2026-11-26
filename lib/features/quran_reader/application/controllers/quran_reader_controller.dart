@@ -132,13 +132,17 @@ class ActiveItemPositionsListenerNotifier
   }
 
   void clearIfMatches(ItemPositionsListener listener) {
-    if (state == listener) {
-      Future.microtask(() {
-        if (state == listener) {
-          state = null;
-        }
-      });
-    }
+    try {
+      if (state == listener) {
+        Future.microtask(() {
+          try {
+            if (state == listener) {
+              state = null;
+            }
+          } catch (_) {}
+        });
+      }
+    } catch (_) {}
   }
 }
 

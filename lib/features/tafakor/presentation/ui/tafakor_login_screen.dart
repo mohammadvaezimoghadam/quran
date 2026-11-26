@@ -8,26 +8,12 @@ import 'package:smart_auth/smart_auth.dart';
 import '../../../../common/extensions/context_extension.dart';
 import '../../../../common/extensions/size_extension.dart';
 import '../../../../common/extensions/string_extension.dart';
+import '../../../../common/utils/persian_number_formatter.dart';
 import '../../../../common/widgets/app_snackbar.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../application/controllers/tafakor_auth_controller.dart';
 import '../../domain/entities/tafakor_auth_state.dart';
 import '../../infrastructure/datasources/tafakor_remote_data_source.dart';
-
-/// Formatter that automatically converts English/Arabic digits to Persian digits.
-class PersianNumberFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final converted = newValue.text.toPersianDigit();
-    return TextEditingValue(
-      text: converted,
-      selection: newValue.selection,
-    );
-  }
-}
 
 class TafakorLoginScreen extends ConsumerStatefulWidget {
   const TafakorLoginScreen({super.key});

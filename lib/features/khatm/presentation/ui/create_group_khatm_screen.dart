@@ -16,7 +16,6 @@ import 'package:quran/features/khatm/application/controllers/create_group_khatm_
 import 'package:quran/features/khatm/application/controllers/group_khatm_list_controller.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_enums.dart';
 import '../widgets/shared/complete_name_bottom_sheet.dart';
-import '../widgets/shared/group_khatm_share_sheet.dart';
 import '../widgets/shared/guest_otp_bottom_sheet.dart';
 import '../widgets/wizard/khatm_jalali_date_picker.dart';
 import '../widgets/wizard/khatm_step_indicator.dart';
@@ -144,12 +143,6 @@ class _CreateGroupKhatmScreenState
         groupKhatmDetailRoute,
         pathParameters: {'code': createdCampaign.inviteCode},
       );
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          GroupKhatmShareSheet.show(context, campaign: createdCampaign);
-        }
-      });
     } else if (mounted) {
       final error = ref.read(createGroupKhatmControllerProvider).errorMessage;
       if (error != null) {

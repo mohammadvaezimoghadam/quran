@@ -4,7 +4,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:quran/core/data/local/hive/hive_service_provider.dart';
 import 'package:quran/core/data/local/hive/i_hive_service.dart';
+import 'package:quran/features/khatm/domain/entities/khatm_ayah_span.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_plan.dart';
+import 'package:quran/features/khatm/domain/services/khatm_progress_calculator.dart';
 
 abstract class IKhatmLocalDataSource {
   Future<void> savePlan(KhatmPlan plan);
@@ -167,11 +169,28 @@ class KhatmLocalDataSource implements IKhatmLocalDataSource {
 
     final updatedSessions = plan.sessions.map((session) {
       if (session.sessionIndex == sessionIndex) {
+        if (isCompleted) {
+          final range = KhatmProgressCalculator.resolveGlobalAyahRange(
+            unitType: plan.unitType,
+            fromUnit: session.fromUnit,
+            toUnit: session.toUnit,
+          );
+          return session.copyWith(
+            isCompleted: true,
+            completedAt: DateTime.now(),
+            progress: 1.0,
+            lastReadUnit: session.toUnit,
+            coveredSpans: [
+              KhatmAyahSpan(start: range.startGlobal, end: range.endGlobal),
+            ],
+          );
+        }
         return session.copyWith(
-          isCompleted: isCompleted,
-          completedAt: isCompleted ? DateTime.now() : null,
-          progress: isCompleted ? 1.0 : 0.0,
-          lastReadUnit: isCompleted ? session.toUnit : null,
+          isCompleted: false,
+          completedAt: null,
+          progress: 0.0,
+          coveredSpans: const [],
+          clearResumeCoordinates: true,
         );
       }
       return session;

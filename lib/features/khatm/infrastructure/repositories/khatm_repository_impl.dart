@@ -78,22 +78,24 @@ class KhatmRepositoryImpl with DioExceptionMapper implements IKhatmRepository {
   }
 
   @override
-  Future<Result<List<GroupKhatmCampaign>, Failure>> getCampaigns({
+  Future<Result<PaginatedCampaignsPage, Failure>> getCampaignsPage({
     int? categoryId,
     String? unitType,
     String? status,
     String? search,
     int page = 1,
+    int pageSize = 10,
   }) async {
     try {
-      final campaigns = await _remoteDataSource.getCampaigns(
+      final result = await _remoteDataSource.getCampaignsPage(
         categoryId: categoryId,
         unitType: unitType,
         status: status,
         search: search,
         page: page,
+        pageSize: pageSize,
       );
-      return Success(campaigns);
+      return Success(result);
     } on DioException catch (e, stackTrace) {
       return Error(_handleDioError(e, stackTrace));
     } catch (e, stackTrace) {
@@ -107,12 +109,39 @@ class KhatmRepositoryImpl with DioExceptionMapper implements IKhatmRepository {
   }
 
   @override
-  Future<Result<List<GroupKhatmCampaign>, Failure>> getMyCampaigns({
+  Future<Result<List<GroupKhatmCampaign>, Failure>> getCampaigns({
+    int? categoryId,
+    String? unitType,
+    String? status,
+    String? search,
+    int page = 1,
+  }) async {
+    final res = await getCampaignsPage(
+      categoryId: categoryId,
+      unitType: unitType,
+      status: status,
+      search: search,
+      page: page,
+    );
+    return res.when(
+      (pageData) => Success(pageData.items),
+      (failure) => Error(failure),
+    );
+  }
+
+  @override
+  Future<Result<PaginatedCampaignsPage, Failure>> getMyCampaignsPage({
     required String tab,
+    int page = 1,
+    int pageSize = 10,
   }) async {
     try {
-      final campaigns = await _remoteDataSource.getMyCampaigns(tab: tab);
-      return Success(campaigns);
+      final result = await _remoteDataSource.getMyCampaignsPage(
+        tab: tab,
+        page: page,
+        pageSize: pageSize,
+      );
+      return Success(result);
     } on DioException catch (e, stackTrace) {
       return Error(_handleDioError(e, stackTrace));
     } catch (e, stackTrace) {
@@ -123,6 +152,17 @@ class KhatmRepositoryImpl with DioExceptionMapper implements IKhatmRepository {
         ),
       );
     }
+  }
+
+  @override
+  Future<Result<List<GroupKhatmCampaign>, Failure>> getMyCampaigns({
+    required String tab,
+  }) async {
+    final res = await getMyCampaignsPage(tab: tab);
+    return res.when(
+      (pageData) => Success(pageData.items),
+      (failure) => Error(failure),
+    );
   }
 
   @override

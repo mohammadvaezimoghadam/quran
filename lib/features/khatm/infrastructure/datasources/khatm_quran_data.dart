@@ -1,6 +1,10 @@
+import '../../../study_plan/domain/entities/study_plan.dart'
+    show getGlobalAyahIndex;
+import '../../../surah_list/infrastructure/datasources/static_surahs_data.dart';
+
 /// Static lookup tables extracted directly from quran.db for mapping
-/// Quran units (Juz, Hizb, Page) to Osman Taha starting page numbers
-/// and exact first Ayah on every page.
+/// Quran units (Juz, Hizb, Page, Surah) to Osman Taha starting page numbers,
+/// exact first Ayah on every page, and exact 1-based global ayah (1..6236) boundaries.
 abstract final class KhatmQuranData {
   /// Mapping of Juz (1 to 30) to Osman Taha starting page number.
   static const Map<int, int> juzToStartPage = {
@@ -8,6 +12,15 @@ abstract final class KhatmQuranData {
     11: 201, 12: 222, 13: 242, 14: 262, 15: 282, 16: 302, 17: 322, 18: 342,
     19: 362, 20: 382, 21: 402, 22: 422, 23: 442, 24: 462, 25: 482, 26: 502,
     27: 522, 28: 542, 29: 562, 30: 582,
+  };
+
+  /// Exact 1-based global ayah index (1..6236) where each Juz (1 to 30) starts,
+  /// extracted directly from quran.db (handles all 4 mid-page Juz starts).
+  static const Map<int, int> juzToStartGlobalAyah = {
+    1: 1, 2: 149, 3: 260, 4: 386, 5: 517, 6: 641, 7: 751, 8: 900, 9: 1042,
+    10: 1201, 11: 1328, 12: 1479, 13: 1649, 14: 1803, 15: 2030, 16: 2215,
+    17: 2484, 18: 2674, 19: 2876, 20: 3215, 21: 3386, 22: 3564, 23: 3733,
+    24: 4090, 25: 4265, 26: 4511, 27: 4706, 28: 5105, 29: 5242, 30: 5673,
   };
 
   /// Mapping of 120 Ahzab (Iranian / Hablolmatin convention: 4 Ahzab per Juz)
@@ -25,6 +38,28 @@ abstract final class KhatmQuranData {
     91: 451, 92: 456, 93: 462, 94: 467, 95: 472, 96: 477, 97: 482, 98: 486, 99: 491, 100: 496,
     101: 502, 102: 507, 103: 513, 104: 517, 105: 522, 106: 526, 107: 531, 108: 536, 109: 542, 110: 547,
     111: 553, 112: 558, 113: 562, 114: 566, 115: 572, 116: 577, 117: 582, 118: 587, 119: 591, 120: 596,
+  };
+
+  /// Exact 1-based global ayah index (1..6236) where each Hizb (1 to 120) starts,
+  /// extracted directly from quran.db (handles all 64 mid-page Hizb starts).
+  static const Map<int, int> hizb120ToStartGlobalAyah = {
+    1: 1, 2: 51, 3: 82, 4: 113, 5: 149, 6: 184, 7: 210, 8: 240, 9: 260,
+    10: 279, 11: 308, 12: 345, 13: 386, 14: 426, 15: 464, 16: 494, 17: 517,
+    18: 551, 19: 581, 20: 607, 21: 641, 22: 670, 23: 696, 24: 720, 25: 751,
+    26: 778, 27: 825, 28: 863, 29: 900, 30: 930, 31: 955, 32: 1001, 33: 1042,
+    34: 1096, 35: 1125, 36: 1161, 37: 1201, 38: 1236, 39: 1269, 40: 1295,
+    41: 1328, 42: 1357, 43: 1390, 44: 1435, 45: 1479, 46: 1514, 47: 1557,
+    48: 1603, 49: 1649, 50: 1697, 51: 1726, 52: 1760, 53: 1803, 54: 1902,
+    55: 1952, 56: 1991, 57: 2030, 58: 2079, 59: 2128, 60: 2172, 61: 2215,
+    62: 2272, 63: 2349, 64: 2431, 65: 2484, 66: 2534, 67: 2596, 68: 2633,
+    69: 2674, 70: 2748, 71: 2812, 72: 2844, 73: 2876, 74: 2933, 75: 3043,
+    76: 3160, 77: 3215, 78: 3264, 79: 3303, 80: 3341, 81: 3386, 82: 3440,
+    83: 3491, 84: 3534, 85: 3564, 86: 3593, 87: 3630, 88: 3675, 89: 3733,
+    90: 3810, 91: 3933, 92: 4022, 93: 4090, 94: 4134, 95: 4174, 96: 4227,
+    97: 4265, 98: 4299, 99: 4349, 100: 4431, 101: 4511, 102: 4555, 103: 4601,
+    104: 4626, 105: 4706, 106: 4810, 107: 4902, 108: 5054, 109: 5105,
+    110: 5137, 111: 5178, 112: 5218, 113: 5242, 114: 5324, 115: 5448,
+    116: 5552, 117: 5673, 118: 5830, 119: 5949, 120: 6091,
   };
 
   /// Mapping of each page (1 to 604) to the starting (surahNumber, ayahInSurah)
@@ -696,5 +731,104 @@ abstract final class KhatmQuranData {
       }
     }
     return 1;
+  }
+
+  /// Returns exact 1-based global ayah range `[startGlobal, endGlobal]` for [page] (1..604).
+  static ({int startGlobal, int endGlobal}) getGlobalAyahRangeForPage(
+    int page,
+  ) {
+    final p = page.clamp(1, 604);
+    final startPos = getStartAyahForPage(p);
+    final startGlobal = getGlobalAyahIndex(startPos.$1, startPos.$2);
+    if (p >= 604) {
+      return (startGlobal: startGlobal, endGlobal: 6236);
+    }
+    final nextPos = getStartAyahForPage(p + 1);
+    final endGlobal = getGlobalAyahIndex(nextPos.$1, nextPos.$2) - 1;
+    return (startGlobal: startGlobal, endGlobal: endGlobal);
+  }
+
+  /// Returns exact 1-based global ayah range `[startGlobal, endGlobal]` for [juz] (1..30).
+  static ({int startGlobal, int endGlobal}) getGlobalAyahRangeForJuz(int juz) {
+    final j = juz.clamp(1, 30);
+    final startGlobal = juzToStartGlobalAyah[j] ?? 1;
+    final endGlobal = j < 30 ? (juzToStartGlobalAyah[j + 1]! - 1) : 6236;
+    return (startGlobal: startGlobal, endGlobal: endGlobal);
+  }
+
+  /// Returns exact 1-based global ayah range `[startGlobal, endGlobal]` for [hizb] (1..120).
+  static ({int startGlobal, int endGlobal}) getGlobalAyahRangeForHizb(
+    int hizb,
+  ) {
+    final h = hizb.clamp(1, 120);
+    final startGlobal = hizb120ToStartGlobalAyah[h] ?? 1;
+    final endGlobal = h < 120 ? (hizb120ToStartGlobalAyah[h + 1]! - 1) : 6236;
+    return (startGlobal: startGlobal, endGlobal: endGlobal);
+  }
+
+  /// Returns exact 1-based global ayah range `[startGlobal, endGlobal]` for [surahId] (1..114).
+  static ({int startGlobal, int endGlobal}) getGlobalAyahRangeForSurah(
+    int surahId,
+  ) {
+    final s = surahId.clamp(1, 114);
+    final startGlobal = getGlobalAyahIndex(s, 1);
+    final count = kStaticQuranSurahs[s - 1].numberOfAyahs;
+    return (startGlobal: startGlobal, endGlobal: startGlobal + count - 1);
+  }
+
+  /// Returns exact Juz number (1..30) for a 1-based [globalAyah] (1..6236).
+  static int getJuzForGlobalAyah(int globalAyah) {
+    final g = globalAyah.clamp(1, 6236);
+    int low = 1;
+    int high = 30;
+    int result = 1;
+    while (low <= high) {
+      final mid = (low + high) ~/ 2;
+      if (juzToStartGlobalAyah[mid]! <= g) {
+        result = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return result;
+  }
+
+  /// Returns exact Hizb number (1..120) for a 1-based [globalAyah] (1..6236).
+  static int getHizbForGlobalAyah(int globalAyah) {
+    final g = globalAyah.clamp(1, 6236);
+    int low = 1;
+    int high = 120;
+    int result = 1;
+    while (low <= high) {
+      final mid = (low + high) ~/ 2;
+      if (hizb120ToStartGlobalAyah[mid]! <= g) {
+        result = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return result;
+  }
+
+  /// Returns exact Osman Taha page number (1..604) for a 1-based [globalAyah] (1..6236).
+  static int getPageForGlobalAyah(int globalAyah) {
+    final g = globalAyah.clamp(1, 6236);
+    int low = 1;
+    int high = 604;
+    int result = 1;
+    while (low <= high) {
+      final mid = (low + high) ~/ 2;
+      final pos = pageToStartAyah[mid]!;
+      final startGlobal = getGlobalAyahIndex(pos.$1, pos.$2);
+      if (startGlobal <= g) {
+        result = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return result;
   }
 }

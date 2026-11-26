@@ -84,13 +84,17 @@ class GroupKhatmBottomCta extends StatelessWidget {
                     color: Colors.white,
                     radius: 10,
                   )
-                : Text(
-                    buttonLabel,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                : FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      buttonLabel,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
           ),

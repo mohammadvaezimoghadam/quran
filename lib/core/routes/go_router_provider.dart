@@ -22,6 +22,7 @@ import '../../features/smart_device/presentation/ui/smart_device_settings_screen
 import '../../features/splash/presentation/ui/splash_screen.dart';
 import '../../features/subscription/presentation/ui/vip_subscription_screen.dart';
 import '../../features/surah_list/presentation/ui/surah_list_screen.dart';
+import '../../features/khatm/domain/entities/khatm_enums.dart';
 import '../../features/khatm/presentation/ui/create_khatm_wizard_screen.dart';
 import '../../features/khatm/presentation/ui/create_group_khatm_screen.dart';
 import '../../features/khatm/presentation/ui/group_khatm_detail_screen.dart';
@@ -141,6 +142,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               int.tryParse(state.uri.queryParameters['groupSlotUnit'] ?? '');
           final groupSlotId =
               int.tryParse(state.uri.queryParameters['groupSlotId'] ?? '');
+          final groupUnitTypeStr =
+              state.uri.queryParameters['groupUnitType'];
+          final groupUnitType = groupUnitTypeStr == null
+              ? null
+              : GroupKhatmUnitType.values
+                  .where((e) => e.name == groupUnitTypeStr)
+                  .firstOrNull;
+          final groupSlotQuantity = int.tryParse(
+            state.uri.queryParameters['groupSlotQuantity'] ?? '',
+          );
           return QuranReaderScreen(
             surahId: surahId,
             surahName: surahName,
@@ -153,6 +164,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             groupKhatmCode: groupKhatmCode,
             groupSlotUnit: groupSlotUnit,
             groupSlotId: groupSlotId,
+            groupUnitType: groupUnitType,
+            groupSlotQuantity: groupSlotQuantity,
           );
         },
       ),

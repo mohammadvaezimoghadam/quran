@@ -7,25 +7,25 @@ import 'package:go_router/go_router.dart';
 import 'package:quran/common/extensions/context_extension.dart';
 import 'package:quran/common/extensions/int_extension.dart';
 import 'package:quran/common/extensions/string_extension.dart';
+import 'package:quran/common/extensions/surah_name_extension.dart';
 import 'package:quran/common/utils/jalali_date.dart';
 import 'package:quran/common/widgets/app_snackbar.dart';
 import 'package:quran/core/routes/route_name.dart';
 import 'package:quran/core/theme/app_typography.dart';
 import 'package:quran/features/tafakor/application/controllers/tafakor_auth_controller.dart';
 import 'package:quran/features/khatm/application/controllers/group_khatm_detail_controller.dart';
+import 'package:quran/features/khatm/application/controllers/group_khatm_reading_controller.dart';
 import 'package:quran/features/khatm/domain/entities/group_khatm_campaign.dart';
 import 'package:quran/features/khatm/domain/entities/group_khatm_slot.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_enums.dart';
-import 'package:quran/features/khatm/domain/services/khatm_quran_resolver.dart';
 import '../widgets/group_detail/group_khatm_bottom_cta.dart';
 import '../widgets/group_detail/group_khatm_detail_header.dart';
 import '../widgets/group_detail/group_khatm_detail_skeleton.dart';
-import '../widgets/group_detail/group_khatm_my_slot_card.dart';
 import '../widgets/group_detail/group_khatm_participants_sheet.dart';
 import '../widgets/group_detail/group_khatm_slot_grid.dart';
 import '../widgets/group_detail/group_khatm_surah_picker.dart';
+import '../widgets/group_detail/group_khatm_surah_slots_section.dart';
 import '../widgets/shared/complete_name_bottom_sheet.dart';
-import '../widgets/shared/group_khatm_share_sheet.dart';
 import '../widgets/shared/guest_otp_bottom_sheet.dart';
 
 /// Screen displaying details of a collective Group Khatm Campaign.
@@ -46,10 +46,13 @@ class _GroupKhatmDetailScreenState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref
           .read(groupKhatmDetailControllerProvider(widget.inviteCode).notifier)
           .loadCampaign();
+      await ref
+          .read(groupKhatmReadingControllerProvider.notifier)
+          .syncPendingCompletions(widget.inviteCode);
     });
   }
 
@@ -58,43 +61,12 @@ class _GroupKhatmDetailScreenState
     GroupKhatmCampaign campaign,
     bool isAuthenticated,
   ) {
-    if (!isAuthenticated) {
-      if (slot.isCompleted) {
-        AppSnackBar.showInfo(context, 'این سهم قبلاً قرائت شده است');
-        return;
-      }
-      if (slot.isReserved) {
-        AppSnackBar.showInfo(context, 'این سهم در حال حاضر در حال قرائت است');
-        return;
-      }
-    }
-
-    if (slot.isCompleted) {
-      final holderName = slot.userDisplayName?.trim();
-      final String message;
-      if (slot.isMine) {
-        message = (holderName != null && holderName.isNotEmpty)
-            ? 'این سهم توسط شما ($holderName) قرائت و تکمیل شده است'
-            : 'این سهم توسط شما قرائت و تکمیل شده است';
-      } else {
-        final name = (holderName != null && holderName.isNotEmpty)
-            ? holderName
-            : 'کاربر قرآن';
-        message = 'این سهم توسط $name قرائت و تکمیل شده است';
-      }
-      AppSnackBar.showInfo(context, message);
+    // Strictly ignore other participants' slots or already-completed slots
+    if (!slot.isFree && !slot.isMine) {
       return;
     }
 
-    if (slot.isReserved && !slot.isMine) {
-      final holderName = slot.userDisplayName?.trim();
-      final name = (holderName != null && holderName.isNotEmpty)
-          ? holderName
-          : 'کاربر قرآن';
-      AppSnackBar.showInfo(
-        context,
-        'این سهم در حال حاضر توسط $name در حال قرائت است',
-      );
+    if (slot.isCompleted) {
       return;
     }
 
@@ -107,6 +79,144 @@ class _GroupKhatmDetailScreenState
     _reserveSlotWithGuestCheck(unitNumber: slot.unitNumber, quantity: 1);
   }
 
+  String _formatReserveTargetLabel({
+    required GroupKhatmCampaign? campaign,
+    int? unitNumber,
+    int quantity = 1,
+  }) {
+    if (campaign?.unitTypeEnum == GroupKhatmUnitType.surah) {
+      final surahId = campaign?.targetSurah ?? 1;
+      final surahTitle = 'سوره ${surahId.surahNameFa}';
+      return quantity > 1
+          ? '${quantity.toPersianDigit()} مرتبه $surahTitle'
+          : surahTitle;
+    }
+    if (unitNumber != null) {
+      final unitPrefix = campaign?.unitTypeLabel ?? 'جزء';
+      return '$unitPrefix ${unitNumber.toPersianDigit()}';
+    }
+    return 'سهم مورد نظر';
+  }
+
+  /// Shared confirmation dialog that locks dismissal and shows an inline
+  /// loading spinner inside the confirm button while [onConfirm] completes.
+  /// Returns `null` if the user cancelled, or the boolean result of [onConfirm].
+  Future<bool?> _showActionConfirmDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    String cancelLabel = 'انصراف',
+    Color? confirmColor,
+    required Future<bool> Function() onConfirm,
+  }) {
+    final colors = context.colors;
+    final colorScheme = context.colorScheme;
+    final effectiveConfirmColor = confirmColor ?? colorScheme.primary;
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        bool isLoading = false;
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            return PopScope(
+              canPop: !isLoading,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: AlertDialog(
+                  backgroundColor: colors.cardBackground,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  content: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13,
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.55,
+                    ),
+                  ),
+                  actionsAlignment: MainAxisAlignment.spaceEvenly,
+                  actions: [
+                    TextButton(
+                      onPressed: isLoading
+                          ? null
+                          : () => Navigator.of(dialogCtx).pop(null),
+                      child: Text(
+                        cancelLabel,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    FilledButton(
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              setDialogState(() => isLoading = true);
+                              bool ok = false;
+                              try {
+                                ok = await onConfirm();
+                              } finally {
+                                if (dialogCtx.mounted) {
+                                  Navigator.of(dialogCtx).pop(ok);
+                                }
+                              }
+                            },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: effectiveConfirmColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        minimumSize: const Size(108, 40),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CupertinoActivityIndicator(
+                                color: Colors.white,
+                                radius: 9,
+                              ),
+                            )
+                          : Text(
+                              confirmLabel,
+                              style: const TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _reserveSlotWithGuestCheck({
     int? unitNumber,
     int quantity = 1,
@@ -115,16 +225,21 @@ class _GroupKhatmDetailScreenState
       groupKhatmDetailControllerProvider(widget.inviteCode).notifier,
     );
     final wasGuest = !ref.read(isTafakorAuthenticatedProvider);
+    final currentCampaign = ref
+        .read(groupKhatmDetailControllerProvider(widget.inviteCode))
+        .campaign;
+    final unitLabel = _formatReserveTargetLabel(
+      campaign: currentCampaign,
+      unitNumber: unitNumber,
+      quantity: quantity,
+    );
 
     if (wasGuest) {
-      final unitLabel = unitNumber != null
-          ? 'جزء ${unitNumber.toPersianDigit()}'
-          : 'سهم مورد نظر';
       final loggedIn = await GuestOtpBottomSheet.show(
         context,
         title: 'ثبت سهم در ختم گروهی',
         description:
-            'برای ثبت $unitLabel به نام شما، لطفاً وارد حساب تفکر شوید.',
+            'برای ثبت «$unitLabel» به نام شما، لطفاً وارد حساب تفکر شوید.',
       );
       if (!loggedIn || !mounted) {
         if (mounted && ref.read(isTafakorAuthenticatedProvider)) {
@@ -145,11 +260,25 @@ class _GroupKhatmDetailScreenState
       }
     }
 
-    var success = await notifier.reserveSlot(
-      unitNumber: unitNumber,
-      quantity: quantity,
+    var dialogResult = await _showActionConfirmDialog(
+      title: 'تأیید برداشتن سهم',
+      message:
+          'آیا مایل به برداشتن «$unitLabel» در این ختم گروهی هستید؟ با تأیید شما این سهم به نام شما ثبت می‌شود.',
+      confirmLabel: 'بله، برمی‌دارم',
+      onConfirm: () => notifier.reserveSlot(
+        unitNumber: unitNumber,
+        quantity: quantity,
+      ),
     );
 
+    if (dialogResult == null || !mounted) {
+      if (wasGuest && mounted) {
+        notifier.loadCampaign(silent: true);
+      }
+      return;
+    }
+
+    var success = dialogResult;
     if (!success && mounted) {
       final detailState = ref.read(
         groupKhatmDetailControllerProvider(widget.inviteCode),
@@ -157,10 +286,16 @@ class _GroupKhatmDetailScreenState
       if (detailState.errorCode == 'profile_name_required') {
         final nameSaved = await CompleteNameBottomSheet.show(context);
         if (nameSaved && mounted) {
-          success = await notifier.reserveSlot(
-            unitNumber: unitNumber,
-            quantity: quantity,
+          dialogResult = await _showActionConfirmDialog(
+            title: 'تأیید برداشتن سهم',
+            message: 'آیا مایل به ثبت نهایی «$unitLabel» هستید؟',
+            confirmLabel: 'ثبت سهم',
+            onConfirm: () => notifier.reserveSlot(
+              unitNumber: unitNumber,
+              quantity: quantity,
+            ),
           );
+          success = dialogResult == true;
         }
       }
     }
@@ -176,23 +311,12 @@ class _GroupKhatmDetailScreenState
   void _startReadingSlot(GroupKhatmSlot slot, GroupKhatmCampaign campaign) {
     HapticFeedback.lightImpact();
 
-    final KhatmUnitType unitType;
-    switch (campaign.unitTypeEnum) {
-      case GroupKhatmUnitType.juz:
-        unitType = KhatmUnitType.juz;
-        break;
-      case GroupKhatmUnitType.hizb:
-        unitType = KhatmUnitType.hizb;
-        break;
-      case GroupKhatmUnitType.surah:
-        unitType = KhatmUnitType.surah;
-        break;
-    }
-
     final unitNumber = slot.unitNumber ?? campaign.targetSurah ?? 1;
-    final target = KhatmQuranResolver.resolveUnit(
-      unitType: unitType,
-      unitNumber: unitNumber,
+    final readingController =
+        ref.read(groupKhatmReadingControllerProvider.notifier);
+    final target = readingController.resolveResumeTarget(
+      campaign: campaign,
+      slot: slot,
     );
 
     context.pushNamed(
@@ -203,171 +327,254 @@ class _GroupKhatmDetailScreenState
         'groupKhatmCode': campaign.inviteCode,
         'groupSlotUnit': unitNumber.toString(),
         'groupSlotId': slot.id.toString(),
+        'groupUnitType': campaign.unitTypeEnum.name,
+        'groupSlotQuantity': slot.quantity.toString(),
       },
     );
   }
 
-  void _confirmReleaseSlot(GroupKhatmSlot slot) {
+  Future<void> _confirmReleaseSlot(GroupKhatmSlot slot) async {
+    final colorScheme = context.colorScheme;
+    final notifier = ref.read(
+      groupKhatmDetailControllerProvider(widget.inviteCode).notifier,
+    );
+
+    final ok = await _showActionConfirmDialog(
+      title: 'انصراف از سهم',
+      message:
+          'آیا از انصراف این سهم اطمینان دارید؟ با انصراف، این سهم مجدداً برای دیگر همراهان آزاد می‌شود.',
+      confirmLabel: 'آزادسازی سهم',
+      confirmColor: colorScheme.error,
+      onConfirm: () async {
+        final released = await notifier.releaseSlot(
+          slotId: slot.id,
+          unitNumber: slot.unitNumber,
+        );
+        if (released) {
+          await ref
+              .read(groupKhatmReadingControllerProvider.notifier)
+              .clearSlotProgress(widget.inviteCode, slot.id);
+        }
+        return released;
+      },
+    );
+
+    if (ok == true && mounted) {
+      AppSnackBar.showSuccess(context, 'سهم با موفقیت آزاد شد');
+    }
+  }
+
+  Future<void> _confirmCompleteSlot(
+    GroupKhatmSlot slot,
+    GroupKhatmCampaign campaign,
+  ) async {
+    final unitLabel = _formatReserveTargetLabel(
+      campaign: campaign,
+      unitNumber: slot.unitNumber,
+      quantity: slot.quantity,
+    );
+    final notifier = ref.read(
+      groupKhatmDetailControllerProvider(widget.inviteCode).notifier,
+    );
+
+    final ok = await _showActionConfirmDialog(
+      title: 'ثبت اتمام قرائت',
+      message:
+          'آیا قرائت «$unitLabel» را به پایان رسانده‌اید؟ ثواب این تلاوت در پیشرفت ختم ثبت خواهد شد.',
+      confirmLabel: 'بله، تکمیل شد',
+      cancelLabel: 'هنوز نه',
+      onConfirm: () async {
+        final synced = await notifier.completeSlot(
+          slotId: slot.id,
+          unitNumber: slot.unitNumber,
+        );
+        await ref
+            .read(groupKhatmReadingControllerProvider.notifier)
+            .markCompletedLocally(
+              inviteCode: widget.inviteCode,
+              slot: slot,
+              campaign: campaign,
+              syncedWithServer: synced,
+            );
+        return synced;
+      },
+    );
+
+    if (ok != null && mounted) {
+      HapticFeedback.mediumImpact();
+      AppSnackBar.showSuccess(
+        context,
+        ok
+            ? 'قبول باشد، ثواب قرائت شما ثبت شد'
+            : 'اتمام سهم در حافظه ذخیره شد و پس از اتصال ثبت می‌شود',
+      );
+    }
+  }
+
+  String _buildCampaignStructureSummary(GroupKhatmCampaign campaign) {
+    return switch (campaign.unitTypeEnum) {
+      GroupKhatmUnitType.juz =>
+        'این ختم گروهی بر پایه ۳۰ جزء کامل قرآن کریم طراحی شده است؛ هر کارت یک جزء است و با تکمیل همه بخش‌ها، ثواب یک ختم کامل جمعی ثبت می‌شود.',
+      GroupKhatmUnitType.hizb =>
+        'این ختم گروهی بر پایه ۱۲۰ حزب قرآن کریم (هر جزء شامل ۴ حزب) تقسیم شده تا حجم هر سهم کوتاه‌تر باشد و همگان به آسانی مشارکت کنند.',
+      GroupKhatmUnitType.surah => () {
+        final surahName =
+            campaign.targetSurahName ??
+            campaign.targetSurah?.surahNameFa ??
+            'منتخب';
+        return 'این ختم گروهی بر محور قرائت سوره مبارکه «$surahName» در قالب ${campaign.targetUnits.toPersianDigit()} سهم طراحی شده است و می‌توانید یک یا چند دور قرائت را انتخاب کنید.';
+      }(),
+    };
+  }
+
+  Future<void> _showReadingGuideDialog(GroupKhatmCampaign campaign) {
     final colors = context.colors;
     final colorScheme = context.colorScheme;
+    final remainingLabel = campaign.remainingTimeLabel();
+    final structureLabel = switch (campaign.unitTypeEnum) {
+      GroupKhatmUnitType.juz => 'اساس ختم: جزءبندی (۳۰ جزء)',
+      GroupKhatmUnitType.hizb => 'اساس ختم: حزب‌بندی (۱۲۰ حزب)',
+      GroupKhatmUnitType.surah =>
+        'اساس ختم: سوره ${campaign.targetSurahName ?? campaign.targetSurah?.surahNameFa ?? 'منتخب'}',
+    };
 
-    showDialog(
+    return showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'انصراف از سهم',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        content: Text(
-          'آیا از انصراف این سهم اطمینان دارید؟ با انصراف، این سهم مجدداً برای دیگر همراهان آزاد می‌شود.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 13,
-            color: colorScheme.onSurfaceVariant,
-            height: 1.5,
-          ),
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'انصراف',
+      builder: (dialogCtx) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            backgroundColor: colors.cardBackground,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+            contentPadding: const EdgeInsets.fromLTRB(18, 6, 18, 8),
+            actionsPadding: const EdgeInsets.fromLTRB(18, 6, 18, 16),
+            title: Text(
+              'راهنمای قرائت و مشارکت',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: AppTypography.fontFamily,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              final notifier = ref.read(
-                groupKhatmDetailControllerProvider(widget.inviteCode).notifier,
-              );
-              final ok = await notifier.releaseSlot(
-                slotId: slot.id,
-                unitNumber: slot.unitNumber,
-              );
-              if (ok && mounted) {
-                AppSnackBar.showSuccess(context, 'سهم با موفقیت آزاد شد');
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: colorScheme.error,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              'آزادسازی سهم',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: colorScheme.onSurface,
               ),
             ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildGuideStepItem(
+                    title: structureLabel,
+                    description: _buildCampaignStructureSummary(campaign),
+                    colorScheme: colorScheme,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildGuideStepItem(
+                    title: 'انتخاب سهم شخصی',
+                    description:
+                        'با لمس هر کارت آزاد و تایید در پنجره، آن بخش به نام شما ثبت می‌شود. کارت سایر همراهان تنها برای مشاهده وضعیت است.',
+                    colorScheme: colorScheme,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildGuideStepItem(
+                    title: 'تلاوت در برنامه و ثبت خودکار',
+                    description:
+                        'با لمس کارت خود یا آیکون پخش وارد قرآن‌خوان همان بخش می‌شوید. درصد مطالعه و آخرین آیه حتی به‌صورت آفلاین ذخیره می‌شود تا ادامه دهید و در پایان بخش خودکار تکمیل گردد.',
+                    colorScheme: colorScheme,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildGuideStepItem(
+                    title: 'تکمیل دستی یا آزادسازی کارت',
+                    description:
+                        'در صورت قرائت از روی مصحف کاغذی، با دکمه «تموم شد» اتمام را ثبت کنید؛ پیش از اتمام نیز با آیکون بازگشت می‌توانید سهم را آزاد کنید.',
+                    colorScheme: colorScheme,
+                  ),
+                  if (remainingLabel != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      remainingLabel,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    minimumSize: const Size.fromHeight(42),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                  ),
+                  child: const Text(
+                    'متوجه شدم',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  void _confirmCompleteSlot(GroupKhatmSlot slot, GroupKhatmCampaign campaign) {
-    final colors = context.colors;
-    final colorScheme = context.colorScheme;
-
-    final unitLabel = slot.unitNumber != null
-        ? '${campaign.unitTypeLabel} ${slot.unitNumber!.toPersianDigit()}'
-        : 'سهم شما';
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'ثبت اتمام قرائت',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        content: Text(
-          'آیا قرائت $unitLabel را به پایان رسانده‌اید؟ ثواب این تلاوت در پیشرفت ختم ثبت خواهد شد.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: AppTypography.fontFamily,
-            fontSize: 13,
-            color: colorScheme.onSurfaceVariant,
-            height: 1.5,
-          ),
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'هنوز نه',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurfaceVariant,
-              ),
+  Widget _buildGuideStepItem({
+    required String title,
+    required String description,
+    required ColorScheme colorScheme,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
             ),
           ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              final notifier = ref.read(
-                groupKhatmDetailControllerProvider(widget.inviteCode).notifier,
-              );
-              final ok = await notifier.completeSlot(
-                slotId: slot.id,
-                unitNumber: slot.unitNumber,
-              );
-              if (ok && mounted) {
-                HapticFeedback.mediumImpact();
-                AppSnackBar.showSuccess(
-                  context,
-                  'قبول باشد، ثواب قرائت شما ثبت شد',
-                );
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              'بله، تکمیل شد',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+          const SizedBox(height: 3),
+          Text(
+            description,
+            style: TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontSize: 11.5,
+              height: 1.55,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -438,10 +645,10 @@ class _GroupKhatmDetailScreenState
             TextButton(
               onPressed: () {
                 HapticFeedback.lightImpact();
-                GroupKhatmShareSheet.show(context, campaign: campaign);
+                _showReadingGuideDialog(campaign);
               },
               child: Text(
-                'دعوت',
+                'توضیحات',
                 style: TextStyle(
                   fontFamily: AppTypography.fontFamily,
                   fontSize: 13.5,
@@ -490,36 +697,29 @@ class _GroupKhatmDetailScreenState
                             GroupKhatmDetailHeader(campaign: campaign),
                             const SizedBox(height: 14),
 
-                            // ── ۲. کارت سهم فعال کاربر (در صورت وجود سهم) ──
-                            if (state.myActiveSlot != null) ...[
-                              GroupKhatmMySlotCard(
-                                slot: state.myActiveSlot!,
-                                campaign: campaign,
-                                onStartReading: () => _startReadingSlot(
-                                  state.myActiveSlot!,
-                                  campaign,
-                                ),
-                                onComplete: () => _confirmCompleteSlot(
-                                  state.myActiveSlot!,
-                                  campaign,
-                                ),
-                                onRelease: () =>
-                                    _confirmReleaseSlot(state.myActiveSlot!),
-                              ),
-                              const SizedBox(height: 14),
-                            ],
-
-                            // ── ۳. بخش سهم‌ها (انتخاب‌گر سوره یا گرید ۴ ستونه جزء) ──
+                            // ── ۲. بخش سهم‌ها (سوره + کارت‌های مشارکت من، یا گرید ۳ ستونه با درصد و دکمه‌ها روی خود کارت) ──
                             if (campaign.unitTypeEnum ==
-                                GroupKhatmUnitType.surah)
+                                GroupKhatmUnitType.surah) ...[
+                              if (state.mySlots.isNotEmpty) ...[
+                                GroupKhatmSurahSlotsSection(
+                                  campaign: campaign,
+                                  mySlots: state.mySlots,
+                                  onContinueReading: (slot) =>
+                                      _startReadingSlot(slot, campaign),
+                                  onCompleteSlot: (slot) =>
+                                      _confirmCompleteSlot(slot, campaign),
+                                  onReleaseSlot: _confirmReleaseSlot,
+                                ),
+                                const SizedBox(height: 14),
+                              ],
                               GroupKhatmSurahPicker(
                                 campaign: campaign,
                                 onReserve: (quantity) =>
                                     _reserveSlotWithGuestCheck(
                                       quantity: quantity,
                                     ),
-                              )
-                            else
+                              ),
+                            ] else
                               GroupKhatmSlotGrid(
                                 campaign: campaign,
                                 isAuthenticated: isAuthenticated,
@@ -528,6 +728,9 @@ class _GroupKhatmDetailScreenState
                                   campaign,
                                   isAuthenticated,
                                 ),
+                                onCompleteSlot: (slot) =>
+                                    _confirmCompleteSlot(slot, campaign),
+                                onReleaseSlot: _confirmReleaseSlot,
                               ),
                             const SizedBox(height: 14),
 

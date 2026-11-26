@@ -83,8 +83,7 @@ class KhatmPlan {
   /// Never returns 100 unless all sessions/units are truly completed.
   int get progressPercentInt {
     if (isCompleted) return 100;
-    final percent = (progressPercentage * 100).floor();
-    return percent >= 100 ? 99 : percent;
+    return (progressPercentage * 100).floor().clamp(0, 99);
   }
 
   /// True when all sessions have been marked completed.

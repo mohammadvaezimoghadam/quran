@@ -28,80 +28,89 @@ class GroupKhatmDetailSkeleton extends StatelessWidget {
           children: [
             // ── ۱. کارت هدر مشخصات و نمودار دایره‌ای ──
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
                 color: colors.cardBackground,
                 borderRadius: BorderRadius.circular(20),
                 border: hairlineBorder,
               ),
-              child: Column(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const KhatmSkeletonBox(
-                    width: 88,
-                    height: 24,
-                    borderRadius: 20,
-                  ),
-                  const SizedBox(height: 16),
-                  const KhatmSkeletonRing(size: 154, strokeWidth: 9.5),
-                  const SizedBox(height: 18),
-                  const KhatmSkeletonBox(
-                    width: 170,
-                    height: 18,
-                    borderRadius: 6,
-                  ),
-                  const SizedBox(height: 8),
-                  const KhatmSkeletonBox(
-                    width: 220,
-                    height: 12,
-                    borderRadius: 4,
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    height: 60,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: pillBg,
-                      borderRadius: BorderRadius.circular(14),
-                      border: hairlineBorder,
-                    ),
-                    child: const Row(
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              KhatmSkeletonBox(width: 52, height: 10),
-                              SizedBox(height: 6),
-                              KhatmSkeletonBox(width: 24, height: 13),
-                            ],
-                          ),
+                        const KhatmSkeletonBox(
+                          width: 72,
+                          height: 20,
+                          borderRadius: 20,
                         ),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              KhatmSkeletonBox(width: 56, height: 10),
-                              SizedBox(height: 6),
-                              KhatmSkeletonBox(width: 24, height: 13),
-                            ],
-                          ),
+                        const SizedBox(height: 8),
+                        const KhatmSkeletonBox(
+                          width: 150,
+                          height: 16,
+                          borderRadius: 6,
                         ),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                        const SizedBox(height: 6),
+                        const KhatmSkeletonBox(
+                          width: 130,
+                          height: 11,
+                          borderRadius: 4,
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          height: 50,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: pillBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: hairlineBorder,
+                          ),
+                          child: const Row(
                             children: [
-                              KhatmSkeletonBox(width: 48, height: 10),
-                              SizedBox(height: 6),
-                              KhatmSkeletonBox(width: 24, height: 13),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    KhatmSkeletonBox(width: 36, height: 9),
+                                    SizedBox(height: 5),
+                                    KhatmSkeletonBox(width: 18, height: 12),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    KhatmSkeletonBox(width: 40, height: 9),
+                                    SizedBox(height: 5),
+                                    KhatmSkeletonBox(width: 18, height: 12),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    KhatmSkeletonBox(width: 36, height: 9),
+                                    SizedBox(height: 5),
+                                    KhatmSkeletonBox(width: 18, height: 12),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 14),
+                  const KhatmSkeletonRing(size: 100, strokeWidth: 7.5),
                 ],
               ),
             ),

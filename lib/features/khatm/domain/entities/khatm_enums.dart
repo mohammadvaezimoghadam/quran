@@ -177,6 +177,17 @@ enum GroupKhatmUnitType {
     }
   }
 
+  String get shortLabelFa {
+    switch (this) {
+      case GroupKhatmUnitType.juz:
+        return 'جزء';
+      case GroupKhatmUnitType.hizb:
+        return 'حزب';
+      case GroupKhatmUnitType.surah:
+        return 'سوره';
+    }
+  }
+
   String get serverValue {
     switch (this) {
       case GroupKhatmUnitType.juz:

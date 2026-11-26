@@ -16,6 +16,8 @@ class KhatmProgressDonutChart extends ConsumerWidget {
   final int totalUnits;
   final int completedUnits;
   final String unitLabel;
+  final double? completedFractionOverride;
+  final bool? isCompletedOverride;
 
   const KhatmProgressDonutChart({
     super.key,
@@ -23,6 +25,8 @@ class KhatmProgressDonutChart extends ConsumerWidget {
     required this.totalUnits,
     required this.completedUnits,
     required this.unitLabel,
+    this.completedFractionOverride,
+    this.isCompletedOverride,
   });
 
   @override
@@ -33,8 +37,11 @@ class KhatmProgressDonutChart extends ConsumerWidget {
     final isAuthenticated = ref.watch(isTafakorAuthenticatedProvider);
 
     final remainingUnits = (totalUnits - completedUnits).clamp(0, totalUnits);
-    final double completedFraction =
-        totalUnits > 0 ? (completedUnits / totalUnits).clamp(0.0, 1.0) : 0.0;
+    final double completedFraction = (completedFractionOverride ??
+            (totalUnits > 0 ? completedUnits / totalUnits : 0.0))
+        .clamp(0.0, 1.0);
+    final bool isAllDone =
+        isCompletedOverride ?? (completedUnits >= totalUnits && totalUnits > 0);
 
     final completedColor = colorScheme.primary;
     final remainingColor = isDark
@@ -107,8 +114,9 @@ class KhatmProgressDonutChart extends ConsumerWidget {
                   duration: const Duration(milliseconds: 650),
                   curve: Curves.easeOutCubic,
                   builder: (context, animFraction, _) {
-                    final animPercent =
-                        (animFraction * 100).toInt().clamp(0, 100);
+                    final animPercent = isAllDone
+                        ? 100
+                        : (animFraction * 100).floor().clamp(0, 99);
                     return Stack(
                       alignment: Alignment.center,
                       children: [

@@ -29,7 +29,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('برنامه مطالعه و ختم قرآن'), findsOneWidget);
+    expect(find.text('برنامه ختم'), findsOneWidget);
     expect(find.text('ایجاد برنامه ختم جدید'), findsOneWidget);
   });
 
@@ -86,7 +86,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ختم نورانی رمضان'), findsOneWidget);
-    expect(find.text('مشاهده همه'), findsOneWidget);
+    expect(find.text('همه'), findsOneWidget);
     expect(find.text('ادامه مطالعه'), findsOneWidget);
   });
 }

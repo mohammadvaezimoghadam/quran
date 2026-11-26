@@ -89,6 +89,8 @@ class KhatmListController extends StateNotifier<KhatmListState> {
               completedAt: isCompleted ? DateTime.now() : null,
               progress: isCompleted ? 1.0 : 0.0,
               lastReadUnit: isCompleted ? s.toUnit : null,
+              coveredSpans: isCompleted ? s.coveredSpans : const [],
+              clearResumeCoordinates: !isCompleted,
             );
           }
           return s;
@@ -101,6 +103,16 @@ class KhatmListController extends StateNotifier<KhatmListState> {
       }
       return p;
     }).toList();
+    state = state.copyWith(plans: updatedPlans);
+  }
+
+  /// Synchronous in-memory plan update used during active reading so Home & quick sheets
+  /// reflect live progress and resume coordinates before the debounced Hive write fires.
+  void optimisticUpdatePlan(KhatmPlan updatedPlan) {
+    final idx = state.plans.indexWhere((p) => p.id == updatedPlan.id);
+    if (idx == -1) return;
+    final updatedPlans = List<KhatmPlan>.from(state.plans);
+    updatedPlans[idx] = updatedPlan;
     state = state.copyWith(plans: updatedPlans);
   }
 

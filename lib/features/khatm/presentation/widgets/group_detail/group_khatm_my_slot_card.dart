@@ -4,6 +4,7 @@ import 'package:quran/common/extensions/context_extension.dart';
 import 'package:quran/common/extensions/int_extension.dart';
 import 'package:quran/common/extensions/string_extension.dart';
 import 'package:quran/common/utils/jalali_date.dart';
+import 'package:quran/common/widgets/auto_scroll_text.dart';
 import 'package:quran/core/theme/app_typography.dart';
 import '../../../domain/entities/group_khatm_campaign.dart';
 import '../../../domain/entities/group_khatm_slot.dart';
@@ -78,41 +79,54 @@ class GroupKhatmMySlotCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      shape: BoxShape.circle,
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 7),
-                  Text(
-                    'سهم فعال شما در این ختم',
+                    const SizedBox(width: 7),
+                    Flexible(
+                      child: Text(
+                        'سهم فعال شما در این ختم',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (hours != null) ...[
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    hours > 0
+                        ? 'مهلت باقی‌مانده: ${hours.toPersianDigit()} ساعت'
+                        : 'مهلت باقی‌مانده: کمتر از ۱ ساعت',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
                     style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
                     ),
                   ),
-                ],
-              ),
-              if (hours != null)
-                Text(
-                  hours > 0
-                      ? 'مهلت باقی‌مانده: ${hours.toPersianDigit()} ساعت'
-                      : 'مهلت باقی‌مانده: کمتر از ۱ ساعت',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
-                  ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 14),
@@ -136,31 +150,37 @@ class GroupKhatmMySlotCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        unitLabel,
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      if (dateFa.isNotEmpty) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          'ثبت شده در $dateFa (لمس جهت تلاوت قرآن)',
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AutoScrollText(
+                          unitLabel,
                           style: TextStyle(
                             fontFamily: AppTypography.fontFamily,
-                            fontSize: 11,
-                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
                           ),
                         ),
+                        if (dateFa.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            'ثبت شده در $dateFa (لمس جهت تلاوت قرآن)',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 11,
+                              color: colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
+                  const SizedBox(width: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4.5),
@@ -194,7 +214,7 @@ class GroupKhatmMySlotCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: SizedBox(
                   height: 42,
                   child: FilledButton(
@@ -203,17 +223,22 @@ class GroupKhatmMySlotCard extends StatelessWidget {
                       backgroundColor: colorScheme.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      'تأیید اتمام قرائت',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'تأیید اتمام قرائت',
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -221,23 +246,29 @@ class GroupKhatmMySlotCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
+                flex: 2,
                 child: SizedBox(
                   height: 42,
                   child: TextButton(
                     onPressed: onRelease,
                     style: TextButton.styleFrom(
                       foregroundColor: colorScheme.onSurfaceVariant,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      'انصراف یا ویرایش',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurfaceVariant,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'انصراف یا ویرایش',
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontFamily,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),

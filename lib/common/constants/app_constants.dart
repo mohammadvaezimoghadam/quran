@@ -5,9 +5,9 @@ abstract class AppConstants {
   static const String everyAyahAudioBaseUrl =
       'https://quran-tafakor-audio.s3.ir-central1.arvanstorage.ir';
   // Staging / Dev Server (سرور دو - پورت ۸۰۸۶ برای تست توسعه):
-  static const String tafakorBaseUrl = 'http://5.202.19.101:8086/api/';
+  // static const String tafakorBaseUrl = 'http://5.202.19.101:8086/api/';
   // Production (سرور اصلی تفکر):
-  // static const String tafakorBaseUrl = 'https://tafakormag.ir/api/';
+  static const String tafakorBaseUrl = 'https://tafakormag.ir/api/';
   // Local Wi-Fi (تست لوکال روی وای‌فای):
   // static const String tafakorBaseUrl = 'http://192.168.1.106:8085/api/';
   // Local Docker (اتصال به داکر لوکال روی پورت 8085):

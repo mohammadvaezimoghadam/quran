@@ -6,6 +6,7 @@ import 'package:quran/common/extensions/string_extension.dart';
 import 'package:quran/common/utils/jalali_date.dart';
 import 'package:quran/features/khatm/domain/entities/group_khatm_campaign.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_enums.dart';
+import 'khatm_circular_progress_ring.dart';
 
 /// Clean card displaying a collective Group Khatm campaign in lists.
 /// Strictly follows Sacred Serenity theme tokens (warm neutrals, subtle borders, no green saturation).
@@ -13,11 +14,7 @@ class GroupKhatmCard extends StatelessWidget {
   final GroupKhatmCampaign campaign;
   final VoidCallback? onTap;
 
-  const GroupKhatmCard({
-    super.key,
-    required this.campaign,
-    this.onTap,
-  });
+  const GroupKhatmCard({super.key, required this.campaign, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -28,13 +25,14 @@ class GroupKhatmCard extends StatelessWidget {
     final isDark = context.isDark;
 
     final isCompleted = campaign.status == GroupKhatmStatus.completed;
-    final hasActiveSlot = campaign.mySlots.any((s) => s.status == GroupKhatmSlotStatus.reserved);
+    final hasActiveSlot = campaign.mySlots.any(
+      (s) => s.status == GroupKhatmSlotStatus.reserved,
+    );
 
-    final startDateFa =
-        JalaliDate.fromDateTime(campaign.createdAt).formatFa().toPersianDigit();
-    final deadlineFa = campaign.deadline != null
-        ? JalaliDate.fromDateTime(campaign.deadline!).formatFa().toPersianDigit()
-        : null;
+    final startDateFa = JalaliDate.fromDateTime(
+      campaign.createdAt,
+    ).formatFa().toPersianDigit();
+    final remainingLabel = isCompleted ? null : campaign.remainingTimeLabel();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -45,8 +43,8 @@ class GroupKhatmCard extends StatelessWidget {
           color: hasActiveSlot
               ? colorScheme.primary.withValues(alpha: 0.35)
               : (isDark
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.black.withValues(alpha: 0.04)),
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.04)),
           width: 0.5,
         ),
       ),
@@ -60,158 +58,189 @@ class GroupKhatmCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top row: Category tag & Unit badge
-                Row(
-                  children: [
-                    if (campaign.categoryTitle != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: colors.cardBackgroundSubtle,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: colors.cardBorder),
-                        ),
-                        child: Text(
-                          campaign.categoryTitle!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            color: colorScheme.onSurfaceVariant,
+                if (campaign.categoryTitle != null ||
+                    isCompleted ||
+                    hasActiveSlot) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (campaign.categoryTitle != null)
+                        Expanded(
+                          child: Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.cardBackgroundSubtle,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: colors.cardBorder),
+                                ),
+                                child: Text(
+                                  campaign.categoryTitle!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                        )
+                      else
+                        const Spacer(),
+                      if (isCompleted || hasActiveSlot) ...[
+                        const SizedBox(width: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 112),
+                          child: isCompleted
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.cardBackgroundSubtle,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: colors.cardBorder,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'تکمیل شده',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 11,
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'سهم فعال شما',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 11,
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
+                      ],
                     ],
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: colors.cardBackgroundSubtle,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: colors.cardBorder),
-                      ),
-                      child: Text(
-                        campaign.unitTypeLabel,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    if (isCompleted)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: colors.cardBackgroundSubtle,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: colors.cardBorder),
-                        ),
-                        child: Text(
-                          'تکمیل شده',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    else if (hasActiveSlot)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'سهم فعال شما',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
-                // Title
-                Text(
-                  campaign.title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                if (campaign.description != null && campaign.description!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    campaign.description!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.4,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  const SizedBox(height: 10),
                 ],
-                const SizedBox(height: 14),
 
-                // Progress Bar & Percentage
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: campaign.progressPercent / 100,
-                    minHeight: 6,
-                    backgroundColor: colors.cardBackgroundSubtle,
-                    valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Stats row
+                // Title & plain unit/slots subtitle opposite circular progress ring on the left (RTL)
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      '${campaign.progressPercent.toInt().toPersianDigit()}٪ خوانده شده',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 11.5,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            campaign.title,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            !isCompleted
+                                ? 'بر اساس ${campaign.unitTypeEnum.shortLabelFa} • ${campaign.remainingUnits.toPersianDigit()} موقعیت خالی'
+                                : 'بر اساس ${campaign.unitTypeEnum.shortLabelFa} • تمام بخش‌های ختم تکمیل شد',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                          if (campaign.description != null &&
+                              campaign.description!.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              campaign.description!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.85,
+                                ),
+                                height: 1.4,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    if (!isCompleted)
-                      Text(
-                        '${campaign.remainingUnits.toPersianDigit()} ${campaign.unitTypeLabel} موقعیت خالی',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 11.5,
-                        ),
-                      ),
+                    const SizedBox(width: 12),
+                    KhatmCircularProgressRing(
+                      progress: campaign.progressPercent / 100,
+                      isCompleted: campaign.isCompleted,
+                    ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
 
                 // Dates row: Start date & Deadline
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'شروع: $startDateFa',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                        fontSize: 10.5,
-                      ),
-                    ),
-                    if (deadlineFa != null)
-                      Text(
-                        'مهلت پایان: $deadlineFa',
+                    Flexible(
+                      child: Text(
+                        'شروع: $startDateFa',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.7,
+                          ),
                           fontSize: 10.5,
                         ),
                       ),
+                    ),
+                    if (remainingLabel != null) ...[
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          remainingLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.7,
+                            ),
+                            fontSize: 10.5,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],

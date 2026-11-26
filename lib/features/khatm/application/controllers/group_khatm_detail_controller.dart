@@ -49,6 +49,10 @@ class GroupKhatmDetailState {
     );
   }
 
+  /// Helper: all slots owned by the current user
+  List<GroupKhatmSlot> get mySlots =>
+      campaign?.slots.where((s) => s.isMine).toList() ?? const [];
+
   /// Helper: find user's active (reserved) slot
   GroupKhatmSlot? get myActiveSlot {
     final c = campaign;
@@ -97,10 +101,12 @@ class GroupKhatmDetailController extends StateNotifier<GroupKhatmDetailState> {
   }
 
   Future<void> loadCampaign({bool silent = false}) async {
+    if (!mounted) return;
     if (!silent) {
       state = state.copyWith(isLoading: true, clearError: true);
     }
     final result = await _repository.getCampaignDetail(inviteCode);
+    if (!mounted) return;
     result.when(
       (campaign) {
         state = state.copyWith(
@@ -119,6 +125,7 @@ class GroupKhatmDetailController extends StateNotifier<GroupKhatmDetailState> {
 
   /// Claim a slot (juz/hizb unitNumber, or surah quantity)
   Future<bool> reserveSlot({int? unitNumber, int quantity = 1}) async {
+    if (!mounted) return false;
     state = state.copyWith(isActionLoading: true, clearError: true, clearConflict: true);
     final result = await _repository.reserveSlot(
       inviteCode,
@@ -126,31 +133,42 @@ class GroupKhatmDetailController extends StateNotifier<GroupKhatmDetailState> {
       quantity: quantity,
     );
 
-    return result.when(
-      (updatedCampaign) {
-        state = state.copyWith(
-          campaign: updatedCampaign,
-          isActionLoading: false,
-        );
+    return await result.when(
+      (updatedCampaign) async {
+        if (mounted) {
+          await _applyMutationResult(
+            returned: updatedCampaign,
+            targetUnitNumber: unitNumber,
+            newStatus: GroupKhatmSlotStatus.reserved,
+            newIsMine: true,
+          );
+        }
         _refreshGroupList();
         return true;
       },
-      (failure) {
-        // Check for 409 conflict
-        if (failure.statusCode == 409) {
+      (failure) async {
+        if (!mounted) return false;
+        final isConflict = failure.statusCode == 409 ||
+            failure.code == 'slot_already_taken' ||
+            failure.code == 'slot_unavailable' ||
+            failure.code == 'already_reserved';
+        if (isConflict) {
           state = state.copyWith(
             isActionLoading: false,
             conflictError: failure.message,
             errorCode: failure.code,
           );
-          // Silently refresh the campaign to update slot grid in real-time
-          loadCampaign(silent: true);
+          await loadCampaign(silent: true);
         } else {
           state = state.copyWith(
             isActionLoading: false,
             errorMessage: failure.message,
             errorCode: failure.code,
           );
+          if (failure.statusCode == 400 &&
+              failure.code != 'profile_name_required') {
+            await loadCampaign(silent: true);
+          }
         }
         return false;
       },
@@ -159,30 +177,38 @@ class GroupKhatmDetailController extends StateNotifier<GroupKhatmDetailState> {
 
   /// Mark reserved slot as completed
   Future<bool> completeSlot({int? slotId, int? unitNumber}) async {
-    state = state.copyWith(isActionLoading: true, clearError: true);
+    if (!mounted) return false;
+    state = state.copyWith(isActionLoading: true, clearError: true, clearConflict: true);
     final result = await _repository.completeSlot(
       inviteCode,
       slotId: slotId,
       unitNumber: unitNumber,
     );
 
-    return result.when(
-      (updatedCampaign) {
-        final wasCompleted = updatedCampaign.status == GroupKhatmStatus.completed;
-        state = state.copyWith(
-          campaign: updatedCampaign,
-          isActionLoading: false,
-          campaignJustCompleted: wasCompleted,
-        );
+    return await result.when(
+      (updatedCampaign) async {
+        if (mounted) {
+          await _applyMutationResult(
+            returned: updatedCampaign,
+            targetSlotId: slotId,
+            targetUnitNumber: unitNumber,
+            newStatus: GroupKhatmSlotStatus.completed,
+            newIsMine: true,
+          );
+        }
         _refreshGroupList();
         return true;
       },
-      (failure) {
+      (failure) async {
+        if (!mounted) return false;
         state = state.copyWith(
           isActionLoading: false,
           errorMessage: failure.message,
           errorCode: failure.code,
         );
+        if (failure.statusCode == 409 || failure.statusCode == 404) {
+          await loadCampaign(silent: true);
+        }
         return false;
       },
     );
@@ -190,30 +216,200 @@ class GroupKhatmDetailController extends StateNotifier<GroupKhatmDetailState> {
 
   /// Release a slot back to the group
   Future<bool> releaseSlot({int? slotId, int? unitNumber}) async {
-    state = state.copyWith(isActionLoading: true, clearError: true);
+    if (!mounted) return false;
+    state = state.copyWith(isActionLoading: true, clearError: true, clearConflict: true);
     final result = await _repository.releaseSlot(
       inviteCode,
       slotId: slotId,
       unitNumber: unitNumber,
     );
 
-    return result.when(
-      (updatedCampaign) {
-        state = state.copyWith(
-          campaign: updatedCampaign,
-          isActionLoading: false,
-        );
+    return await result.when(
+      (updatedCampaign) async {
+        if (mounted) {
+          await _applyMutationResult(
+            returned: updatedCampaign,
+            targetSlotId: slotId,
+            targetUnitNumber: unitNumber,
+            newStatus: GroupKhatmSlotStatus.available,
+            newIsMine: false,
+          );
+        }
         _refreshGroupList();
         return true;
       },
-      (failure) {
+      (failure) async {
+        if (!mounted) return false;
         state = state.copyWith(
           isActionLoading: false,
           errorMessage: failure.message,
+          errorCode: failure.code,
         );
+        if (failure.statusCode == 409 || failure.statusCode == 404) {
+          await loadCampaign(silent: true);
+        }
         return false;
       },
     );
+  }
+
+  /// Applies a mutation response without ever wiping existing slots if the backend
+  /// omits `slots` or returns only a partial/summary payload, then performs a
+  /// silent detail reload to guarantee authoritative synchronization.
+  Future<void> _applyMutationResult({
+    required GroupKhatmCampaign returned,
+    int? targetSlotId,
+    int? targetUnitNumber,
+    required GroupKhatmSlotStatus newStatus,
+    required bool newIsMine,
+  }) async {
+    if (!mounted) return;
+    final previous = state.campaign;
+    final hasFullReturnedSlots =
+        returned.id > 0 &&
+        returned.slots.isNotEmpty &&
+        returned.slots.length >= (previous?.slots.length ?? 0);
+
+    if (hasFullReturnedSlots) {
+      state = state.copyWith(
+        campaign: returned,
+        isActionLoading: false,
+        campaignJustCompleted: returned.status == GroupKhatmStatus.completed,
+      );
+      return;
+    }
+
+    if (previous != null) {
+      final mergedSlots = _mergeSlotsOptimistically(
+        previousSlots: previous.slots,
+        returnedSlots: returned.slots,
+        targetSlotId: targetSlotId,
+        targetUnitNumber: targetUnitNumber,
+        newStatus: newStatus,
+        newIsMine: newIsMine,
+      );
+
+      final hasCampaignStats = returned.id > 0;
+      final reservedCount = mergedSlots.where((s) => s.isReserved).length;
+      final completedCount = mergedSlots.where((s) => s.isCompleted).length;
+      final remainingCount =
+          (previous.targetUnits - completedCount - reservedCount)
+              .clamp(0, previous.targetUnits);
+      final progress = previous.targetUnits > 0
+          ? (completedCount / previous.targetUnits) * 100.0
+          : previous.progressPercentage;
+
+      final mergedCampaign = GroupKhatmCampaign(
+        id: hasCampaignStats ? returned.id : previous.id,
+        inviteCode: previous.inviteCode,
+        category: (hasCampaignStats ? returned.category : null) ??
+            previous.category,
+        creatorId: (hasCampaignStats ? returned.creatorId : null) ??
+            previous.creatorId,
+        creatorDisplayName: hasCampaignStats &&
+                returned.creatorDisplayName.isNotEmpty
+            ? returned.creatorDisplayName
+            : previous.creatorDisplayName,
+        title: hasCampaignStats && returned.title.isNotEmpty
+            ? returned.title
+            : previous.title,
+        description: (hasCampaignStats ? returned.description : null) ??
+            previous.description,
+        unitType: previous.unitType,
+        unitTypeDisplay: previous.unitTypeDisplay,
+        targetUnits:
+            hasCampaignStats ? returned.targetUnits : previous.targetUnits,
+        targetSurahId: previous.targetSurahId,
+        targetSurahName: previous.targetSurahName,
+        reservedUnits:
+            hasCampaignStats ? returned.reservedUnits : reservedCount,
+        completedUnits:
+            hasCampaignStats ? returned.completedUnits : completedCount,
+        remainingUnits:
+            hasCampaignStats ? returned.remainingUnits : remainingCount,
+        progressPercentage:
+            hasCampaignStats ? returned.progressPercentage : progress,
+        isPublic: hasCampaignStats ? returned.isPublic : previous.isPublic,
+        status: hasCampaignStats ? returned.status : previous.status,
+        statusDisplay: (hasCampaignStats ? returned.statusDisplay : null) ??
+            previous.statusDisplay,
+        deadline: (hasCampaignStats ? returned.deadline : null) ??
+            previous.deadline,
+        createdAt: previous.createdAt,
+        isCreator: previous.isCreator,
+        slots: mergedSlots,
+        inviteUrl: previous.inviteUrl,
+        myActiveSlotsCount: hasCampaignStats
+            ? returned.myActiveSlotsCount
+            : mergedSlots.where((s) => s.isMine && s.isReserved).length,
+      );
+
+      state = state.copyWith(
+        campaign: mergedCampaign,
+        isActionLoading: false,
+        campaignJustCompleted:
+            mergedCampaign.status == GroupKhatmStatus.completed,
+      );
+    }
+
+    // Fetch authoritative full detail including all slots and display names
+    await loadCampaign(silent: true);
+  }
+
+  List<GroupKhatmSlot> _mergeSlotsOptimistically({
+    required List<GroupKhatmSlot> previousSlots,
+    required List<GroupKhatmSlot> returnedSlots,
+    int? targetSlotId,
+    int? targetUnitNumber,
+    required GroupKhatmSlotStatus newStatus,
+    required bool newIsMine,
+  }) {
+    if (returnedSlots.length == 1) {
+      final serverSlot = returnedSlots.first;
+      bool matched = false;
+      final updated = previousSlots.map((s) {
+        if (s.id == serverSlot.id) {
+          matched = true;
+          return serverSlot;
+        }
+        return s;
+      }).toList();
+      if (!matched) {
+        updated.add(serverSlot);
+      }
+      updated.sort(GroupKhatmSlot.compareByUnitOrder);
+      return updated;
+    }
+
+    return previousSlots.map((s) {
+      final matchesById = targetSlotId != null && s.id == targetSlotId;
+      final matchesByUnit =
+          targetUnitNumber != null && s.unitNumber == targetUnitNumber;
+      if (matchesById || matchesByUnit) {
+        return GroupKhatmSlot(
+          id: s.id,
+          campaignId: s.campaignId,
+          unitNumber: s.unitNumber,
+          quantity: s.quantity,
+          status: newStatus,
+          userId: newStatus == GroupKhatmSlotStatus.available ? null : s.userId,
+          userDisplayName: newStatus == GroupKhatmSlotStatus.available
+              ? null
+              : (s.userDisplayName ?? 'شما'),
+          isMine: newIsMine,
+          reservedAt: newStatus == GroupKhatmSlotStatus.reserved
+              ? (s.reservedAt ?? DateTime.now())
+              : null,
+          expiresAt: newStatus == GroupKhatmSlotStatus.reserved
+              ? s.expiresAt
+              : null,
+          completedAt: newStatus == GroupKhatmSlotStatus.completed
+              ? DateTime.now()
+              : null,
+        );
+      }
+      return s;
+    }).toList();
   }
 
   void clearErrors() {

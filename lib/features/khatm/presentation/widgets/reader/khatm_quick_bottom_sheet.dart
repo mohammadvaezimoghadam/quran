@@ -98,18 +98,10 @@ class KhatmQuickBottomSheet extends ConsumerWidget {
       return;
     }
 
-    // Otherwise, resume from lastReadUnit if available and within session range, or fromUnit
-    final int resumeUnit =
-        (nextSession.lastReadUnit != null &&
-            nextSession.lastReadUnit! >= nextSession.fromUnit &&
-            nextSession.lastReadUnit! <= nextSession.toUnit)
-        ? nextSession.lastReadUnit!
-        : nextSession.fromUnit;
-
-    // Resolve target surah and ayah for the session unit
-    final resolvedTarget = KhatmQuranResolver.resolveUnit(
+    // Otherwise, resume from exact lastSurahId/lastAyahNumber (or lastReadUnit / fromUnit)
+    final resolvedTarget = KhatmQuranResolver.resolveSessionResumeTarget(
       unitType: plan.unitType,
-      unitNumber: resumeUnit,
+      session: nextSession,
     );
 
     final jumpResult = KhatmJumpResult(

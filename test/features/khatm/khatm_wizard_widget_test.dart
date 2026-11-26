@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quran/common/widgets/app_modal_header.dart';
 import 'package:quran/features/khatm/domain/entities/khatm_enums.dart';
@@ -150,13 +151,15 @@ void main() {
   group('Khatm Report Widgets', () {
     testWidgets('KhatmProgressDonutChart renders title and legends', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: KhatmProgressDonutChart(
-              title: 'تست',
-              totalUnits: 604,
-              completedUnits: 121,
-              unitLabel: 'صفحه',
+        const ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: KhatmProgressDonutChart(
+                title: 'تست',
+                totalUnits: 604,
+                completedUnits: 121,
+                unitLabel: 'صفحه',
+              ),
             ),
           ),
         ),

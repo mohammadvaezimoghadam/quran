@@ -313,82 +313,7 @@ class KhatmHomeSection extends ConsumerWidget {
             isDark: isDark,
             width: cardWidth,
           ),
-          const SizedBox(width: 10),
-
-          // ── ۳. ساخت ختم جدید (Add Card در انتهای لیست افقی) ─────────
-          _buildMockAddCard(
-            context,
-            ref,
-            colors: colors,
-            colorScheme: colorScheme,
-            isDark: isDark,
-          ),
         ],
-      ),
-    );
-  }
-
-  /// کارت کوچک افزودن ختم در انتهای لیست افقی کارت‌ها
-  Widget _buildMockAddCard(
-    BuildContext context,
-    WidgetRef ref, {
-    required dynamic colors,
-    required ColorScheme colorScheme,
-    required bool isDark,
-  }) {
-    final primaryMint = colorScheme.primary;
-
-    return InkWell(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        _showCreateKhatmBottomSheet(context, ref);
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: CustomPaint(
-        painter: _DottedBorderPainter(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.20)
-              : primaryMint.withValues(alpha: 0.25),
-          strokeWidth: 1.0,
-          dash: 5.0,
-          gap: 4.0,
-          radius: 16.0,
-        ),
-        child: Container(
-          width: 105,
-          height: 114,
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.02)
-                : Colors.black.withValues(alpha: 0.012),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: primaryMint.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Icon(CupertinoIcons.plus, size: 17, color: primaryMint),
-              ),
-              8.vSpace,
-              Text(
-                'ختم جدید',
-                style: TextStyle(
-                  fontFamily: AppTypography.fontFamily,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                  color: primaryMint,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -736,18 +661,9 @@ class KhatmHomeSection extends ConsumerWidget {
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,
         physics: const BouncingScrollPhysics(),
-        itemCount: plans.length + 1,
+        itemCount: plans.length,
         separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          if (index == plans.length) {
-            return _buildMockAddCard(
-              context,
-              ref,
-              colors: colors,
-              colorScheme: colorScheme,
-              isDark: isDark,
-            );
-          }
           final plan = plans[index];
           return KhatmListCard(
             key: ValueKey(plan.id),
